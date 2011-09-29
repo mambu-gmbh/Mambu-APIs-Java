@@ -1,0 +1,23 @@
+
+.project
+
+.classpath
+
+.settings/org.eclipse.jdt.core.prefs
+
+target/test-classes/.mavenResources.target.test-classes
+
+#java specific
+*.class
+
+#netbeans ignore personal stuff 
+nbproject/private/
+
+
+## generic files to ignore
+*~
+*.lock
+*.DS_Store
+*.swp
+*.out
+target/classes/.mavenResources.target.classes
