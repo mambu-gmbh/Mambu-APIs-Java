@@ -10,7 +10,10 @@ import java.net.URL;
 
 import sun.misc.BASE64Encoder;
 
+import com.google.gson.GsonBuilder;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.clients.shared.model.Client;
+import com.mambu.clients.shared.model.ClientExpanded;
 
 /**
  * Mambu service to call the APIs
@@ -24,6 +27,10 @@ public class MambuAPIService {
 	private String protocol = "https";
 	private String encodedAuthorization;
 
+	//creat the gson deserializer
+	private static GsonBuilder gsonBuilder = new GsonBuilder()
+			.setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+		
 	/**
 	 * Creates a Mambu API Service class
 	 * 
@@ -44,18 +51,36 @@ public class MambuAPIService {
 	}
 
 	/**
-	 * Requests a client which is then returned as the json response string
+	 * Requests a client by their Mambu ID
 	 * 
 	 * @param clientId
-	 * @return the json response String
+	 * @return the Mambu client model
 	 * @throws MambuApiException
 	 */
-	public String getClient(String clientId) throws MambuApiException {
+	public Client getClient(String clientId) throws MambuApiException {
 
 		// create the api call
 		String urlString = new String(createUrl("client" + "/" + clientId));
 		String method = "GET";
-		return executeRequest(urlString, method);
+		String jsonResposne = executeRequest(urlString, method);
+		ClientExpanded clientResult = gsonBuilder.create().fromJson(jsonResposne, ClientExpanded.class);
+		return clientResult.getClient();
+
+	}
+	
+	/**
+	 * Returns a client with their full details such as addresses, cusotm fields, 
+	 * @param clientId
+	 * @return
+	 * @throws MambuApiException
+	 */
+	public ClientExpanded getClientDetails(String clientId) throws MambuApiException {
+		// create the api call
+		String urlString = new String(createUrl("client" + "/" + clientId + "?fullDetails=true"));
+		String method = "GET";
+		String jsonResposne = executeRequest(urlString, method);
+		ClientExpanded clientResult = gsonBuilder.create().fromJson(jsonResposne, ClientExpanded.class);
+		return clientResult;
 
 	}
 
@@ -65,6 +90,7 @@ public class MambuAPIService {
 	 * http://stackoverflow.com/questions/2793150/how-to-use-java
 	 * -net-urlconnection-to-fire-and-handle-http-requests
 	 * 
+	 * TODO: Use HTTPClient instead?
 	 * @param urlString
 	 * @param method
 	 * @return
