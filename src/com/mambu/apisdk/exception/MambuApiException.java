@@ -16,6 +16,8 @@ public class MambuApiException extends Exception {
 
 	public MambuApiException(Exception e) {
 		super(e);
+		errorCode = -1;
+		errorMessage = "";
 	}
 	
 	public MambuApiException(Integer errorCode, String errorMessage) {

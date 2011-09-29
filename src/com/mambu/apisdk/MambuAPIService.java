@@ -54,10 +54,8 @@ public class MambuAPIService {
 
 		// create the api call
 		String urlString = new String(createUrl("client" + "/" + clientId));
-		String method = "POST";
-		String response = executeRequest(urlString, method);
-
-		return response;
+		String method = "GET";
+		return executeRequest(urlString, method);
 
 	}
 
@@ -104,13 +102,7 @@ public class MambuAPIService {
 				content = connection.getInputStream();
 			}
 
-			//read the response content
-			BufferedReader in = new BufferedReader(new InputStreamReader(
-					content));
-			String line;
-			while ((line = in.readLine()) != null) {
-				response += line;
-			}
+			response = readStream(content);
 			
 			//check if we hit an error
 			if (errorCode != null) {
@@ -126,6 +118,26 @@ public class MambuAPIService {
 		return response;
 	}
 
+	/**
+	 * Reads a stream as 
+	 * @param content
+	 * @return
+	 * @throws IOException 
+	 */
+	private String readStream(InputStream content) throws IOException {
+		String response = "";
+		//read the response content
+		BufferedReader in = new BufferedReader(new InputStreamReader(
+				content));
+		String line;
+		while ((line = in.readLine()) != null) {
+			response += line;
+		}
+		
+		return response;
+
+		
+	}
 	/**
 	 * Creates the URL for the cron servlet
 	 * 

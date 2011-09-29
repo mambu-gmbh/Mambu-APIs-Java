@@ -13,11 +13,13 @@ public class Launch {
 		MambuAPIService apiService = MambuAPIFactory.crateService("api", "api", "demo.mambucloud.com");
 		
 		try {
-			String client = apiService.getClient("001578547");
+			String client = apiService.getClient("A01578547");
 			System.out.println(client);
 		} catch (MambuApiException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println(e.getErrorCode());
+			System.out.println(e.getErrorMessage());
+//			e.printStackTrace();
+
 		}
 	}
 
