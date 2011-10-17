@@ -1,6 +1,7 @@
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -49,6 +50,11 @@ public class Launch {
 			// get an indicator
 			BigDecimal indicator = mambu.getIndicator(Indicator.NUM_CLIENTS);
 			System.out.println("Num clients: " + indicator);
+			
+			//get a gl account
+			GLAccount glAccount = mambu.getGLAccount("33000");
+			System.out.println("Account Name " + glAccount.getLongName());
+			System.out.println("Account Balance: " + glAccount.getBalance());
 
 		} catch (MambuApiException e) {
 			e.printStackTrace();

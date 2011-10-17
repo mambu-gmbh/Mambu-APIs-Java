@@ -59,10 +59,12 @@ public class MambuAPIService {
 	MambuAPIService(String username, String password, String domainName) throws MambuApiException {
 		this.domainName = domainName;
 
+		//encode the username and password
 		String userNamePassword = username + ":" + password;
 		BASE64Encoder enc = new BASE64Encoder();
 		encodedAuthorization = enc.encode(userNamePassword.getBytes());
 		
+		//create the SSL context
 		try {
 			SSLContext ctx = SSLContext.getInstance("TLS");
 			ctx.init(new KeyManager[0],
@@ -98,16 +100,16 @@ public class MambuAPIService {
 	}
 
 	/**
-	 * Requests a gl account by their Mambu ID
+	 * Requests a gl account by its gl code
 	 * 
 	 * @param glCode
-	 * @return the Mambu client model
+	 * @return the Mambu gl account
 	 * @throws MambuApiException
 	 */
-	public GLAccount getGLAccount(String clientId) throws MambuApiException {
+	public GLAccount getGLAccount(String glCode) throws MambuApiException {
 
 		// create the api call
-		String urlString = new String(createUrl("glaccounts" + "/" + clientId));
+		String urlString = new String(createUrl("glaccounts" + "/" + glCode));
 		String method = "GET";
 		String jsonResponse = executeRequest(urlString, method);
 		GLAccount glAccount = gsonBuilder.create().fromJson(jsonResponse,
@@ -117,10 +119,10 @@ public class MambuAPIService {
 	}
 
 	/**
-	 * Requests a mambu indicator value as a bigdecimal value
+	 * Requests a mambu indicator value as a BigDecimal value
 	 * 
 	 * @param glCode
-	 * @return the Mambu client model
+	 * @return the big decimal indicator value
 	 * @throws MambuApiException
 	 */
 	public BigDecimal getIndicator(Indicator indicator)
@@ -272,10 +274,6 @@ public class MambuAPIService {
 		return protocol;
 	}
 
-	private class IndicatorMaps {
-		public HashMap<String, String> indicatorMap = new HashMap<String, String>();
-
-	}
 
 	/**
 	 * Implements basic HTTPs
