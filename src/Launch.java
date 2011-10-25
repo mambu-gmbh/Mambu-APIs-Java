@@ -24,10 +24,10 @@ public class Launch {
 	public static void main(String[] args) {
 
 		try {
-			MambuAPIService mambu = MambuAPIFactory.crateService("apied",
-					"apied", "demo.mambuonline.com");
+			MambuAPIService mambu = MambuAPIFactory.crateService("api",
+					"api", "demo.mambuonline.com");
 
-			String clientID = "960178943";
+			String clientID = "50";
 
 			// get just the client info
 			Client client = mambu.getClient(clientID);
@@ -50,9 +50,13 @@ public class Launch {
 			// get an indicator
 			BigDecimal indicator = mambu.getIndicator(Indicator.NUM_CLIENTS);
 			System.out.println("Num clients: " + indicator);
+
+			// get a gl account
+			GLAccount glAccount = mambu.getGLAccount("100");
+			System.out.println("Account Name " + glAccount.getLongName());
+			System.out.println("Account Balance: " + glAccount.getBalance());
 			
-			//get a gl account
-			GLAccount glAccount = mambu.getGLAccount("33000");
+			glAccount = mambu.getGLAccount("100","1990-01-01","2000-01-01");
 			System.out.println("Account Name " + glAccount.getLongName());
 			System.out.println("Account Balance: " + glAccount.getBalance());
 

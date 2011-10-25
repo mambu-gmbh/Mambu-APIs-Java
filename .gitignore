@@ -21,3 +21,5 @@ nbproject/private/
 *.swp
 *.out
 target/classes/.mavenResources.target.classes
+
+/target/*

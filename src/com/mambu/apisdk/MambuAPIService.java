@@ -8,18 +8,9 @@ import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.HashMap;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-
-import sun.misc.BASE64Encoder;
+import org.apache.commons.codec.binary.Base64;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -38,7 +29,7 @@ import com.mambu.intelligence.shared.model.Intelligence.Indicator;
 public class MambuAPIService {
 
 	private String domainName;
-	private String protocol = "https";
+	private String protocol = "http";
 	private String encodedAuthorization;
 
 	// creat the gson deserializer
@@ -54,30 +45,15 @@ public class MambuAPIService {
 	 *            password to connect with to the apis
 	 * @param domainName
 	 *            based domain name for the tenant (eg: mytenant.mambu.com)
-	 * @throws MambuApiException 
+	 * @throws MambuApiException
 	 */
-	MambuAPIService(String username, String password, String domainName) throws MambuApiException {
+	MambuAPIService(String username, String password, String domainName)
+			throws MambuApiException {
 		this.domainName = domainName;
 
-		//encode the username and password
+		// encode the username and password
 		String userNamePassword = username + ":" + password;
-		BASE64Encoder enc = new BASE64Encoder();
-		encodedAuthorization = enc.encode(userNamePassword.getBytes());
-		
-		//create the SSL context
-		try {
-			SSLContext ctx = SSLContext.getInstance("TLS");
-			ctx.init(new KeyManager[0],
-					new TrustManager[] { new DefaultTrustManager() },
-					new SecureRandom());
-			SSLContext.setDefault(ctx);
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new MambuApiException(e);
-		}
-
-
-
+		encodedAuthorization = new String(Base64.encodeBase64(userNamePassword.getBytes()));
 	}
 
 	/**
@@ -109,13 +85,37 @@ public class MambuAPIService {
 	public GLAccount getGLAccount(String glCode) throws MambuApiException {
 
 		// create the api call
-		String urlString = new String(createUrl("glaccounts" + "/" + glCode));
+		String url = "glaccounts" + "/" + glCode;
+		GLAccount glAccount = getGLAccountResponse(url);
+
+		return glAccount;
+
+	}
+	
+	/**
+	 * Requests a gl account by its gl code with a balance over a certain date range
+	 * 
+	 * @param glCode
+	 * @return the Mambu gl account
+	 * @throws MambuApiException
+	 */
+	public GLAccount getGLAccount(String glCode, String fromDate, String toDate) throws MambuApiException {
+
+		// create the api call
+		String url = "glaccounts" + "/" + glCode + "?" + "from=" + fromDate + "&to=" + toDate;
+		
+		GLAccount glAccount = getGLAccountResponse(url);
+		return glAccount;
+
+	}
+
+	private GLAccount getGLAccountResponse(String url) throws MambuApiException {
+		String urlString = new String(createUrl(url));
 		String method = "GET";
 		String jsonResponse = executeRequest(urlString, method);
 		GLAccount glAccount = gsonBuilder.create().fromJson(jsonResponse,
 				GLAccount.class);
 		return glAccount;
-
 	}
 
 	/**
@@ -187,7 +187,7 @@ public class MambuAPIService {
 			URL url = new URL(urlString);
 
 			// set up the connection
-			HttpsURLConnection connection = (HttpsURLConnection) url
+			HttpURLConnection connection = (HttpURLConnection) url
 					.openConnection();
 			connection.setRequestMethod(method);
 			connection.setDoOutput(true);
@@ -272,30 +272,5 @@ public class MambuAPIService {
 	 */
 	public String getProtocol() {
 		return protocol;
-	}
-
-
-	/**
-	 * Implements basic HTTPs
-	 * @author edanilkis
-	 *
-	 */
-	private static class DefaultTrustManager implements X509TrustManager {
-
-		@Override
-		public void checkClientTrusted(X509Certificate[] arg0, String arg1)
-				throws CertificateException {
-		}
-
-		@Override
-		public void checkServerTrusted(X509Certificate[] arg0, String arg1)
-				throws CertificateException {
-		}
-
-		@Override
-		public X509Certificate[] getAcceptedIssuers() {
-			return null;
-		}
-
 	}
 }
