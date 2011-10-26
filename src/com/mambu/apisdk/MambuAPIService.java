@@ -18,6 +18,7 @@ import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
+import com.mambu.core.shared.model.Currency;
 import com.mambu.intelligence.shared.model.Intelligence.Indicator;
 
 /**
@@ -89,6 +90,27 @@ public class MambuAPIService {
 		GLAccount glAccount = getGLAccountResponse(url);
 
 		return glAccount;
+
+	}
+	
+	/**
+	 * Requests the organization currency
+	 * 
+	 * @return the Mambu gl account
+	 * @throws MambuApiException
+	 */
+	public Currency getCurrency() throws MambuApiException {
+
+		// create the api call
+		String url = "currencies";
+		String urlString = new String(createUrl(url));
+		String method = "GET";
+		String jsonResponse = executeRequest(urlString, method);
+		
+		//conver to collection
+		Currency[] currencies = gsonBuilder.create().fromJson(jsonResponse, Currency[].class);
+
+		return currencies[0];
 
 	}
 	

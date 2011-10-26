@@ -7,6 +7,7 @@ import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
+import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.intelligence.shared.model.Intelligence.Indicator;
 
@@ -27,6 +28,10 @@ public class Launch {
 			MambuAPIService mambu = MambuAPIFactory.crateService("api",
 					"api", "demo.mambuonline.com");
 
+			// get the org currency
+			Currency currency = mambu.getCurrency();
+			System.out.println("Currency is: " + currency.getLongSymbol());
+			
 			String clientID = "50";
 
 			// get just the client info
