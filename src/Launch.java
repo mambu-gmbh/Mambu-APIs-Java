@@ -26,7 +26,7 @@ public class Launch {
 
 		try {
 			MambuAPIService mambu = MambuAPIFactory.crateService("api",
-					"api", "demo.mambuonline.com");
+					"api", "demo.mambucloud.com");
 
 			// get the org currency
 			Currency currency = mambu.getCurrency();

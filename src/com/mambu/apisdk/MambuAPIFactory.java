@@ -1,15 +1,16 @@
 package com.mambu.apisdk;
 
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.RequestExecutorImpl;
 
 /**
- * Factor for creating Mambu API Services
+ * Factory for creating Mambu API Services
  * 
  * @author edanilkis
  * 
  */
 public class MambuAPIFactory {
-
+	
 	/**
 	 * Creates a mambu API services for a given username, password and domain
 	 * 
@@ -24,7 +25,8 @@ public class MambuAPIFactory {
 	 */
 	public static MambuAPIService crateService(String username,
 			String password, String domainName) throws MambuApiException {
-		return new MambuAPIService(username, password, domainName);
+		
+		return new MambuAPIService(username, password, domainName, new RequestExecutorImpl());
 	}
 
 }

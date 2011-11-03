@@ -1,21 +1,16 @@
 package com.mambu.apisdk;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.math.BigDecimal;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.HashMap;
-
-import org.apache.commons.codec.binary.Base64;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.RequestExecutor;
+import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.core.shared.model.Currency;
@@ -31,11 +26,10 @@ public class MambuAPIService {
 
 	private String domainName;
 	private String protocol = "http";
-	private String encodedAuthorization;
+	private RequestExecutor executor;
 
 	// creat the gson deserializer
-	private static GsonBuilder gsonBuilder = new GsonBuilder()
-			.setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+	private static GsonBuilder gsonBuilder = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
 	/**
 	 * Creates a Mambu API Service class
@@ -48,13 +42,14 @@ public class MambuAPIService {
 	 *            based domain name for the tenant (eg: mytenant.mambu.com)
 	 * @throws MambuApiException
 	 */
-	MambuAPIService(String username, String password, String domainName)
+	public MambuAPIService(String username, String password, String domainName, RequestExecutor executor)
 			throws MambuApiException {
-		this.domainName = domainName;
 
-		// encode the username and password
-		String userNamePassword = username + ":" + password;
-		encodedAuthorization = new String(Base64.encodeBase64(userNamePassword.getBytes()));
+		this.domainName = domainName;
+		this.executor = executor;
+
+		executor.setAuthorization(username, password);
+
 	}
 
 	/**
@@ -68,10 +63,8 @@ public class MambuAPIService {
 
 		// create the api call
 		String urlString = new String(createUrl("clients" + "/" + clientId));
-		String method = "GET";
-		String jsonResposne = executeRequest(urlString, method);
-		Client clientResult = gsonBuilder.create().fromJson(jsonResposne,
-				Client.class);
+		String jsonResposne = executeRequest(urlString, Method.GET);
+		Client clientResult = gsonBuilder.create().fromJson(jsonResposne, Client.class);
 		return clientResult;
 
 	}
@@ -92,7 +85,7 @@ public class MambuAPIService {
 		return glAccount;
 
 	}
-	
+
 	/**
 	 * Requests the organization currency
 	 * 
@@ -104,18 +97,22 @@ public class MambuAPIService {
 		// create the api call
 		String url = "currencies";
 		String urlString = new String(createUrl(url));
-		String method = "GET";
-		String jsonResponse = executeRequest(urlString, method);
-		
-		//conver to collection
+		String jsonResponse = executeRequest(urlString, Method.GET);
+
+		// conver to collection
 		Currency[] currencies = gsonBuilder.create().fromJson(jsonResponse, Currency[].class);
 
-		return currencies[0];
+		if (currencies != null && currencies.length > 0) {
+			return currencies[0];
+		} else {
+			return null;
+		}
 
 	}
-	
+
 	/**
-	 * Requests a gl account by its gl code with a balance over a certain date range
+	 * Requests a gl account by its gl code with a balance over a certain date
+	 * range
 	 * 
 	 * @param glCode
 	 * @return the Mambu gl account
@@ -125,18 +122,23 @@ public class MambuAPIService {
 
 		// create the api call
 		String url = "glaccounts" + "/" + glCode + "?" + "from=" + fromDate + "&to=" + toDate;
-		
+
 		GLAccount glAccount = getGLAccountResponse(url);
 		return glAccount;
 
 	}
 
+	/**
+	 * Returns the gl account response witha given url & parameters
+	 * 
+	 * @param url
+	 * @return
+	 * @throws MambuApiException
+	 */
 	private GLAccount getGLAccountResponse(String url) throws MambuApiException {
 		String urlString = new String(createUrl(url));
-		String method = "GET";
-		String jsonResponse = executeRequest(urlString, method);
-		GLAccount glAccount = gsonBuilder.create().fromJson(jsonResponse,
-				GLAccount.class);
+		String jsonResponse = executeRequest(urlString, Method.GET);
+		GLAccount glAccount = gsonBuilder.create().fromJson(jsonResponse, GLAccount.class);
 		return glAccount;
 	}
 
@@ -147,19 +149,20 @@ public class MambuAPIService {
 	 * @return the big decimal indicator value
 	 * @throws MambuApiException
 	 */
-	public BigDecimal getIndicator(Indicator indicator)
-			throws MambuApiException {
+	public BigDecimal getIndicator(Indicator indicator) throws MambuApiException {
 
 		// create the api call
-		String urlString = new String(createUrl("indicators" + "/"
-				+ indicator.toString()));
-		String method = "GET";
-		String jsonResponse = executeRequest(urlString, method);
-		HashMap<String, String> result = gsonBuilder.create().fromJson(
-				jsonResponse, new TypeToken<HashMap<String, String>>() {
+		String urlString = new String(createUrl("indicators" + "/" + indicator.toString()));
+		String jsonResponse = executeRequest(urlString, Method.GET);
+		HashMap<String, String> result = gsonBuilder.create().fromJson(jsonResponse,
+				new TypeToken<HashMap<String, String>>() {
 				}.getType());
-		String resultString = result.get(indicator.toString());
-		return new BigDecimal(resultString);
+		if (result != null) {
+			String resultString = result.get(indicator.toString());
+			return new BigDecimal(resultString);
+		} else {
+			return null;
+		}
 
 	}
 
@@ -171,15 +174,11 @@ public class MambuAPIService {
 	 * @return
 	 * @throws MambuApiException
 	 */
-	public ClientExpanded getClientDetails(String clientId)
-			throws MambuApiException {
+	public ClientExpanded getClientDetails(String clientId) throws MambuApiException {
 		// create the api call
-		String urlString = new String(createUrl("clients" + "/" + clientId
-				+ "?fullDetails=true"));
-		String method = "GET";
-		String jsonResposne = executeRequest(urlString, method);
-		ClientExpanded clientResult = gsonBuilder.create().fromJson(
-				jsonResposne, ClientExpanded.class);
+		String urlString = new String(createUrl("clients" + "/" + clientId + "?fullDetails=true"));
+		String jsonResposne = executeRequest(urlString, Method.GET);
+		ClientExpanded clientResult = gsonBuilder.create().fromJson(jsonResposne, ClientExpanded.class);
 		return clientResult;
 
 	}
@@ -197,46 +196,12 @@ public class MambuAPIService {
 	 * @return
 	 * @throws MambuApiException
 	 */
-	private String executeRequest(String urlString, String method)
-			throws MambuApiException {
+	private String executeRequest(String urlString, Method method) throws MambuApiException {
 
 		String response = "";
-		Integer errorCode = null;
-
 		try {
 
-			// create the url
-			URL url = new URL(urlString);
-
-			// set up the connection
-			HttpURLConnection connection = (HttpURLConnection) url
-					.openConnection();
-			connection.setRequestMethod(method);
-			connection.setDoOutput(true);
-			connection.setRequestProperty("Authorization", "Basic "
-					+ encodedAuthorization);
-
-			// get the status
-			int status = ((HttpURLConnection) connection).getResponseCode();
-
-			// setup the content
-			InputStream content;
-
-			// ensure it's an ok response
-			if (status != 200) {
-				errorCode = status;
-				// if there was an error, read the error message
-				content = connection.getErrorStream();
-			} else {
-				content = connection.getInputStream();
-			}
-
-			response = readStream(content);
-
-			// check if we hit an error
-			if (errorCode != null) {
-				throw new MambuApiException(errorCode, response);
-			}
+			response = executor.executeRequest(urlString, method);
 
 		} catch (MalformedURLException e) {
 			throw new MambuApiException(e);
@@ -245,26 +210,6 @@ public class MambuAPIService {
 		}
 
 		return response;
-	}
-
-	/**
-	 * Reads a stream as
-	 * 
-	 * @param content
-	 * @return
-	 * @throws IOException
-	 */
-	private String readStream(InputStream content) throws IOException {
-		String response = "";
-		// read the response content
-		BufferedReader in = new BufferedReader(new InputStreamReader(content));
-		String line;
-		while ((line = in.readLine()) != null) {
-			response += line;
-		}
-
-		return response;
-
 	}
 
 	/**

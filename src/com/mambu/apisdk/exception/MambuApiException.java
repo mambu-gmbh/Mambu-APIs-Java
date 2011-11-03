@@ -1,7 +1,7 @@
 package com.mambu.apisdk.exception;
 
 /**
- * Encapculation for exceptions which may occur when calling Mambu APIs
+ * Encapsulation for exceptions which may occur when calling Mambu APIs
  * 
  * @author edanilkis
  * 
