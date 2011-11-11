@@ -10,11 +10,13 @@ The library is current under development and is in beta. This means the APIs are
 
 Usage
 -----
-To use the Mambu apis, one just needs to include two jars in your build path:
+
+To use the Mambu apis, just include the following two jars in your build path (available under /jars)
+
 * Mambu-APIs-Java-1.10-SNAPSHOT-jar-with-dependencies.jar
 * mambu-models-v1.10.jar
 
-Then use the factor to create the service and access the methods:
+Then use the factory to create the service and access the methods:
 
 	MambuAPIService mambu = MambuAPIFactory.crateService("username", "password", "mydomain.mambu.com");
 	Client client = mambu.getClient("abc123");	
