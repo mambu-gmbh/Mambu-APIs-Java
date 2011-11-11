@@ -4,7 +4,7 @@
   <groupId>Mambu-APIs-Java</groupId>
   <artifactId>Mambu-APIs-Java</artifactId>
   <name>Mambu Java APIs SDK</name>
-  <version>0.1-SNAPSHOT</version>
+  <version>1.10-SNAPSHOT</version>
   <url>http://www.mambu.com</url>
   <build>
     <sourceDirectory>src</sourceDirectory>
