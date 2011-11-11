@@ -22,6 +22,8 @@ Then use the factor to create the service and access the methods:
 
 See Launch.java for a few more examples of using the library
 
+Or check out the javadocs here: http://mambu-gmbh.github.com/Mambu-APIs-Java/
+
 Contributing to the Project
 -----
 The Mambu Java APIs uses Maven for the build process. To make contributions to the project, one just need to checkout the library and import it into Eclipse (or your favourite Java IDE) as a Maven 2 project.
