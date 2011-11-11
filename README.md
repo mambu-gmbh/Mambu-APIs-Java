@@ -2,7 +2,7 @@ Mambu Java Client
 ===================
 
 The Mambu Java Client library is an open source library to interact with Mambu's APIs from your java project. 
-The library interacts with Mambu's REST API.
+The library interacts with Mambu's REST APIs.
 
 Using the original class files from the Mambu project, the library allows your to easily interact via the Mambu APIs to retrieve and store information. 
 
@@ -16,11 +16,9 @@ To use the Mambu apis, one just needs to include two jars in your build path:
 
 Then use the factor to create the service and access the methods:
 
-<code>
 	MambuAPIService mambu = MambuAPIFactory.crateService("username", "password", "mydomain.mambu.com");
-	Client client = mambu.getClient("abc123");
-	System.out.println(client.getLastName());
-</code>
+	Client client = mambu.getClient("abc123");	
+	System.out.println(client.getLastName());	
 
 See Launch.java for a few more examples of using the library
 
