@@ -13,16 +13,29 @@ Usage
 
 To use the Mambu apis, just include the following two jars in your build path (available under /jars)
 
-* Mambu-APIs-Java-1.10-SNAPSHOT-jar-with-dependencies.jar
-* mambu-models-v1.10.jar
+* Mambu-APIs-Java-1.13-SNAPSHOT-jar-with-dependencies.jar
+* mambu-models-v1.13.jar
 
-Then use the factory to create the service and access the methods:
+There is a list of services which are provided through a factory.
+The list will be updated constantly and currently contains:
 
-	MambuAPIService mambu = MambuAPIFactory.crateService("username", "password", "mydomain.mambu.com");
-	Client client = mambu.getClient("abc123");	
-	System.out.println(client.getLastName());	
+- AccountingService
+- ClientService
+- IntelligenceService
+- LoanService
+- OrganizationService
+- RepaymentsService
+- SavingsService
 
-See Launch.java for a few more examples of using the library
+To use the factory, some date must be provided in order to set it up:
+
+	MambuAPIFactory.setUp("mydomain.mambu.com", "username", "password");
+	 
+After this step, each service can be taken through a simple call like:
+
+		ClientService clientService = MambuAPIFactory.getClientService();
+
+See the classes from demo package for a few more examples of using the library
 
 Or check out the javadocs here: http://mambu-gmbh.github.com/Mambu-APIs-Java/
 
