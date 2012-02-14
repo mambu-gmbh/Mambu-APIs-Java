@@ -11,7 +11,7 @@ The library is current under development and is in beta. This means the APIs are
 Usage
 -----
 
-To use the Mambu apis, just include the following two jars in your build path (available under /jars)
+To use the Mambu apis, just include the following two jars in your build path (available under /lib)
 
 * Mambu-APIs-Java-1.13-SNAPSHOT-jar-with-dependencies.jar
 * mambu-models-v1.13.jar
