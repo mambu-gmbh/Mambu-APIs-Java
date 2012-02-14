@@ -1,32 +1,136 @@
 package com.mambu.apisdk;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.util.RequestExecutorImpl;
+import com.mambu.apisdk.services.AccountingService;
+import com.mambu.apisdk.services.ClientService;
+import com.mambu.apisdk.services.IntelligenceService;
+import com.mambu.apisdk.services.LoanService;
+import com.mambu.apisdk.services.OrganizationService;
+import com.mambu.apisdk.services.RepaymentsService;
+import com.mambu.apisdk.services.SavingsService;
 
 /**
- * Factory for creating Mambu API Services
+ * Factory for creating Mambu API Services in a singleton fashion.
  * 
  * @author edanilkis
  * 
  */
 public class MambuAPIFactory {
-	
-	/**
-	 * Creates a mambu API services for a given username, password and domain
-	 * 
-	 * @param username
-	 *            username to connect with to the apis
-	 * @param password
-	 *            password to connect with to the apis
-	 * @param domainName
-	 *            based domain name for the tenant (eg: mytenant.mambu.com)
-	 * @return the api service
-	 * @throws MambuApiException 
+
+	/***
+	 * The Guice injector used for the creation of each service
 	 */
-	public static MambuAPIService crateService(String username,
-			String password, String domainName) throws MambuApiException {
-		
-		return new MambuAPIService(username, password, domainName, new RequestExecutorImpl());
+	private static Injector injector;
+
+	/**
+	 * The defined error code for an invalid authentication. In this case this will be used if the user didn't set up
+	 * the factory properly before getting a service
+	 */
+	private static Integer INVALID_BASIC_AUTHORIZATION = 1;
+
+	/***
+	 * Set up the Guice Module with data required for accessing the remote server
+	 * 
+	 * @param domain
+	 *            the domain where the server is found
+	 * @param username
+	 *            the name of the user
+	 * @param password
+	 *            the password used by the user
+	 */
+	public static void setUp(String domain, String username, String password) {
+		injector = Guice.createInjector(new MambuAPIModule(domain, username, password));
 	}
 
+	/***
+	 * Throw a MambuAPIException if the injector is null, meaning the user didn't set up the factory
+	 * 
+	 * @throws MambuApiException
+	 *             the thrown exception
+	 */
+	private static void validateFactorySetUp() throws MambuApiException {
+
+		if (injector == null) {
+			throw new MambuApiException(INVALID_BASIC_AUTHORIZATION, "The factory wasn't set up properly!");
+		}
+
+	}
+	/***
+	 * Get an instance of the ClientService class
+	 * 
+	 * @return the obtained instance
+	 * @throws MambuApiException
+	 */
+	public static ClientService getClientService() throws MambuApiException {
+		validateFactorySetUp();
+		return injector.getInstance(ClientService.class);
+	}
+
+	/***
+	 * Get an instance of the LoanService class
+	 * 
+	 * @return the obtained instance
+	 * @throws MambuApiException
+	 */
+	public static LoanService getLoanService() throws MambuApiException {
+		validateFactorySetUp();
+		return injector.getInstance(LoanService.class);
+	}
+
+	/***
+	 * Get an instance of the SavingsService class
+	 * 
+	 * @return the obtained instance
+	 * @throws MambuApiException
+	 */
+	public static SavingsService getSavingsService() throws MambuApiException {
+		validateFactorySetUp();
+		return injector.getInstance(SavingsService.class);
+	}
+
+	/***
+	 * Get an instance of the IntelligenceService class
+	 * 
+	 * @return the obtained instance
+	 * @throws MambuApiException
+	 */
+	public static IntelligenceService getIntelligenceService() throws MambuApiException {
+		validateFactorySetUp();
+		return injector.getInstance(IntelligenceService.class);
+	}
+
+	/***
+	 * Get an instance of the RepaymentsService class
+	 * 
+	 * @return the obtained instance
+	 * @throws MambuApiException
+	 */
+	public static RepaymentsService getRepaymentsService() throws MambuApiException {
+		validateFactorySetUp();
+		return injector.getInstance(RepaymentsService.class);
+	}
+
+	/***
+	 * Get an instance of the OrganizationService class
+	 * 
+	 * @return the obtained instance
+	 * @throws MambuApiException
+	 */
+	public static OrganizationService getOrganizationService() throws MambuApiException {
+		validateFactorySetUp();
+		return injector.getInstance(OrganizationService.class);
+	}
+
+	/***
+	 * Get an instance of the AccountingService class
+	 * 
+	 * @return the obtained instance
+	 * @throws MambuApiException
+	 */
+	public static AccountingService getAccountingService() throws MambuApiException {
+		validateFactorySetUp();
+		return injector.getInstance(AccountingService.class);
+	}
 }
