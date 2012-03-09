@@ -15,12 +15,12 @@ import com.mambu.apisdk.exception.MambuApiException;
 public class LoanServiceTest extends MambuAPIServiceTest {
 
 	@SuppressWarnings("unused")
-	private LoanService service;
+	private LoansService service;
 
 	@Before
 	public void setUp() throws MambuApiException {
 		super.setUp();
 
-		service = new LoanService(super.mambuApiService);
+		service = new LoansService(super.mambuApiService);
 	}
 }

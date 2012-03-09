@@ -4,9 +4,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.AccountingService;
-import com.mambu.apisdk.services.ClientService;
+import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.services.IntelligenceService;
-import com.mambu.apisdk.services.LoanService;
+import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.apisdk.services.RepaymentsService;
 import com.mambu.apisdk.services.SavingsService;
@@ -63,9 +63,9 @@ public class MambuAPIFactory {
 	 * @return the obtained instance
 	 * @throws MambuApiException
 	 */
-	public static ClientService getClientService() throws MambuApiException {
+	public static ClientsService getClientService() throws MambuApiException {
 		validateFactorySetUp();
-		return injector.getInstance(ClientService.class);
+		return injector.getInstance(ClientsService.class);
 	}
 
 	/***
@@ -74,9 +74,9 @@ public class MambuAPIFactory {
 	 * @return the obtained instance
 	 * @throws MambuApiException
 	 */
-	public static LoanService getLoanService() throws MambuApiException {
+	public static LoansService getLoanService() throws MambuApiException {
 		validateFactorySetUp();
-		return injector.getInstance(LoanService.class);
+		return injector.getInstance(LoansService.class);
 	}
 
 	/***

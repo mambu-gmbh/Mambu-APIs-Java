@@ -20,7 +20,7 @@ import com.mambu.clients.shared.model.GroupExpanded;
  * @author ipenciuc
  * 
  */
-public class ClientService {
+public class ClientsService {
 
 	private MambuAPIService mambuAPIService;
 
@@ -43,7 +43,7 @@ public class ClientService {
 	 *            the service responsible with the connection to the server
 	 */
 	@Inject
-	public ClientService(MambuAPIService mambuAPIService) {
+	public ClientsService(MambuAPIService mambuAPIService) {
 		this.mambuAPIService = mambuAPIService;
 	}
 

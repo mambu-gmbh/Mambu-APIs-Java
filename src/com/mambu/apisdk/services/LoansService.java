@@ -24,7 +24,7 @@ import com.mambu.loans.shared.model.LoanAccount.AccountState;
  * 
  */
 @Singleton
-public class LoanService {
+public class LoansService {
 
 	public static final String LOANS = "loans";
 	public static final String CLIENTS = "clients";
@@ -54,7 +54,7 @@ public class LoanService {
 	 *            the service responsible with the connection to the server
 	 */
 	@Inject
-	public LoanService(MambuAPIService mambuAPIService) {
+	public LoansService(MambuAPIService mambuAPIService) {
 		this.mambuAPIService = mambuAPIService;
 	}
 

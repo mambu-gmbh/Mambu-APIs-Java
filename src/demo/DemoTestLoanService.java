@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.services.LoanService;
+import com.mambu.apisdk.services.LoansService;
 import com.mambu.loans.shared.model.LoanAccount;
 
 /**
@@ -15,30 +15,31 @@ import com.mambu.loans.shared.model.LoanAccount;
  */
 public class DemoTestLoanService {
 
-	private static String CLIENT_ID = "016529076";
-	private static String GROUP_ID = "411039390";
-	private static String LOAN_ACCOUNT_ID = "XXKF158";
+	private static String CLIENT_ID = "1000000043";
+	private static String GROUP_ID = "445076768";
+	private static String LOAN_ACCOUNT_ID = "BNGP767";
 
 	public static void main(String[] args) {
 
 		try {
-			MambuAPIFactory.setUp("demo.mambucloud.com", "api", "api");
+			MambuAPIFactory.setUp("demo.mambucloud.com", "api", "1");
 
 			testGetLoanAccount();
 			testGetLoanAccountsForClient();
 			testGetLoanAccountsForGroup();
-			// testApproveLoanAccount();
+			testApproveLoanAccount();
 
 		} catch (MambuApiException e) {
 			System.out.println(e.getCause());
 			System.out.println(e.getMessage());
+			System.out.println(e.getErrorCode());
 		}
 
 	}
 
 	public static void testGetLoanAccount() throws MambuApiException {
 
-		LoanService loanService = MambuAPIFactory.getLoanService();
+		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		System.out.println("Got loan account: " + loanService.getLoanAccount(LOAN_ACCOUNT_ID).getName());
 
@@ -46,7 +47,7 @@ public class DemoTestLoanService {
 
 	public static void testGetLoanAccountsForClient() throws MambuApiException {
 
-		LoanService loanService = MambuAPIFactory.getLoanService();
+		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		List<LoanAccount> loanAccounts = loanService.getLoanAccountsForClient(CLIENT_ID);
 
@@ -58,7 +59,7 @@ public class DemoTestLoanService {
 
 	public static void testGetLoanAccountsForGroup() throws MambuApiException {
 
-		LoanService loanService = MambuAPIFactory.getLoanService();
+		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		List<LoanAccount> loanAccounts = loanService.getLoanAccountsForGroup(GROUP_ID);
 
@@ -70,7 +71,7 @@ public class DemoTestLoanService {
 
 	public static void testApproveLoanAccount() throws MambuApiException {
 
-		LoanService loanService = MambuAPIFactory.getLoanService();
+		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		String response = loanService.approveLoanAccount(LOAN_ACCOUNT_ID, "some notes");
 

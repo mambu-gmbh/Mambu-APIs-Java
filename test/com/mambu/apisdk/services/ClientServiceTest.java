@@ -22,13 +22,13 @@ import com.mambu.apisdk.util.RequestExecutor.Method;
  */
 public class ClientServiceTest extends MambuAPIServiceTest {
 
-	private ClientService service;
+	private ClientsService service;
 
 	@Before
 	public void setUp() throws MambuApiException {
 		super.setUp();
 
-		service = new ClientService(super.mambuApiService);
+		service = new ClientsService(super.mambuApiService);
 
 	}
 

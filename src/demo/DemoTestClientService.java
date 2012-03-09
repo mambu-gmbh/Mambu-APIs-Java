@@ -2,7 +2,7 @@ package demo;
 
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.services.ClientService;
+import com.mambu.apisdk.services.ClientsService;
 
 /**
  * 
@@ -20,7 +20,7 @@ public class DemoTestClientService {
 	public static void main(String[] args) {
 
 		try {
-			MambuAPIFactory.setUp("demo.mambucloud.com", "api", "api");
+			MambuAPIFactory.setUp("demo.mambu.com", "api", "api");
 
 			testGetClient();
 			testGetGroup();
@@ -35,7 +35,7 @@ public class DemoTestClientService {
 
 	public static void testGetClient() throws MambuApiException {
 
-		ClientService clientService = MambuAPIFactory.getClientService();
+		ClientsService clientService = MambuAPIFactory.getClientService();
 
 		System.out.println(clientService.getClient(CLIENT_ID).getFullName());
 
@@ -43,7 +43,7 @@ public class DemoTestClientService {
 
 	public static void testGetGroup() throws MambuApiException {
 
-		ClientService clientService = MambuAPIFactory.getClientService();
+		ClientsService clientService = MambuAPIFactory.getClientService();
 
 		System.out.println(clientService.getGroup(GROUP_ID).getGroupName());
 
@@ -51,7 +51,7 @@ public class DemoTestClientService {
 
 	public static void testGetGroupDetails() throws MambuApiException {
 
-		ClientService clientService = MambuAPIFactory.getClientService();
+		ClientsService clientService = MambuAPIFactory.getClientService();
 
 		System.out.println(clientService.getGroupDetails(GROUP_ID).getGroup().getGroupName());
 
@@ -59,7 +59,7 @@ public class DemoTestClientService {
 
 	public static void testCreateBasicClient() throws MambuApiException {
 
-		ClientService clientService = MambuAPIFactory.getClientService();
+		ClientsService clientService = MambuAPIFactory.getClientService();
 
 		System.out.println(clientService.createClient("API", "Client"));
 
@@ -67,7 +67,7 @@ public class DemoTestClientService {
 
 	public static void testCreateFullDetailsClient() throws MambuApiException {
 
-		ClientService clientService = MambuAPIFactory.getClientService();
+		ClientsService clientService = MambuAPIFactory.getClientService();
 
 		System.out.println(clientService.createClient("API", "FullClient", "09", "23", "MALE", "09-03-1980",
 				"client@mambu.com", "some notes").toString());
