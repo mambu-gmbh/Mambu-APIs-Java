@@ -13,8 +13,8 @@ Usage
 
 To use the Mambu apis, just include the following two jars in your build path (available under /lib)
 
-* Mambu-APIs-Java-1.13-SNAPSHOT-jar-with-dependencies.jar
-* mambu-models-v1.13.jar
+* Mambu-APIs-Java-2.0-SNAPSHOT-jar-with-dependencies.jar
+* mambu-models-v2.0.jar
 
 There is a list of services which are provided through a factory.
 The list will be updated constantly and currently contains:
@@ -26,6 +26,7 @@ The list will be updated constantly and currently contains:
 - OrganizationService
 - RepaymentsService
 - SavingsService
+- UsersService
 
 To use the factory, some date must be provided in order to set it up:
 
