@@ -3,7 +3,6 @@
  */
 package com.mambu.apisdk.services;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -19,7 +18,7 @@ public class AccountingServiceTest extends MambuAPIServiceTest {
 
 	private AccountingService service;
 
-	@Before
+	@Override
 	public void setUp() throws MambuApiException {
 		super.setUp();
 

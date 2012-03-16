@@ -5,10 +5,6 @@ package com.mambu.apisdk.services;
 
 import static org.mockito.Mockito.verify;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-
-import org.junit.Before;
 import org.junit.Test;
 
 import com.mambu.apisdk.MambuAPIServiceTest;
@@ -24,7 +20,7 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 
 	private ClientsService service;
 
-	@Before
+	@Override
 	public void setUp() throws MambuApiException {
 		super.setUp();
 
@@ -35,9 +31,6 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 	/***
 	 * Test the retrieval of a client with a given id
 	 * 
-	 * @throws MalformedURLException
-	 * @throws IOException
-	 * @throws MambuApiException
 	 */
 	@Test
 	public void testGetClient() throws MambuApiException {
@@ -49,6 +42,10 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 		verify(executor).executeRequest("https://demo.mambutest.com/api/clients/abc123", Method.GET);
 	}
 
+	/***
+	 * Test the retrieval of a full details client with a given id
+	 * 
+	 */
 	@Test
 	public void testGetClientDetails() throws MambuApiException {
 

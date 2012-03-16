@@ -17,12 +17,12 @@ public class DemoTestLoanService {
 
 	private static String CLIENT_ID = "1000000043";
 	private static String GROUP_ID = "445076768";
-	private static String LOAN_ACCOUNT_ID = "BNGP767";
+	private static String LOAN_ACCOUNT_ID = "ADFB886";
 
 	public static void main(String[] args) {
 
 		try {
-			MambuAPIFactory.setUp("demo.mambucloud.com", "api", "1");
+			MambuAPIFactory.setUp("demo.mambucloud.com", "api", "api");
 
 			testGetLoanAccount();
 			testGetLoanAccountsForClient();

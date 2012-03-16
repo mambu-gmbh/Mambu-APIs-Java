@@ -14,13 +14,13 @@ import com.mambu.apisdk.services.ClientsService;
  */
 public class DemoTestClientService {
 
-	private static String CLIENT_ID = "850373088";
-	private static String GROUP_ID = "411039390";
+	private static String CLIENT_ID = "1000000041";
+	private static String GROUP_ID = "445076768";
 
 	public static void main(String[] args) {
 
 		try {
-			MambuAPIFactory.setUp("demo.mambu.com", "api", "api");
+			MambuAPIFactory.setUp("demo.mambucloud.com", "api", "api");
 
 			testGetClient();
 			testGetGroup();

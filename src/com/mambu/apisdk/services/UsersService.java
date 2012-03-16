@@ -1,10 +1,21 @@
 package com.mambu.apisdk.services;
 
+import java.lang.reflect.Type;
+import java.util.List;
+
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
+import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.GsonUtils;
+import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.RequestExecutor.Method;
+import com.mambu.core.shared.model.User;
 
 /**
- * Service class which handles API operations like getting and creating users
+ * Service class which handles API operations like getting and creating users. When getting users, for safety reasons
+ * the API call will have the response stripped of some fields: - transactionLimits - password - apiAppId - apiAppKey -
+ * preferences - permissions
  * 
  * @author ipenciuc
  * 
@@ -15,14 +26,9 @@ public class UsersService {
 
 	private static String USERS = "users";
 
-	private static String FIRST_NAME = "firstName";
-	private static String LAST_NAME = "lastName";
-	public static String HOME_PHONE = "homephone";
-	public static String MOBILE_PHONE = "mobilephone";
-	public static String GENDER = "gender";
-	public static String BIRTH_DATE = "birthdate";
-	public static String EMAIL_ADDRESS = "email";
-	public static String NOTES = "notes";
+	private static String OFFSET = "offset";
+	private static String LIMIT = "limit";
+	private static String BRANCH_ID = "branchID";
 
 	/***
 	 * Create a new users service
@@ -34,5 +40,59 @@ public class UsersService {
 	public UsersService(MambuAPIService mambuAPIService) {
 		this.mambuAPIService = mambuAPIService;
 	}
-	
+
+	/**
+	 * Get all the users
+	 * 
+	 * @param offset
+	 *            the offset of the response. If not set a value of 0 is used by default
+	 * @param limit
+	 *            the maximum number of response entries. If not set a value of 50 is used by default
+	 * @return
+	 * @throws MambuApiException
+	 */
+	@SuppressWarnings("unchecked")
+	public List<User> getUsers() throws MambuApiException {
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(USERS));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
+
+		Type collectionType = new TypeToken<List<User>>() {}.getType();
+
+		List<User> users = (List<User>) GsonUtils.createResponse().fromJson(jsonResponse, collectionType);
+		return users;
+	}
+
+	/**
+	 * Get a paginated list of users filtered by branch
+	 * 
+	 * @param branchId
+	 *            the id of the branch to filter with
+	 * @param offset
+	 *            the offset of the response. If not set a value of 0 is used by default
+	 * @param limit
+	 *            the maximum number of response entries. If not set a value of 50 is used by default
+	 * @return
+	 * @throws MambuApiException
+	 */
+	@SuppressWarnings("unchecked")
+	public List<User> getUsers(String branchId, String offset, String limit) throws MambuApiException {
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(USERS));
+
+		ParamsMap params = new ParamsMap();
+		params.put(BRANCH_ID, branchId);
+		params.put(OFFSET, offset);
+		params.put(LIMIT, limit);
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+
+		Type collectionType = new TypeToken<List<User>>() {}.getType();
+
+		List<User> users = (List<User>) GsonUtils.createResponse().fromJson(jsonResponse, collectionType);
+		return users;
+	}
 }

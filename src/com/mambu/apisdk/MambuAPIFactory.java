@@ -10,6 +10,7 @@ import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.apisdk.services.RepaymentsService;
 import com.mambu.apisdk.services.SavingsService;
+import com.mambu.apisdk.services.UsersService;
 
 /**
  * Factory for creating Mambu API Services in a singleton fashion.
@@ -132,5 +133,16 @@ public class MambuAPIFactory {
 	public static AccountingService getAccountingService() throws MambuApiException {
 		validateFactorySetUp();
 		return injector.getInstance(AccountingService.class);
+	}
+
+	/***
+	 * Get an instance of the UsersService class
+	 * 
+	 * @return the obtained instance
+	 * @throws MambuApiException
+	 */
+	public static UsersService getUsersService() throws MambuApiException {
+		validateFactorySetUp();
+		return injector.getInstance(UsersService.class);
 	}
 }

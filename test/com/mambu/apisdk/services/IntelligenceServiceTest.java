@@ -3,7 +3,6 @@
  */
 package com.mambu.apisdk.services;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -20,7 +19,7 @@ public class IntelligenceServiceTest extends MambuAPIServiceTest {
 
 	private IntelligenceService service;
 
-	@Before
+	@Override
 	public void setUp() throws MambuApiException {
 		super.setUp();
 

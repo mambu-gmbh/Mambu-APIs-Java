@@ -3,8 +3,6 @@
  */
 package com.mambu.apisdk.services;
 
-import org.junit.Before;
-
 import com.mambu.apisdk.MambuAPIServiceTest;
 import com.mambu.apisdk.exception.MambuApiException;
 
@@ -17,7 +15,7 @@ public class RepaymentsServiceTest extends MambuAPIServiceTest {
 	@SuppressWarnings("unused")
 	private RepaymentsService service;
 
-	@Before
+	@Override
 	public void setUp() throws MambuApiException {
 		super.setUp();
 

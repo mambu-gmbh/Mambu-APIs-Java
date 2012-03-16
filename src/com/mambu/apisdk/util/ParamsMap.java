@@ -47,8 +47,11 @@ public class ParamsMap extends LinkedHashMap<String, String> {
 		StringBuffer urlParams = new StringBuffer();
 
 		for (Map.Entry<String, String> entry : this.entrySet()) {
-			urlParams.append(entry.getKey() + "=" + entry.getValue());
-			urlParams.append(APPENDER);
+			// only put the parameter in the URL if its value is not null
+			if (entry.getValue() != null) {
+				urlParams.append(entry.getKey() + "=" + entry.getValue());
+				urlParams.append(APPENDER);
+			}
 		}
 		return urlParams.deleteCharAt(urlParams.length() - 1).toString();
 	}
