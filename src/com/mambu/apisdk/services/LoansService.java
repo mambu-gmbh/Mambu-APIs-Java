@@ -9,13 +9,13 @@ import java.util.List;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mambu.accounts.shared.model.AccountState;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.loans.shared.model.LoanAccount;
-import com.mambu.loans.shared.model.LoanAccount.AccountState;
 
 /**
  * Service class which handles API operations like retrieval, creation or changing state of loan accounts

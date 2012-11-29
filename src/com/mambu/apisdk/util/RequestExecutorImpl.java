@@ -13,7 +13,6 @@ import org.apache.commons.codec.binary.Base64;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.mambu.api.shared.model.HttpResponseCode;
 import com.mambu.apisdk.exception.MambuApiException;
 
 /**
@@ -87,7 +86,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		InputStream content;
 
 		// ensure it's an ok response or a successfully created one
-		if (status != HttpResponseCode.OK.value() && status != HttpResponseCode.CREATED.value()) {
+		if (status != 200 && status != 201) {
 			errorCode = status;
 			// if there was an error, read the error message
 			content = connection.getErrorStream();
@@ -131,7 +130,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		InputStream content;
 
 		// ensure it's an ok response
-		if (status != HttpResponseCode.OK.value()) {
+		if (status != 200) {
 			errorCode = status;
 			// if there was an error, read the error message
 			content = connection.getErrorStream();
