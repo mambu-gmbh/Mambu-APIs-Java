@@ -8,11 +8,14 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Base64;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
+import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 
 /**
@@ -27,6 +30,10 @@ public class RequestExecutorImpl implements RequestExecutor {
 	private URLHelper urlHelper;
 	private String encodedAuthorization;
 	private String charset = "UTF-8";
+	
+	private final String APPLICATION_KEY = "appkey"; //as per JIRA issue MBU-3236
+
+	private final static Logger LOGGER = Logger.getLogger(RequestExecutorImpl.class.getName());
 
 	@Inject
 	public RequestExecutorImpl(URLHelper urlHelper) {
@@ -40,12 +47,22 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 	@Override
 	public String executeRequest(String urlString, ParamsMap params, Method method) throws MambuApiException {
+		// Add 'Application Key', if it was set by the application
+		// Mambu may handle API requests differently for different Application Keys
+
+		String applicationKey = MambuAPIFactory.getApplicationKey();
+		if (applicationKey != null) {
+			// add application key to the params map
+			if (params == null)
+				params = new ParamsMap();
+			params.addParam(APPLICATION_KEY, applicationKey);
+			LOGGER.info("Added Application key=" + applicationKey);
+		}
 
 		String response = "";
-
 		try {
 			switch (method) {
-			case GET:
+			case GET:				
 				response = executeGetRequest(urlString, params);
 				break;
 			case POST:
@@ -53,8 +70,10 @@ public class RequestExecutorImpl implements RequestExecutor {
 				break;
 			}
 		} catch (MalformedURLException e) {
+			LOGGER.severe("MalformedURLException: " + e.getMessage());
 			throw new MambuApiException(e);
 		} catch (IOException e) {
+			LOGGER.warning("IOException: message= " + e.getMessage());
 			throw new MambuApiException(e);
 		}
 		return response;
@@ -65,6 +84,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 */
 	private String executePostRequest(String urlString, ParamsMap params) throws MalformedURLException, IOException,
 			MambuApiException {
+
 		String response = "";
 		Integer errorCode = null;
 
@@ -74,30 +94,39 @@ public class RequestExecutorImpl implements RequestExecutor {
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		connection.setRequestMethod(Method.POST.name());
 		connection.setDoOutput(true);
+
 		connection.setRequestProperty("Authorization", "Basic " + encodedAuthorization);
 
+		LOGGER.info("URL=" + urlString + "Author=" + encodedAuthorization);
 		// put the params in the request body
-		if (params != null) {
+		if (params != null && params.size() > 0) {
+			LOGGER.info(" Params string:" + params.getURLString());
 			OutputStream output = connection.getOutputStream();
 			output.write(params.getURLString().getBytes(charset));
 		}
 
 		int status = ((HttpURLConnection) connection).getResponseCode();
+
 		InputStream content;
 
 		// ensure it's an ok response or a successfully created one
-		if (status != 200 && status != 201) {
+		if (status != HttpURLConnection.HTTP_OK && status != HttpURLConnection.HTTP_CREATED) {
+			LOGGER.info("Error status=" + status);
 			errorCode = status;
 			// if there was an error, read the error message
 			content = connection.getErrorStream();
 		} else {
+			LOGGER.info("Status OK=" + status);
 			content = connection.getInputStream();
 		}
-
-		response = readStream(content);
-
+		if (content != null) {
+			response = readStream(content);
+			if (response != null)
+				LOGGER.info("Response=" + response);
+		}
 		// check if we hit an error
 		if (errorCode != null) {
+			LOGGER.warning("Throwing exception, error code=" + errorCode + " response=" + response);
 			throw new MambuApiException(errorCode, response);
 		}
 
@@ -114,34 +143,43 @@ public class RequestExecutorImpl implements RequestExecutor {
 		String response = "";
 		Integer errorCode = null;
 
-		if (params != null) {
+		if (params != null && params.size() > 0) {
 			urlString = urlHelper.createUrlWithParams(urlString, params);
 		}
-
+		LOGGER.info("Url string with params from Helper=" + urlString);
 		URL url = new URL(urlString);
 
 		// set up the connection
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		connection.setRequestMethod(Method.GET.toString());
 		connection.setDoOutput(true);
+		connection.setDoInput(true);
 		connection.setRequestProperty("Authorization", "Basic " + encodedAuthorization);
 
 		int status = ((HttpURLConnection) connection).getResponseCode();
+
 		InputStream content;
 
 		// ensure it's an ok response
-		if (status != 200) {
+		if (status != HttpURLConnection.HTTP_OK) {
+			LOGGER.info("Error status=" + status);
 			errorCode = status;
 			// if there was an error, read the error message
 			content = connection.getErrorStream();
 		} else {
+			LOGGER.info("Status OK=" + status);
 			content = connection.getInputStream();
 		}
 
-		response = readStream(content);
+		// check for null stream and read it
+		if (content != null) {
+			response = readStream(content);
+			LOGGER.info("Response=" + response);
+		}
 
 		// check if we hit an error
 		if (errorCode != null) {
+			LOGGER.warning("Throwing exception, error code=" + errorCode + " response=" + response);
 			throw new MambuApiException(errorCode, response);
 		}
 
@@ -163,9 +201,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		while ((line = in.readLine()) != null) {
 			response += line;
 		}
-
 		return response;
-
 	}
 
 	@Override
@@ -173,6 +209,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// encode the username and password
 		String userNamePassword = username + ":" + password;
 		encodedAuthorization = new String(Base64.encodeBase64(userNamePassword.getBytes()));
+
 	}
 
 }

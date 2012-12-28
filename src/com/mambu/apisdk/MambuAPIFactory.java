@@ -1,7 +1,10 @@
 package com.mambu.apisdk;
 
+import java.util.logging.Logger;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.AccountingService;
 import com.mambu.apisdk.services.ClientsService;
@@ -11,6 +14,7 @@ import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.apisdk.services.RepaymentsService;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.services.UsersService;
+
 
 /**
  * Factory for creating Mambu API Services in a singleton fashion.
@@ -24,6 +28,11 @@ public class MambuAPIFactory {
 	 * The Guice injector used for the creation of each service
 	 */
 	private static Injector injector;
+	private final static Logger LOGGER = Logger.getLogger(MambuAPIFactory.class.getName());
+
+	// An 'Application Key' can be optionally set by some Applications (e.g. Mambu Android)
+	// Mambu may handle API requests differently depending on the Application Key
+	private static String applicationKey = null;
 
 	/**
 	 * The defined error code for an invalid authentication. In this case this will be used if the user didn't set up
@@ -54,6 +63,8 @@ public class MambuAPIFactory {
 	private static void validateFactorySetUp() throws MambuApiException {
 
 		if (injector == null) {
+
+			LOGGER.severe("validateFactorySetUp - Failed");
 			throw new MambuApiException(INVALID_BASIC_AUTHORIZATION, "The factory wasn't set up properly!");
 		}
 
@@ -144,5 +155,24 @@ public class MambuAPIFactory {
 	public static UsersService getUsersService() throws MambuApiException {
 		validateFactorySetUp();
 		return injector.getInstance(UsersService.class);
+	}
+	/***
+	 * Setter for an Application Key
+	 * 
+	 * @param applicationKey
+	 * @return void
+	 */
+	public static void setApplicationKey(String appKey) {
+
+		applicationKey = appKey;
+	}
+	/***
+	 * Getter for an Application Key
+	 * 
+	 * @return String
+	 */
+	public static String getApplicationKey() {
+
+		return applicationKey;
 	}
 }
