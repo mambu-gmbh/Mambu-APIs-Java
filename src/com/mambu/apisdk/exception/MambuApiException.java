@@ -10,7 +10,6 @@ public class MambuApiException extends Exception {
 
 	private static final long serialVersionUID = 1L;
 
-	
 	Integer errorCode;
 	String errorMessage;
 
@@ -18,8 +17,39 @@ public class MambuApiException extends Exception {
 		super(e);
 		errorCode = -1;
 		errorMessage = "";
+
+		String classNameMessage = getExceptionClassName(e);
+
+		if (e.getMessage() != null)
+			errorMessage = classNameMessage + ", " + e.getMessage();
+		else
+			errorMessage = classNameMessage;
 	}
-	
+
+	private String getExceptionClassName(Exception e) {
+
+		String className = new String();
+		String classNameMessage = new String("");
+
+		Class eClass = e.getClass();
+
+		if (eClass != null) {
+
+			className = eClass.getSimpleName();
+			String words[] = className.split("(?=[A-Z])"); // Split Name by Upper Case
+
+			// put the Name back together, now with spaces between words
+			for (int i = 0; i < words.length; i++) {
+				String word = words[i];
+				if (i > 0)
+					classNameMessage = classNameMessage.concat(" ");
+				classNameMessage = classNameMessage.concat(word);
+			}
+		}
+
+		return classNameMessage.trim();
+	}
+
 	public MambuApiException(Integer errorCode, String errorMessage) {
 		super();
 		this.errorCode = errorCode;
@@ -30,20 +60,22 @@ public class MambuApiException extends Exception {
 		return errorCode;
 	}
 
-
 	public void setErrorCode(Integer errorCode) {
 		this.errorCode = errorCode;
 	}
-
 
 	public String getErrorMessage() {
 		return errorMessage;
 	}
 
-
 	public void setErrorMessage(String errorMessage) {
 		this.errorMessage = errorMessage;
 	}
 
+	@Override
+	public String getMessage() {
+		return getErrorMessage();
+
+	}
 
 }

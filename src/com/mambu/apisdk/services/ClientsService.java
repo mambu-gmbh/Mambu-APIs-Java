@@ -3,7 +3,12 @@
  */
 package com.mambu.apisdk.services;
 
+import java.lang.reflect.Type;
+import java.util.List;
+
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
+
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.GsonUtils;
@@ -36,6 +41,8 @@ public class ClientsService {
 	public static String EMAIL_ADDRESS = "email";
 	public static String NOTES = "notes";
 
+	public static String ID_DOCUMENT = "idDocument";
+
 	/***
 	 * Create a new client service
 	 * 
@@ -61,7 +68,88 @@ public class ClientsService {
 		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
 
 		Client clientResult = GsonUtils.createResponse().fromJson(jsonResposne, Client.class);
+
 		return clientResult;
+
+	}
+
+	/**
+	 * Requests a client by their Last name and first name
+	 * 
+	 * @param clientLastName
+	 * @param clientFirstName
+	 * @return list of Mambu clients
+	 * @throws MambuApiException
+	 */
+	public List<Client> getClientByFullName(String clientLastName, String clientFirstName) throws MambuApiException {
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(CLIENTS));
+
+		ParamsMap params = new ParamsMap();
+		params.put(LAST_NAME, clientLastName);
+		params.put(FIRST_NAME, clientFirstName);
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+
+		Type collectionType = new TypeToken<List<Client>>() {}.getType();
+		List<Client> clients = GsonUtils.createResponse().fromJson(jsonResponse, collectionType);
+
+		return clients;
+
+	}
+	/**
+	 * Requests a client by their Last name and Birth date
+	 * 
+	 * @param clientLastName
+	 * @param clientBirthday
+	 *            ("yyyy-MM-dd")
+	 * 
+	 * @return list of Mambu clients
+	 * @throws MambuApiException
+	 */
+	public List<Client> getClientByLastNameBirthday(String clientLastName, String birthDay) throws MambuApiException {
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(CLIENTS));
+
+		ParamsMap params = new ParamsMap();
+		params.put(LAST_NAME, clientLastName);
+		params.put(BIRTH_DATE, birthDay);
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+
+		Type collectionType = new TypeToken<List<Client>>() {}.getType();
+		List<Client> clients = GsonUtils.createResponse().fromJson(jsonResponse, collectionType);
+
+		return clients;
+
+	}
+
+	/**
+	 * Requests a client by their Document ID and Last name
+	 * 
+	 * @param clientLastName
+	 * @param documentId
+	 * @return the list of Mambu clients
+	 * @throws MambuApiException
+	 */
+	public List<Client> getClientByLastNameDocId(String clientLastName, String documentId) throws MambuApiException {
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(CLIENTS));
+
+		ParamsMap params = new ParamsMap();
+
+		params.put(LAST_NAME, clientLastName);
+		params.put(ID_DOCUMENT, documentId);
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+
+		Type collectionType = new TypeToken<List<Client>>() {}.getType();
+		List<Client> clients = GsonUtils.createResponse().fromJson(jsonResponse, collectionType);
+
+		return clients;
 
 	}
 
@@ -84,6 +172,7 @@ public class ClientsService {
 		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
 		ClientExpanded clientResult = GsonUtils.createResponse().fromJson(jsonResposne, ClientExpanded.class);
+
 		return clientResult;
 
 	}
@@ -115,7 +204,7 @@ public class ClientsService {
 	 * @param groupId
 	 *            the id of the group
 	 * 
-	 * @return the retrieved group
+	 * @return the retrieved expanded group
 	 * 
 	 * @throws MambuApiException
 	 */
@@ -166,7 +255,7 @@ public class ClientsService {
 	 * @param birthdate
 	 * @param email
 	 * @param notes
-	 * @return
+	 * @return created Mambu Client
 	 * @throws MambuApiException
 	 */
 	public Client createClient(String firstName, String lastName, String homephone, String mobilephone, String gender,
@@ -178,16 +267,16 @@ public class ClientsService {
 		ParamsMap params = new ParamsMap();
 		params.put(FIRST_NAME, firstName);
 		params.put(LAST_NAME, lastName);
-		params.put("HOME_PHONE", homephone);
-		params.put("MOBILE_PHONE", mobilephone);
-		params.put("GENDER", gender);
-		params.put("BIRTH_DATE", birthdate);
-		params.put("EMAIL_ADDRESS", email);
-		params.put("NOTES", notes);
+		params.put(HOME_PHONE, homephone); // params.put("HOME_PHONE", homephone);
+		params.put(MOBILE_PHONE, mobilephone);
+		params.put(GENDER, gender);
+		params.put(BIRTH_DATE, birthdate);
+		params.put(EMAIL_ADDRESS, email);
+		params.put(NOTES, notes); //
 
 		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.POST);
-
 		Client clientResult = GsonUtils.createResponse().fromJson(jsonResposne, Client.class);
+
 		return clientResult;
 	}
 }

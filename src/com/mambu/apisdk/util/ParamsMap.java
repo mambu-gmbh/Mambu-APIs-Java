@@ -53,6 +53,10 @@ public class ParamsMap extends LinkedHashMap<String, String> {
 				urlParams.append(APPENDER);
 			}
 		}
-		return urlParams.deleteCharAt(urlParams.length() - 1).toString();
+
+		if (urlParams.length() > 0)
+			return urlParams.deleteCharAt(urlParams.length() - 1).toString();
+		else
+			return "";
 	}
 }
