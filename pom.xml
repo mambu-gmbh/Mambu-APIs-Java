@@ -108,9 +108,9 @@
 		<dependency>
 			<groupId>com.mambu</groupId>
 			<artifactId>mambumodels</artifactId>
-			<version>3.0</version>
+			<version>3.1</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/mambu-models-v3.0.jar
+			<systemPath>${project.basedir}/lib/mambu-models-v3.1.jar
 			</systemPath>
 			<optional>false</optional>
 		</dependency>
