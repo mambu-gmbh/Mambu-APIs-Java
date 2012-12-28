@@ -61,7 +61,7 @@ public class DemoTestClientService {
 			testCreateFullDetailsClient();
 
 		} catch (MambuApiException e) {
-			System.out.println("  Exception caught in Demo Test Clients");
+			System.out.println("Exception caught in Demo Test Clients");
 			System.out.println("Error code=" + e.getErrorCode());
 			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
 		}

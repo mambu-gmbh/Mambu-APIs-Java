@@ -28,9 +28,9 @@ public class DemoTestUsersService {
 			testGetPaginatedUsersFilteredByBranch();
 
 		} catch (MambuApiException e) {
-			System.out.println(e.getCause());
-			System.out.println(e.getErrorMessage());
-			System.out.println(e.getErrorCode());
+			System.out.println("Exception caught in Demo Test Users Service");
+			System.out.println("Error code=" + e.getErrorCode());
+			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
 		}
 	}
 

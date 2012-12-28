@@ -29,9 +29,9 @@ public class DemoTestOrganizationService {
 			//testGetBranch(); // API not implemented 
 
 		} catch (MambuApiException e) {
-			System.out.println(e.getCause());
-			System.out.println(e.getErrorMessage());
-			System.out.println(e.getErrorCode());
+			System.out.println("Exception caught in Demo Test Organization Service");
+			System.out.println("Error code=" + e.getErrorCode());
+			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
 		}
 
 	}

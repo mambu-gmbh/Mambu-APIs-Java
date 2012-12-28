@@ -45,9 +45,9 @@ public class DemoTestLoanService {
 			testGetLoanAccountTransactions();
 
 		} catch (MambuApiException e) {
-			System.out.println(e.getCause());
-			System.out.println(e.getErrorMessage()); // getMessage() returns null, crash Android
-			System.out.println(e.getErrorCode());
+			System.out.println("Exception caught in Demo Test Loan Service");
+			System.out.println("Error code=" + e.getErrorCode());
+			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
 		}
 
 	}
