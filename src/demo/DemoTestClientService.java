@@ -45,9 +45,8 @@ public class DemoTestClientService {
 
 		try {
 
-			//MambuAPIFactory.setUp("demo.mambucloud.com", "api", "api");		
-			MambuAPIFactory.setUp("decisions21.sandbox.mambu.com", "MichaelD", "MichaelD");		
-
+			MambuAPIFactory.setUp("demo.mambucloud.com", "api", "api");		
+		
 			testGetClient();
 			testGetClientDetails();
 
