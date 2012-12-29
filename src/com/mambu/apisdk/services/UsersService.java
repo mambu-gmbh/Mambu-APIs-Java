@@ -62,7 +62,9 @@ public class UsersService {
 		Type collectionType = new TypeToken<List<User>>() {}.getType();
 
 		List<User> users = (List<User>) GsonUtils.createResponse().fromJson(jsonResponse, collectionType);
+
 		return users;
+
 	}
 
 	/**
@@ -93,6 +95,29 @@ public class UsersService {
 		Type collectionType = new TypeToken<List<User>>() {}.getType();
 
 		List<User> users = (List<User>) GsonUtils.createResponse().fromJson(jsonResponse, collectionType);
+
 		return users;
 	}
+
+	/**
+	 * Get User by it's userID
+	 * 
+	 * @param userId
+	 *            the id of the user to filter
+	 * @return
+	 * @throws MambuApiException
+	 */
+
+	public User getUserById(String userId) throws MambuApiException {
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(USERS) + "/" + userId);
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
+
+		User user = GsonUtils.createResponse().fromJson(jsonResponse, User.class);
+
+		return user;
+	}
+
 }

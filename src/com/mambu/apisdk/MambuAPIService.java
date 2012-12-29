@@ -61,7 +61,6 @@ public class MambuAPIService {
 	 * @throws MalformedURLException
 	 */
 	public String executeRequest(String urlString, Method method) throws MambuApiException {
-
 		return executor.executeRequest(urlString, method);
 	}
 

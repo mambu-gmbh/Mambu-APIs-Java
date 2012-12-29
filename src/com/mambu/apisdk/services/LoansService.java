@@ -16,6 +16,7 @@ import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.loans.shared.model.LoanAccount;
+import com.mambu.loans.shared.model.LoanTransaction;
 
 /**
  * Service class which handles API operations like retrieval, creation or changing state of loan accounts
@@ -44,6 +45,25 @@ public class LoansService {
 	public static final String BANK_ACCOUNT_NUMBER = "bankAccountNumber";
 	public static final String BANK_ROUTING_NUMBER = "bankRoutingNumber";
 	public static final String NOTES = "notes";
+	//
+	public static final String TRANSACTIONS = "transactions";
+	public static final String TYPE_REPAYMENT = "REPAYMENT";
+	public static final String TYPE_DISBURSMENT = "DISBURSMENT";
+	public static final String TYPE_APPROVAL = "APPROVAL";
+	public static final String TYPE_FEE = "FEE";
+
+	public static final String AMOUNT = "amount";
+	public static final String DATE = "date";
+	public static final String PAYMENT_METHOD = "method";
+	public static final String CASH_METHOD = "CASH";
+	public static final String RECEIPT_METHOD = "RECEIPT";
+	public static final String CHECK_METHOD = "CHECK";
+	public static final String BANK_TRANSFER_METHOD = "BANK_TRANSFER";
+	public static final String REPAYMENT_NUMBER = "repayment";
+	// Loan filters
+	public static final String BRANCH_ID = "branchId";
+	public static final String CREDIT_OFFICER_USER_NAME = "creditOfficerUsername";
+	public static final String ACCOUNT_STATE = "accountState";
 
 	private MambuAPIService mambuAPIService;
 
@@ -124,49 +144,35 @@ public class LoansService {
 		return accounts;
 	}
 
+	// Loan approval which returns LoanAccount object
 	/****
 	 * Approve a loan account if the user has permission to approve loans, the maximum exposure is not exceeded for the
 	 * client, the account was in Pending Approval state and if the number of loans is not exceeded
 	 * 
 	 * @param accountId
 	 *            the id of the account
-	 * @return
+	 * @return LoanAccount
 	 * @throws MambuApiException
 	 */
-	public String approveLoanAccount(String accountId, String notes) throws MambuApiException {
+
+	public LoanAccount approveLoanAccount(String accountId, String notes) throws MambuApiException {
+		// E.g. format: POST "type=APPROVAL" /api/loans/KHGJ593/transactions
 
 		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.addParam(ACTION, APPROVE);
+		// MD
+		paramsMap.addParam(TYPE, TYPE_APPROVAL);
 		paramsMap.addParam(NOTES, notes);
 
-		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId));
-		String response = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
+		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId + "/" + TRANSACTIONS));
 
-		return response;
+		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
+
+		LoanAccount laonAccount = GsonUtils.createResponse().fromJson(jsonResponse, LoanAccount.class);
+
+		return laonAccount;
 	}
 
-	/***
-	 * Disburse a loan account with a given disbursal date
-	 * 
-	 * @param accountId
-	 *            the id of the loan account
-	 * @param disbursalDate
-	 *            the disbursal date
-	 * @return
-	 * @throws MambuApiException
-	 */
-	private String disburseLoanAccount(String accountId, String disbursalDate) throws MambuApiException {
-
-		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.addParam(ACTION, DISBURSE);
-		paramsMap.addParam(DISBURSAL_DATE, disbursalDate);
-
-		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId));
-		String response = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
-
-		return response;
-	}
-
+	// A disbursment transaction, returns Transaction object 
 	/***
 	 * 
 	 * Disburse a loan account with a given disbursal date and some extra details
@@ -181,18 +187,25 @@ public class LoansService {
 	 * @param bankAccountNumber
 	 * @param bankRoutingNumber
 	 * @param notes
-	 * @return
+	 * 
+	 * @return Loan Transaction
+	 * 
 	 * @throws MambuApiException
 	 */
-	private String disburseLoanAccount(String accountId, String disbursalDate, String firstRepaymentDate, String type,
-			String bankNumber, String receiptNumber, String checkNumber, String bankAccountNumber,
-			String bankRoutingNumber, String notes) throws MambuApiException {
+	public LoanTransaction disburseLoanAccount(String accountId, String amount, String disbursalDate,
+			String firstRepaymentDate, String paymentMethod, String bankNumber, String receiptNumber,
+			String checkNumber, String bankAccountNumber, String bankRoutingNumber, String notes)
+			throws MambuApiException {
+		// Example: POST "type=DISBURSMENT&date=2012-10-04&firstRepaymentDate=2012-10-08&notes=using transactions"
+		// /api/loans/KHGJ593/transactions
 
 		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.addParam(ACTION, DISBURSE);
-		paramsMap.addParam(DISBURSAL_DATE, disbursalDate);
+		paramsMap.addParam(TYPE, TYPE_DISBURSMENT);
+		paramsMap.addParam(AMOUNT, amount);
+
+		paramsMap.addParam(DATE, disbursalDate);
 		paramsMap.addParam(FIRST_REPAYMENT_DATE, firstRepaymentDate);
-		paramsMap.addParam(TYPE, type);
+		paramsMap.addParam(PAYMENT_METHOD, paymentMethod);
 		paramsMap.addParam(BANK_NUMBER, bankNumber);
 		paramsMap.addParam(RECEIPT_NUMBER, receiptNumber);
 		paramsMap.addParam(CHECK_NUMBER, checkNumber);
@@ -200,71 +213,183 @@ public class LoansService {
 		paramsMap.addParam(BANK_ROUTING_NUMBER, bankRoutingNumber);
 		paramsMap.addParam(NOTES, notes);
 
-		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId));
-		String response = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
+		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId + "/" + TRANSACTIONS));
 
-		return response;
+		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
+
+		LoanTransaction transaction = GsonUtils.createResponse().fromJson(jsonResponse, LoanTransaction.class);
+
+		return transaction;
+
 	}
 
 	/***
-	 * Change the state of a loan account to Approved or Active
+	 * Get a loan account with Details by its id
 	 * 
 	 * @param accountId
-	 * @param state
-	 * @return
+	 *            the id of the account
+	 * @return the loan account
+	 * 
 	 * @throws MambuApiException
+	 * 
 	 */
-	public String aproveOrDisburseLoanAccount(String accountId, AccountState state, String disbursementDate)
+	public LoanAccount getLoanAccountDetails(String accountId) throws MambuApiException {
+
+		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId));
+		ParamsMap paramsMap = new ParamsMap();
+		
+		paramsMap.put("fullDetails", "true");
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
+
+		LoanAccount account = GsonUtils.createResponse().fromJson(jsonResponse, LoanAccount.class);
+		return account;
+	}
+
+	/***
+	 * Get loan account Transactions by Loan id and offset and limit
+	 * 
+	 * @param accountId
+	 *            the id of the account offset - first transaction number limit - last transaction number Note: if
+	 *            offset and limit both equal null, all transactions are returned (Note: transaction are sorted by date)
+	 * @return the list of loan account transactions
+	 * 
+	 * @throws MambuApiException
+	 * 
+	 */
+	@SuppressWarnings("unchecked")
+	public List<LoanTransaction> getLoanAccountTransactions(String accountId, String offset, String limit)
 			throws MambuApiException {
 
-		String response = "";
+		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId + "/" + TRANSACTIONS));
 
-		switch (state) {
-		case PENDING_APPROVAL:
-			response = approveLoanAccount(accountId, null);
-			break;
+		String jsonResponse;
 
-		case APPROVED:
-			response = disburseLoanAccount(accountId, disbursementDate);
-			break;
-		}
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.put("offset", offset);
+		paramsMap.put("limit", limit);
 
-		return response;
+		jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
+
+		Type collectionType = new TypeToken<List<LoanTransaction>>() {}.getType();
+
+		List<LoanTransaction> transactions = (List<LoanTransaction>) GsonUtils.createResponse().fromJson(jsonResponse,
+				collectionType);
+
+		return transactions;
 	}
-
-	/***
-	 * Change the state of a loan account to Approved or Active. Also, add some extra parameters
+	/****
+	 * Repayments on a loan account if the user has permission to repay loans, the maximum exposure is not exceeded for
+	 * the client, the account was in Approved state
 	 * 
 	 * @param accountId
-	 * @param state
-	 * @param disbursalDate
-	 * @param firstRepaymentDate
-	 * @param type
+	 * @param amount
+	 * @param date
+	 * @param paymentMethod
 	 * @param bankNumber
 	 * @param receiptNumber
 	 * @param checkNumber
 	 * @param bankAccountNumber
 	 * @param bankRoutingNumber
 	 * @param notes
-	 * @return
+	 * 
+	 * @return LoanTransaction
+	 * 
 	 * @throws MambuApiException
 	 */
-	public String aproveOrDisburseLoanAccount(String accountId, AccountState state, String disbursalDate,
-			String firstRepaymentDate, String type, String bankNumber, String receiptNumber, String checkNumber,
-			String bankAccountNumber, String bankRoutingNumber, String notes) throws MambuApiException {
 
-		String response = "";
+	public LoanTransaction makeLoanRepayment(String accountId, String amount, String date, String notes,
+			String paymentMethod, String receiptNumber, String bankNumber, String checkNumber,
+			String bankAccountNumber, String bankRoutingNumber) throws MambuApiException {
 
-		switch (state) {
-		case PENDING_APPROVAL:
-			response = approveLoanAccount(accountId, notes);
-			break;
+		// E.g. format: POST "type=APPROVAL" /api/loans/KHGJ593/transactions
 
-		case APPROVED:
-			response = disburseLoanAccount(accountId, disbursalDate, firstRepaymentDate, type, bankNumber,
-					receiptNumber, checkNumber, bankAccountNumber, bankRoutingNumber, notes);
-			break;
-		}
-		return response;
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, TYPE_REPAYMENT);
+		paramsMap.addParam(AMOUNT, amount);
+		paramsMap.addParam(DATE, date);
+
+		paramsMap.addParam(PAYMENT_METHOD, paymentMethod);
+		paramsMap.addParam(RECEIPT_NUMBER, receiptNumber);
+		paramsMap.addParam(BANK_NUMBER, bankNumber);
+		paramsMap.addParam(CHECK_NUMBER, checkNumber);
+		paramsMap.addParam(BANK_ACCOUNT_NUMBER, bankAccountNumber);
+		paramsMap.addParam(BANK_ROUTING_NUMBER, bankRoutingNumber);
+		paramsMap.addParam(NOTES, notes);
+
+		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId + "/" + TRANSACTIONS));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
+
+		LoanTransaction transaction = GsonUtils.createResponse().fromJson(jsonResponse, LoanTransaction.class);
+
+		return transaction;
 	}
+
+	/****
+	 * Apply FEE to a loan account
+	 * 
+	 * @param accountId
+	 *            the id of the account
+	 * @param amount
+	 * @param repaymentNumber
+	 * @param notes
+	 * 
+	 * @return Loan Transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public LoanTransaction applyFeeToLoanAccount(String accountId, String amount, String repaymentNumber, String notes)
+			throws MambuApiException {
+
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, TYPE_FEE);
+		paramsMap.addParam(AMOUNT, amount);
+		paramsMap.addParam(REPAYMENT_NUMBER, repaymentNumber);
+		paramsMap.addParam(NOTES, notes);
+
+		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId + "/" + TRANSACTIONS));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
+
+		LoanTransaction transaction = GsonUtils.createResponse().fromJson(jsonResponse, LoanTransaction.class);
+
+		return transaction;
+	}
+
+	/***
+	 * Get the loan accounts by branch is, credit officer, accountState
+	 * 
+	 * @param Parameters
+	 *            branchID The ID of the branch to which the loan accounts are assigned to
+	 * @param creditOfficerUsername
+	 *            - The username of the credit officer to whom the loans are assigned to
+	 * @param accountState
+	 *            - The desired state of the accounts to filter on (eg: APPROVED) *
+	 * @return the list of loan accounts matching these parameters
+	 * 
+	 * @throws MambuApiException
+	 */
+	@SuppressWarnings("unchecked")
+	public List<LoanAccount> getLoanAccountsByBranchOfficerState(String branchId, String creditOfficerUserName,
+			String accountState) throws MambuApiException {
+
+		String urlString = new String(mambuAPIService.createUrl(LOANS + "/"));
+
+		ParamsMap params = new ParamsMap();
+		params.addParam(BRANCH_ID, branchId);
+		params.addParam(CREDIT_OFFICER_USER_NAME, creditOfficerUserName);
+		params.addParam(ACCOUNT_STATE, accountState);
+
+		String jsonResponse;
+
+		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+
+		Type collectionType = new TypeToken<List<LoanAccount>>() {}.getType();
+
+		List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createResponse().fromJson(jsonResponse,
+				collectionType);
+		return accounts;
+	}
+
 }

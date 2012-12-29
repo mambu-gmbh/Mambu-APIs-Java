@@ -4,6 +4,9 @@ import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.UsersService;
 
+import java.util.List;
+import com.mambu.core.shared.model.User;
+
 /**
  * 
  */
@@ -20,28 +23,49 @@ public class DemoTestUsersService {
 			MambuAPIFactory.setUp("demo.mambucloud.com", "api", "api");
 
 			testGetUsers();
+			testGetUserById();
+
 			testGetPaginatedUsersFilteredByBranch();
 
 		} catch (MambuApiException e) {
-			System.out.println(e.getCause());
-			System.out.println(e.getMessage());
-			System.out.println(e.getErrorCode());
+			System.out.println("Exception caught in Demo Test Users Service");
+			System.out.println("Error code=" + e.getErrorCode());
+			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
 		}
 	}
 
 	public static void testGetUsers() throws MambuApiException {
-
+		System.out.println("In testGetUsers");
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
-		System.out.println(usersService.getUsers().get(1).getUsername());
+		List<User> users = usersService.getUsers();
+
+		System.out.println("testGetUsers OK");
+		for (User user : users) {
+			System.out.println(" Username=" + user.getUsername());
+		}
 
 	}
 
 	public static void testGetPaginatedUsersFilteredByBranch() throws MambuApiException {
-
+		System.out.println("In testGetPaginatedUsersFilteredByBranch");
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
-		System.out.println(usersService.getUsers("41", null, null).size());
+		List<User> users = usersService.getUsers("7", null, null); // RICHMOND BRANCH
+
+		System.out.println("testGetPaginatedUsersFilteredByBranch OK");
+		for (User user : users) {
+			System.out.println(" Username=" + user.getUsername());
+		}
+
+	}
+
+	public static void testGetUserById() throws MambuApiException {
+		System.out.println("In testGetUserById ");
+		UsersService usersService = MambuAPIFactory.getUsersService();
+
+		User user = usersService.getUserById("1");
+		System.out.println("testGetUserById OK, retrurned user=" + user.getFirstName() + " " + user.getLastName());
 
 	}
 
