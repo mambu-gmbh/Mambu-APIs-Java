@@ -235,7 +235,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * @return List<NameValuePair>
 	 * @throws
 	 */
-	public List<NameValuePair> getListFromParams(ParamsMap params) {
+	private List<NameValuePair> getListFromParams(ParamsMap params) {
 
 		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(params.size());
 
