@@ -4,13 +4,26 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
+
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URL;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -30,8 +43,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 	private URLHelper urlHelper;
 	private String encodedAuthorization;
 	private String charset = "UTF-8";
-	
-	private final String APPLICATION_KEY = "appkey"; //as per JIRA issue MBU-3236
+
+	private final String APPLICATION_KEY = "appkey"; // as per JIRA issue MBU-3236
 
 	private final static Logger LOGGER = Logger.getLogger(RequestExecutorImpl.class.getName());
 
@@ -62,7 +75,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		String response = "";
 		try {
 			switch (method) {
-			case GET:				
+			case GET:
 				response = executeGetRequest(urlString, params);
 				break;
 			case POST:
@@ -88,45 +101,49 @@ public class RequestExecutorImpl implements RequestExecutor {
 		String response = "";
 		Integer errorCode = null;
 
-		URL url = new URL(urlString);
+		HttpClient httpClient = new DefaultHttpClient();
+		HttpPost httpPost = new HttpPost(urlString);
+		httpPost.addHeader("Authorization", "Basic " + encodedAuthorization);
 
-		// set up the connection
-		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-		connection.setRequestMethod(Method.POST.name());
-		connection.setDoOutput(true);
+		LOGGER.info(" Input Params string:" + params.getURLString());
 
-		connection.setRequestProperty("Authorization", "Basic " + encodedAuthorization);
-
-		LOGGER.info("URL=" + urlString + "Author=" + encodedAuthorization);
-		// put the params in the request body
 		if (params != null && params.size() > 0) {
-			LOGGER.info(" Params string:" + params.getURLString());
-			OutputStream output = connection.getOutputStream();
-			output.write(params.getURLString().getBytes(charset));
+			// convert parms to a list for HttpEntity
+			List<NameValuePair> httpParams = getListFromParams(params);
+			HttpEntity postEntity = new UrlEncodedFormEntity(httpParams);
+			httpPost.setEntity(postEntity);
+
 		}
 
-		int status = ((HttpURLConnection) connection).getResponseCode();
+		// execute
+		HttpResponse httpResponse = httpClient.execute(httpPost);
+		// get status code
+		int status = httpResponse.getStatusLine().getStatusCode();
 
-		InputStream content;
+		InputStream content = null;
+		HttpEntity entity = httpResponse.getEntity();
 
-		// ensure it's an ok response or a successfully created one
+		// if there is an entity - get content
+		if (entity != null) {
+			content = entity.getContent();
+			if (content != null)
+				response = readStream(content);
+		}
+
 		if (status != HttpURLConnection.HTTP_OK && status != HttpURLConnection.HTTP_CREATED) {
-			LOGGER.info("Error status=" + status);
+
 			errorCode = status;
-			// if there was an error, read the error message
-			content = connection.getErrorStream();
-		} else {
-			LOGGER.info("Status OK=" + status);
-			content = connection.getInputStream();
+			LOGGER.info("Error status=" + status + " Error response=" + response);
 		}
-		if (content != null) {
-			response = readStream(content);
-			if (response != null)
-				LOGGER.info("Response=" + response);
-		}
+
+		if (errorCode == null)
+			// For logging only: log successful response
+			LOGGER.info("Status=" + status + "\nResponse=" + response);
+
 		// check if we hit an error
 		if (errorCode != null) {
-			LOGGER.warning("Throwing exception, error code=" + errorCode + " response=" + response);
+			//  pass to MambuApiException the content that goes with the error code
+			LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response);
 			throw new MambuApiException(errorCode, response);
 		}
 
@@ -147,39 +164,38 @@ public class RequestExecutorImpl implements RequestExecutor {
 			urlString = urlHelper.createUrlWithParams(urlString, params);
 		}
 		LOGGER.info("Url string with params from Helper=" + urlString);
-		URL url = new URL(urlString);
 
-		// set up the connection
-		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-		connection.setRequestMethod(Method.GET.toString());
-		connection.setDoOutput(true);
-		connection.setDoInput(true);
-		connection.setRequestProperty("Authorization", "Basic " + encodedAuthorization);
+		HttpClient httpClient = new DefaultHttpClient();
+		HttpGet httpGet = new HttpGet(urlString);
+		// add Authorozation header
+		httpGet.addHeader("Authorization", "Basic " + encodedAuthorization);
+		// execute
+		HttpResponse httpResponse = httpClient.execute(httpGet);
+		// get status
+		int status = httpResponse.getStatusLine().getStatusCode();
 
-		int status = ((HttpURLConnection) connection).getResponseCode();
-
-		InputStream content;
-
-		// ensure it's an ok response
+		InputStream content = null;
+		// Get the response Entity
+		HttpEntity entity = httpResponse.getEntity();
+		if (entity != null) {
+			content = entity.getContent();
+			if (content != null)
+				response = readStream(content);
+		}
+		// if status is not Ok - set error code
 		if (status != HttpURLConnection.HTTP_OK) {
-			LOGGER.info("Error status=" + status);
 			errorCode = status;
-			// if there was an error, read the error message
-			content = connection.getErrorStream();
-		} else {
-			LOGGER.info("Status OK=" + status);
-			content = connection.getInputStream();
+			LOGGER.info("Error status=" + status + " Error response=" + response);
 		}
 
-		// check for null stream and read it
-		if (content != null) {
-			response = readStream(content);
-			LOGGER.info("Response=" + response);
-		}
+		if (errorCode == null)
+			// For logging only: log successful response
+			LOGGER.info("Status=" + status + "\nResponse=" + response);
 
 		// check if we hit an error
 		if (errorCode != null) {
-			LOGGER.warning("Throwing exception, error code=" + errorCode + " response=" + response);
+			//  pass to MambuApiException the content that goes with the error code
+			LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response);
 			throw new MambuApiException(errorCode, response);
 		}
 
@@ -210,6 +226,27 @@ public class RequestExecutorImpl implements RequestExecutor {
 		String userNamePassword = username + ":" + password;
 		encodedAuthorization = new String(Base64.encodeBase64(userNamePassword.getBytes()));
 
+	}
+
+	/**
+	 * Convert Params Map into a List<NameValuePair> for HttpPpost
+	 * 
+	 * @param params
+	 * @return List<NameValuePair>
+	 * @throws
+	 */
+	private List<NameValuePair> getListFromParams(ParamsMap params) {
+
+		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(params.size());
+
+		for (Map.Entry<String, String> entry : params.entrySet()) {
+			// only put the parameter in the URL if its value is not null
+			if (entry.getValue() != null) {
+				nameValuePairs.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
+
+			}
+		}
+		return nameValuePairs;
 	}
 
 }

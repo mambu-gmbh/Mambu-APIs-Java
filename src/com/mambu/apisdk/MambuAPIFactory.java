@@ -15,7 +15,6 @@ import com.mambu.apisdk.services.RepaymentsService;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.services.UsersService;
 
-
 /**
  * Factory for creating Mambu API Services in a singleton fashion.
  * 
