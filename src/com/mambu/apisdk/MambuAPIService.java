@@ -51,7 +51,6 @@ public class MambuAPIService {
 	 * Executes the request for a given url string using a specified method See more info here:
 	 * http://stackoverflow.com/questions/2793150/how-to-use-java-net-urlconnection-to-fire-and-handle-http-requests
 	 * 
-	 * TODO: Use HTTPClient instead?
 	 * 
 	 * @param urlString
 	 * @param method
