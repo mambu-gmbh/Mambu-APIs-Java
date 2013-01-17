@@ -5,16 +5,15 @@ package com.mambu.apisdk.services;
 
 //import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
-
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.Method;
-
 import com.mambu.core.shared.model.SearchResult;
 import com.mambu.core.shared.model.SearchResult.Type;
 
@@ -47,7 +46,7 @@ public class SearchService {
 		this.mambuAPIService = mambuAPIService;
 	}
 	/***
-	 * Get a list of Search Results for a given query and an optional list of search types
+	 * Get a Map of  search results <SearchResul, List<SearchResult> for a given query and an optional list of search types
 	 * 
 	 * @param query
 	 *            the string to query
@@ -56,12 +55,11 @@ public class SearchService {
 	 *  	e.g. CLIENT, GROUP
 	 * 		 - null if searching for all types (as defined by SearchResult.Type)
 	 * 
-	 * @return a list of Search Results objects.  Empty list and/or Mambu exception if not found
+	 * @return Map<SearchResult.Type, List<SearchResult>> is returned.  Empty map and/or Mambu exception if not found
 	 * 
 	 * @throws MambuApiException
 	 */
-	@SuppressWarnings("unchecked")
-	public  List<SearchResult> search(String query, List<Type> searchTypes) throws MambuApiException {
+	public  Map<SearchResult.Type,List<SearchResult>>  search (String query, List<SearchResult.Type> searchTypes) throws MambuApiException {
 		
 		String urlString = new String(mambuAPIService.createUrl(SEARCH));
 		
@@ -81,9 +79,9 @@ public class SearchService {
 		
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 		
-		java.lang.reflect.Type collectionType = new TypeToken<List<SearchResult>>() {}.getType();
-
-		List<SearchResult> results = (List<SearchResult>) GsonUtils.createResponse().fromJson(jsonResponse,
+		java.lang.reflect.Type collectionType = new TypeToken<Map<SearchResult.Type, List<SearchResult>>>() {}.getType();
+		
+		Map<SearchResult.Type,List<SearchResult>>  results  =GsonUtils.createResponse().fromJson(jsonResponse,
 				collectionType);
 		
 		return results;

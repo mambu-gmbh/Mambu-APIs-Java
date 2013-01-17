@@ -43,6 +43,10 @@ public class ClientsService {
 
 	public static String ID_DOCUMENT = "idDocument";
 
+	public static final String BRANCH_ID = "branchId";
+	public static final String CREDIT_OFFICER_USER_NAME = "creditOfficerUsername";
+	public static final String CLIENT_STATE = "clientState";
+
 	/***
 	 * Create a new client service
 	 * 
@@ -278,5 +282,71 @@ public class ClientsService {
 		Client clientResult = GsonUtils.createResponse().fromJson(jsonResposne, Client.class);
 
 		return clientResult;
+	}
+	/***
+	 * Get Clients by branch id, credit officer, clientState
+	 * 
+	 * @param Parameters
+	 *            branchID The ID of the Client's branch
+	 * @param creditOfficerUsername
+	 *            - The username of the credit officer to whom the CLients are assigned to
+	 * @param clientState
+	 *            - The desired state of a Client to filter on (eg: ACTIVE) *
+	 * @return the list of Clients matching these parameters
+	 * 
+	 * @throws MambuApiException
+	 */
+	@SuppressWarnings("unchecked")
+	public List<Client> getClientsByBranchOfficerState(String branchId, String creditOfficerUserName,
+			String clientState) throws MambuApiException {
+
+		String urlString = new String(mambuAPIService.createUrl(CLIENTS + "/"));
+
+		ParamsMap params = new ParamsMap();
+		params.addParam(BRANCH_ID, branchId);
+		params.addParam(CREDIT_OFFICER_USER_NAME, creditOfficerUserName);
+		params.addParam(CLIENT_STATE, clientState); //
+
+		String jsonResponse;
+
+		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+
+		Type collectionType = new TypeToken<List<Client>>() {}.getType();
+
+		List<Client> clients = (List<Client>) GsonUtils.createResponse().fromJson(jsonResponse,
+				collectionType);
+		return clients;
+	}
+	
+	/***
+	 * Get Groups by branch id, credit officer
+	 * 
+	 * @param Parameters
+	 *            branchID The ID of the Client's branch
+	 * @param creditOfficerUsername
+	 *            - The username of the credit officer to whom the CLients are assigned to
+	 * 
+	 * @return the list of Groups matching these parameters
+	 * 
+	 * @throws MambuApiException
+	 */
+	@SuppressWarnings("unchecked")
+	public List<Group> getGroupsByBranchOfficer(String branchId, String creditOfficerUserName) throws MambuApiException {
+
+		String urlString = new String(mambuAPIService.createUrl(GROUPS + "/"));
+
+		ParamsMap params = new ParamsMap();
+		params.addParam(BRANCH_ID, branchId);
+		params.addParam(CREDIT_OFFICER_USER_NAME, creditOfficerUserName);
+
+		String jsonResponse;
+
+		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+
+		Type collectionType = new TypeToken<List<Group>>() {}.getType();
+
+		List<Group> groups = (List<Group>) GsonUtils.createResponse().fromJson(jsonResponse,
+				collectionType);
+		return groups;
 	}
 }

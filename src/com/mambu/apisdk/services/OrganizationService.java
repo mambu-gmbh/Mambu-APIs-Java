@@ -25,6 +25,7 @@ public class OrganizationService {
 	private static String CURRENCIES = "currencies";
 	private static String OFFSET = "offset";
 	private static String LIMIT = "limit";
+	private static String FULL_DETAILS ="fullDetails";
 
 	private MambuAPIService mambuAPIService;
 
@@ -78,7 +79,7 @@ public class OrganizationService {
 		String urlString = new String(mambuAPIService.createUrl(BRANCHES));
 		String jsonResponse;
 		ParamsMap params = new ParamsMap();
-
+		
 		params.put(OFFSET, offset);
 		params.put(LIMIT, limit);
 
@@ -96,12 +97,16 @@ public class OrganizationService {
 	 * @return the Mambu branch model
 	 * @throws MambuApiException
 	 */
-	// TODO: This API is not implemented YET- for no this call returns all branches
+	// TODO: This API is not implemented YET- for now this call returns all branches
 	public Branch getBranch(String branchId) throws MambuApiException {
 
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(BRANCHES + "/" + branchId));
-		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
+		
+		ParamsMap params = new ParamsMap();
+		
+		params.put(FULL_DETAILS, "true");
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
 		Branch branches[] = (Branch[]) GsonUtils.createResponse().fromJson(jsonResponse, Branch[].class);
 
