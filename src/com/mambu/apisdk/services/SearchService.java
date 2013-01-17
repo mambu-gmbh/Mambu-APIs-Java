@@ -59,7 +59,7 @@ public class SearchService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public  Map<SearchResult.Type,List<SearchResult>>  search(String query, List<SearchResult.Type> searchTypes) throws MambuApiException {
+	public  Map<SearchResult.Type,List<SearchResult>>  search (String query, List<SearchResult.Type> searchTypes) throws MambuApiException {
 		
 		String urlString = new String(mambuAPIService.createUrl(SEARCH));
 		
