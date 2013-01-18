@@ -12,9 +12,11 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.ClientsService;
 
 import com.mambu.clients.shared.model.Client;
+import com.mambu.clients.shared.model.Group;
 
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.core.shared.model.Gender;
+
 
 /**
  * 
@@ -29,6 +31,10 @@ public class DemoTestClientService {
 	private static String CLIENT_ID = "729859576"; 
 
 	private static String GROUP_ID = "842485684";
+	
+	private static String BRANCH_ID = "branchId_001";
+	private static String CREDIT_OFFICER_USER_NAME = "user_name_01";
+	private static String  CLIENT_STATE = "ACTIVE"; // PENDING_APPROVAL BLACKLISTED  INACTIVE
 
 	public static void main(String[] args) {
 		// get Logging properties file
@@ -59,6 +65,9 @@ public class DemoTestClientService {
 
 			testCreateBasicClient();
 			testCreateFullDetailsClient();
+			
+			testGetClientsByBranchOfficerState();
+			testGetGroupsByBranchOfficer();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Clients");
@@ -191,5 +200,42 @@ public class DemoTestClientService {
 
 		System.out.println("Client created, id=" + client.getId() + "  Full name=" + client.getFullName());
 
+	}
+	public static void testGetClientsByBranchOfficerState() throws MambuApiException {
+		System.out.println("In testGetClientsByBranchOfficerState");
+
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		String branchId = BRANCH_ID;// "RICHMOND_001"; //Berlin_001 REICHMOND_001
+		String creditOfficerUserName = CREDIT_OFFICER_USER_NAME; // 
+		String clientState = CLIENT_STATE; //// PENDING_APPROVAL BLACKLISTED  INACTIVE
+
+		List<Client> clients = clientService.getClientsByBranchOfficerState(branchId,
+				creditOfficerUserName, clientState);
+
+		if (clients != null)
+			System.out.println("Got  Clients for the branch, officer, state, total clients=" + clients.size());
+		for (Client client : clients) {
+			System.out.println("Client Name=" + client.getFullName() + "  BranchId=" + client.getAssignedBranchKey()
+					+ "   Credit Officer id=" + client.getAssignedUserKey());
+		}
+	}
+	
+	public static void testGetGroupsByBranchOfficer() throws MambuApiException {
+		System.out.println("In testGetGroupsByBranchOfficer");
+
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		String branchId = BRANCH_ID;// "RICHMOND_001"; //Berlin_001 REICHMOND_001
+		String creditOfficerUserName = CREDIT_OFFICER_USER_NAME; // 
+
+		List<Group> groups = clientService.getGroupsByBranchOfficer(branchId, creditOfficerUserName);
+
+		if (groups != null)
+			System.out.println("Got  Groups for the branch, officer, total clients=" + groups.size());
+		for (Group group : groups) {
+			System.out.println("Group Name=" + group.getGroupName() + "  BranchId=" + group.getAssignedBranchKey()
+					+ "   Credit Officer id=" + group.getAssignedUserKey());
+		}
 	}
 }

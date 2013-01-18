@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -58,16 +59,20 @@ public class DemoTestSearchService {
 
 		List<Type> searchTypes = Arrays.asList(Type.CLIENT, Type.GROUP); // or null
 
-		List<SearchResult> results = searchService.search(query, searchTypes);
+		Map<SearchResult.Type,List<SearchResult>>  results = searchService.search(query, searchTypes);		
 
-		System.out.println("Total Search results found=" + results.size());
-		int i = 0;
-		for (SearchResult result : results) {
+		System.out.println("Total Search map entries returned=" + results.size());
 
-			System.out.println("Search Result #" + i + ".  Type=" + result.getResultType().toString() + "  Id="
+		for (SearchResult.Type type : results.keySet()) {
+			List<SearchResult> items = results.get(type);
+			System.out.println("Returned Search Type="+ type.toString() + "  with " +items.size() + "  items:");
+			
+			for (SearchResult result: items) {
+			System.out.println("   Type=" + result.getResultType().toString() + "  Id="
 					+ result.getResultID() + " Display String=" + result.getDisplayString() + "  Display Text="
 					+ result.getDisplayText());
-			i++;
+			}
+			
 		}
 
 	}

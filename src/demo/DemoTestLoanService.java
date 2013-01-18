@@ -161,7 +161,7 @@ public class DemoTestLoanService {
 				creditOfficerUserName, accountState);
 
 		if (loanAccounts != null)
-			System.out.println("Got loan accounts for the barnch, offecer, state, taotal loans=" + loanAccounts.size());
+			System.out.println("Got loan accounts for the branch, officer, state, total loans=" + loanAccounts.size());
 		for (LoanAccount account : loanAccounts) {
 			System.out.println("Account Name=" + account.getLoanName() + "  BranchId=" + account.getAssignedBranchKey()
 					+ "   Credit Officer=" + account.getAssignedUserKey());
