@@ -3,7 +3,7 @@
  */
 package com.mambu.apisdk.services;
 
-//import java.lang.reflect.Type;
+// import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
@@ -25,13 +25,13 @@ import com.mambu.core.shared.model.SearchResult.Type;
  */
 
 public class SearchService {
-	
+
 	private MambuAPIService mambuAPIService;
-	
+
 	// API's endpoint
 	private String SEARCH = "search";
-	
-	//Param names for QUERY and TYPE 
+
+	// Param names for QUERY and TYPE
 	private String QUERY = "query";
 	private String TYPE = "type";
 
@@ -46,46 +46,50 @@ public class SearchService {
 		this.mambuAPIService = mambuAPIService;
 	}
 	/***
-	 * Get a Map of  search results <SearchResul, List<SearchResult> for a given query and an optional list of search types
+	 * Get a Map of search results <SearchResul, List<SearchResult> for a given query and an optional list of search
+	 * types
 	 * 
 	 * @param query
 	 *            the string to query
-	 *  @param  searchTypes list 
-	 *  	a list of search types to query. The results of the query shall be limited to the specified types
-	 *  	e.g. CLIENT, GROUP
-	 * 		 - null if searching for all types (as defined by SearchResult.Type)
+	 * @param searchTypes
+	 *            list, separated by comma a list of search types to query. The results of the query shall be limited to
+	 *            the specified types e.g. CLIENT, GROUP - null if searching for all types (as defined by
+	 *            SearchResult.Type)
 	 * 
-	 * @return Map<SearchResult.Type, List<SearchResult>> is returned.  Empty map and/or Mambu exception if not found
+	 * @return Map<SearchResult.Type, List<SearchResult>> is returned. Empty map and/or Mambu exception if not found
 	 * 
 	 * @throws MambuApiException
 	 */
-	public  Map<SearchResult.Type,List<SearchResult>>  search (String query, List<SearchResult.Type> searchTypes) throws MambuApiException {
-		
+	public Map<SearchResult.Type, List<SearchResult>> search(String query, List<SearchResult.Type> searchTypes)
+			throws MambuApiException {
+
 		String urlString = new String(mambuAPIService.createUrl(SEARCH));
-		
+
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(QUERY, query);
-		
-		//  Add search Types, if any
+
+		// Add search Types, if any
 		if (searchTypes != null && searchTypes.size() > 0) {
 			String typeParamsString = new String();
-			for (int i=0; i< searchTypes.size(); i++) {
+			for (int i = 0; i < searchTypes.size(); i++) {
 				// a comma separated list of Search Types, e.g. GROUP,CLIENT, LOAN_ACCOUNT
-				if ( i > 0) typeParamsString = typeParamsString.concat(",");
+				if (i > 0)
+					typeParamsString = typeParamsString.concat(",");
 				typeParamsString = typeParamsString.concat(searchTypes.get(i).toString());
 			}
-			paramsMap.addParam(TYPE, typeParamsString);			
+			paramsMap.addParam(TYPE, typeParamsString);
 		}
-		
+
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
-		
-		java.lang.reflect.Type collectionType = new TypeToken<Map<SearchResult.Type, List<SearchResult>>>() {}.getType();
-		
-		Map<SearchResult.Type,List<SearchResult>>  results  =GsonUtils.createResponse().fromJson(jsonResponse,
+
+		java.lang.reflect.Type collectionType = new TypeToken<Map<SearchResult.Type, List<SearchResult>>>() {}
+				.getType();
+
+		Map<SearchResult.Type, List<SearchResult>> results = GsonUtils.createResponse().fromJson(jsonResponse,
 				collectionType);
-		
+
 		return results;
-		
+
 	}
 
 }

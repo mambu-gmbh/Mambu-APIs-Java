@@ -4,10 +4,9 @@
 package com.mambu.apisdk.services;
 
 import java.lang.reflect.Type;
-import com.google.gson.reflect.TypeToken;
-
 import java.util.List;
 
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -77,8 +76,8 @@ public class RepaymentsService {
 
 		String urlString = new String(mambuAPIService.createUrl(REPAYMENTS + "/"));
 		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.put("DUE_FROM", dueFomString);
-		paramsMap.put("DUE_TO", dueToString);
+		paramsMap.put(DUE_FROM, dueFomString);
+		paramsMap.put(DUE_TO, dueToString);
 
 		String jsonResposne = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 		Type collectionType = new TypeToken<List<Repayment>>() {}.getType();

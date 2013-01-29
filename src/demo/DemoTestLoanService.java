@@ -16,29 +16,34 @@ import com.mambu.loans.shared.model.LoanTransaction;
  */
 public class DemoTestLoanService {
 
-	private static String CLIENT_ID = "282600987";
+	private static String CLIENT_ID = "046360136"; // 046360136 282600987
 
-	private static String GROUP_ID = "842485684";
-	private static String LOAN_ACCOUNT_ID = "DOCF446";
+	private static String GROUP_ID = "414659806"; // 414659806 - dec21: reichmondg
+	private static String LOAN_ACCOUNT_ID = "TPXA949"; // TPXA949
 
 	public static void main(String[] args) {
 
+		DemoUtil.setUp();
+
 		try {
-			MambuAPIFactory.setUp("demo.mambucloud.com", "api", "api");
-	
+			// MambuAPIFactory.setUp("demo.mambucloud.com", "api", "api");
+			// MambuAPIFactory.setUp("decisions21.sandbox.mambu.com", "MichaelD", "MichaelD");
+			// MambuAPIFactory.setUp("dec21.mambucloud.com", "MichaelD", "MichaelD7");
+			// MambuAPIFactory.setApplicationKey(appKeyValue);
+
 			testGetLoanAccount();
 			testGetLoanAccountDetails();
 
 			testGetLoanAccountsForClient();
 			testGetLoanAccountsForGroup();
 
-			testGetLoanAccountsByBranchOfficerState();
+			// testGetLoanAccountsByBranchOfficerState();
 
 			testGetLoanAccountTransactions();
 			testApproveLoanAccount();
-			
+
 			testDisburseLoanAccountWithDetails();
-	
+
 			testRepayLoanAccount();
 			testApplyFeeToLoanAccount();
 
@@ -88,12 +93,12 @@ public class DemoTestLoanService {
 		String bankRoutingNumber = "D_BNK_ROUT_2344";
 		String notes = "Disbursed loan for testing";
 
-		LoanTransaction transaction = loanService.disburseLoanAccount(accountId, amount, disbursalDate, firstRepaymentDate,
-				paymentMethod, bankNumber, receiptNumber, checkNumber, bankAccountNumber, bankRoutingNumber,
-				notes);
+		LoanTransaction transaction = loanService.disburseLoanAccount(accountId, amount, disbursalDate,
+				firstRepaymentDate, paymentMethod, bankNumber, receiptNumber, checkNumber, bankAccountNumber,
+				bankRoutingNumber, notes);
 
-		System.out.println("Loan for Disbursment with Details: Trans Id=" + transaction.getTransactionId() + " amount=" +
-		transaction.getAmount().toString());
+		System.out.println("Loan for Disbursment with Details: Trans Id=" + transaction.getTransactionId() + " amount="
+				+ transaction.getAmount().toString());
 	}
 
 	public static void testGetLoanAccountTransactions() throws MambuApiException {
@@ -153,7 +158,7 @@ public class DemoTestLoanService {
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		String branchId = null;// "REICHMOND_001"; //Berlin_001 REICHMOND_001
+		String branchId = null;// "RICHMOND_001"; //Berlin_001 REICHMOND_001
 		String creditOfficerUserName = null; // "MichaelD";
 		String accountState = null; // "ACTIVE_IN_ARREARS"; // CLOSED_WITHDRAWN ACTIVE_IN_ARREARS
 
@@ -178,6 +183,7 @@ public class DemoTestLoanService {
 		for (LoanAccount account : loanAccounts) {
 			System.out.print(account.getLoanName() + " ");
 		}
+		System.out.println();
 	}
 
 	public static void testGetLoanAccountsForGroup() throws MambuApiException {
@@ -199,7 +205,7 @@ public class DemoTestLoanService {
 		LoanAccount account = loanService.approveLoanAccount(LOAN_ACCOUNT_ID, "some demo notes");
 
 		System.out.println("Approving loan account with the " + LOAN_ACCOUNT_ID + " Loan name" + account.getLoanName()
-				+  "  Account State=" + account.getState().toString());
+				+ "  Account State=" + account.getState().toString());
 	}
 
 }

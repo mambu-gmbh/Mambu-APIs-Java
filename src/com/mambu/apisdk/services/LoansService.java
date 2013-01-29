@@ -30,6 +30,7 @@ public class LoansService {
 	public static final String LOANS = "loans";
 	public static final String CLIENTS = "clients";
 	public static final String GROUPS = "groups";
+	public static final String FULL_DETAILS="fullDetails";
 
 	public static final String ACTION = "action";
 	public static final String APPROVE = "approve";
@@ -238,7 +239,7 @@ public class LoansService {
 		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId));
 		ParamsMap paramsMap = new ParamsMap();
 		
-		paramsMap.put("fullDetails", "true");
+		paramsMap.put(FULL_DETAILS, "true");
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 
