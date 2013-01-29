@@ -1,10 +1,10 @@
 package demo;
 
+import java.util.List;
+
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.UsersService;
-
-import java.util.List;
 import com.mambu.core.shared.model.User;
 
 /**
@@ -17,15 +17,22 @@ import com.mambu.core.shared.model.User;
  */
 public class DemoTestUsersService {
 
+	private static String BRANCH_ID = "richmond_001";
+	private static String USER_NAME = "MichaelD";
+
 	public static void main(String[] args) {
 
+		DemoUtil.setUp();
+
 		try {
-			MambuAPIFactory.setUp("demo.mambucloud.com", "api", "api");
 
 			testGetUsers();
+
 			testGetUserById();
 
 			testGetPaginatedUsersFilteredByBranch();
+			// TODO: this is not implemented yet, returns all users for now
+			// testGetUserByUsername();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Users Service");
@@ -40,24 +47,25 @@ public class DemoTestUsersService {
 
 		List<User> users = usersService.getUsers();
 
-		System.out.println("testGetUsers OK");
+		System.out.println("Total users=" + users.size());
 		for (User user : users) {
-			System.out.println(" Username=" + user.getUsername());
+			System.out.println(" Username=" + user.getUsername() + "\tUser Id=" + user.getId());
 		}
-
+		System.out.println();
 	}
 
 	public static void testGetPaginatedUsersFilteredByBranch() throws MambuApiException {
 		System.out.println("In testGetPaginatedUsersFilteredByBranch");
+
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
-		List<User> users = usersService.getUsers("7", null, null); // RICHMOND BRANCH
+		List<User> users = usersService.getUsers(BRANCH_ID, null, null); // RICHMOND BRANCH
 
 		System.out.println("testGetPaginatedUsersFilteredByBranch OK");
 		for (User user : users) {
-			System.out.println(" Username=" + user.getUsername());
+			System.out.println(" Username=" + user.getUsername() + "\tUser Id=" + user.getId());
 		}
-
+		System.out.println();
 	}
 
 	public static void testGetUserById() throws MambuApiException {
@@ -65,7 +73,21 @@ public class DemoTestUsersService {
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
 		User user = usersService.getUserById("1");
-		System.out.println("testGetUserById OK, retrurned user=" + user.getFirstName() + " " + user.getLastName());
+
+		System.out.println("testGetUserById OK, returned user= " + user.getFirstName() + " " + user.getLastName()
+				+ " id=" + user.getId());
+
+	}
+
+	// getUserByUsername(
+	public static void testGetUserByUsername() throws MambuApiException {
+		System.out.println("In testGetUserByUsername ");
+		UsersService usersService = MambuAPIFactory.getUsersService();
+
+		User user = usersService.getUserByUsername(USER_NAME);
+
+		System.out.println("testGetUserByUsername OK, returned user= " + user.getFirstName() + " " + user.getLastName()
+				+ " id=" + user.getId());
 
 	}
 

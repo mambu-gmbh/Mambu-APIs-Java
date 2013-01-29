@@ -29,6 +29,7 @@ public class UsersService {
 	private static String OFFSET = "offset";
 	private static String LIMIT = "limit";
 	private static String BRANCH_ID = "branchID";
+	private static String USER_NAME ="userName";
 
 	/***
 	 * Create a new users service
@@ -119,5 +120,30 @@ public class UsersService {
 
 		return user;
 	}
+	
+	/**
+	 * Get User by it's userName
+	 * 
+	 * @param userName
+	 *            the username of the user to filter
+	 * @return
+	 * @throws MambuApiException
+	 */
+
+	public User getUserByUsername(String userName) throws MambuApiException {
+		
+		ParamsMap params = new ParamsMap();
+		params.put(USER_NAME, userName);
+		// create the api call
+		
+		String urlString = new String(mambuAPIService.createUrl(USERS));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+
+		User user = GsonUtils.createResponse().fromJson(jsonResponse, User.class);
+
+		return user;
+	}
+
 
 }

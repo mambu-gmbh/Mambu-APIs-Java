@@ -41,7 +41,7 @@ public class MambuApiException extends Exception {
 			// put the Name back together, now with spaces between words
 			for (int i = 0; i < words.length; i++) {
 				String word = words[i];
-				if (i > 0)
+				if (i > 0 && word.length() >1)
 					classNameMessage = classNameMessage.concat(" ");
 				classNameMessage = classNameMessage.concat(word);
 			}

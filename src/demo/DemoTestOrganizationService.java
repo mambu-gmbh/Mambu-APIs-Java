@@ -4,7 +4,6 @@ import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.core.shared.model.Currency;
-
 import com.mambu.organization.shared.model.Branch;
 
 /**
@@ -15,22 +14,23 @@ import com.mambu.organization.shared.model.Branch;
  */
 public class DemoTestOrganizationService {
 
-	private static String BRANCH_ID = "RICHMOND_001"; //
+	private static String BRANCH_ID = "richmond_001"; // 414659806 RICHMOND_001
 
 	public static void main(String[] args) {
 
+		DemoUtil.setUp();
+
 		try {
-			MambuAPIFactory.setUp("demo.mambucloud.com", "api", "api");
-			
-			testGetCurrency();			
-			
+
+			testGetCurrency();
+
 			testGetBranches();
-			
-			//testGetBranch(); // API not implemented 
+
+			testGetBranch();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Organization Service");
-			System.out.println("Error code=" + e.getErrorCode());
+			System.out.println("Exception Error code=" + e.getErrorCode());
 			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
 		}
 
@@ -51,9 +51,9 @@ public class DemoTestOrganizationService {
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
-		Branch branch = organizationService.getBranch(BRANCH_ID);
-
-		System.out.println("Branch id=" + branch.getId() + "   Name=" + branch.getName());
+		Branch branch = organizationService.getBranch(BRANCH_ID); // BRANCH_ID
+		if (branch != null)
+			System.out.println("Branch id=" + branch.getId() + "   Name=" + branch.getName());
 
 	}
 	public static void testGetCurrency() throws MambuApiException {
