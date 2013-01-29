@@ -8,13 +8,11 @@ import java.util.List;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
-
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.Method;
-
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsTransaction;
 
@@ -29,6 +27,7 @@ public class SavingsService {
 	public static final String SAVINGS = "savings";
 	public static final String CLIENTS = "clients";
 	public static final String GROUPS = "groups";
+	public static final String FULL_DETAILS = "fullDetails";
 
 	public static final String ACTION = "action";
 	public static final String APPROVE = "approve";
@@ -115,7 +114,7 @@ public class SavingsService {
 
 		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/" + accountId));
 		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.put("fullDetails", "true");
+		paramsMap.put(FULL_DETAILS, "true");
 
 		String jsonResposne = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 
@@ -334,7 +333,7 @@ public class SavingsService {
 	// TODO: TO BE FIXED This API does NOT return a Savings Transaction object. Returns only a Success string
 	// Response ={"returnCode":0,"returnStatus":"SUCCESS"}. Parsing to object fails
 
-	public boolean makeTransfer(String fromAccountId, String destinationAccountKey,
+	public SavingsTransaction makeTransfer(String fromAccountId, String destinationAccountKey,
 			ACCOUNT_TYPE destinationAccountType, String amount, String notes) throws MambuApiException {
 
 		// E.g .format: POST "type=TYPE_TRANSFER" /api/savings/KHGJ593/transactions
@@ -356,12 +355,12 @@ public class SavingsService {
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
 
 		// TODO: This is Temp, until api is fixed to return Savings Transaction Object
-		// SavingsTransaction transaction = GsonUtils.createResponse().fromJson(jsonResponse, SavingsTransaction.class);
+		SavingsTransaction transaction = GsonUtils.createResponse().fromJson(jsonResponse, SavingsTransaction.class);
 		boolean status = false;
 		if (jsonResponse.contains("SUCCESS"))
 			status = true;
 
-		return status;
+		return transaction;
 	}
 
 	/***

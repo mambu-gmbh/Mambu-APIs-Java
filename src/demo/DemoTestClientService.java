@@ -1,22 +1,14 @@
 package demo;
 
-
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.List;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
 
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.ClientsService;
-
 import com.mambu.clients.shared.model.Client;
-import com.mambu.clients.shared.model.Group;
-
 import com.mambu.clients.shared.model.ClientExpanded;
+import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.Gender;
-
 
 /**
  * 
@@ -28,31 +20,20 @@ import com.mambu.core.shared.model.Gender;
  */
 public class DemoTestClientService {
 
-	private static String CLIENT_ID = "729859576"; 
+	private static String CLIENT_ID = "046360136"; // 046360136 729859576
 
-	private static String GROUP_ID = "842485684";
-	
-	private static String BRANCH_ID = "branchId_001";
-	private static String CREDIT_OFFICER_USER_NAME = "user_name_01";
-	private static String  CLIENT_STATE = "ACTIVE"; // PENDING_APPROVAL BLACKLISTED  INACTIVE
+	private static String GROUP_ID = "414659806"; // 414659806 842485684
+
+	private static String BRANCH_ID = "richmond_001";
+	private static String CREDIT_OFFICER_USER_NAME = "MichaelD";
+	private static String CLIENT_STATE = "ACTIVE"; // PENDING_APPROVAL BLACKLISTED INACTIVE
 
 	public static void main(String[] args) {
-		// get Logging properties file
-		try {
 
-			FileInputStream loggingFile = new FileInputStream("logging.properties");
-
-			LogManager.getLogManager().readConfiguration(loggingFile);
-
-		} catch (IOException e) {
-			System.out.println("  Exception reading property file in Demo Test Clients");
-			Logger.getAnonymousLogger().severe("Could not load default logging.properties file");
-		}
+		DemoUtil.setUp();
 
 		try {
 
-			MambuAPIFactory.setUp("demo.mambucloud.com", "api", "api");		
-		
 			testGetClient();
 			testGetClientDetails();
 
@@ -65,8 +46,8 @@ public class DemoTestClientService {
 
 			testCreateBasicClient();
 			testCreateFullDetailsClient();
-			
-			testGetClientsByBranchOfficerState();
+
+			// testGetClientsByBranchOfficerState();
 			testGetGroupsByBranchOfficer();
 
 		} catch (MambuApiException e) {
@@ -206,12 +187,12 @@ public class DemoTestClientService {
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
-		String branchId = BRANCH_ID;// "RICHMOND_001"; //Berlin_001 REICHMOND_001
-		String creditOfficerUserName = CREDIT_OFFICER_USER_NAME; // 
-		String clientState = CLIENT_STATE; //// PENDING_APPROVAL BLACKLISTED  INACTIVE
+		String branchId = null; // BRANCH_ID;// "RICHMOND_001"; //Berlin_001 REICHMOND_001
+		String creditOfficerUserName = CREDIT_OFFICER_USER_NAME; //
+		String clientState = CLIENT_STATE; // // PENDING_APPROVAL BLACKLISTED INACTIVE
 
-		List<Client> clients = clientService.getClientsByBranchOfficerState(branchId,
-				creditOfficerUserName, clientState);
+		List<Client> clients = clientService.getClientsByBranchOfficerState(branchId, creditOfficerUserName,
+				clientState);
 
 		if (clients != null)
 			System.out.println("Got  Clients for the branch, officer, state, total clients=" + clients.size());
@@ -220,14 +201,14 @@ public class DemoTestClientService {
 					+ "   Credit Officer id=" + client.getAssignedUserKey());
 		}
 	}
-	
+
 	public static void testGetGroupsByBranchOfficer() throws MambuApiException {
 		System.out.println("In testGetGroupsByBranchOfficer");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
 		String branchId = BRANCH_ID;// "RICHMOND_001"; //Berlin_001 REICHMOND_001
-		String creditOfficerUserName = CREDIT_OFFICER_USER_NAME; // 
+		String creditOfficerUserName = CREDIT_OFFICER_USER_NAME; //
 
 		List<Group> groups = clientService.getGroupsByBranchOfficer(branchId, creditOfficerUserName);
 
