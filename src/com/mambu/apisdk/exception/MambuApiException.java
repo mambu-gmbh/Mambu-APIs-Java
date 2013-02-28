@@ -18,6 +18,7 @@ public class MambuApiException extends Exception {
 		errorCode = -1;
 		errorMessage = "";
 
+		// preserve the original's exception class
 		String classNameMessage = getExceptionClassName(e);
 
 		if (e.getMessage() != null)
@@ -36,12 +37,12 @@ public class MambuApiException extends Exception {
 		if (eClass != null) {
 
 			className = eClass.getSimpleName();
-			String words[] = className.split("(?=[A-Z])"); // Split Name by Upper Case
+			String words[] = className.split("(?=[A-Z])"); // Split Name by Upper Case for readability
 
 			// put the Name back together, now with spaces between words
 			for (int i = 0; i < words.length; i++) {
 				String word = words[i];
-				if (i > 0 && word.length() >1)
+				if (i > 0 && word.length() > 1)
 					classNameMessage = classNameMessage.concat(" ");
 				classNameMessage = classNameMessage.concat(word);
 			}

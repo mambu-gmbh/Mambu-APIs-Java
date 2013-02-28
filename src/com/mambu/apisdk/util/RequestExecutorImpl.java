@@ -4,16 +4,15 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -23,11 +22,12 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.HTTP;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 
@@ -42,7 +42,9 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 	private URLHelper urlHelper;
 	private String encodedAuthorization;
-	private String charset = "UTF-8";
+	private String UTF8_charset = HTTP.UTF_8;
+	private String formPostContentType = "application/x-www-form-urlencoded; charset=UTF-8";
+	private String formGetContentType = "application/x-www-form-urlencoded; charset=UTF-8";
 
 	private final String APPLICATION_KEY = "appkey"; // as per JIRA issue MBU-3236
 
@@ -98,25 +100,38 @@ public class RequestExecutorImpl implements RequestExecutor {
 	private String executePostRequest(String urlString, ParamsMap params) throws MalformedURLException, IOException,
 			MambuApiException {
 
+		String contentType = formPostContentType; // "application/x-www-form-urlencoded; charset=UTF-8";
+		// String contentType = "application/json;  charset=UTF-8";// charset=UTF-8"; // NO_API_ACCESS
+
 		String response = "";
 		Integer errorCode = null;
 
-		HttpClient httpClient = new DefaultHttpClient();
-		HttpPost httpPost = new HttpPost(urlString);
-		httpPost.addHeader("Authorization", "Basic " + encodedAuthorization);
+		HttpParams httpParameters = new BasicHttpParams();
+		HttpClient httpClient = new DefaultHttpClient(httpParameters);
 
-		LOGGER.info(" Input Params string:" + params.getURLString());
+		HttpPost httpPost = new HttpPost(urlString);
+		httpPost.setHeader("Content-Type", contentType);
+		httpPost.setHeader("Authorization", "Basic " + encodedAuthorization);
+
+		LOGGER.info("POST:  URL=" + urlString + " Params=" + params.getURLString());
 
 		if (params != null && params.size() > 0) {
+
 			// convert parms to a list for HttpEntity
 			List<NameValuePair> httpParams = getListFromParams(params);
-			HttpEntity postEntity = new UrlEncodedFormEntity(httpParams);
+			// use UTF-8 to encode
+
+			HttpEntity postEntity = new UrlEncodedFormEntity(httpParams, UTF8_charset);
+			// Will revisit this for the application-json contentType
+			// e.g. postEntity.setEntity(new StringEntity(jsonObj.tostring(), "UTF8"));
+			// getStatusCode() == 204
 			httpPost.setEntity(postEntity);
 
 		}
 
 		// execute
 		HttpResponse httpResponse = httpClient.execute(httpPost);
+
 		// get status code
 		int status = httpResponse.getStatusLine().getStatusCode();
 
@@ -125,6 +140,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		// if there is an entity - get content
 		if (entity != null) {
+
 			content = entity.getContent();
 			if (content != null)
 				response = readStream(content);
@@ -142,14 +158,14 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		// check if we hit an error
 		if (errorCode != null) {
-			//  pass to MambuApiException the content that goes with the error code
+			// pass to MambuApiException the content that goes with the error code
 			LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response);
 			throw new MambuApiException(errorCode, response);
 		}
 
 		return response;
-	}
 
+	}
 	/***
 	 * Execute a GET request as per the interface specification
 	 * 
@@ -159,24 +175,35 @@ public class RequestExecutorImpl implements RequestExecutor {
 			MambuApiException {
 		String response = "";
 		Integer errorCode = null;
+		String contentType = formGetContentType; // "application/x-www-form-urlencoded; charset=UTF-8";
 
 		if (params != null && params.size() > 0) {
-			urlString = urlHelper.createUrlWithParams(urlString, params);
+			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
 		}
-		LOGGER.info("Url string with params from Helper=" + urlString);
+		LOGGER.info("GET: URL with params=" + urlString);
 
-		HttpClient httpClient = new DefaultHttpClient();
+		HttpParams httpParameters = new BasicHttpParams();
+
+		HttpClient httpClient = new DefaultHttpClient(httpParameters);
+
 		HttpGet httpGet = new HttpGet(urlString);
 		// add Authorozation header
-		httpGet.addHeader("Authorization", "Basic " + encodedAuthorization);
+		httpGet.setHeader("Authorization", "Basic " + encodedAuthorization);
+		httpGet.setHeader("Content-Type", contentType);
+
 		// execute
 		HttpResponse httpResponse = httpClient.execute(httpGet);
+
 		// get status
 		int status = httpResponse.getStatusLine().getStatusCode();
+		Header responseContentType = httpResponse.getFirstHeader("Content-Type");
+		String contentTypeStr = responseContentType.getValue();
+		LOGGER.info("contentType =" + contentTypeStr);
 
 		InputStream content = null;
 		// Get the response Entity
 		HttpEntity entity = httpResponse.getEntity();
+
 		if (entity != null) {
 			content = entity.getContent();
 			if (content != null)
@@ -194,14 +221,13 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		// check if we hit an error
 		if (errorCode != null) {
-			//  pass to MambuApiException the content that goes with the error code
+			// pass to MambuApiException the content that goes with the error code
 			LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response);
 			throw new MambuApiException(errorCode, response);
 		}
 
 		return response;
 	}
-
 	/**
 	 * Reads a stream into a String
 	 * 
@@ -210,9 +236,11 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * @throws IOException
 	 */
 	private String readStream(InputStream content) throws IOException {
+
 		String response = "";
+
 		// read the response content
-		BufferedReader in = new BufferedReader(new InputStreamReader(content));
+		BufferedReader in = new BufferedReader(new InputStreamReader(content, UTF8_charset));
 		String line;
 		while ((line = in.readLine()) != null) {
 			response += line;
@@ -248,5 +276,4 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 		return nameValuePairs;
 	}
-
 }

@@ -15,7 +15,7 @@ import com.mambu.loans.shared.model.Repayment;
  */
 public class DemoTestRepaymentService {
 
-	private static String LOAN_ACCOUNT_ID = "TPXA949"; // DOCF446 - Tom Hanks; QFCY911 - Irina Chernaya;
+	private static String LOAN_ACCOUNT_ID = "ZKII792"; //
 
 	private static String dueFromString = "2013-02-01";
 	private static String dueToString = "2013-12-05";
@@ -28,6 +28,9 @@ public class DemoTestRepaymentService {
 
 			testGetLoanAccountRepayments();
 
+			// TODO: this returns all
+			testGetLoanAccountRepaymentsWithLimit();
+
 			testGetRepaymentsDueFromTo();
 
 		} catch (MambuApiException e) {
@@ -39,18 +42,39 @@ public class DemoTestRepaymentService {
 	}
 
 	public static void testGetLoanAccountRepayments() throws MambuApiException {
+		System.out.println("\nIn testGetLoanAccountRepayments");
 
 		RepaymentsService repaymentService = MambuAPIFactory.getRepaymentsService();
 
 		List<Repayment> repayemnts = repaymentService.getLoanAccountRepayments(LOAN_ACCOUNT_ID);
 
 		System.out.println("Total Repayments=" + repayemnts.size());
-		System.out.println("First Repayments  Due date" + repayemnts.get(0).getDueDate().toString());
-		System.out
-				.println("Last  Repayment   Due date" + repayemnts.get(repayemnts.size() - 1).getDueDate().toString());
+		if (repayemnts.size() > 0) {
+			System.out.println("First Repayment  Due date=" + repayemnts.get(0).getDueDate().toString());
+			System.out.println("Last  Repayment  Due date="
+					+ repayemnts.get(repayemnts.size() - 1).getDueDate().toString());
+		}
+
+	}
+	public static void testGetLoanAccountRepaymentsWithLimit() throws MambuApiException {
+		System.out.println("\nIn testGetLoanAccountRepaymentsWithLimit");
+
+		RepaymentsService repaymentService = MambuAPIFactory.getRepaymentsService();
+		String offset = "0";
+		String limit = "100";
+
+		List<Repayment> repayemnts = repaymentService.getLoanAccountRepayments(LOAN_ACCOUNT_ID, offset, limit);
+
+		System.out.println("Total Repayments =" + repayemnts.size() + " Offset=" + offset + "  Limit=" + limit);
+		if (repayemnts.size() > 0) {
+			System.out.println("First Repayment  Due date=" + repayemnts.get(0).getDueDate().toString());
+			System.out.println("Last  Repayment  Due date="
+					+ repayemnts.get(repayemnts.size() - 1).getDueDate().toString());
+		}
 
 	}
 	public static void testGetRepaymentsDueFromTo() throws MambuApiException {
+		System.out.println("\nIn testGetRepaymentsDueFromTo");
 
 		RepaymentsService repaymentService = MambuAPIFactory.getRepaymentsService();
 
@@ -59,7 +83,7 @@ public class DemoTestRepaymentService {
 		System.out.println("Total Repayments=" + repayemnts.size());
 		if (repayemnts.size() > 0) {
 			System.out.println("First Repayment Due date" + repayemnts.get(0).getDueDate().toString());
-			System.out.println("Last Repayment  Due date"
+			System.out.println("Last  Repayment Due date"
 					+ repayemnts.get(repayemnts.size() - 1).getDueDate().toString());
 		}
 	}

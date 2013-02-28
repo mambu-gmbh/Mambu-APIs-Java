@@ -14,7 +14,7 @@ import com.mambu.organization.shared.model.Branch;
  */
 public class DemoTestOrganizationService {
 
-	private static String BRANCH_ID = "richmond_001"; // 414659806 RICHMOND_001
+	private static String BRANCH_ID = "Richmond01"; // 414659806 RICHMOND_001
 
 	public static void main(String[] args) {
 
@@ -37,7 +37,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetBranches() throws MambuApiException {
-
+		System.out.println("\nIn testGetBranches");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		Branch branches[] = organizationService.getBranches(null, null);
@@ -48,7 +48,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetBranch() throws MambuApiException {
-
+		System.out.println("\nIn testGetBranch");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		Branch branch = organizationService.getBranch(BRANCH_ID); // BRANCH_ID
@@ -57,7 +57,7 @@ public class DemoTestOrganizationService {
 
 	}
 	public static void testGetCurrency() throws MambuApiException {
-
+		System.out.println("\nIn testGetCurrency");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		Currency currency = organizationService.getCurrency();

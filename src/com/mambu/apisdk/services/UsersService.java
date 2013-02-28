@@ -7,6 +7,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.Method;
@@ -24,12 +25,12 @@ public class UsersService {
 
 	private MambuAPIService mambuAPIService;
 
-	private static String USERS = "users";
+	private static String USERS = APIData.USERS;
 
-	private static String OFFSET = "offset";
-	private static String LIMIT = "limit";
-	private static String BRANCH_ID = "branchID";
-	private static String USER_NAME ="userName";
+	private static String OFFSET = APIData.OFFSET;
+	private static String LIMIT = APIData.LIMIT;
+	private static String BRANCH_ID = APIData.BRANCH_ID;
+	private static String USER_NAME = APIData.USER_NAME;
 
 	/***
 	 * Create a new users service
@@ -120,7 +121,7 @@ public class UsersService {
 
 		return user;
 	}
-	
+
 	/**
 	 * Get User by it's userName
 	 * 
@@ -131,11 +132,11 @@ public class UsersService {
 	 */
 
 	public User getUserByUsername(String userName) throws MambuApiException {
-		
+
 		ParamsMap params = new ParamsMap();
 		params.put(USER_NAME, userName);
 		// create the api call
-		
+
 		String urlString = new String(mambuAPIService.createUrl(USERS));
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
@@ -144,6 +145,5 @@ public class UsersService {
 
 		return user;
 	}
-
 
 }

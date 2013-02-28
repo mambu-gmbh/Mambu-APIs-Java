@@ -46,7 +46,7 @@ public class UsersServiceTest extends MambuAPIServiceTest {
 	public void testGetUsersFilteredByBranch() throws MambuApiException {
 
 		ParamsMap params = new ParamsMap();
-		params.addParam("branchID", "branch_id");
+		params.addParam("branchId", "branch_id");
 		params.addParam("offset", "50");
 		params.addParam("limit", "100");
 

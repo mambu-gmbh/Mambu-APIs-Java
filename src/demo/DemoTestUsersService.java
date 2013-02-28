@@ -17,7 +17,7 @@ import com.mambu.core.shared.model.User;
  */
 public class DemoTestUsersService {
 
-	private static String BRANCH_ID = "richmond_001";
+	private static String BRANCH_ID = "Richmond01";
 	private static String USER_NAME = "MichaelD";
 
 	public static void main(String[] args) {
@@ -31,7 +31,7 @@ public class DemoTestUsersService {
 			testGetUserById();
 
 			testGetPaginatedUsersFilteredByBranch();
-			// TODO: this is not implemented yet, returns all users for now
+			// TODO: this is not implemented yet (if called, returns all users)
 			// testGetUserByUsername();
 
 		} catch (MambuApiException e) {
@@ -42,7 +42,7 @@ public class DemoTestUsersService {
 	}
 
 	public static void testGetUsers() throws MambuApiException {
-		System.out.println("In testGetUsers");
+		System.out.println("\nIn testGetUsers");
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
 		List<User> users = usersService.getUsers();
@@ -55,7 +55,7 @@ public class DemoTestUsersService {
 	}
 
 	public static void testGetPaginatedUsersFilteredByBranch() throws MambuApiException {
-		System.out.println("In testGetPaginatedUsersFilteredByBranch");
+		System.out.println("\nIn testGetPaginatedUsersFilteredByBranch");
 
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
@@ -69,7 +69,7 @@ public class DemoTestUsersService {
 	}
 
 	public static void testGetUserById() throws MambuApiException {
-		System.out.println("In testGetUserById ");
+		System.out.println("\nIn testGetUserById ");
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
 		User user = usersService.getUserById("1");
@@ -81,7 +81,7 @@ public class DemoTestUsersService {
 
 	// getUserByUsername(
 	public static void testGetUserByUsername() throws MambuApiException {
-		System.out.println("In testGetUserByUsername ");
+		System.out.println("\nIn testGetUserByUsername ");
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
 		User user = usersService.getUserByUsername(USER_NAME);

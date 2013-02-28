@@ -9,13 +9,14 @@ import java.util.List;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.mambu.accounts.shared.model.AccountState;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.loans.shared.model.LoanAccount;
+import com.mambu.loans.shared.model.LoanProduct;
 import com.mambu.loans.shared.model.LoanTransaction;
 
 /**
@@ -27,44 +28,42 @@ import com.mambu.loans.shared.model.LoanTransaction;
 @Singleton
 public class LoansService {
 
-	public static final String LOANS = "loans";
-	public static final String CLIENTS = "clients";
-	public static final String GROUPS = "groups";
-	public static final String FULL_DETAILS="fullDetails";
+	private static final String LOANS = APIData.LOANS;
+	private static final String CLIENTS = APIData.CLIENTS;
+	private static final String GROUPS = APIData.GROUPS;
+	private static final String FULL_DETAILS = APIData.FULL_DETAILS;
 
-	public static final String ACTION = "action";
-	public static final String APPROVE = "approve";
-	public static final String DISBURSE = "disburse";
+	private static final String FIRST_REPAYMENT_DATE = APIData.FIRST_REPAYMENT_DATE;
 
-	public static final String DISBURSAL_DATE = "disbursalDate";
-	public static final String FIRST_REPAYMENT_DATE = "firstRepaymentDate";
-
-	public static final String TYPE = "type";
-	public static final String BANK_NUMBER = "bankNumber";
-	public static final String RECEIPT_NUMBER = "receiptNumber";
-	public static final String CHECK_NUMBER = "checkNumber";
-	public static final String BANK_ACCOUNT_NUMBER = "bankAccountNumber";
-	public static final String BANK_ROUTING_NUMBER = "bankRoutingNumber";
-	public static final String NOTES = "notes";
+	private static final String TYPE = APIData.TYPE;
+	private static final String BANK_NUMBER = APIData.BANK_NUMBER;
+	private static final String RECEIPT_NUMBER = APIData.RECEIPT_NUMBER;
+	private static final String CHECK_NUMBER = APIData.CHECK_NUMBER;
+	private static final String BANK_ACCOUNT_NUMBER = APIData.BANK_ACCOUNT_NUMBER;
+	private static final String BANK_ROUTING_NUMBER = APIData.BANK_ROUTING_NUMBER;
+	private static final String NOTES = APIData.NOTES;
 	//
-	public static final String TRANSACTIONS = "transactions";
-	public static final String TYPE_REPAYMENT = "REPAYMENT";
-	public static final String TYPE_DISBURSMENT = "DISBURSMENT";
-	public static final String TYPE_APPROVAL = "APPROVAL";
-	public static final String TYPE_FEE = "FEE";
+	private static final String TRANSACTIONS = APIData.TRANSACTIONS;
+	private static final String TYPE_REPAYMENT = APIData.TYPE_REPAYMENT;
+	private static final String TYPE_DISBURSMENT = APIData.TYPE_DISBURSMENT;
+	private static final String TYPE_APPROVAL = APIData.TYPE_APPROVAL;
+	private static final String TYPE_FEE = APIData.TYPE_FEE;
 
-	public static final String AMOUNT = "amount";
-	public static final String DATE = "date";
-	public static final String PAYMENT_METHOD = "method";
-	public static final String CASH_METHOD = "CASH";
-	public static final String RECEIPT_METHOD = "RECEIPT";
-	public static final String CHECK_METHOD = "CHECK";
-	public static final String BANK_TRANSFER_METHOD = "BANK_TRANSFER";
-	public static final String REPAYMENT_NUMBER = "repayment";
+	private static final String AMOUNT = APIData.AMOUNT;
+	private static final String DATE = APIData.DATE;
+	private static final String PAYMENT_METHOD = APIData.PAYMENT_METHOD;
+
+	private static final String REPAYMENT_NUMBER = APIData.REPAYMENT_NUMBER;
 	// Loan filters
-	public static final String BRANCH_ID = "branchId";
-	public static final String CREDIT_OFFICER_USER_NAME = "creditOfficerUsername";
-	public static final String ACCOUNT_STATE = "accountState";
+	private static final String BRANCH_ID = APIData.BRANCH_ID;
+	private static final String CREDIT_OFFICER_USER_NAME = APIData.CREDIT_OFFICER_USER_NAME;
+	private static final String ACCOUNT_STATE = APIData.ACCOUNT_STATE;
+
+	private static final String OFFSET = APIData.OFFSET;
+	private static final String LIMIT = APIData.LIMIT;
+
+	// Loan products
+	private static final String LOANPRODUCTS = APIData.LOANPRODUCTS;
 
 	private MambuAPIService mambuAPIService;
 
@@ -145,7 +144,6 @@ public class LoansService {
 		return accounts;
 	}
 
-	// Loan approval which returns LoanAccount object
 	/****
 	 * Approve a loan account if the user has permission to approve loans, the maximum exposure is not exceeded for the
 	 * client, the account was in Pending Approval state and if the number of loans is not exceeded
@@ -173,7 +171,7 @@ public class LoansService {
 		return laonAccount;
 	}
 
-	// A disbursment transaction, returns Transaction object 
+	// A disbursment transaction, returns Transaction object
 	/***
 	 * 
 	 * Disburse a loan account with a given disbursal date and some extra details
@@ -238,7 +236,7 @@ public class LoansService {
 
 		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId));
 		ParamsMap paramsMap = new ParamsMap();
-		
+
 		paramsMap.put(FULL_DETAILS, "true");
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
@@ -267,8 +265,8 @@ public class LoansService {
 		String jsonResponse;
 
 		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.put("offset", offset);
-		paramsMap.put("limit", limit);
+		paramsMap.put(OFFSET, offset);
+		paramsMap.put(LIMIT, limit);
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 
@@ -391,6 +389,45 @@ public class LoansService {
 		List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createResponse().fromJson(jsonResponse,
 				collectionType);
 		return accounts;
+	}
+	// Loan Products
+	/***
+	 * Get a list of Loan Products
+	 * 
+	 * @return the List of Loan Products
+	 * 
+	 * @throws MambuApiException
+	 * 
+	 */
+	public List<LoanProduct> getLoanProducts() throws MambuApiException {
+
+		String urlString = new String(mambuAPIService.createUrl(LOANPRODUCTS + "/"));
+		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
+
+		Type collectionType = new TypeToken<List<LoanProduct>>() {}.getType();
+
+		List<LoanProduct> products = GsonUtils.createResponse().fromJson(jsonResposne, collectionType);
+
+		return products;
+	}
+
+	/***
+	 * Get a Loan Product by Product id
+	 * 
+	 * @param productId
+	 *            the id of the loan product
+	 * @return the Loan Product
+	 * 
+	 * @throws MambuApiException
+	 * 
+	 */
+	public LoanProduct getLoanProduct(String productId) throws MambuApiException {
+
+		String urlString = new String(mambuAPIService.createUrl(LOANPRODUCTS + "/" + productId));
+		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
+
+		LoanProduct product = GsonUtils.createResponse().fromJson(jsonResposne, LoanProduct.class);
+		return product;
 	}
 
 }

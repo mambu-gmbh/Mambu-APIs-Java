@@ -8,9 +8,9 @@ import java.util.List;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
-
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.Method;
@@ -29,23 +29,24 @@ public class ClientsService {
 
 	private MambuAPIService mambuAPIService;
 
-	private static String CLIENTS = "clients";
-	private static String GROUPS = "groups";
+	private static String CLIENTS = APIData.CLIENTS;
+	private static String GROUPS = APIData.GROUPS;
 
-	private static String FIRST_NAME = "firstName";
-	private static String LAST_NAME = "lastName";
-	public static String HOME_PHONE = "homephone";
-	public static String MOBILE_PHONE = "mobilephone";
-	public static String GENDER = "gender";
-	public static String BIRTH_DATE = "birthdate";
-	public static String EMAIL_ADDRESS = "email";
-	public static String NOTES = "notes";
+	// Client search and create fields
+	private static String FIRST_NAME = APIData.FIRST_NAME;
+	private static String LAST_NAME = APIData.LAST_NAME;
+	private static String HOME_PHONE = APIData.HOME_PHONE;
+	private static String MOBILE_PHONE = APIData.MOBILE_PHONE;
+	private static String GENDER = APIData.GENDER;
+	private static String BIRTH_DATE = APIData.BIRTH_DATE;
+	private static String EMAIL_ADDRESS = APIData.EMAIL_ADDRESS;
+	private static String ID_DOCUMENT = APIData.ID_DOCUMENT;
 
-	public static String ID_DOCUMENT = "idDocument";
+	private static String NOTES = APIData.NOTES;
 
-	public static final String BRANCH_ID = "branchId";
-	public static final String CREDIT_OFFICER_USER_NAME = "creditOfficerUsername";
-	public static final String CLIENT_STATE = "clientState";
+	private static final String BRANCH_ID = APIData.BRANCH_ID;
+	private static final String CREDIT_OFFICER_USER_NAME = APIData.CREDIT_OFFICER_USER_NAME;
+	private static final String CLIENT_STATE = "clientState";
 
 	/***
 	 * Create a new client service
@@ -171,7 +172,7 @@ public class ClientsService {
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(CLIENTS + "/" + clientId));
 		ParamsMap params = new ParamsMap();
-		params.put("fullDetails", "true");
+		params.put(APIData.FULL_DETAILS, "true");
 
 		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
@@ -217,7 +218,7 @@ public class ClientsService {
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(GROUPS + "/" + groupId));
 		ParamsMap params = new ParamsMap();
-		params.put("fullDetails", "true");
+		params.put(APIData.FULL_DETAILS, "true");
 
 		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.GET);
 

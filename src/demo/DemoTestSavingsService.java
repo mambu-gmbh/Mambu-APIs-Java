@@ -5,8 +5,9 @@ import java.util.List;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.SavingsService;
-import com.mambu.apisdk.services.SavingsService.ACCOUNT_TYPE;
+import com.mambu.apisdk.util.APIData;
 import com.mambu.savings.shared.model.SavingsAccount;
+import com.mambu.savings.shared.model.SavingsProduct;
 import com.mambu.savings.shared.model.SavingsTransaction;
 
 /**
@@ -17,11 +18,11 @@ import com.mambu.savings.shared.model.SavingsTransaction;
  */
 public class DemoTestSavingsService {
 
-	private static String CLIENT_ID = "046360136"; // 282600987 046360136
+	private static String CLIENT_ID = "250213653"; // 282600987 046360136
 
-	private static String GROUP_ID = "414659806"; // 842485684 414659806
-	private static String SAVINGS_ACCOUNT_ID = "UBUV290"; // ILRP761 SHAS854 UBUV290
-	private static String TO_LOAN_ACCOUNT_ID = "SEFY187"; // XXBE600 TPXA949 QBDP300 SEFY187
+	private static String GROUP_ID = "588752540"; // 842485684 414659806
+	private static String SAVINGS_ACCOUNT_ID = "VWXH449"; // ILRP761 SHAS854 UBUV290
+	private static String TO_LOAN_ACCOUNT_ID = "ZKII792"; // XXBE600 TPXA949 QBDP300 SEFY187
 
 	public static void main(String[] args) {
 
@@ -45,6 +46,9 @@ public class DemoTestSavingsService {
 
 			testGetSavingsAccountsForGroup();
 
+			testGetSavingsProducts();
+			testGetSavingsProductById();
+
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Savings Service");
 			System.out.println("Error code=" + e.getErrorCode());
@@ -54,7 +58,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testGetSavingsAccount() throws MambuApiException {
-		System.out.println("In testGetSavingsAccount");
+		System.out.println("\nIn testGetSavingsAccount");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
@@ -65,7 +69,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testGetSavingsAccountDetails() throws MambuApiException {
-		System.out.println("In testGetSavingsAccount with Details");
+		System.out.println("\nIn testGetSavingsAccount with Details");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
@@ -76,12 +80,13 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testGetSavingsAccountsForClient() throws MambuApiException {
-		System.out.println("In testGetSavingsAccountsFor Client");
+		System.out.println("\nIn testGetSavingsAccountsFor Client");
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
 		List<SavingsAccount> savingsAccounts = savingsService.getSavingsAccountsForClient(CLIENT_ID);
 
-		System.out.println("Got Savings accounts for the client with the " + CLIENT_ID + " id:");
+		System.out.println("Got Savings accounts for the client with the " + CLIENT_ID + " id, Total="
+				+ savingsAccounts.size());
 		for (SavingsAccount account : savingsAccounts) {
 			System.out.print(account.getName() + " ");
 		}
@@ -89,12 +94,13 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testGetSavingsAccountsForGroup() throws MambuApiException {
-		System.out.println("In testGetSavingsAccountsFor Group");
+		System.out.println("\nIn testGetSavingsAccountsFor Group");
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
 		List<SavingsAccount> savingsAccounts = savingsService.getSavingsAccountsForGroup(GROUP_ID);
 
-		System.out.println("Got Savings accounts for the group with the " + GROUP_ID + " id:");
+		System.out.println("Got Savings accounts for the group with the " + GROUP_ID + " id, Total ="
+				+ savingsAccounts.size());
 		for (SavingsAccount account : savingsAccounts) {
 			System.out.print(account.getName() + ", ");
 		}
@@ -103,7 +109,8 @@ public class DemoTestSavingsService {
 
 	// Get All Transaction
 	public static void testGetSavingsAccountTransactions() throws MambuApiException {
-		System.out.println("In testGetSavingsAccountTransactions");
+		System.out.println("\nIn testGetSavingsAccountTransactions");
+
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
 		List<SavingsTransaction> transactions = savingsService.getSavingsAccountTransactions(SAVINGS_ACCOUNT_ID, null,
@@ -118,7 +125,7 @@ public class DemoTestSavingsService {
 
 	// Make Withdrawal
 	public static void testWithdrawalFromSavingsAccount() throws MambuApiException {
-		System.out.println("In testWithdrawalFromSavingsAccount");
+		System.out.println("\nIn testWithdrawalFromSavingsAccount");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 		String amount = "93.55";
@@ -142,7 +149,7 @@ public class DemoTestSavingsService {
 	}
 	// Deposit
 	public static void testDepositToSavingsAccount() throws MambuApiException {
-		System.out.println("In testDepositToSavingsAccount");
+		System.out.println("\nIn testDepositToSavingsAccount");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 		String amount = "150.00";
@@ -165,7 +172,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testTransferFromSavingsAccount() throws MambuApiException {
-		System.out.println("In testTransferFromSavingsAccount");
+		System.out.println("\nIn testTransferFromSavingsAccount");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
@@ -175,21 +182,23 @@ public class DemoTestSavingsService {
 		String amount = "20.50";
 		String notes = "Transfer notes from API";
 
+		APIData.ACCOUNT_TYPE accountType = APIData.ACCOUNT_TYPE.LOAN;
+
 		SavingsTransaction transaction = savingsService.makeTransfer(SAVINGS_ACCOUNT_ID, destinationAccountKey,
-				ACCOUNT_TYPE.LOAN, amount, notes);
+				accountType, amount, notes);
 
 		System.out.println("Transfer From account:" + SAVINGS_ACCOUNT_ID + "   To account id=" + destinationAccountKey
 				+ "Amount=" + transaction.getAmount().toString() + " Transac Id=" + transaction.getTransactionId());
 
 	}
 	public static void testGetSavingsAccountsByBranchOfficerState() throws MambuApiException {
-		System.out.println("In testGetSavingsAccountsByBranchOfficerState");
+		System.out.println("\nIn testGetSavingsAccountsByBranchOfficerState");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
 		String branchId = null; // "RICHMOND_001"; // Berlin_001 RICHMOND_001
-		String creditOfficerUserName = null; // "MichaelD";
-		String accountState = "ACTIVE"; // CLOSED_WITHDRAWN ACTIVE APPROVED
+		String creditOfficerUserName = "MichaelD";
+		String accountState = null; // "ACTIVE"; // CLOSED_WITHDRAWN ACTIVE APPROVED
 
 		List<SavingsAccount> accounts = savingsService.getSavingsAccountsByBranchOfficerState(branchId,
 				creditOfficerUserName, accountState);
@@ -200,5 +209,38 @@ public class DemoTestSavingsService {
 					+ "   Credit Officer=" + account.getAssignedUserKey());
 		}
 		System.out.println();
+	}
+
+	// Savings Products
+	public static void testGetSavingsProducts() throws MambuApiException {
+		System.out.println("\nIn testGetSavingsProducts");
+
+		SavingsService savingsService = MambuAPIFactory.getSavingsService();
+
+		List<SavingsProduct> products = savingsService.getSavingsProducts();
+
+		System.out.println("Got Savings products, count=" + products.size());
+
+		if (products.size() > 0) {
+			for (SavingsProduct product : products) {
+				System.out.println("Product=" + product.getName() + "  Id=" + product.getId() + " Savings Type="
+						+ product.getTypeOfProduct().name());
+			}
+		}
+
+	}
+
+	public static void testGetSavingsProductById() throws MambuApiException {
+		System.out.println("\nIn testGetSavingsProductById");
+
+		SavingsService savingsService = MambuAPIFactory.getSavingsService();
+
+		String productId = "DSP"; // DSP FDS SP highInterest_001
+
+		SavingsProduct product = savingsService.getSavingsProduct(productId);
+
+		System.out.println("Product=" + product.getName() + "  Id=" + product.getId() + " Loan Type="
+				+ product.getTypeOfProduct().name());
+
 	}
 }

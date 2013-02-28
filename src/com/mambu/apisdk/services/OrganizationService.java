@@ -6,6 +6,7 @@ package com.mambu.apisdk.services;
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.Method;
@@ -20,11 +21,11 @@ import com.mambu.organization.shared.model.Branch;
  */
 public class OrganizationService {
 
-	private static String BRANCHES = "branches";
-	private static String CURRENCIES = "currencies";
-	private static String OFFSET = "offset";
-	private static String LIMIT = "limit";
-	private static String FULL_DETAILS = "fullDetails";
+	private static String BRANCHES = APIData.BRANCHES;
+	private static String CURRENCIES = APIData.CURRENCIES;
+	private static String OFFSET = APIData.OFFSET;
+	private static String LIMIT = APIData.LIMIT;
+	private static String FULL_DETAILS = APIData.FULL_DETAILS;
 
 	private MambuAPIService mambuAPIService;
 
@@ -60,7 +61,6 @@ public class OrganizationService {
 			return null;
 		}
 	}
-
 	/**
 	 * Get a paginated list of branches
 	 * 

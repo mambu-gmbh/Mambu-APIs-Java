@@ -6,6 +6,7 @@ import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.LoansService;
 import com.mambu.loans.shared.model.LoanAccount;
+import com.mambu.loans.shared.model.LoanProduct;
 import com.mambu.loans.shared.model.LoanTransaction;
 
 /**
@@ -16,20 +17,17 @@ import com.mambu.loans.shared.model.LoanTransaction;
  */
 public class DemoTestLoanService {
 
-	private static String CLIENT_ID = "046360136"; // 046360136 282600987
+	private static String CLIENT_ID = "250213653"; // 046360136 282600987
 
-	private static String GROUP_ID = "414659806"; // 414659806 - dec21: reichmondg
-	private static String LOAN_ACCOUNT_ID = "TPXA949"; // TPXA949
+	private static String GROUP_ID = "588752540"; //
+	private static String LOAN_ACCOUNT_ID = "ZKII792"; // ZKII792
+	private static String BRANCH_ID = "Richmond01";
 
 	public static void main(String[] args) {
 
 		DemoUtil.setUp();
 
 		try {
-			// MambuAPIFactory.setUp("demo.mambucloud.com", "api", "api");
-			// MambuAPIFactory.setUp("decisions21.sandbox.mambu.com", "MichaelD", "MichaelD");
-			// MambuAPIFactory.setUp("dec21.mambucloud.com", "MichaelD", "MichaelD7");
-			// MambuAPIFactory.setApplicationKey(appKeyValue);
 
 			testGetLoanAccount();
 			testGetLoanAccountDetails();
@@ -37,9 +35,10 @@ public class DemoTestLoanService {
 			testGetLoanAccountsForClient();
 			testGetLoanAccountsForGroup();
 
-			// testGetLoanAccountsByBranchOfficerState();
-
+			testGetLoanAccountsByBranchOfficerState();
+			// transactions
 			testGetLoanAccountTransactions();
+
 			testApproveLoanAccount();
 
 			testDisburseLoanAccountWithDetails();
@@ -48,6 +47,10 @@ public class DemoTestLoanService {
 			testApplyFeeToLoanAccount();
 
 			testGetLoanAccountTransactions();
+
+			// Products
+			testGetLoanProducts();
+			testGetLoanProductById();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Loan Service");
@@ -58,7 +61,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testGetLoanAccount() throws MambuApiException {
-		System.out.println("In testGetLoanAccount");
+		System.out.println("\nIn testGetLoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		System.out.println("Got loan account  by ID: " + loanService.getLoanAccount(LOAN_ACCOUNT_ID).getName());
@@ -66,7 +69,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testGetLoanAccountDetails() throws MambuApiException {
-		System.out.println("In testGetLoanAccountDetails");
+		System.out.println("\nIn testGetLoanAccountDetails");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		System.out.println("Got loan account by ID with details: "
@@ -77,7 +80,7 @@ public class DemoTestLoanService {
 	// / Transactions testing
 
 	public static void testDisburseLoanAccountWithDetails() throws MambuApiException {
-		System.out.println("In test Disburse LoanAccount with Deatils");
+		System.out.println("\nIn test Disburse LoanAccount with Deatils");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
@@ -97,12 +100,12 @@ public class DemoTestLoanService {
 				firstRepaymentDate, paymentMethod, bankNumber, receiptNumber, checkNumber, bankAccountNumber,
 				bankRoutingNumber, notes);
 
-		System.out.println("Loan for Disbursment with Details: Trans Id=" + transaction.getTransactionId() + " amount="
-				+ transaction.getAmount().toString());
+		System.out.println("\nLoan for Disbursment with Details: Trans Id=" + transaction.getTransactionId()
+				+ " amount=" + transaction.getAmount().toString());
 	}
 
 	public static void testGetLoanAccountTransactions() throws MambuApiException {
-		System.out.println("In testGetLoanAccount Transactions");
+		System.out.println("\nIn testGetLoanAccount Transactions");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		String offest = "0";
 		String limit = "10";
@@ -118,7 +121,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testRepayLoanAccount() throws MambuApiException {
-		System.out.println("In test Repay LoanAccount");
+		System.out.println("\nIn test Repay LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		String amount = "93.55";
 		String date = "2012-11-23";
@@ -138,7 +141,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testApplyFeeToLoanAccount() throws MambuApiException {
-		System.out.println("In test Applying Fee to a Loan Account");
+		System.out.println("\nIn test Applying Fee to a Loan Account");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		String accountId = LOAN_ACCOUNT_ID;
@@ -154,13 +157,13 @@ public class DemoTestLoanService {
 	}
 
 	public static void testGetLoanAccountsByBranchOfficerState() throws MambuApiException {
-		System.out.println("In testGetLoanAccounts ByBranch Officer State");
+		System.out.println("\nIn testGetLoanAccounts ByBranch Officer State");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		String branchId = null;// "RICHMOND_001"; //Berlin_001 REICHMOND_001
-		String creditOfficerUserName = null; // "MichaelD";
-		String accountState = null; // "ACTIVE_IN_ARREARS"; // CLOSED_WITHDRAWN ACTIVE_IN_ARREARS
+		String branchId = "Richmond01"; // Berlin_001 RICHMOND_001
+		String creditOfficerUserName = "MichaelD";
+		String accountState = "ACTIVE"; // CLOSED_WITHDRAWN ACTIVE_IN_ARREARS
 
 		List<LoanAccount> loanAccounts = loanService.getLoanAccountsByBranchOfficerState(branchId,
 				creditOfficerUserName, accountState);
@@ -172,14 +175,14 @@ public class DemoTestLoanService {
 					+ "   Credit Officer=" + account.getAssignedUserKey());
 		}
 	}
-
 	public static void testGetLoanAccountsForClient() throws MambuApiException {
-		System.out.println("In testGetLoan Accounts ForClient");
+		System.out.println("\nIn testGetLoan Accounts ForClient");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		List<LoanAccount> loanAccounts = loanService.getLoanAccountsForClient(CLIENT_ID);
 
-		System.out.println("Got loan accounts for the client with the " + CLIENT_ID + " id:");
+		System.out.println("Got loan accounts for the client with the " + CLIENT_ID + " id, Total="
+				+ loanAccounts.size());
 		for (LoanAccount account : loanAccounts) {
 			System.out.print(account.getLoanName() + " ");
 		}
@@ -187,19 +190,24 @@ public class DemoTestLoanService {
 	}
 
 	public static void testGetLoanAccountsForGroup() throws MambuApiException {
-		System.out.println("In testGetLoanAccounts ForGroup");
+		System.out.println("\nIn testGetLoanAccounts ForGroup");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		List<LoanAccount> loanAccounts = loanService.getLoanAccountsForGroup(GROUP_ID);
 
-		System.out.println("Got loan accounts for the group with the " + GROUP_ID + " id:");
+		System.out.println("Got " + loanAccounts.size() + " loan accounts for the group with the " + GROUP_ID
+				+ " id, Total= " + loanAccounts.size());
+		int i = 0;
 		for (LoanAccount account : loanAccounts) {
-			System.out.print(account.getLoanName() + ", ");
+			if (i > 0)
+				System.out.print(", ");
+			System.out.print(account.getLoanName());
 		}
+		System.out.println();
 	}
 
 	public static void testApproveLoanAccount() throws MambuApiException {
-		System.out.println("In test Approve LoanAccount");
+		System.out.println("\nIn test Approve LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		LoanAccount account = loanService.approveLoanAccount(LOAN_ACCOUNT_ID, "some demo notes");
@@ -208,4 +216,34 @@ public class DemoTestLoanService {
 				+ "  Account State=" + account.getState().toString());
 	}
 
+	// Loan Products
+	public static void testGetLoanProducts() throws MambuApiException {
+		System.out.println("\nIn testGetLoanProducts");
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		List<LoanProduct> products = loanService.getLoanProducts();
+
+		System.out.println("Got loan products, count=" + products.size());
+
+		if (products.size() > 0) {
+			for (LoanProduct product : products) {
+				System.out.println("Product=" + product.getName() + "  Id=" + product.getId() + " Loan Type="
+						+ product.getLoanType().name());
+			}
+		}
+
+	}
+
+	public static void testGetLoanProductById() throws MambuApiException {
+		System.out.println("\nIn testGetLoanProductById");
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		String productId = "AGL"; //
+
+		LoanProduct product = loanService.getLoanProduct(productId);
+
+		System.out.println("Product=" + product.getName() + "  Id=" + product.getId() + " Loan Type="
+				+ product.getLoanType().name());
+
+	}
 }

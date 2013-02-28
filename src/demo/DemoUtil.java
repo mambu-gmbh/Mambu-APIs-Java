@@ -11,16 +11,15 @@ import com.mambu.apisdk.MambuAPIFactory;
 
 public class DemoUtil {
 
-	private static String domain = "demo.mambucloud.com"; // demo.mambucloud.com decisions21.sandbox.mambu.com
-															// dec21.mambucloud.com
-	private static String user = "api"; // api MichaelD
-	private static String password = "api"; // api
+	private static String domain = "decisions21.mambu.com"; // demo.mambucloud.com decisions21.sandbox.mambu.com
+	private static String user = "MichaelD";
+	private static String password = "MichaelD";
 
 	public static void setUp() {
 		// get Logging properties file
 		try {
 
-			FileInputStream loggingFile = new FileInputStream("logging.properties");
+			FileInputStream loggingFile = new FileInputStream("logger.properties");
 
 			LogManager.getLogManager().readConfiguration(loggingFile);
 			System.out.println("DemoUtil: Logger Initiated");
@@ -33,8 +32,7 @@ public class DemoUtil {
 		Properties prop = new Properties();
 		String appKeyValue = null;
 		try {
-			InputStream configFile = new FileInputStream("config.properties"); // am.open("config.properties",
-																				// Context.MODE_PRIVATE);
+			InputStream configFile = new FileInputStream("config.properties");
 
 			prop.load(configFile);
 
@@ -42,15 +40,13 @@ public class DemoUtil {
 
 			System.out.println("DemoUtil: APP KEY=" + appKeyValue);
 		} catch (IOException e) {
-			System.out.println("  Exception reading Config file in Demo Test Loan Service");
-			Logger.getAnonymousLogger().severe("Could not read config file config.properties");
+			System.out.println("  Exception reading config.properties file in Demo Test Loan Service");
+			Logger.getAnonymousLogger().severe("Could not read file config.properties");
 
 			e.printStackTrace();
 
 		}
 		// Set up Factory
-		// MambuAPIFactory.setUp("demo.mambucloud.com", "api", "api");
-		// MambuAPIFactory.setUp("decisions21.sandbox.mambu.com", "MichaelD", "MichaelD");
 		MambuAPIFactory.setUp(domain, user, password);
 
 		// set up App Key
