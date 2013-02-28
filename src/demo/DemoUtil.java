@@ -11,9 +11,9 @@ import com.mambu.apisdk.MambuAPIFactory;
 
 public class DemoUtil {
 
-	private static String domain = "decisions21.mambu.com"; // demo.mambucloud.com decisions21.sandbox.mambu.com
-	private static String user = "MichaelD";
-	private static String password = "MichaelD";
+	private static String domain = "demo.mambucloud.com"; // demo.mambucloud.com decisions21.sandbox.mambu.com
+	private static String user = "api";
+	private static String password = "api";
 
 	public static void setUp() {
 		// get Logging properties file
