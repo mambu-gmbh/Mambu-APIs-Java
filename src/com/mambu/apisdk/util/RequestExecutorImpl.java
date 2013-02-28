@@ -62,6 +62,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 	@Override
 	public String executeRequest(String urlString, ParamsMap params, Method method) throws MambuApiException {
+
 		// Add 'Application Key', if it was set by the application
 		// Mambu may handle API requests differently for different Application Keys
 
@@ -71,7 +72,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 			if (params == null)
 				params = new ParamsMap();
 			params.addParam(APPLICATION_KEY, applicationKey);
-			LOGGER.info("Added Application key=" + applicationKey);
+			// LOGGER.info("Added Application key=" + applicationKey);
 		}
 
 		String response = "";
@@ -122,9 +123,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 			// use UTF-8 to encode
 
 			HttpEntity postEntity = new UrlEncodedFormEntity(httpParams, UTF8_charset);
-			// Will revisit this for the application-json contentType
-			// e.g. postEntity.setEntity(new StringEntity(jsonObj.tostring(), "UTF8"));
-			// getStatusCode() == 204
+
 			httpPost.setEntity(postEntity);
 
 		}
