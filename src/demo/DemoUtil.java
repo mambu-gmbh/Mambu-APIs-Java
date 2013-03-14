@@ -11,8 +11,8 @@ import com.mambu.apisdk.MambuAPIFactory;
 
 public class DemoUtil {
 
-	private static String domain = "demo.mambucloud.com"; // demo.mambucloud.com decisions21.sandbox.mambu.com
-	private static String user = "api";
+	private static String domain = "demo.mambucloud.com"; // demo.mambucloud.com decisions21.mambu.com
+	private static String user = "api"; // api
 	private static String password = "api";
 
 	public static void setUp() {
@@ -37,8 +37,11 @@ public class DemoUtil {
 			prop.load(configFile);
 
 			appKeyValue = prop.getProperty("APPLICATION_KEY");
+			if (appKeyValue == null)
+				System.out.println("WARNING: DemoUtil: APP KEY is NOT specified");
+			else
+				System.out.println("DemoUtil: APP KEY specified");
 
-			System.out.println("DemoUtil: APP KEY=" + appKeyValue);
 		} catch (IOException e) {
 			System.out.println("  Exception reading config.properties file in Demo Test Loan Service");
 			Logger.getAnonymousLogger().severe("Could not read file config.properties");

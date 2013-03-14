@@ -1,6 +1,9 @@
 package com.mambu.apisdk.util;
 
-// This class defines API string constants
+//
+// This class defines string constants and other constants for Mambu API services
+//
+//
 public class APIData {
 
 	//
@@ -56,6 +59,7 @@ public class APIData {
 	public static final String BRANCH_ID = "branchId";
 	public static final String CREDIT_OFFICER_USER_NAME = "creditOfficerUsername";
 	public static final String ACCOUNT_STATE = "accountState";
+	public static final String CLIENT_STATE = "state";
 
 	public static final String OFFSET = "offset";
 	public static final String LIMIT = "limit";

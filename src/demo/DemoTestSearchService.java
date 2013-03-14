@@ -13,7 +13,7 @@ import com.mambu.core.shared.model.SearchResult.Type;
 /**
  * Test class to show example usage of the api calls
  * 
- * @author mdanilkis
+ * @author mambu
  * 
  */
 public class DemoTestSearchService {
@@ -47,8 +47,8 @@ public class DemoTestSearchService {
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
-		String query = "ma";
-		String offset = "22";
+		String query = "i";
+		String offset = "0";
 		String limit = "10";
 
 		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, null, offset, limit);

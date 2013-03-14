@@ -395,7 +395,7 @@ public class SavingsService {
 	 */
 	@SuppressWarnings("unchecked")
 	public List<SavingsAccount> getSavingsAccountsByBranchOfficerState(String branchId, String creditOfficerUserName,
-			String accountState) throws MambuApiException {
+			String accountState, String offset, String limit) throws MambuApiException {
 
 		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/"));
 		ParamsMap params = new ParamsMap();
@@ -403,6 +403,8 @@ public class SavingsService {
 		params.addParam(BRANCH_ID, branchId);
 		params.addParam(CREDIT_OFFICER_USER_NAME, creditOfficerUserName);
 		params.addParam(ACCOUNT_STATE, accountState);
+		params.put(APIData.OFFSET, offset);
+		params.put(APIData.LIMIT, limit);
 
 		String jsonResponse;
 

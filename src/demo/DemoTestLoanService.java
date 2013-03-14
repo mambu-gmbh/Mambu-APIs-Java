@@ -20,7 +20,7 @@ public class DemoTestLoanService {
 	private static String CLIENT_ID = "250213653"; // 046360136 282600987
 
 	private static String GROUP_ID = "588752540"; //
-	private static String LOAN_ACCOUNT_ID = "ZKII792"; // ZKII792
+	private static String LOAN_ACCOUNT_ID = "PRTO161"; // WETZ340 RRSF961
 	private static String BRANCH_ID = "Richmond01";
 
 	public static void main(String[] args) {
@@ -124,7 +124,7 @@ public class DemoTestLoanService {
 		System.out.println("\nIn test Repay LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		String amount = "93.55";
-		String date = "2012-11-23";
+		String date = null; // "2012-11-23";
 		String notes = "repayment notes from API";
 		String paymentMethod = "CASH";// CHECK,
 		String receiptNumber = "REC1123";
@@ -146,7 +146,7 @@ public class DemoTestLoanService {
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		String accountId = LOAN_ACCOUNT_ID;
 		String amount = "10";
-		String repaymentNumber = "2";
+		String repaymentNumber = "100";
 		String notes = "Notes for applying fee to a loan";
 
 		LoanTransaction transaction = loanService.applyFeeToLoanAccount(accountId, amount, repaymentNumber, notes);
@@ -161,12 +161,14 @@ public class DemoTestLoanService {
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		String branchId = "Richmond01"; // Berlin_001 RICHMOND_001
+		String branchId = BRANCH_ID; // Berlin_001 RICHMOND_001
 		String creditOfficerUserName = "MichaelD";
 		String accountState = "ACTIVE"; // CLOSED_WITHDRAWN ACTIVE_IN_ARREARS
+		String offset = null;
+		String limit = null;
 
 		List<LoanAccount> loanAccounts = loanService.getLoanAccountsByBranchOfficerState(branchId,
-				creditOfficerUserName, accountState);
+				creditOfficerUserName, accountState, offset, limit);
 
 		if (loanAccounts != null)
 			System.out.println("Got loan accounts for the branch, officer, state, total loans=" + loanAccounts.size());

@@ -13,7 +13,7 @@ import com.mambu.savings.shared.model.SavingsTransaction;
 /**
  * Test class to show example usage of the api calls
  * 
- * @author mdanilkis
+ * @author mambu
  * 
  */
 public class DemoTestSavingsService {
@@ -199,9 +199,11 @@ public class DemoTestSavingsService {
 		String branchId = null; // "RICHMOND_001"; // Berlin_001 RICHMOND_001
 		String creditOfficerUserName = "MichaelD";
 		String accountState = null; // "ACTIVE"; // CLOSED_WITHDRAWN ACTIVE APPROVED
+		String offset = null;
+		String limit = null;
 
 		List<SavingsAccount> accounts = savingsService.getSavingsAccountsByBranchOfficerState(branchId,
-				creditOfficerUserName, accountState);
+				creditOfficerUserName, accountState, offset, limit);
 
 		System.out.println("Got Savings accounts for the branch, officer, state, total Deposits=" + accounts.size());
 		for (SavingsAccount account : accounts) {

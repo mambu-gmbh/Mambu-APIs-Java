@@ -59,9 +59,6 @@ public class LoansService {
 	private static final String CREDIT_OFFICER_USER_NAME = APIData.CREDIT_OFFICER_USER_NAME;
 	private static final String ACCOUNT_STATE = APIData.ACCOUNT_STATE;
 
-	private static final String OFFSET = APIData.OFFSET;
-	private static final String LIMIT = APIData.LIMIT;
-
 	// Loan products
 	private static final String LOANPRODUCTS = APIData.LOANPRODUCTS;
 
@@ -265,8 +262,8 @@ public class LoansService {
 		String jsonResponse;
 
 		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.put(OFFSET, offset);
-		paramsMap.put(LIMIT, limit);
+		paramsMap.put(APIData.OFFSET, offset);
+		paramsMap.put(APIData.LIMIT, limit);
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 
@@ -371,7 +368,7 @@ public class LoansService {
 	 */
 	@SuppressWarnings("unchecked")
 	public List<LoanAccount> getLoanAccountsByBranchOfficerState(String branchId, String creditOfficerUserName,
-			String accountState) throws MambuApiException {
+			String accountState, String offset, String limit) throws MambuApiException {
 
 		String urlString = new String(mambuAPIService.createUrl(LOANS + "/"));
 
@@ -379,6 +376,8 @@ public class LoansService {
 		params.addParam(BRANCH_ID, branchId);
 		params.addParam(CREDIT_OFFICER_USER_NAME, creditOfficerUserName);
 		params.addParam(ACCOUNT_STATE, accountState);
+		params.put(APIData.OFFSET, offset);
+		params.put(APIData.LIMIT, limit);
 
 		String jsonResponse;
 

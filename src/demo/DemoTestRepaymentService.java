@@ -18,7 +18,7 @@ public class DemoTestRepaymentService {
 	private static String LOAN_ACCOUNT_ID = "ZKII792"; //
 
 	private static String dueFromString = "2013-02-01";
-	private static String dueToString = "2013-12-05";
+	private static String dueToString = "2013-07-05";
 
 	public static void main(String[] args) {
 
@@ -28,7 +28,7 @@ public class DemoTestRepaymentService {
 
 			testGetLoanAccountRepayments();
 
-			// TODO: this returns all
+			// TODO: this API doesn't work now: returns all
 			testGetLoanAccountRepaymentsWithLimit();
 
 			testGetRepaymentsDueFromTo();

@@ -24,7 +24,7 @@ public class DemoTestClientService {
 
 	private static String GROUP_ID = "588752540"; // 414659806 588752540
 
-	private static String BRANCH_ID = "richmond_001";
+	private static String BRANCH_ID = "Richmond01";
 	private static String CREDIT_OFFICER_USER_NAME = "MichaelD";
 	private static String CLIENT_STATE = "ACTIVE"; // PENDING_APPROVAL BLACKLISTED INACTIVE
 
@@ -33,9 +33,6 @@ public class DemoTestClientService {
 		DemoUtil.setUp();
 
 		try {
-
-			// testGetClientsByBranchOfficerState();
-			// testGetGroupsByBranchOfficer();
 
 			testGetClient();
 
@@ -200,9 +197,10 @@ public class DemoTestClientService {
 		String branchId = BRANCH_ID;
 		String creditOfficerUserName = CREDIT_OFFICER_USER_NAME;
 		String clientState = CLIENT_STATE; // ACTIVE PENDING_APPROVAL BLACKLISTED INACTIVE
-
+		String offset = null;
+		String limit = null;
 		List<Client> clients = clientService.getClientsByBranchOfficerState(branchId, creditOfficerUserName,
-				clientState);
+				clientState, offset, limit);
 
 		if (clients != null)
 			System.out.println("Got  Clients for the branch, officer, state, total clients=" + clients.size());
@@ -218,8 +216,9 @@ public class DemoTestClientService {
 
 		String branchId = BRANCH_ID;// "RICHMOND_001"; //Berlin_001 REICHMOND_001
 		String creditOfficerUserName = CREDIT_OFFICER_USER_NAME; //
-
-		List<Group> groups = clientService.getGroupsByBranchOfficer(branchId, creditOfficerUserName);
+		String offset = null;
+		String limit = null;
+		List<Group> groups = clientService.getGroupsByBranchOfficer(branchId, creditOfficerUserName, offset, limit);
 
 		if (groups != null)
 			System.out.println("Got  Groups for the branch, officer, total clients=" + groups.size());
