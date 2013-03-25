@@ -24,7 +24,9 @@ public class DemoTestOrganizationService {
 
 			testGetCurrency();
 
-			testGetBranches();
+			testGetAllBranches();
+
+			testGetBranchesByPage();
 
 			testGetBranch();
 
@@ -35,15 +37,36 @@ public class DemoTestOrganizationService {
 		}
 
 	}
-
-	public static void testGetBranches() throws MambuApiException {
+	public static void testGetAllBranches() throws MambuApiException {
 		System.out.println("\nIn testGetBranches");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
-		Branch branches[] = organizationService.getBranches(null, null);
+		String offset = null;
+		String limit = null;
+		Branch branches[] = organizationService.getBranches(offset, limit);
 
-		System.out.println(" Total branches=" + branches.length + ".  Firts branch=" + branches[0].getName()
-				+ "   Key= " + branches[0].getEncodedKey());
+		System.out.println("All Total=" + branches.length);
+		for (Branch branch : branches) {
+			System.out.println(" Name=" + branch.getName() + "\tId=" + branch.getId());
+		}
+		System.out.println();
+
+	}
+
+	public static void testGetBranchesByPage() throws MambuApiException {
+
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+
+		String offset = "1";
+		String limit = "1";
+		System.out.println("\nIn testGetBranchesByPage" + "  Offset=" + offset + "  Limit=" + limit);
+		Branch branches[] = organizationService.getBranches(offset, limit);
+
+		System.out.println("Total=" + branches.length);
+		for (Branch branch : branches) {
+			System.out.println(" Name=" + branch.getName() + "\tId=" + branch.getId());
+		}
+		System.out.println();
 
 	}
 
@@ -53,8 +76,10 @@ public class DemoTestOrganizationService {
 
 		Branch branch = organizationService.getBranch(BRANCH_ID); // BRANCH_ID
 		if (branch != null)
-			System.out.println("Branch id=" + branch.getId() + "   Name=" + branch.getName());
-
+			System.out.println("Branch id=" + BRANCH_ID + " found. Returned:  ID=" + branch.getId() + "   Name="
+					+ branch.getName());
+		else
+			System.out.println("Not Found Branch id=" + BRANCH_ID);
 	}
 	public static void testGetCurrency() throws MambuApiException {
 		System.out.println("\nIn testGetCurrency");

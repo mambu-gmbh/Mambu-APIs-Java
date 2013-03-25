@@ -20,7 +20,7 @@ public class DemoTestLoanService {
 	private static String CLIENT_ID = "250213653"; // 046360136 282600987
 
 	private static String GROUP_ID = "588752540"; //
-	private static String LOAN_ACCOUNT_ID = "PRTO161"; // WETZ340 RRSF961
+	private static String LOAN_ACCOUNT_ID = "DTQK377"; // WETZ340 RRSF961 PRTO161
 	private static String BRANCH_ID = "Richmond01";
 
 	public static void main(String[] args) {
@@ -28,6 +28,8 @@ public class DemoTestLoanService {
 		DemoUtil.setUp();
 
 		try {
+
+			testGetLoanProducts();
 
 			testGetLoanAccount();
 			testGetLoanAccountDetails();
@@ -49,6 +51,7 @@ public class DemoTestLoanService {
 			testGetLoanAccountTransactions();
 
 			// Products
+
 			testGetLoanProducts();
 			testGetLoanProductById();
 
@@ -107,19 +110,18 @@ public class DemoTestLoanService {
 	public static void testGetLoanAccountTransactions() throws MambuApiException {
 		System.out.println("\nIn testGetLoanAccount Transactions");
 		LoansService loanService = MambuAPIFactory.getLoanService();
-		String offest = "0";
-		String limit = "10";
+		String offest = "4";
+		String limit = "8";
 
 		List<LoanTransaction> transactions = loanService.getLoanAccountTransactions(LOAN_ACCOUNT_ID, offest, limit);
 
-		System.out.println("Got loan accounts transactions in a range for the Loan with the " + LOAN_ACCOUNT_ID
-				+ " id:" + " Range=" + offest + "  " + limit);
+		System.out.println("Got loan accounts transactions, total=" + transactions.size()
+				+ " in a range for the Loan with the " + LOAN_ACCOUNT_ID + " id:" + " Range=" + offest + "  " + limit);
 		for (LoanTransaction transaction : transactions) {
-			System.out.println("Trans Date, type=" + transaction.getEntryDate().toString() + "  "
-					+ transaction.getType());
+			System.out.println("Trans ID=" + transaction.getTransactionId() + "  " + transaction.getType() + "  "
+					+ transaction.getEntryDate().toString());
 		}
 	}
-
 	public static void testRepayLoanAccount() throws MambuApiException {
 		System.out.println("\nIn test Repay LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
@@ -223,7 +225,10 @@ public class DemoTestLoanService {
 		System.out.println("\nIn testGetLoanProducts");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		List<LoanProduct> products = loanService.getLoanProducts();
+		String offset = "0";
+		String limit = "3";
+
+		List<LoanProduct> products = loanService.getLoanProducts(offset, limit);
 
 		System.out.println("Got loan products, count=" + products.size());
 

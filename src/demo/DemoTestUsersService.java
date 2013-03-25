@@ -26,11 +26,12 @@ public class DemoTestUsersService {
 
 		try {
 
-			testGetUsers();
+			testGetAllUsers();
+			testGetUsersByPage();
 
 			testGetUserById();
 
-			testGetPaginatedUsersFilteredByBranch();
+			testGetPaginatedUsersByBranch();
 			// TODO: this is not implemented yet (if called, returns all users)
 			// testGetUserByUsername();
 
@@ -41,29 +42,46 @@ public class DemoTestUsersService {
 		}
 	}
 
-	public static void testGetUsers() throws MambuApiException {
-		System.out.println("\nIn testGetUsers");
+	public static void testGetAllUsers() throws MambuApiException {
+		System.out.println("\nIn testGetAllUsers");
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
 		List<User> users = usersService.getUsers();
 
 		System.out.println("Total users=" + users.size());
 		for (User user : users) {
-			System.out.println(" Username=" + user.getUsername() + "\tUser Id=" + user.getId());
+			System.out.println(" Username=" + user.getUsername() + "\tId=" + user.getId());
 		}
 		System.out.println();
 	}
 
-	public static void testGetPaginatedUsersFilteredByBranch() throws MambuApiException {
-		System.out.println("\nIn testGetPaginatedUsersFilteredByBranch");
+	public static void testGetUsersByPage() throws MambuApiException {
+		System.out.println("\nIn testGetUsersByPage");
+		UsersService usersService = MambuAPIFactory.getUsersService();
+		String offset = "1";
+		String limit = "2";
+		List<User> users = usersService.getUsers(offset, limit);
+
+		System.out.println("Total users=" + users.size());
+		for (User user : users) {
+			System.out.println(" Username=" + user.getUsername() + "\tId=" + user.getId());
+		}
+		System.out.println();
+	}
+
+	public static void testGetPaginatedUsersByBranch() throws MambuApiException {
+		System.out.println("\nIn testGetPaginatedUsers ByBranch");
 
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
+		String offset = "0";
+		String limit = "5";
+
 		List<User> users = usersService.getUsers(BRANCH_ID, null, null); // RICHMOND BRANCH
 
-		System.out.println("testGetPaginatedUsersFilteredByBranch OK");
+		System.out.println("testGetPaginatedUsers OK, barnch ID=" + BRANCH_ID);
 		for (User user : users) {
-			System.out.println(" Username=" + user.getUsername() + "\tUser Id=" + user.getId());
+			System.out.println(" Username=" + user.getUsername() + "\tId=" + user.getId());
 		}
 		System.out.println();
 	}
@@ -72,10 +90,11 @@ public class DemoTestUsersService {
 		System.out.println("\nIn testGetUserById ");
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
-		User user = usersService.getUserById("1");
+		String userId = "1";
+		User user = usersService.getUserById(userId);
 
 		System.out.println("testGetUserById OK, returned user= " + user.getFirstName() + " " + user.getLastName()
-				+ " id=" + user.getId());
+				+ " Id=" + user.getId());
 
 	}
 
@@ -87,7 +106,7 @@ public class DemoTestUsersService {
 		User user = usersService.getUserByUsername(USER_NAME);
 
 		System.out.println("testGetUserByUsername OK, returned user= " + user.getFirstName() + " " + user.getLastName()
-				+ " id=" + user.getId());
+				+ " Id=" + user.getId());
 
 	}
 

@@ -31,6 +31,7 @@ public class UsersService {
 	private static String LIMIT = APIData.LIMIT;
 	private static String BRANCH_ID = APIData.BRANCH_ID;
 	private static String USER_NAME = APIData.USER_NAME;
+	private static String FULL_DETAILS = APIData.FULL_DETAILS;
 
 	/***
 	 * Create a new users service
@@ -46,20 +47,21 @@ public class UsersService {
 	/**
 	 * Get all the users
 	 * 
-	 * @param offset
-	 *            the offset of the response. If not set a value of 0 is used by default
-	 * @param limit
-	 *            the maximum number of response entries. If not set a value of 50 is used by default
-	 * @return
+	 * @param
+	 * @return List of all Users
 	 * @throws MambuApiException
 	 */
 	@SuppressWarnings("unchecked")
-	public List<User> getUsers() throws MambuApiException {
+	public List<User> getUsers(String offset, String limit) throws MambuApiException {
 
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(USERS));
 
-		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
+		ParamsMap params = new ParamsMap();
+
+		params.put(OFFSET, offset);
+		params.put(LIMIT, limit);
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
 		Type collectionType = new TypeToken<List<User>>() {}.getType();
 
@@ -68,7 +70,23 @@ public class UsersService {
 		return users;
 
 	}
+	/**
+	 * Get users with offset and limit
+	 * 
+	 * @param offset
+	 *            the offset of the response. If not set a value of 0 is used by default
+	 * @param limit
+	 *            the maximum number of response entries. If not set a value of 50 is used by default
+	 * @return List of Users
+	 * @throws MambuApiException
+	 */
+	public List<User> getUsers() throws MambuApiException {
 
+		List<User> users = getUsers(null, null);
+
+		return users;
+
+	}
 	/**
 	 * Get a paginated list of users filtered by branch
 	 * 
@@ -114,8 +132,10 @@ public class UsersService {
 
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(USERS) + "/" + userId);
+		ParamsMap params = new ParamsMap();
 
-		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
+		params.put(FULL_DETAILS, "true");
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
 		User user = GsonUtils.createResponse().fromJson(jsonResponse, User.class);
 
@@ -135,6 +155,7 @@ public class UsersService {
 
 		ParamsMap params = new ParamsMap();
 		params.put(USER_NAME, userName);
+		params.put(FULL_DETAILS, "true");
 		// create the api call
 
 		String urlString = new String(mambuAPIService.createUrl(USERS));

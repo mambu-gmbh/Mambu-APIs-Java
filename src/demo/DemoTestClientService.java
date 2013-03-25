@@ -42,8 +42,11 @@ public class DemoTestClientService {
 			testGetClientByLastNameBirthday();
 			testGetClientByDocIdLastName();
 
-			testGetGroup();
-			testGetGroupDetails();
+			// TODO: GroupDetails API issue. Uncomment and replace temp when API is fixed // testGetGroup();
+			testGetGroupTemp();
+
+			// TODO: Uncomment and replace temp when API is fixed // testGetGroupDetails();
+			testGetGroupDetailsTemp();
 
 			testCreateBasicClient();
 
@@ -144,6 +147,13 @@ public class DemoTestClientService {
 		System.out.println("testGetGroup OK, name=" + clientService.getGroup(GROUP_ID).getGroupName());
 
 	}
+	public static void testGetGroupTemp() throws MambuApiException {
+		System.out.println("\nIn testGetGroupTemp - NOTE: USING groupDetails workaround");
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		System.out.println("testGetGroup OK, name=" + clientService.getGroupList(GROUP_ID).getGroupName());
+
+	}
 
 	public static void testGetGroupDetails() throws MambuApiException {
 		System.out.println("\nIn testGetGroupDetails");
@@ -152,6 +162,15 @@ public class DemoTestClientService {
 
 		System.out.println("testGetGroupDetails Ok, name="
 				+ clientService.getGroupDetails(GROUP_ID).getGroup().getGroupName());
+
+	}
+	public static void testGetGroupDetailsTemp() throws MambuApiException {
+		System.out.println("\nIn testGetGroupDetailsTemp - NOTE: USING groupDetails workaround");
+
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		System.out.println("testGetGroupDetails Ok, name="
+				+ clientService.getGroupDetailsList(GROUP_ID).getGroup().getGroupName());
 
 	}
 
@@ -189,6 +208,7 @@ public class DemoTestClientService {
 		System.out.println("Client created, id=" + client.getId() + "  Full name=" + client.getFullName());
 
 	}
+
 	public static void testGetClientsByBranchOfficerState() throws MambuApiException {
 		System.out.println("\nIn testGetClientsByBranchOfficerState");
 
@@ -197,8 +217,8 @@ public class DemoTestClientService {
 		String branchId = BRANCH_ID;
 		String creditOfficerUserName = CREDIT_OFFICER_USER_NAME;
 		String clientState = CLIENT_STATE; // ACTIVE PENDING_APPROVAL BLACKLISTED INACTIVE
-		String offset = null;
-		String limit = null;
+		String offset = "0";
+		String limit = "1";
 		List<Client> clients = clientService.getClientsByBranchOfficerState(branchId, creditOfficerUserName,
 				clientState, offset, limit);
 
@@ -214,14 +234,14 @@ public class DemoTestClientService {
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
-		String branchId = BRANCH_ID;// "RICHMOND_001"; //Berlin_001 REICHMOND_001
+		String branchId = null; // BRANCH_ID;// "RICHMOND_001"; //Berlin_001 REICHMOND_001
 		String creditOfficerUserName = CREDIT_OFFICER_USER_NAME; //
-		String offset = null;
-		String limit = null;
+		String offset = "1";
+		String limit = "1";
 		List<Group> groups = clientService.getGroupsByBranchOfficer(branchId, creditOfficerUserName, offset, limit);
 
 		if (groups != null)
-			System.out.println("Got  Groups for the branch, officer, total clients=" + groups.size());
+			System.out.println("Got  Groups for the branch, officer, total groups=" + groups.size());
 		for (Group group : groups) {
 			System.out.println("Group Name=" + group.getGroupName() + "  BranchId=" + group.getAssignedBranchKey()
 					+ "   Credit Officer id=" + group.getAssignedUserKey());

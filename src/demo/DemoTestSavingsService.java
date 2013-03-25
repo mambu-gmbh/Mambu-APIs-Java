@@ -199,16 +199,16 @@ public class DemoTestSavingsService {
 		String branchId = null; // "RICHMOND_001"; // Berlin_001 RICHMOND_001
 		String creditOfficerUserName = "MichaelD";
 		String accountState = null; // "ACTIVE"; // CLOSED_WITHDRAWN ACTIVE APPROVED
-		String offset = null;
-		String limit = null;
+		String offset = "1";
+		String limit = "2";
 
 		List<SavingsAccount> accounts = savingsService.getSavingsAccountsByBranchOfficerState(branchId,
 				creditOfficerUserName, accountState, offset, limit);
 
 		System.out.println("Got Savings accounts for the branch, officer, state, total Deposits=" + accounts.size());
 		for (SavingsAccount account : accounts) {
-			System.out.println("Account Name=" + account.getName() + "  BranchId=" + account.getAssignedBranchKey()
-					+ "   Credit Officer=" + account.getAssignedUserKey());
+			System.out.println("AccountsID=" + account.getId() + " " + account.getName() + "  BranchId="
+					+ account.getAssignedBranchKey() + "   Credit Officer=" + account.getAssignedUserKey());
 		}
 		System.out.println();
 	}
@@ -219,7 +219,10 @@ public class DemoTestSavingsService {
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
-		List<SavingsProduct> products = savingsService.getSavingsProducts();
+		String offset = "1";
+		String limit = "3";
+
+		List<SavingsProduct> products = savingsService.getSavingsProducts(offset, limit);
 
 		System.out.println("Got Savings products, count=" + products.size());
 

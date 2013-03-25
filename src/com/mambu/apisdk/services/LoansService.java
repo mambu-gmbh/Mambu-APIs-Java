@@ -398,10 +398,15 @@ public class LoansService {
 	 * @throws MambuApiException
 	 * 
 	 */
-	public List<LoanProduct> getLoanProducts() throws MambuApiException {
+	public List<LoanProduct> getLoanProducts(String offset, String limit) throws MambuApiException {
 
 		String urlString = new String(mambuAPIService.createUrl(LOANPRODUCTS + "/"));
-		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
+
+		ParamsMap params = new ParamsMap();
+		params.put(APIData.OFFSET, offset);
+		params.put(APIData.LIMIT, limit);
+
+		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
 		Type collectionType = new TypeToken<List<LoanProduct>>() {}.getType();
 

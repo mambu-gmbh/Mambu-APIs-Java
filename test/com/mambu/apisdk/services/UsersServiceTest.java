@@ -31,11 +31,14 @@ public class UsersServiceTest extends MambuAPIServiceTest {
 	@Test
 	public void testGetUsers() throws MambuApiException {
 
+		ParamsMap params = new ParamsMap();
+		params.addParam("offset", "1");
+		params.addParam("limit", "10");
 		// execute
-		service.getUsers();
+		service.getUsers("1", "10");
 
 		// verify
-		verify(executor).executeRequest("https://demo.mambutest.com/api/users", Method.GET);
+		verify(executor).executeRequest("https://demo.mambutest.com/api/users", params, Method.GET);
 	}
 
 	/***

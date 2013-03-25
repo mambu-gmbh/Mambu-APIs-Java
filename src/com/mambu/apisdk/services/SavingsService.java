@@ -426,10 +426,15 @@ public class SavingsService {
 	 * @throws MambuApiException
 	 * 
 	 */
-	public List<SavingsProduct> getSavingsProducts() throws MambuApiException {
+	public List<SavingsProduct> getSavingsProducts(String offset, String limit) throws MambuApiException {
 
 		String urlString = new String(mambuAPIService.createUrl(SAVINGSRODUCTS + "/"));
-		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
+
+		ParamsMap params = new ParamsMap();
+		params.put(APIData.OFFSET, offset);
+		params.put(APIData.LIMIT, limit);
+
+		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
 		Type collectionType = new TypeToken<List<SavingsProduct>>() {}.getType();
 
