@@ -1,5 +1,7 @@
 package demo;
 
+import java.util.Date;
+
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.OrganizationService;
@@ -14,7 +16,7 @@ import com.mambu.organization.shared.model.Branch;
  */
 public class DemoTestOrganizationService {
 
-	private static String BRANCH_ID = "Richmond01"; // 414659806 RICHMOND_001
+	private static String BRANCH_ID = "TAK 001"; // 414659806 RICHMOND_001 OKE001 "ABKT 001" NE008
 
 	public static void main(String[] args) {
 
@@ -57,12 +59,16 @@ public class DemoTestOrganizationService {
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
-		String offset = "1";
-		String limit = "1";
+		String offset = "0";
+		String limit = "500";
 		System.out.println("\nIn testGetBranchesByPage" + "  Offset=" + offset + "  Limit=" + limit);
-		Branch branches[] = organizationService.getBranches(offset, limit);
 
-		System.out.println("Total=" + branches.length);
+		Date d1 = new Date();
+		Branch branches[] = organizationService.getBranches(offset, limit);
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
+
+		System.out.println("Total Branches=" + branches.length + " Total time=" + diff);
 		for (Branch branch : branches) {
 			System.out.println(" Name=" + branch.getName() + "\tId=" + branch.getId());
 		}
@@ -75,6 +81,7 @@ public class DemoTestOrganizationService {
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		Branch branch = organizationService.getBranch(BRANCH_ID); // BRANCH_ID
+
 		if (branch != null)
 			System.out.println("Branch id=" + BRANCH_ID + " found. Returned:  ID=" + branch.getId() + "   Name="
 					+ branch.getName());
@@ -83,12 +90,14 @@ public class DemoTestOrganizationService {
 	}
 	public static void testGetCurrency() throws MambuApiException {
 		System.out.println("\nIn testGetCurrency");
+		Date d1 = new Date();
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		Currency currency = organizationService.getCurrency();
-
-		System.out.println("Currency code=" + currency.getCode() + "   Name=" + currency.getName());
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
+		System.out.println("Currency code=" + currency.getCode() + "   Name=" + currency.getName() + " Total time="
+				+ diff);
 
 	}
-
 }

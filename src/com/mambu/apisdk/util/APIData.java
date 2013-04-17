@@ -14,7 +14,6 @@ public class APIData {
 	// Users API
 
 	public static final String USERS = "users";
-	public static final String USER_NAME = "userName";
 
 	// Loans and Savings API
 	public static final String LOANS = "loans";

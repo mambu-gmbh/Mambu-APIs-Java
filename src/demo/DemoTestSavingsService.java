@@ -13,15 +13,15 @@ import com.mambu.savings.shared.model.SavingsTransaction;
 /**
  * Test class to show example usage of the api calls
  * 
- * @author mambu
+ * @author manilkis
  * 
  */
 public class DemoTestSavingsService {
 
-	private static String CLIENT_ID = "250213653"; // 282600987 046360136
+	private static String CLIENT_ID = "548919675"; // 282600987 046360136
 
-	private static String GROUP_ID = "588752540"; // 842485684 414659806
-	private static String SAVINGS_ACCOUNT_ID = "VWXH449"; // ILRP761 SHAS854 UBUV290
+	private static String GROUP_ID = "118035060"; // 842485684 414659806
+	private static String SAVINGS_ACCOUNT_ID = "XTTO550"; // ILRP761 SHAS854 UBUV290
 	private static String TO_LOAN_ACCOUNT_ID = "ZKII792"; // XXBE600 TPXA949 QBDP300 SEFY187
 
 	public static void main(String[] args) {
@@ -196,8 +196,8 @@ public class DemoTestSavingsService {
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
-		String branchId = null; // "RICHMOND_001"; // Berlin_001 RICHMOND_001
-		String creditOfficerUserName = "MichaelD";
+		String branchId = "GBK 001"; // "RICHMOND_001"; // Berlin_001 RICHMOND_001 GBK 001
+		String creditOfficerUserName = null;// "demo";
 		String accountState = null; // "ACTIVE"; // CLOSED_WITHDRAWN ACTIVE APPROVED
 		String offset = "1";
 		String limit = "2";

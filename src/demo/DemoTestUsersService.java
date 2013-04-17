@@ -1,5 +1,6 @@
 package demo;
 
+import java.util.Date;
 import java.util.List;
 
 import com.mambu.apisdk.MambuAPIFactory;
@@ -17,8 +18,8 @@ import com.mambu.core.shared.model.User;
  */
 public class DemoTestUsersService {
 
-	private static String BRANCH_ID = "Richmond01";
-	private static String USER_NAME = "MichaelD";
+	private static String BRANCH_ID = "GBK 001"; // NE008 Richmond01 GBK 001
+	private static String USER_NAME = "demo"; // demo michaeld
 
 	public static void main(String[] args) {
 
@@ -27,13 +28,14 @@ public class DemoTestUsersService {
 		try {
 
 			testGetAllUsers();
+
 			testGetUsersByPage();
 
 			testGetUserById();
 
 			testGetPaginatedUsersByBranch();
-			// TODO: this is not implemented yet (if called, returns all users)
-			// testGetUserByUsername();
+
+			testGetUserByUsername();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Users Service");
@@ -46,9 +48,13 @@ public class DemoTestUsersService {
 		System.out.println("\nIn testGetAllUsers");
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
-		List<User> users = usersService.getUsers();
+		Date d1 = new Date();
 
-		System.out.println("Total users=" + users.size());
+		List<User> users = usersService.getUsers();
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
+
+		System.out.println("Total users=" + users.size() + " Total time=" + diff);
 		for (User user : users) {
 			System.out.println(" Username=" + user.getUsername() + "\tId=" + user.getId());
 		}
@@ -56,28 +62,35 @@ public class DemoTestUsersService {
 	}
 
 	public static void testGetUsersByPage() throws MambuApiException {
-		System.out.println("\nIn testGetUsersByPage");
-		UsersService usersService = MambuAPIFactory.getUsersService();
-		String offset = "1";
-		String limit = "2";
-		List<User> users = usersService.getUsers(offset, limit);
 
-		System.out.println("Total users=" + users.size());
+		String offset = "0";
+		String limit = "500";
+
+		System.out.println("\nIn testGetUsersByPage" + " offset=" + offset + " limit=" + limit);
+		Date d1 = new Date();
+		UsersService usersService = MambuAPIFactory.getUsersService();
+		List<User> users = usersService.getUsers(offset, limit);
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
+
+		System.out.println("Total users=" + users.size() + " Total time=" + diff);
 		for (User user : users) {
-			System.out.println(" Username=" + user.getUsername() + "\tId=" + user.getId());
+			System.out.println(" Username=" + user.getUsername() + "\tId=" + user.getId() + "\tBranchId="
+					+ user.getAssignedBranchKey());
 		}
 		System.out.println();
 	}
 
 	public static void testGetPaginatedUsersByBranch() throws MambuApiException {
-		System.out.println("\nIn testGetPaginatedUsers ByBranch");
 
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
 		String offset = "0";
 		String limit = "5";
-
-		List<User> users = usersService.getUsers(BRANCH_ID, null, null); // RICHMOND BRANCH
+		String branchId = BRANCH_ID; // GBK 001
+		System.out
+				.println("\nIn testGetPaginatedUsers ByBranch=" + branchId + "  offset=" + offset + " limit=" + limit);
+		List<User> users = usersService.getUsers(branchId, null, null); // RICHMOND BRANCH
 
 		System.out.println("testGetPaginatedUsers OK, barnch ID=" + BRANCH_ID);
 		for (User user : users) {
@@ -87,27 +100,32 @@ public class DemoTestUsersService {
 	}
 
 	public static void testGetUserById() throws MambuApiException {
-		System.out.println("\nIn testGetUserById ");
+
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
-		String userId = "1";
-		User user = usersService.getUserById(userId);
+		String userId = "demo";
 
-		System.out.println("testGetUserById OK, returned user= " + user.getFirstName() + " " + user.getLastName()
-				+ " Id=" + user.getId());
+		System.out.println("\nIn testGetUserById=" + userId);
+		Date d1 = new Date();
+		User user = usersService.getUserById(userId);
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
+
+		System.out.println("testGetUserById OK, Total time=" + diff + "\nReturned user= " + user.getFirstName() + " "
+				+ user.getLastName() + " Id=" + user.getId() + " Username=" + user.getUsername());
 
 	}
 
 	// getUserByUsername(
 	public static void testGetUserByUsername() throws MambuApiException {
-		System.out.println("\nIn testGetUserByUsername ");
+
 		UsersService usersService = MambuAPIFactory.getUsersService();
+		String username = "Funmi"; // USER_NAME
+		System.out.println("\nIn testGetUserByUsername with name =" + username);
+		User user = usersService.getUserByUsername(username);
 
-		User user = usersService.getUserByUsername(USER_NAME);
-
-		System.out.println("testGetUserByUsername OK, returned user= " + user.getFirstName() + " " + user.getLastName()
-				+ " Id=" + user.getId());
+		System.out.println("testGetUserByUsername OK,returned user= " + user.getFirstName() + " " + user.getLastName()
+				+ " Id=" + user.getId() + " Username=" + user.getUsername());
 
 	}
-
 }

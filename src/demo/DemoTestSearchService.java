@@ -13,7 +13,7 @@ import com.mambu.core.shared.model.SearchResult.Type;
 /**
  * Test class to show example usage of the api calls
  * 
- * @author mambu
+ * @author manilkis
  * 
  */
 public class DemoTestSearchService {

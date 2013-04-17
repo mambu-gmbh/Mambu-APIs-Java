@@ -98,6 +98,9 @@ public class OrganizationService {
 	 */
 	public Branch getBranch(String branchId) throws MambuApiException {
 
+		// Replace spaces with url-encoding symbol "+". Spaces in IDs crash API wrappers
+		branchId = branchId.trim().replace(" ", "+");
+
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(BRANCHES + "/" + branchId));
 

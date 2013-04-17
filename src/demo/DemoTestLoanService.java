@@ -17,11 +17,11 @@ import com.mambu.loans.shared.model.LoanTransaction;
  */
 public class DemoTestLoanService {
 
-	private static String CLIENT_ID = "250213653"; // 046360136 282600987
+	private static String CLIENT_ID = "548919675"; // 046360136 282600987
 
-	private static String GROUP_ID = "588752540"; //
-	private static String LOAN_ACCOUNT_ID = "DTQK377"; // WETZ340 RRSF961 PRTO161
-	private static String BRANCH_ID = "Richmond01";
+	private static String GROUP_ID = "118035060"; // 118035060 588752540
+	private static String LOAN_ACCOUNT_ID = "UXPP562"; // DTQK377 WETZ340 RRSF961 PRTO161 DLWY699
+	private static String BRANCH_ID = "NE008"; // GBK 001
 
 	public static void main(String[] args) {
 
@@ -51,7 +51,6 @@ public class DemoTestLoanService {
 			testGetLoanAccountTransactions();
 
 			// Products
-
 			testGetLoanProducts();
 			testGetLoanProductById();
 
@@ -89,7 +88,7 @@ public class DemoTestLoanService {
 
 		String accountId = LOAN_ACCOUNT_ID;
 		String amount = "10000.00";
-		String disbursalDate = null;// "2013-1-22";
+		String disbursalDate = "2013-4-3";
 		String firstRepaymentDate = null; // "2012-12-06";
 		String paymentMethod = "CASH";// CASH CHECK RECEIPT BANK_TRANSFER
 		String receiptNumber = "D_REC1123";
@@ -163,8 +162,8 @@ public class DemoTestLoanService {
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		String branchId = BRANCH_ID; // Berlin_001 RICHMOND_001
-		String creditOfficerUserName = "MichaelD";
+		String branchId = BRANCH_ID; // BRANCH_ID Berlin_001 RICHMOND_001 GBK 001
+		String creditOfficerUserName = null; // "demo"; // MichaelD
 		String accountState = "ACTIVE"; // CLOSED_WITHDRAWN ACTIVE_IN_ARREARS
 		String offset = null;
 		String limit = null;
@@ -175,8 +174,8 @@ public class DemoTestLoanService {
 		if (loanAccounts != null)
 			System.out.println("Got loan accounts for the branch, officer, state, total loans=" + loanAccounts.size());
 		for (LoanAccount account : loanAccounts) {
-			System.out.println("Account Name=" + account.getLoanName() + "  BranchId=" + account.getAssignedBranchKey()
-					+ "   Credit Officer=" + account.getAssignedUserKey());
+			System.out.println("Account Name=" + account.getId() + "-" + account.getLoanName() + "  BranchId="
+					+ account.getAssignedBranchKey() + "   Credit Officer=" + account.getAssignedUserKey());
 		}
 	}
 	public static void testGetLoanAccountsForClient() throws MambuApiException {
@@ -226,7 +225,7 @@ public class DemoTestLoanService {
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		String offset = "0";
-		String limit = "3";
+		String limit = "100";
 
 		List<LoanProduct> products = loanService.getLoanProducts(offset, limit);
 

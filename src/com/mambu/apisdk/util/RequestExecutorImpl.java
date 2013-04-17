@@ -196,8 +196,13 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// get status
 		int status = httpResponse.getStatusLine().getStatusCode();
 		Header responseContentType = httpResponse.getFirstHeader("Content-Type");
-		String contentTypeStr = responseContentType.getValue();
-		LOGGER.info("contentType =" + contentTypeStr);
+		String contentTypeStr = "";
+		if (responseContentType != null) {
+			contentTypeStr = responseContentType.getValue();
+			LOGGER.info("contentType from response=" + contentTypeStr);
+		} else {
+			LOGGER.info("response is NULL, so no contentType");
+		}
 
 		InputStream content = null;
 		// Get the response Entity

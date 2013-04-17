@@ -30,7 +30,6 @@ public class UsersService {
 	private static String OFFSET = APIData.OFFSET;
 	private static String LIMIT = APIData.LIMIT;
 	private static String BRANCH_ID = APIData.BRANCH_ID;
-	private static String USER_NAME = APIData.USER_NAME;
 	private static String FULL_DETAILS = APIData.FULL_DETAILS;
 
 	/***
@@ -123,8 +122,8 @@ public class UsersService {
 	 * Get User by it's userID
 	 * 
 	 * @param userId
-	 *            the id of the user to filter
-	 * @return
+	 *            the id of the user to filter.
+	 * @return User - with full details
 	 * @throws MambuApiException
 	 */
 
@@ -143,26 +142,20 @@ public class UsersService {
 	}
 
 	/**
-	 * Get User by it's userName
+	 * Get User by it's userName.
+	 * 
+	 * NOTE: This is just a convenience method, it uses the getById() API. One can use getById() diretcly too.
+	 * 
 	 * 
 	 * @param userName
 	 *            the username of the user to filter
-	 * @return
+	 * @return User - with full details
 	 * @throws MambuApiException
 	 */
 
 	public User getUserByUsername(String userName) throws MambuApiException {
 
-		ParamsMap params = new ParamsMap();
-		params.put(USER_NAME, userName);
-		params.put(FULL_DETAILS, "true");
-		// create the api call
-
-		String urlString = new String(mambuAPIService.createUrl(USERS));
-
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
-
-		User user = GsonUtils.createResponse().fromJson(jsonResponse, User.class);
+		User user = getUserById(userName);
 
 		return user;
 	}

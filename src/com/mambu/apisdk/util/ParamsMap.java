@@ -3,8 +3,13 @@
  */
 package com.mambu.apisdk.util;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Logger;
+
+import org.apache.http.protocol.HTTP;
 
 /**
  * Utility class responsible for the creation and the formatting of a map of URL parameters. It extends
@@ -18,6 +23,7 @@ public class ParamsMap extends LinkedHashMap<String, String> {
 	private static final long serialVersionUID = 1L;
 
 	private static String APPENDER = "&";
+	private final static Logger LOGGER = Logger.getLogger(RequestExecutorImpl.class.getName());
 
 	/**
 	 * Class constructor (only for serialization)
@@ -48,8 +54,26 @@ public class ParamsMap extends LinkedHashMap<String, String> {
 
 		for (Map.Entry<String, String> entry : this.entrySet()) {
 			// only put the parameter in the URL if its value is not null
-			if (entry.getValue() != null) {
-				urlParams.append(entry.getKey() + "=" + entry.getValue());
+			String value = entry.getValue();
+
+			if (value != null) {
+
+				// Encode Params's value for url
+				String encodedValue = value;
+
+				try {
+					// encode encodes spaces with '+'
+					encodedValue = URLEncoder.encode(value, HTTP.UTF_8);
+
+				} catch (UnsupportedEncodingException e) {
+					// Shouldn't happen as we only use HTTP.UTF_8, but just in case...
+					LOGGER.severe("Params Map: UnsupportedEncodingException, Invalid Encoding: " + e.getMessage());
+
+					// at least try removing spaces
+					encodedValue = encodedValue.trim().replace(" ", "+");
+
+				}
+				urlParams.append(entry.getKey() + "=" + encodedValue);
 				urlParams.append(APPENDER);
 			}
 		}

@@ -12,8 +12,10 @@ import com.mambu.apisdk.MambuAPIFactory;
 public class DemoUtil {
 
 	private static String domain = "demo.mambucloud.com"; // demo.mambucloud.com decisions21.mambu.com
-	private static String user = "api"; // api
-	private static String password = "api";
+															// seapmfi.mambucloud.com
+															//
+	private static String user = "api"; // api demo MichaelD
+	private static String password = ""; // scale: mdmdcloudy2010mdmd
 
 	public static void setUp() {
 		// get Logging properties file
