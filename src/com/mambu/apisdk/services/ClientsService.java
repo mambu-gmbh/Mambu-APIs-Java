@@ -8,9 +8,9 @@ import java.util.List;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
-
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.Method;
@@ -29,23 +29,24 @@ public class ClientsService {
 
 	private MambuAPIService mambuAPIService;
 
-	private static String CLIENTS = "clients";
-	private static String GROUPS = "groups";
+	private static String CLIENTS = APIData.CLIENTS;
+	private static String GROUPS = APIData.GROUPS;
 
-	private static String FIRST_NAME = "firstName";
-	private static String LAST_NAME = "lastName";
-	public static String HOME_PHONE = "homephone";
-	public static String MOBILE_PHONE = "mobilephone";
-	public static String GENDER = "gender";
-	public static String BIRTH_DATE = "birthdate";
-	public static String EMAIL_ADDRESS = "email";
-	public static String NOTES = "notes";
+	// Client search and create fields
+	private static String FIRST_NAME = APIData.FIRST_NAME;
+	private static String LAST_NAME = APIData.LAST_NAME;
+	private static String HOME_PHONE = APIData.HOME_PHONE;
+	private static String MOBILE_PHONE = APIData.MOBILE_PHONE;
+	private static String GENDER = APIData.GENDER;
+	private static String BIRTH_DATE = APIData.BIRTH_DATE;
+	private static String EMAIL_ADDRESS = APIData.EMAIL_ADDRESS;
+	private static String ID_DOCUMENT = APIData.ID_DOCUMENT;
 
-	public static String ID_DOCUMENT = "idDocument";
+	private static String NOTES = APIData.NOTES;
 
-	public static final String BRANCH_ID = "branchId";
-	public static final String CREDIT_OFFICER_USER_NAME = "creditOfficerUsername";
-	public static final String CLIENT_STATE = "clientState";
+	private static final String BRANCH_ID = APIData.BRANCH_ID;
+	private static final String CREDIT_OFFICER_USER_NAME = APIData.CREDIT_OFFICER_USER_NAME;
+	private static final String CLIENT_STATE = APIData.CLIENT_STATE;
 
 	/***
 	 * Create a new client service
@@ -171,7 +172,7 @@ public class ClientsService {
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(CLIENTS + "/" + clientId));
 		ParamsMap params = new ParamsMap();
-		params.put("fullDetails", "true");
+		params.put(APIData.FULL_DETAILS, "true");
 
 		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
@@ -195,13 +196,42 @@ public class ClientsService {
 
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(GROUPS + "/" + groupId));
-		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
+		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		Group groupResult = GsonUtils.createResponse().fromJson(jsonResposne, Group.class);
+		Group groupResult = GsonUtils.createResponse().fromJson(jsonResponse, Group.class);
 		return groupResult;
 
 	}
 
+	/**
+	 * Requests a group by it's Mambu ID
+	 * 
+	 * @param groupId
+	 *            the id of the group
+	 * 
+	 * @return the retrieved group
+	 * 
+	 * @throws MambuApiException
+	 */
+	public Group getGroupList(String groupId) throws MambuApiException {
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(GROUPS + "/" + groupId));
+		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
+
+		// TODO: temp fix issue in 3.1 patch- it returns an array instead of a single json object
+
+		// *** Temp
+		Type collectionType = new TypeToken<List<Group>>() {}.getType();
+		List<Group> groups = (List<Group>) GsonUtils.createResponse().fromJson(jsonResponse, collectionType);
+		Group groupResult = null;
+		if (groups != null && groups.size() > 0)
+			groupResult = groups.get(0);
+		// *** Temp end
+		// Group groupResult = GsonUtils.createResponse().fromJson(jsonResponse, Group.class);
+		return groupResult;
+
+	}
 	/**
 	 * Requests the details about a group
 	 * 
@@ -217,11 +247,33 @@ public class ClientsService {
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(GROUPS + "/" + groupId));
 		ParamsMap params = new ParamsMap();
-		params.put("fullDetails", "true");
+		params.put(APIData.FULL_DETAILS, "true");
 
-		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.GET);
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		GroupExpanded groupResult = GsonUtils.createResponse().fromJson(jsonResposne, GroupExpanded.class);
+		GroupExpanded groupResult = GsonUtils.createResponse().fromJson(jsonResponse, GroupExpanded.class);
+		return groupResult;
+
+	}
+	public GroupExpanded getGroupDetailsList(String groupId) throws MambuApiException {
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(GROUPS + "/" + groupId));
+		ParamsMap params = new ParamsMap();
+		params.put(APIData.FULL_DETAILS, "true");
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+		// TODO: temp fix issue in 3.1 patch- it returns an array instead of a single json object
+
+		// *** Temp
+		Type collectionType = new TypeToken<List<GroupExpanded>>() {}.getType();
+		List<GroupExpanded> groups = (List<GroupExpanded>) GsonUtils.createResponse().fromJson(jsonResponse,
+				collectionType);
+		GroupExpanded groupResult = null;
+		if (groups != null && groups.size() > 0)
+			groupResult = groups.get(0);
+		// *** Temp end
+		// GroupExpanded groupResult = GsonUtils.createResponse().fromJson(jsonResposne, GroupExpanded.class);
 		return groupResult;
 
 	}
@@ -297,15 +349,17 @@ public class ClientsService {
 	 * @throws MambuApiException
 	 */
 	@SuppressWarnings("unchecked")
-	public List<Client> getClientsByBranchOfficerState(String branchId, String creditOfficerUserName, String clientState)
-			throws MambuApiException {
+	public List<Client> getClientsByBranchOfficerState(String branchId, String creditOfficerUserName,
+			String clientState, String offset, String limit) throws MambuApiException {
 
 		String urlString = new String(mambuAPIService.createUrl(CLIENTS + "/"));
 
 		ParamsMap params = new ParamsMap();
 		params.addParam(BRANCH_ID, branchId);
 		params.addParam(CREDIT_OFFICER_USER_NAME, creditOfficerUserName);
-		params.addParam(CLIENT_STATE, clientState); //
+		params.addParam(CLIENT_STATE, clientState);
+		params.put(APIData.OFFSET, offset);
+		params.put(APIData.LIMIT, limit);
 
 		String jsonResponse;
 
@@ -330,13 +384,16 @@ public class ClientsService {
 	 * @throws MambuApiException
 	 */
 	@SuppressWarnings("unchecked")
-	public List<Group> getGroupsByBranchOfficer(String branchId, String creditOfficerUserName) throws MambuApiException {
+	public List<Group> getGroupsByBranchOfficer(String branchId, String creditOfficerUserName, String offset,
+			String limit) throws MambuApiException {
 
 		String urlString = new String(mambuAPIService.createUrl(GROUPS + "/"));
 
 		ParamsMap params = new ParamsMap();
 		params.addParam(BRANCH_ID, branchId);
 		params.addParam(CREDIT_OFFICER_USER_NAME, creditOfficerUserName);
+		params.put(APIData.OFFSET, offset);
+		params.put(APIData.LIMIT, limit);
 
 		String jsonResponse;
 

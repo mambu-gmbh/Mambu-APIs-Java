@@ -4,7 +4,6 @@ import java.util.logging.Logger;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.AccountingService;
 import com.mambu.apisdk.services.ClientsService;
@@ -30,8 +29,9 @@ public class MambuAPIFactory {
 	private static Injector injector;
 	private final static Logger LOGGER = Logger.getLogger(MambuAPIFactory.class.getName());
 
-	// An 'Application Key' can be optionally set by some Applications (e.g. Mambu Android)
-	// Mambu may handle API requests differently depending on the Application Key
+	// An 'Application Key' can be (optionally) set by some Applications (e.g. Mambu Android)
+	// Mambu can handle API verification requests differently depending on the presence
+	// of the valid Application Key
 	private static String applicationKey = null;
 
 	/**

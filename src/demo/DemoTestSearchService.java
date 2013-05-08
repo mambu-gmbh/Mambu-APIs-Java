@@ -13,7 +13,7 @@ import com.mambu.core.shared.model.SearchResult.Type;
 /**
  * Test class to show example usage of the api calls
  * 
- * @author mdanilkis
+ * @author manilkis
  * 
  */
 public class DemoTestSearchService {
@@ -22,16 +22,15 @@ public class DemoTestSearchService {
 
 		DemoUtil.setUp();
 
-		// Test APIs
 		try {
 
-			// testSearchAll();
+			testSearchAll();
 
-			// testSearchClientsGroups();
+			testSearchClientsGroups();
 
-			// testSearchLoansSavings();
+			testSearchLoansSavings();
 
-			// testSearchUsersBranches();
+			testSearchUsersBranches();
 
 			testTypesCombinations();
 
@@ -44,28 +43,32 @@ public class DemoTestSearchService {
 	}
 
 	public static void testSearchAll() throws MambuApiException {
-		System.out.println("In testSearchAll");
+		System.out.println("\nIn testSearchAll");
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
-		String query = "tom";
+		String query = "i";
+		String offset = "0";
+		String limit = "10";
 
-		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, null);
+		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, null, offset, limit);
 
-		System.out.println("Search All for query=" + query + "Returned=" + results.size());
+		System.out.println("Search All types with a query=" + query + "  Returned=" + results.size());
 
 		logSearchResults(results);
 
 	}
 
 	public static void testSearchClientsGroups() throws MambuApiException {
-		System.out.println("In testSearchClientsGroups");
+		System.out.println("\nIn testSearchClientsGroups");
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
-		String query = "inrina";
+		String query = "ir";
+		String offset = "0";
+		String limit = "100";
 		List<Type> searchTypes = Arrays.asList(Type.CLIENT, Type.GROUP); // or null
 
-		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes);
+		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, offset, limit);
 
 		System.out.println("Search Clients for query=" + query + "Returned=" + results.size());
 
@@ -73,15 +76,17 @@ public class DemoTestSearchService {
 
 	}
 	public static void testSearchLoansSavings() throws MambuApiException {
-		System.out.println("In testSearchLoansSavings");
+		System.out.println("\nIn testSearchLoansSavings");
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
-		String query = "tom";
+		String query = "fish";
+		String offset = "0";
+		String limit = "100";
 
 		List<Type> searchTypes = Arrays.asList(Type.LOAN_ACCOUNT, Type.SAVINGS_ACCOUNT); // or null
 
-		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes);
+		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, offset, limit);
 
 		System.out.println("Search Loans/Savings for query=" + query + "Returned=" + results.size());
 
@@ -90,15 +95,17 @@ public class DemoTestSearchService {
 	}
 
 	public static void testSearchUsersBranches() throws MambuApiException {
-		System.out.println("In testSearchUsersBranches");
+		System.out.println("\nIn testSearchUsersBranches");
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
-		String query = "Michael";
+		String query = "Map";
+		String offset = "0";
+		String limit = "100";
 
 		List<Type> searchTypes = Arrays.asList(Type.USER, Type.BRANCH); // or null
 
-		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes);
+		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, offset, limit);
 
 		System.out.println("Search Users/Branches for query=" + query + "Returned=" + results.size());
 
@@ -107,22 +114,28 @@ public class DemoTestSearchService {
 	}
 
 	public static void testTypesCombinations() throws MambuApiException {
-		System.out.println("In testTypesCombinations");
+		System.out.println("\nIn testTypesCombinations");
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
-		String query = "irina";
+		String query = "Бо"; // Russian Бо // \u00c1 Spanish A == UTF8 hex = c3 81
+		String offset = "0";
+		String limit = "100";
 
-		// Modify for different search Types combinations as needed
-		List<Type> searchTypes = Arrays.asList(Type.BRANCH); // or null
+		// Use different Search Types combinations as needed
+		// List<Type> searchTypes = Arrays.asList(Type.CLIENT, Type.GROUP, Type.LOAN_ACCOUNT, Type.SAVINGS_ACCOUNT,
+		// Type.USER); // or null
+		List<Type> searchTypes = Arrays.asList(Type.CLIENT);
+		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, offset, limit);
 
-		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, null);
-
-		System.out.println("Search for query=" + query + "Returned=" + results.size());
+		if (results != null)
+			System.out.println("Searching for query=" + query + " Types Returned=" + results.size());
 
 		logSearchResults(results);
 
 	}
+
+	// Helper for printing search results
 	private static void logSearchResults(Map<SearchResult.Type, List<SearchResult>> results) {
 
 		if (results == null || results.size() == 0) {

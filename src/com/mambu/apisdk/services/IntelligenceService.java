@@ -10,6 +10,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.intelligence.shared.model.Intelligence.Indicator;
@@ -45,7 +46,7 @@ public class IntelligenceService {
 	public BigDecimal getIndicator(Indicator indicator) throws MambuApiException {
 
 		// create the api call
-		String urlString = new String(mambuAPIService.createUrl("indicators" + "/" + indicator.toString()));
+		String urlString = new String(mambuAPIService.createUrl(APIData.INDICATORS + "/" + indicator.toString()));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
 		HashMap<String, String> result = GsonUtils.createResponse().fromJson(jsonResponse,

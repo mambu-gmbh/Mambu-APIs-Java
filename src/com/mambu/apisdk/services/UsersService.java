@@ -7,6 +7,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.Method;
@@ -24,12 +25,12 @@ public class UsersService {
 
 	private MambuAPIService mambuAPIService;
 
-	private static String USERS = "users";
+	private static String USERS = APIData.USERS;
 
-	private static String OFFSET = "offset";
-	private static String LIMIT = "limit";
-	private static String BRANCH_ID = "branchID";
-	private static String USER_NAME ="userName";
+	private static String OFFSET = APIData.OFFSET;
+	private static String LIMIT = APIData.LIMIT;
+	private static String BRANCH_ID = APIData.BRANCH_ID;
+	private static String FULL_DETAILS = APIData.FULL_DETAILS;
 
 	/***
 	 * Create a new users service
@@ -45,20 +46,21 @@ public class UsersService {
 	/**
 	 * Get all the users
 	 * 
-	 * @param offset
-	 *            the offset of the response. If not set a value of 0 is used by default
-	 * @param limit
-	 *            the maximum number of response entries. If not set a value of 50 is used by default
-	 * @return
+	 * @param
+	 * @return List of all Users
 	 * @throws MambuApiException
 	 */
 	@SuppressWarnings("unchecked")
-	public List<User> getUsers() throws MambuApiException {
+	public List<User> getUsers(String offset, String limit) throws MambuApiException {
 
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(USERS));
 
-		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
+		ParamsMap params = new ParamsMap();
+
+		params.put(OFFSET, offset);
+		params.put(LIMIT, limit);
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
 		Type collectionType = new TypeToken<List<User>>() {}.getType();
 
@@ -67,7 +69,23 @@ public class UsersService {
 		return users;
 
 	}
+	/**
+	 * Get users with offset and limit
+	 * 
+	 * @param offset
+	 *            the offset of the response. If not set a value of 0 is used by default
+	 * @param limit
+	 *            the maximum number of response entries. If not set a value of 50 is used by default
+	 * @return List of Users
+	 * @throws MambuApiException
+	 */
+	public List<User> getUsers() throws MambuApiException {
 
+		List<User> users = getUsers(null, null);
+
+		return users;
+
+	}
 	/**
 	 * Get a paginated list of users filtered by branch
 	 * 
@@ -104,8 +122,8 @@ public class UsersService {
 	 * Get User by it's userID
 	 * 
 	 * @param userId
-	 *            the id of the user to filter
-	 * @return
+	 *            the id of the user to filter.
+	 * @return User - with full details
 	 * @throws MambuApiException
 	 */
 
@@ -113,31 +131,9 @@ public class UsersService {
 
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(USERS) + "/" + userId);
-
-		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
-
-		User user = GsonUtils.createResponse().fromJson(jsonResponse, User.class);
-
-		return user;
-	}
-	
-	/**
-	 * Get User by it's userName
-	 * 
-	 * @param userName
-	 *            the username of the user to filter
-	 * @return
-	 * @throws MambuApiException
-	 */
-
-	public User getUserByUsername(String userName) throws MambuApiException {
-		
 		ParamsMap params = new ParamsMap();
-		params.put(USER_NAME, userName);
-		// create the api call
-		
-		String urlString = new String(mambuAPIService.createUrl(USERS));
 
+		params.put(FULL_DETAILS, "true");
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
 		User user = GsonUtils.createResponse().fromJson(jsonResponse, User.class);
@@ -145,5 +141,23 @@ public class UsersService {
 		return user;
 	}
 
+	/**
+	 * Get User by it's userName.
+	 * 
+	 * NOTE: This is just a convenience method, it uses the getById() API. One can use getById() diretcly too.
+	 * 
+	 * 
+	 * @param userName
+	 *            the username of the user to filter
+	 * @return User - with full details
+	 * @throws MambuApiException
+	 */
+
+	public User getUserByUsername(String userName) throws MambuApiException {
+
+		User user = getUserById(userName);
+
+		return user;
+	}
 
 }

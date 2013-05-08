@@ -10,10 +10,13 @@ import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.APIData;
+import com.mambu.apisdk.util.APIData.ACCOUNT_TYPE;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.savings.shared.model.SavingsAccount;
+import com.mambu.savings.shared.model.SavingsProduct;
 import com.mambu.savings.shared.model.SavingsTransaction;
 
 /**
@@ -24,48 +27,43 @@ import com.mambu.savings.shared.model.SavingsTransaction;
  */
 public class SavingsService {
 
-	public static final String SAVINGS = "savings";
-	public static final String CLIENTS = "clients";
-	public static final String GROUPS = "groups";
-	public static final String FULL_DETAILS = "fullDetails";
+	private static final String SAVINGS = APIData.SAVINGS;
+	private static final String CLIENTS = APIData.CLIENTS;
+	private static final String GROUPS = APIData.GROUPS;
+	private static final String FULL_DETAILS = APIData.FULL_DETAILS;
 
-	public static final String ACTION = "action";
-	public static final String APPROVE = "approve";
+	private static final String TYPE = APIData.TYPE;
+	private static final String TRANSACTIONS = APIData.TRANSACTIONS;
+	private static final String TYPE_DEPOSIT = APIData.TYPE_DEPOSIT;
+	private static final String TYPE_WITHDRAWAL = APIData.TYPE_WITHDRAWAL;
+	private static final String TYPE_TRANSFER = APIData.TYPE_TRANSFER;
+	private static final String TYPE_APPROVAL = APIData.TYPE_APPROVAL;
 
-	public static final String TYPE = "type";
-	public static final String TRANSACTIONS = "transactions";
-	public static final String TYPE_DEPOSIT = "DEPOSIT";
-	public static final String TYPE_WITHDRAWAL = "WITHDRAWAL";
-	public static final String TYPE_TRANSFER = "TRANSFER";
-	public static final String TYPE_APPROVAL = "APPROVAL";
+	private static final String AMOUNT = APIData.AMOUNT;
+	private static final String DATE = APIData.DATE;
 
-	public static final String AMOUNT = "amount";
-	public static final String DATE = "date";
+	private static final String PAYMENT_METHOD = APIData.PAYMENT_METHOD;
 
-	public static final String PAYMENT_METHOD = "method";
-	public static final String CASH_METHOD = "CASH";
-	public static final String RECEIPT_METHOD = "RECEIPT";
-	public static final String CHECK_METHOD = "CHECK";
-	public static final String BANK_TRANSFER_METHOD = "BANK_TRANSFER";
-	public static final String BANK_NUMBER = "bankNumber";
+	private static final String BANK_NUMBER = APIData.BANK_NUMBER;
 
-	public static final String RECEIPT_NUMBER = "receiptNumber";
-	public static final String CHECK_NUMBER = "checkNumber";
-	public static final String BANK_ACCOUNT_NUMBER = "bankAccountNumber";
-	public static final String BANK_ROUTING_NUMBER = "bankRoutingNumber";
-	public static final String NOTES = "notes";
+	private static final String RECEIPT_NUMBER = APIData.RECEIPT_NUMBER;
+	private static final String CHECK_NUMBER = APIData.CHECK_NUMBER;
+	private static final String BANK_ACCOUNT_NUMBER = APIData.BANK_ACCOUNT_NUMBER;
+	private static final String BANK_ROUTING_NUMBER = APIData.BANK_ROUTING_NUMBER;
+	private static final String NOTES = APIData.NOTES;
 	// Savings filters
-	public static final String BRANCH_ID = "branchId";
-	public static final String CREDIT_OFFICER_USER_NAME = "creditOfficerUsername";
-	public static final String ACCOUNT_STATE = "accountState";
+	private static final String BRANCH_ID = APIData.BRANCH_ID;
+	private static final String CREDIT_OFFICER_USER_NAME = APIData.CREDIT_OFFICER_USER_NAME;
+	private static final String ACCOUNT_STATE = APIData.ACCOUNT_STATE;
 
-	//
-	public enum ACCOUNT_TYPE {
-		LOAN, SAVINGS
-	};
+	private static final String OFFSET = APIData.OFFSET;
+	private static final String LIMIT = APIData.LIMIT;
 
-	public static final String TO_SAVINGS = "toSavingsAccount";
-	public static final String TO_LOAN = "toLoanAccount";
+	private static final String TO_SAVINGS = APIData.TO_SAVINGS;
+	private static final String TO_LOAN = APIData.TO_LOAN;
+
+	// Savings products
+	private static final String SAVINGSRODUCTS = APIData.SAVINGSRODUCTS;
 
 	private MambuAPIService mambuAPIService;
 
@@ -196,8 +194,8 @@ public class SavingsService {
 		String jsonResponse;
 
 		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.put("offset", offset);
-		paramsMap.put("limit", limit);
+		paramsMap.put(OFFSET, offset);
+		paramsMap.put(LIMIT, limit);
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 
@@ -330,11 +328,9 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: TO BE FIXED This API does NOT return a Savings Transaction object. Returns only a Success string
-	// Response ={"returnCode":0,"returnStatus":"SUCCESS"}. Parsing to object fails
 
 	public SavingsTransaction makeTransfer(String fromAccountId, String destinationAccountKey,
-			ACCOUNT_TYPE destinationAccountType, String amount, String notes) throws MambuApiException {
+			APIData.ACCOUNT_TYPE destinationAccountType, String amount, String notes) throws MambuApiException {
 
 		// E.g .format: POST "type=TYPE_TRANSFER" /api/savings/KHGJ593/transactions
 
@@ -354,11 +350,7 @@ public class SavingsService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
 
-		// TODO: This is Temp, until api is fixed to return Savings Transaction Object
 		SavingsTransaction transaction = GsonUtils.createResponse().fromJson(jsonResponse, SavingsTransaction.class);
-		boolean status = false;
-		if (jsonResponse.contains("SUCCESS"))
-			status = true;
 
 		return transaction;
 	}
@@ -403,7 +395,7 @@ public class SavingsService {
 	 */
 	@SuppressWarnings("unchecked")
 	public List<SavingsAccount> getSavingsAccountsByBranchOfficerState(String branchId, String creditOfficerUserName,
-			String accountState) throws MambuApiException {
+			String accountState, String offset, String limit) throws MambuApiException {
 
 		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/"));
 		ParamsMap params = new ParamsMap();
@@ -411,6 +403,8 @@ public class SavingsService {
 		params.addParam(BRANCH_ID, branchId);
 		params.addParam(CREDIT_OFFICER_USER_NAME, creditOfficerUserName);
 		params.addParam(ACCOUNT_STATE, accountState);
+		params.put(APIData.OFFSET, offset);
+		params.put(APIData.LIMIT, limit);
 
 		String jsonResponse;
 
@@ -421,6 +415,51 @@ public class SavingsService {
 		List<SavingsAccount> accounts = (List<SavingsAccount>) GsonUtils.createResponse().fromJson(jsonResponse,
 				collectionType);
 		return accounts;
+	}
+
+	// Savings Products
+	/***
+	 * Get a list of Savings Products
+	 * 
+	 * @return the List of Savings Products
+	 * 
+	 * @throws MambuApiException
+	 * 
+	 */
+	public List<SavingsProduct> getSavingsProducts(String offset, String limit) throws MambuApiException {
+
+		String urlString = new String(mambuAPIService.createUrl(SAVINGSRODUCTS + "/"));
+
+		ParamsMap params = new ParamsMap();
+		params.put(APIData.OFFSET, offset);
+		params.put(APIData.LIMIT, limit);
+
+		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.GET);
+
+		Type collectionType = new TypeToken<List<SavingsProduct>>() {}.getType();
+
+		List<SavingsProduct> products = GsonUtils.createResponse().fromJson(jsonResposne, collectionType);
+
+		return products;
+	}
+
+	/***
+	 * Get a Savings Product by Product id
+	 * 
+	 * @param productId
+	 *            the id of the product
+	 * @return the Savings Product
+	 * 
+	 * @throws MambuApiException
+	 * 
+	 */
+	public SavingsProduct getSavingsProduct(String productId) throws MambuApiException {
+
+		String urlString = new String(mambuAPIService.createUrl(SAVINGSRODUCTS + "/" + productId));
+		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
+
+		SavingsProduct product = GsonUtils.createResponse().fromJson(jsonResposne, SavingsProduct.class);
+		return product;
 	}
 
 }
