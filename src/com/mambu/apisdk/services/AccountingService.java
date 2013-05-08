@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 
@@ -41,7 +42,7 @@ public class AccountingService {
 	public GLAccount getGLAccount(String glCode) throws MambuApiException {
 
 		// create the api call
-		String url = "glaccounts" + "/" + glCode;
+		String url = APIData.GLACCOUNTS + "/" + glCode;
 		GLAccount glAccount = getGLAccountResponse(url);
 
 		return glAccount;
@@ -58,7 +59,7 @@ public class AccountingService {
 	public GLAccount getGLAccount(String glCode, String fromDate, String toDate) throws MambuApiException {
 
 		// create the api call
-		String url = "glaccounts" + "/" + glCode + "?" + "from=" + fromDate + "&to=" + toDate;
+		String url = APIData.GLACCOUNTS + "/" + glCode + "?" + "from=" + fromDate + "&to=" + toDate;
 
 		GLAccount glAccount = getGLAccountResponse(url);
 		return glAccount;
