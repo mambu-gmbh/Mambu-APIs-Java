@@ -1,5 +1,8 @@
 package com.mambu.apisdk.util;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
 //
 // This class defines string constants and other constants for Mambu API services
 //
@@ -10,6 +13,9 @@ public class APIData {
 	public static enum ACCOUNT_TYPE {
 		LOAN, SAVINGS
 	};
+	
+	//----- Date Formatting -----
+	public static	final DateFormat	URLDATE_FORMATTER	=new SimpleDateFormat("yyyy-MM-dd");
 
 	// Users API
 
@@ -68,7 +74,8 @@ public class APIData {
 	public static final String SAVINGSRODUCTS = "savingsproducts";
 
 	// Accounting API
-	public static final String GLACCOUNTS = "glaccounts";
+		public static final String GLACCOUNTS 		= "glaccounts";
+		public static final String GLJOURNALENTRIES = "gljournalentries";
 
 	// Intelligence API
 	public static final String INDICATORS = "indicators";
