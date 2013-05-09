@@ -89,4 +89,21 @@ public class MambuAPIService {
 
 		return urlHelper.createUrl(details);
 	}
+
+	/**
+	 * Returns an url containing limit/offset params.
+	 * @param details URL details
+	 * @param offset offset to start from
+	 * @param limit max. number of entries
+	 * @return URL for a limited query
+	 */
+	public String	createUrl(String details, int offset, int limit)
+	{
+		String	url	=this.createUrl(details);
+		
+		if(limit != -1) url+=(url.contains("?") ? "&" : "?") + "limit=" + limit;
+		if(offset != -1) url+=(url.contains("?") ? "&" : "?") + "offset=" + offset;
+		
+		return(url);
+	}
 }
