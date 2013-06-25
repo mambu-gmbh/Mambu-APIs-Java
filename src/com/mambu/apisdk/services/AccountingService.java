@@ -77,6 +77,7 @@ public class AccountingService {
 		String urlString = new String(mambuAPIService.createUrl(url));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 		GLAccount glAccount = GsonUtils.createResponse().fromJson(jsonResponse, GLAccount.class);
+
 		return glAccount;
 	}
 }

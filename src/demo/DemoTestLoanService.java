@@ -153,7 +153,8 @@ public class DemoTestLoanService {
 		LoanTransaction transaction = loanService.applyFeeToLoanAccount(accountId, amount, repaymentNumber, notes);
 
 		System.out.println("Loan Fee response= " + transaction.getTransactionId().toString() + "  Trans Amount="
-				+ transaction.getAmount().toString() + "   Fees paid=" + transaction.getFeesPaid().toString());
+		// + transaction.getAmount().toString() + "   Fees paid=" + transaction.getFeesPaid().toString());
+				+ transaction.getAmount().toString() + "   Fees amount=" + transaction.getFeesAmount().toString());
 
 	}
 

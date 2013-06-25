@@ -204,35 +204,6 @@ public class ClientsService {
 	}
 
 	/**
-	 * Requests a group by it's Mambu ID
-	 * 
-	 * @param groupId
-	 *            the id of the group
-	 * 
-	 * @return the retrieved group
-	 * 
-	 * @throws MambuApiException
-	 */
-	public Group getGroupList(String groupId) throws MambuApiException {
-
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(GROUPS + "/" + groupId));
-		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
-
-		// TODO: temp fix issue in 3.1 patch- it returns an array instead of a single json object
-
-		// *** Temp
-		Type collectionType = new TypeToken<List<Group>>() {}.getType();
-		List<Group> groups = (List<Group>) GsonUtils.createResponse().fromJson(jsonResponse, collectionType);
-		Group groupResult = null;
-		if (groups != null && groups.size() > 0)
-			groupResult = groups.get(0);
-		// *** Temp end
-		// Group groupResult = GsonUtils.createResponse().fromJson(jsonResponse, Group.class);
-		return groupResult;
-
-	}
-	/**
 	 * Requests the details about a group
 	 * 
 	 * @param groupId
@@ -255,28 +226,7 @@ public class ClientsService {
 		return groupResult;
 
 	}
-	public GroupExpanded getGroupDetailsList(String groupId) throws MambuApiException {
 
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(GROUPS + "/" + groupId));
-		ParamsMap params = new ParamsMap();
-		params.put(APIData.FULL_DETAILS, "true");
-
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
-		// TODO: temp fix issue in 3.1 patch- it returns an array instead of a single json object
-
-		// *** Temp
-		Type collectionType = new TypeToken<List<GroupExpanded>>() {}.getType();
-		List<GroupExpanded> groups = (List<GroupExpanded>) GsonUtils.createResponse().fromJson(jsonResponse,
-				collectionType);
-		GroupExpanded groupResult = null;
-		if (groups != null && groups.size() > 0)
-			groupResult = groups.get(0);
-		// *** Temp end
-		// GroupExpanded groupResult = GsonUtils.createResponse().fromJson(jsonResposne, GroupExpanded.class);
-		return groupResult;
-
-	}
 	/***
 	 * Create a new client with only it's first name and last name
 	 * 
@@ -300,6 +250,35 @@ public class ClientsService {
 		return clientResult;
 	}
 
+	/***
+	 * Create a new client using a Client object and as json request
+	 * 
+	 * @param client
+	 * @return
+	 * @throws MambuApiException
+	 */
+	public Client createClient(Client client) throws MambuApiException {
+
+		// Convert object to json
+
+		String jsonClient = GsonUtils.createResponse().toJson(client, Client.class);
+		String jsonClientRequest = String.format("{\"client\":%s}", jsonClient);
+
+		// System.out.println("Create json client=" + jsonClient);
+		System.out.println("Create json request=" + jsonClientRequest);
+
+		ParamsMap params = new ParamsMap();
+		params.put("JSON", jsonClientRequest);
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(CLIENTS + "/"));
+
+		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.POST_JSON);
+
+		Client clientResult = GsonUtils.createResponse().fromJson(jsonResposne, Client.class);
+
+		return clientResult;
+	}
 	/***
 	 * Create a new client with full details
 	 * 

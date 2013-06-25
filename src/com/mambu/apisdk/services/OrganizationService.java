@@ -12,6 +12,7 @@ import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.organization.shared.model.Branch;
+import com.mambu.organization.shared.model.Centre;
 
 /**
  * Service class which handles API operations available for the organizations like getting it's currency
@@ -113,5 +114,65 @@ public class OrganizationService {
 
 		return branch;
 
+	}
+
+	/** Centres **/
+	/**
+	 * Requests a centre by their Mambu ID
+	 * 
+	 * @param centreId
+	 * @return the Mambu centre model
+	 * @throws MambuApiException
+	 */
+	public Centre getCentre(String centreId) throws MambuApiException {
+
+		// Replace spaces with url-encoding symbol "+". Spaces in IDs crash API wrappers
+		centreId = centreId.trim().replace(" ", "+");
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(APIData.CENTRES + "/" + centreId));
+
+		ParamsMap params = new ParamsMap();
+
+		params.put(FULL_DETAILS, "true");
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+
+		Centre centre = (Centre) GsonUtils.createResponse().fromJson(jsonResponse, Centre.class);
+
+		return centre;
+
+	}
+
+	/**
+	 * Get paginated list of centres
+	 * 
+	 * @param branchID
+	 *            Centers for the specified branch are returned. If NULL, all centres are searched
+	 * 
+	 * @param offset
+	 *            the offset of the response. If not set a value of 0 is used by default
+	 * @param limit
+	 *            the maximum number of response entries. If not set a value of 50 is used by default
+	 * @return an array of Centres
+	 * 
+	 * @throws MambuApiException
+	 */
+
+	public Centre[] getCentres(String branchId, String offset, String limit) throws MambuApiException {
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(APIData.CENTRES));
+		String jsonResponse;
+		ParamsMap params = new ParamsMap();
+
+		params.addParam(APIData.BRANCH_ID, branchId); // if null, all centres are searched
+		params.put(OFFSET, offset);
+		params.put(LIMIT, limit);
+
+		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+
+		Centre centres[] = (Centre[]) GsonUtils.createResponse().fromJson(jsonResponse, Centre[].class);
+
+		return centres;
 	}
 }

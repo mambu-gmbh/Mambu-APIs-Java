@@ -7,6 +7,7 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.organization.shared.model.Branch;
+import com.mambu.organization.shared.model.Centre;
 
 /**
  * Test class to show example usage of the api calls
@@ -16,13 +17,19 @@ import com.mambu.organization.shared.model.Branch;
  */
 public class DemoTestOrganizationService {
 
-	private static String BRANCH_ID = "TAK 001"; // 414659806 RICHMOND_001 OKE001 "ABKT 001" NE008
+	private static String BRANCH_ID = "Richmond01"; // Richmond01 TAK 001 414659806 RICHMOND_001 OKE001 "ABKT 001" NE008
 
 	public static void main(String[] args) {
 
 		DemoUtil.setUp();
 
 		try {
+
+			testGetCentre();
+
+			testGetCentresByPage();
+
+			testGetCentresByBranch();
 
 			testGetCurrency();
 
@@ -40,7 +47,7 @@ public class DemoTestOrganizationService {
 
 	}
 	public static void testGetAllBranches() throws MambuApiException {
-		System.out.println("\nIn testGetBranches");
+		System.out.println("\nIn testGetAllBranches");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		String offset = null;
@@ -88,6 +95,67 @@ public class DemoTestOrganizationService {
 		else
 			System.out.println("Not Found Branch id=" + BRANCH_ID);
 	}
+	public static void testGetCentre() throws MambuApiException {
+
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+
+		String centreId = "Richmond_Center_1";
+		System.out.println("\nIn testGetCentre by ID." + "  Centre ID=" + centreId);
+
+		Date d1 = new Date();
+		Centre centre = organizationService.getCentre(centreId);
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
+
+		System.out.println("Centre: Name=" + centre.getName() + " BranchId=" + centre.getAssignedBranchKey()
+				+ " Total time=" + diff);
+
+	}
+
+	public static void testGetCentresByPage() throws MambuApiException {
+
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+
+		String offset = "0";
+		String limit = "500";
+		String branchId = null;
+		System.out.println("\nIn testGetCentresByPage" + "  Offset=" + offset + "  Limit=" + limit);
+
+		Date d1 = new Date();
+		Centre centres[] = organizationService.getCentres(branchId, offset, limit);
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
+
+		System.out.println("Total Centres=" + centres.length + " Total time=" + diff);
+		for (Centre centre : centres) {
+			System.out.println(" Name=" + centre.getName() + "\tId=" + centre.getId());
+		}
+		System.out.println();
+
+	}
+	public static void testGetCentresByBranch() throws MambuApiException {
+
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+
+		String branchId = BRANCH_ID; // "Richmond01"
+		String offset = "0";
+		String limit = "500";
+		System.out.println("\nIn testGetCentresByBranch" + "  BranchID=" + branchId + "  Offset=" + offset + "  Limit="
+				+ limit);
+
+		Date d1 = new Date();
+		Centre centres[] = organizationService.getCentres(branchId, offset, limit);
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
+
+		System.out.println("Total Centres=" + centres.length + " for branch=" + branchId + ". Total time=" + diff);
+		for (Centre centre : centres) {
+			System.out.println(" Name=" + centre.getName() + "\tId=" + centre.getId());
+		}
+		System.out.println();
+
+	}
+
 	public static void testGetCurrency() throws MambuApiException {
 		System.out.println("\nIn testGetCurrency");
 		Date d1 = new Date();

@@ -47,9 +47,9 @@ public class DemoTestSearchService {
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
-		String query = "i";
+		String query = "m";
 		String offset = "0";
-		String limit = "10";
+		String limit = "200";
 
 		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, null, offset, limit);
 
@@ -63,9 +63,9 @@ public class DemoTestSearchService {
 		System.out.println("\nIn testSearchClientsGroups");
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
-		String query = "ir";
+		String query = "i";
 		String offset = "0";
-		String limit = "100";
+		String limit = "300";
 		List<Type> searchTypes = Arrays.asList(Type.CLIENT, Type.GROUP); // or null
 
 		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, offset, limit);

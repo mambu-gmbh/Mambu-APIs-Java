@@ -1,5 +1,6 @@
 package demo;
 
+import java.util.Date;
 import java.util.List;
 
 import com.mambu.apisdk.MambuAPIFactory;
@@ -20,7 +21,8 @@ import com.mambu.core.shared.model.Gender;
  */
 public class DemoTestClientService {
 
-	private static String CLIENT_ID = "250213653"; // 078911120 046360136 729859576 078911120 250213653
+	private static String CLIENT_ID = "363317853"; // 250213653 078911120 046360136 729859576 078911120 250213653
+													// 363317853
 
 	private static String GROUP_ID = "588752540"; // 414659806 588752540
 
@@ -34,23 +36,21 @@ public class DemoTestClientService {
 
 		try {
 
-			testGetClient();
+			// testCreateJsonClient();
 
+			testGetClient();
 			testGetClientDetails();
+
+			testCreateFullDetailsClient();
 
 			testGetClientbyFullName();
 			testGetClientByLastNameBirthday();
 			testGetClientByDocIdLastName();
 
-			// TODO: GroupDetails API issue. Uncomment and replace temp when API is fixed // testGetGroup();
-			testGetGroupTemp();
+			testGetGroup();
 
-			// TODO: Uncomment and replace temp when API is fixed // testGetGroupDetails();
-			testGetGroupDetailsTemp();
+			testGetGroupDetails();
 
-			testCreateBasicClient();
-
-			testCreateFullDetailsClient();
 			testCreateBasicClient();
 
 			testGetClientsByBranchOfficerState();
@@ -147,13 +147,6 @@ public class DemoTestClientService {
 		System.out.println("testGetGroup OK, name=" + clientService.getGroup(GROUP_ID).getGroupName());
 
 	}
-	public static void testGetGroupTemp() throws MambuApiException {
-		System.out.println("\nIn testGetGroupTemp - NOTE: USING groupDetails workaround");
-		ClientsService clientService = MambuAPIFactory.getClientService();
-
-		System.out.println("testGetGroup OK, name=" + clientService.getGroupList(GROUP_ID).getGroupName());
-
-	}
 
 	public static void testGetGroupDetails() throws MambuApiException {
 		System.out.println("\nIn testGetGroupDetails");
@@ -164,16 +157,22 @@ public class DemoTestClientService {
 				+ clientService.getGroupDetails(GROUP_ID).getGroup().getGroupName());
 
 	}
-	public static void testGetGroupDetailsTemp() throws MambuApiException {
-		System.out.println("\nIn testGetGroupDetailsTemp - NOTE: USING groupDetails workaround");
+
+	public static void testCreateJsonClient() throws MambuApiException {
+		System.out.println("\nIn testCreateJsonClient");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
+		Client clientIn = new Client("FirstName1", "Lastname1");
+		clientIn.setApprovedDate(new Date());
+		clientIn.setEmailAddress("mjson@test.ca");
+		clientIn.setHomePhone("604-271-7033");
 
-		System.out.println("testGetGroupDetails Ok, name="
-				+ clientService.getGroupDetailsList(GROUP_ID).getGroup().getGroupName());
+		Client client = clientService.createClient(clientIn); // Spanish accented A \u00c1 and \u00c9
+																// accented E
+
+		System.out.println("Client created, OK, ID=" + client.getId() + " Full name= " + client.getFullName());
 
 	}
-
 	public static void testCreateBasicClient() throws MambuApiException {
 		System.out.println("\nIn testCreateBasicClient");
 

@@ -20,6 +20,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
@@ -49,6 +50,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 	private final String APPLICATION_KEY = "appkey"; // as per JIRA issue MBU-3236
 
 	private final static Logger LOGGER = Logger.getLogger(RequestExecutorImpl.class.getName());
+
+	private Method theMethod;
 
 	@Inject
 	public RequestExecutorImpl(URLHelper urlHelper) {
@@ -82,6 +85,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 				response = executeGetRequest(urlString, params);
 				break;
 			case POST:
+			case POST_JSON:
+				theMethod = method;
 				response = executePostRequest(urlString, params);
 				break;
 			}
@@ -102,14 +107,21 @@ public class RequestExecutorImpl implements RequestExecutor {
 			MambuApiException {
 
 		String contentType = formPostContentType; // "application/x-www-form-urlencoded; charset=UTF-8";
-		// String contentType = "application/json;  charset=UTF-8";// charset=UTF-8"; // NO_API_ACCESS
+		final String jsonContentType = "application/json;  charset=UTF-8";// charset=UTF-8"; // NO_API_ACCESS
+		if (theMethod == Method.POST_JSON) {
+			contentType = jsonContentType;
 
+		}
 		String response = "";
 		Integer errorCode = null;
 
+		// TODO: REMOVE
+		// urlString = "http://requestb.in/12o4z3g1";
+
+		// /////
+
 		HttpParams httpParameters = new BasicHttpParams();
 		HttpClient httpClient = new DefaultHttpClient(httpParameters);
-
 		HttpPost httpPost = new HttpPost(urlString);
 		httpPost.setHeader("Content-Type", contentType);
 		httpPost.setHeader("Authorization", "Basic " + encodedAuthorization);
@@ -118,13 +130,23 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		if (params != null && params.size() > 0) {
 
-			// convert parms to a list for HttpEntity
-			List<NameValuePair> httpParams = getListFromParams(params);
-			// use UTF-8 to encode
+			switch (theMethod) {
 
-			HttpEntity postEntity = new UrlEncodedFormEntity(httpParams, UTF8_charset);
+			case POST:
 
-			httpPost.setEntity(postEntity);
+				// convert parms to a list for HttpEntity
+				List<NameValuePair> httpParams = getListFromParams(params);
+				// use UTF-8 to encode
+
+				HttpEntity postEntity = new UrlEncodedFormEntity(httpParams, UTF8_charset);
+
+				httpPost.setEntity(postEntity);
+				break;
+
+			case POST_JSON:
+				httpPost.setEntity(new StringEntity(params.get("JSON"), "UTF8"));
+				break;
+			}
 
 		}
 

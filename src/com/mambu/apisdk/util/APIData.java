@@ -73,8 +73,9 @@ public class APIData {
 	// Intelligence API
 	public static final String INDICATORS = "indicators";
 
-	// Organizatoion services
+	// Organization services
 	public static String BRANCHES = "branches";
+	public static String CENTRES = "centres";
 	public static String CURRENCIES = "currencies";
 
 	// Repayments
