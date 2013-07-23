@@ -35,6 +35,7 @@ public class DemoTestClientService {
 		try {
 
 			testGetClient();
+			testGetClients();
 
 			testGetClientDetails();
 
@@ -71,12 +72,32 @@ public class DemoTestClientService {
 		System.out.println("Client Service by ID Ok, ID=" + myClient.getId());
 
 	}
+	
+	public static void testGetClients() throws MambuApiException
+	{
+		try
+		{
+			System.out.println("\nIn testGetClients");
+			ClientsService clientService = MambuAPIFactory.getClientService();
+
+			System.out.println("Sucessfully returned " + clientService.getClients(true).size() + " clients(active)...");
+			System.out.println("Sucessfully returned " + clientService.getClients(false).size() + " clients(inactive)...");
+			
+			System.out.println("Sucessfully returned " + clientService.getClients(true,0,10).size() + " clients(active,pagesize of 10)...");
+			System.out.println("Sucessfully returned " + clientService.getClients(false,0,10).size() + " clients(inactive,pagesize of 10)...");
+		}
+		catch (MambuApiException e) {
+			System.out.println("Exception caught in Demo Test Clients");
+			System.out.println("Error code=" + e.getErrorCode());
+			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
+		}
+	}
 
 	public static void testGetClientbyFullName() throws MambuApiException {
 		System.out.println("\nIn testGetClientbyFullName");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
-		;
+		
 		String lastname = "Chernaya"; // Chernaya FullClient
 		String firstName = "Irina"; // Irina API
 

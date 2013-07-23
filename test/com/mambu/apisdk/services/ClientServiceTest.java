@@ -43,6 +43,62 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 	}
 
 	/***
+	 * Test the retrieval of more/all clients
+	 * 
+	 */
+	@Test
+	public void testGetClientsActive() throws MambuApiException {
+
+		// execute
+		service.getClients(true);
+
+		// verify
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients?state=ACTIVE", Method.GET);
+	}
+
+	/***
+	 * Test the retrieval of more/all clients
+	 * 
+	 */
+	@Test
+	public void testGetClientsInactive() throws MambuApiException {
+
+		// execute
+		service.getClients(false);
+
+		// verify
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients?state=INACTIVE", Method.GET);
+	}
+
+	/***
+	 * Test the retrieval of more/all clients
+	 * 
+	 */
+	@Test
+	public void testGetClientsActivePaged() throws MambuApiException {
+
+		// execute
+		service.getClients(true,0,50);
+
+		// verify
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients?state=ACTIVE&offset=0&limit=50", Method.GET);
+	}
+
+	/***
+	 * Test the retrieval of more/all clients
+	 * 
+	 */
+	@Test
+	public void testGetClientsInactivePaged() throws MambuApiException {
+
+		// execute
+		service.getClients(false,0,50);
+
+		// verify
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients?state=INACTIVE&offset=0&limit=50", Method.GET);
+	}
+
+	/***
 	 * Test the retrieval of a full details client with a given id
 	 * 
 	 */
