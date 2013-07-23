@@ -95,6 +95,10 @@ public class APIData {
 	public static String SEARCH = "search";
 	public static String QUERY = "query";
 	public static String SEARCH_TYPES = "type";
+	
+	// Tasks API
+	// API's endpoint
+	public static String TASKS = "tasks";
 
 	// Client fields
 	public static String FIRST_NAME = "firstName";
