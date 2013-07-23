@@ -43,31 +43,58 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 	private URLHelper urlHelper;
 	private String encodedAuthorization;
-	private String UTF8_charset = HTTP.UTF_8;
-	private String formPostContentType = "application/x-www-form-urlencoded; charset=UTF-8";
-	private String formGetContentType = "application/x-www-form-urlencoded; charset=UTF-8";
+	private final String UTF8_charset = HTTP.UTF_8;
+	private final String wwwFormUrlEncodedContentType = "application/x-www-form-urlencoded; charset=UTF-8";
+	
+	// TODO: add charset when https://mambucom.jira.com/browse/MBU-4137 is fixed
+	private final String jsonContentType = "application/json"; // "application/json; charset=UTF-8";
 
 	private final String APPLICATION_KEY = "appkey"; // as per JIRA issue MBU-3236
 
 	private final static Logger LOGGER = Logger.getLogger(RequestExecutorImpl.class.getName());
-
-	private Method theMethod;
 
 	@Inject
 	public RequestExecutorImpl(URLHelper urlHelper) {
 		this.urlHelper = urlHelper;
 	}
 
+	// Without params and with default contentType (ContentType.WWW_FORM)
 	@Override
 	public String executeRequest(String urlString, Method method) throws MambuApiException {
-		return executeRequest(urlString, null, method);
+		// invoke with default contentType (FORM)
+		return executeRequest(urlString, null, method, ContentType.WWW_FORM);
 	}
 
+	// With params and with default contentType (ContentType.WWW_FORM)
 	@Override
 	public String executeRequest(String urlString, ParamsMap params, Method method) throws MambuApiException {
+		// invoke with default contentType (FORM)
+		return executeRequest(urlString, params, method, ContentType.WWW_FORM);
+	}
+
+	// With specifying the Content Type but without params
+	/*
+	 * Use this method to specify the requests's Content Type (must be used if content type is not WWW_FORM, for example
+	 * for the json content type)
+	 */
+	@Override
+	public String executeRequest(String urlString, Method method, ContentType contentTypeFormat)
+			throws MambuApiException {
+		// No params version
+		return executeRequest(urlString, null, method, contentTypeFormat);
+	}
+	/*
+	 * Use this method to specify the requests's Content Type (must be used if content type is not WWW_FORM, for example
+	 * for the json content type)
+	 */
+	@Override
+	public String executeRequest(String urlString, ParamsMap params, Method method, ContentType contentTypeFormat)
+			throws MambuApiException {
 
 		// Add 'Application Key', if it was set by the application
 		// Mambu may handle API requests differently for different Application Keys
+
+		// TODO: revisit applicationKey implementation for json request when MBU-3892 is fixed in 3.3 (App Key for Json)
 
 		String applicationKey = MambuAPIFactory.getApplicationKey();
 		if (applicationKey != null) {
@@ -75,19 +102,17 @@ public class RequestExecutorImpl implements RequestExecutor {
 			if (params == null)
 				params = new ParamsMap();
 			params.addParam(APPLICATION_KEY, applicationKey);
-			// LOGGER.info("Added Application key=" + applicationKey);
+			LOGGER.info("Added Application key=" + applicationKey);
 		}
 
 		String response = "";
 		try {
 			switch (method) {
 			case GET:
-				response = executeGetRequest(urlString, params);
+				response = executeGetRequest(urlString, params, contentTypeFormat);
 				break;
 			case POST:
-			case POST_JSON:
-				theMethod = method;
-				response = executePostRequest(urlString, params);
+				response = executePostRequest(urlString, params, contentTypeFormat);
 				break;
 			}
 		} catch (MalformedURLException e) {
@@ -103,22 +128,14 @@ public class RequestExecutorImpl implements RequestExecutor {
 	/**
 	 * Executes a POST request as per the interface specification
 	 */
-	private String executePostRequest(String urlString, ParamsMap params) throws MalformedURLException, IOException,
-			MambuApiException {
+	private String executePostRequest(String urlString, ParamsMap params, ContentType contentTypeFormat)
+			throws MalformedURLException, IOException, MambuApiException {
 
-		String contentType = formPostContentType; // "application/x-www-form-urlencoded; charset=UTF-8";
-		final String jsonContentType = "application/json;  charset=UTF-8";// charset=UTF-8"; // NO_API_ACCESS
-		if (theMethod == Method.POST_JSON) {
-			contentType = jsonContentType;
+		// Get properly formatted ContentType
+		final String contentType = getFormattedContentTypeString(contentTypeFormat);
 
-		}
 		String response = "";
 		Integer errorCode = null;
-
-		// TODO: REMOVE
-		// urlString = "http://requestb.in/12o4z3g1";
-
-		// /////
 
 		HttpParams httpParameters = new BasicHttpParams();
 		HttpClient httpClient = new DefaultHttpClient(httpParameters);
@@ -126,13 +143,13 @@ public class RequestExecutorImpl implements RequestExecutor {
 		httpPost.setHeader("Content-Type", contentType);
 		httpPost.setHeader("Authorization", "Basic " + encodedAuthorization);
 
-		LOGGER.info("POST:  URL=" + urlString + " Params=" + params.getURLString());
+		LOGGER.info("POST With ContentType=" + contentType + " URL=" + urlString + " Params as URL string="
+				+ params.getURLString());
 
 		if (params != null && params.size() > 0) {
+			switch (contentTypeFormat) {
 
-			switch (theMethod) {
-
-			case POST:
+			case WWW_FORM:
 
 				// convert parms to a list for HttpEntity
 				List<NameValuePair> httpParams = getListFromParams(params);
@@ -143,8 +160,13 @@ public class RequestExecutorImpl implements RequestExecutor {
 				httpPost.setEntity(postEntity);
 				break;
 
-			case POST_JSON:
-				httpPost.setEntity(new StringEntity(params.get("JSON"), "UTF8"));
+			case JSON:
+				// Parameter )jsson sring) is expected as JSON_OBJECT parameter name
+				StringEntity jsonEntity = new StringEntity(params.get(APIData.JSON_OBJECT), UTF8_charset);
+
+				LOGGER.info("Posting JSON request:  URL=" + urlString + " String Entity=" + jsonEntity.toString());
+
+				httpPost.setEntity(jsonEntity);
 				break;
 			}
 
@@ -192,16 +214,20 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * 
 	 * @param urlString
 	 */
-	private String executeGetRequest(String urlString, ParamsMap params) throws MalformedURLException, IOException,
-			MambuApiException {
+	private String executeGetRequest(String urlString, ParamsMap params, ContentType contentTypeFormat)
+			throws MalformedURLException, IOException, MambuApiException {
 		String response = "";
 		Integer errorCode = null;
-		String contentType = formGetContentType; // "application/x-www-form-urlencoded; charset=UTF-8";
+
+		// "application/x-www-form-urlencoded; charset=UTF-8";
+		// Get properly formatted ContentType
+
+		final String contentType = getFormattedContentTypeString(contentTypeFormat);
 
 		if (params != null && params.size() > 0) {
 			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
 		}
-		LOGGER.info("GET: URL with params=" + urlString);
+		LOGGER.info("GET with ContentType=" + contentType + ". URL with params=" + urlString);
 
 		HttpParams httpParameters = new BasicHttpParams();
 
@@ -221,7 +247,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		String contentTypeStr = "";
 		if (responseContentType != null) {
 			contentTypeStr = responseContentType.getValue();
-			LOGGER.info("contentType from response=" + contentTypeStr);
+			LOGGER.info("contentType in Response=" + contentTypeStr);
 		} else {
 			LOGGER.info("response is NULL, so no contentType");
 		}
@@ -301,5 +327,19 @@ public class RequestExecutorImpl implements RequestExecutor {
 			}
 		}
 		return nameValuePairs;
+	}
+	/**
+	 * Get the formatted content type string for the content type enum value
+	 */
+	private String getFormattedContentTypeString(ContentType contentTypeFormat) {
+		switch (contentTypeFormat) {
+		case WWW_FORM:
+			return wwwFormUrlEncodedContentType;
+		case JSON:
+			return jsonContentType;
+		default:
+			return wwwFormUrlEncodedContentType;
+		}
+
 	}
 }

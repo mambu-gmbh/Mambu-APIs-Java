@@ -1,11 +1,15 @@
 package demo;
 
 import java.util.Date;
+import java.util.List;
 
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.core.shared.model.Currency;
+import com.mambu.core.shared.model.CustomField;
+import com.mambu.core.shared.model.CustomFieldSet;
+import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 
@@ -17,13 +21,16 @@ import com.mambu.organization.shared.model.Centre;
  */
 public class DemoTestOrganizationService {
 
-	private static String BRANCH_ID = "Richmond01"; // Richmond01 TAK 001 414659806 RICHMOND_001 OKE001 "ABKT 001" NE008
+	private static String BRANCH_ID = "Richmond01"; // Richmond01 TAK 001
 
 	public static void main(String[] args) {
 
 		DemoUtil.setUp();
 
 		try {
+			// TODO:Custom Fields API to be tested with Mambu 3.3, see MBU-2486
+			// testCustomField();
+			// testGetCustomFieldSetsByType();
 
 			testGetCentre();
 
@@ -52,9 +59,12 @@ public class DemoTestOrganizationService {
 
 		String offset = null;
 		String limit = null;
+		Date d1 = new Date();
 		Branch branches[] = organizationService.getBranches(offset, limit);
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
 
-		System.out.println("All Total=" + branches.length);
+		System.out.println("All Total=" + branches.length + " Total time=" + diff);
 		for (Branch branch : branches) {
 			System.out.println(" Name=" + branch.getName() + "\tId=" + branch.getId());
 		}
@@ -166,6 +176,46 @@ public class DemoTestOrganizationService {
 		long diff = d2.getTime() - d1.getTime();
 		System.out.println("Currency code=" + currency.getCode() + "   Name=" + currency.getName() + " Total time="
 				+ diff);
+
+	}
+	// Get Custom Field by ID
+	public static void testCustomField() throws MambuApiException {
+
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+
+		String fieldId = "Family_Size_Clients";
+		System.out.println("\nIn testCustomField by ID." + "  Field ID=" + fieldId);
+
+		Date d1 = new Date();
+		CustomFieldValue customFieldValue = organizationService.getCustomField(fieldId);
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
+
+		System.out.println("CustomFieldValue: ID=" + customFieldValue.getCustomFieldId() + " Value="
+				+ customFieldValue.getValue() + " Name=" + customFieldValue.getCustomField().getName() + " Total time="
+				+ diff);
+
+	}
+
+	// Get CustomFieldSets by Type
+	public static void testGetCustomFieldSetsByType() throws MambuApiException {
+
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+
+		CustomField.Type customFieldType = CustomField.Type.CLIENT_INFO; //
+
+		System.out.println("\nIn testGetCustomFieldSetsByType");
+
+		Date d1 = new Date();
+		List<CustomFieldSet> sustomFieldSets = organizationService.getCustomFieldSets(customFieldType);
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
+
+		System.out.println("Total Sets returned=" + sustomFieldSets.size() + " Total time=" + diff);
+		for (CustomFieldSet set : sustomFieldSets) {
+			System.out.println(" Name=" + set.getName() + "\tType=" + set.getType().toString());
+		}
+		System.out.println();
 
 	}
 }

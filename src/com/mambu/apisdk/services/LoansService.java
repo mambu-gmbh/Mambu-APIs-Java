@@ -11,9 +11,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
@@ -90,7 +92,7 @@ public class LoansService {
 		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId));
 		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		LoanAccount account = GsonUtils.createResponse().fromJson(jsonResposne, LoanAccount.class);
+		LoanAccount account = GsonUtils.createGson().fromJson(jsonResposne, LoanAccount.class);
 		return account;
 	}
 
@@ -112,8 +114,7 @@ public class LoansService {
 
 		Type collectionType = new TypeToken<List<LoanAccount>>() {}.getType();
 
-		List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createResponse().fromJson(jsonResponse,
-				collectionType);
+		List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 		return accounts;
 	}
 
@@ -135,8 +136,7 @@ public class LoansService {
 
 		Type collectionType = new TypeToken<List<LoanAccount>>() {}.getType();
 
-		List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createResponse().fromJson(jsonResponse,
-				collectionType);
+		List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return accounts;
 	}
@@ -163,7 +163,7 @@ public class LoansService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
 
-		LoanAccount laonAccount = GsonUtils.createResponse().fromJson(jsonResponse, LoanAccount.class);
+		LoanAccount laonAccount = GsonUtils.createGson().fromJson(jsonResponse, LoanAccount.class);
 
 		return laonAccount;
 	}
@@ -213,7 +213,7 @@ public class LoansService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
 
-		LoanTransaction transaction = GsonUtils.createResponse().fromJson(jsonResponse, LoanTransaction.class);
+		LoanTransaction transaction = GsonUtils.createGson().fromJson(jsonResponse, LoanTransaction.class);
 
 		return transaction;
 
@@ -238,10 +238,45 @@ public class LoansService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 
-		LoanAccount account = GsonUtils.createResponse().fromJson(jsonResponse, LoanAccount.class);
+		LoanAccount account = GsonUtils.createGson().fromJson(jsonResponse, LoanAccount.class);
 		return account;
 	}
 
+	/***
+	 * Create a new LoanAccount (expanded) using LoanAccountExpanded object and sending it as a Json api. This API
+	 * allows creating LoanAccount with details, including creating custom fields.
+	 * 
+	 * 
+	 * @param LoanAccountExpanded
+	 * 
+	 * @return LoanAccountExpanded
+	 * 
+	 *         Note: only the basic details for the custom fields are returned on success. To get full details a user
+	 *         must invoke getLoanAccountDetails() after the LoanAccount was created.
+	 * @throws MambuApiException
+	 */
+	public LoanAccountExpanded createAccount(LoanAccountExpanded loan) throws MambuApiException {
+
+		// Convert object to json
+		// parse LoanAccountExpanded object into json string using specific date time format
+		final String dateTimeFormat = APIData.yyyyMmddFormat;
+		final String jsonData = GsonUtils.createGson(dateTimeFormat).toJson(loan, LoanAccountExpanded.class);
+
+		// System.out.println("Input Loan Details In json format=" + jsonData);
+
+		ParamsMap params = new ParamsMap();
+		// Add json string as JSON_OBJECT
+		params.put(APIData.JSON_OBJECT, jsonData);
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(LOANS + "/"));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.POST, ContentType.JSON);
+
+		LoanAccountExpanded account = GsonUtils.createGson().fromJson(jsonResponse, LoanAccountExpanded.class);
+
+		return account;
+	}
 	/***
 	 * Get loan account Transactions by Loan id and offset and limit
 	 * 
@@ -269,7 +304,7 @@ public class LoansService {
 
 		Type collectionType = new TypeToken<List<LoanTransaction>>() {}.getType();
 
-		List<LoanTransaction> transactions = (List<LoanTransaction>) GsonUtils.createResponse().fromJson(jsonResponse,
+		List<LoanTransaction> transactions = (List<LoanTransaction>) GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);
 
 		return transactions;
@@ -317,7 +352,7 @@ public class LoansService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
 
-		LoanTransaction transaction = GsonUtils.createResponse().fromJson(jsonResponse, LoanTransaction.class);
+		LoanTransaction transaction = GsonUtils.createGson().fromJson(jsonResponse, LoanTransaction.class);
 
 		return transaction;
 	}
@@ -348,7 +383,7 @@ public class LoansService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
 
-		LoanTransaction transaction = GsonUtils.createResponse().fromJson(jsonResponse, LoanTransaction.class);
+		LoanTransaction transaction = GsonUtils.createGson().fromJson(jsonResponse, LoanTransaction.class);
 
 		return transaction;
 	}
@@ -385,8 +420,7 @@ public class LoansService {
 
 		Type collectionType = new TypeToken<List<LoanAccount>>() {}.getType();
 
-		List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createResponse().fromJson(jsonResponse,
-				collectionType);
+		List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 		return accounts;
 	}
 	// Loan Products
@@ -410,7 +444,7 @@ public class LoansService {
 
 		Type collectionType = new TypeToken<List<LoanProduct>>() {}.getType();
 
-		List<LoanProduct> products = GsonUtils.createResponse().fromJson(jsonResposne, collectionType);
+		List<LoanProduct> products = GsonUtils.createGson().fromJson(jsonResposne, collectionType);
 
 		return products;
 	}
@@ -430,7 +464,7 @@ public class LoansService {
 		String urlString = new String(mambuAPIService.createUrl(LOANPRODUCTS + "/" + productId));
 		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		LoanProduct product = GsonUtils.createResponse().fromJson(jsonResposne, LoanProduct.class);
+		LoanProduct product = GsonUtils.createGson().fromJson(jsonResposne, LoanProduct.class);
 		return product;
 	}
 

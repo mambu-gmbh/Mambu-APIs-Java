@@ -67,7 +67,7 @@ public class AccountingService {
 	}
 
 	/**
-	 * Returns the gl account response witha given url & parameters
+	 * Returns the gl account response with given url & parameters
 	 * 
 	 * @param url
 	 * @return
@@ -76,7 +76,7 @@ public class AccountingService {
 	private GLAccount getGLAccountResponse(String url) throws MambuApiException {
 		String urlString = new String(mambuAPIService.createUrl(url));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
-		GLAccount glAccount = GsonUtils.createResponse().fromJson(jsonResponse, GLAccount.class);
+		GLAccount glAccount = GsonUtils.createGson().fromJson(jsonResponse, GLAccount.class);
 
 		return glAccount;
 	}

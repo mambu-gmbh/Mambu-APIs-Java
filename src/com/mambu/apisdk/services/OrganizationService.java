@@ -3,14 +3,22 @@
  */
 package com.mambu.apisdk.services;
 
+import java.lang.reflect.Type;
+import java.util.List;
+
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.core.shared.model.Currency;
+import com.mambu.core.shared.model.CustomField;
+import com.mambu.core.shared.model.CustomFieldSet;
+import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 
@@ -27,6 +35,8 @@ public class OrganizationService {
 	private static String OFFSET = APIData.OFFSET;
 	private static String LIMIT = APIData.LIMIT;
 	private static String FULL_DETAILS = APIData.FULL_DETAILS;
+	private static String CUSTOM_FIELDS = APIData.CUSTOM_FIELDS;
+	private static String CUSTOM_FIELD_SETS = APIData.CUSTOM_FIELD_SETS;
 
 	private MambuAPIService mambuAPIService;
 
@@ -54,7 +64,7 @@ public class OrganizationService {
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
 		// convert to collection
-		Currency[] currencies = GsonUtils.createResponse().fromJson(jsonResponse, Currency[].class);
+		Currency[] currencies = GsonUtils.createGson().fromJson(jsonResponse, Currency[].class);
 
 		if (currencies != null && currencies.length > 0) {
 			return currencies[0];
@@ -85,7 +95,7 @@ public class OrganizationService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Branch branches[] = (Branch[]) GsonUtils.createResponse().fromJson(jsonResponse, Branch[].class);
+		Branch branches[] = (Branch[]) GsonUtils.createGson().fromJson(jsonResponse, Branch[].class);
 
 		return branches;
 	}
@@ -110,7 +120,7 @@ public class OrganizationService {
 		params.put(FULL_DETAILS, "true");
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Branch branch = (Branch) GsonUtils.createResponse().fromJson(jsonResponse, Branch.class);
+		Branch branch = (Branch) GsonUtils.createGson().fromJson(jsonResponse, Branch.class);
 
 		return branch;
 
@@ -137,7 +147,7 @@ public class OrganizationService {
 		params.put(FULL_DETAILS, "true");
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Centre centre = (Centre) GsonUtils.createResponse().fromJson(jsonResponse, Centre.class);
+		Centre centre = (Centre) GsonUtils.createGson().fromJson(jsonResponse, Centre.class);
 
 		return centre;
 
@@ -171,8 +181,63 @@ public class OrganizationService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Centre centres[] = (Centre[]) GsonUtils.createResponse().fromJson(jsonResponse, Centre[].class);
+		Centre centres[] = (Centre[]) GsonUtils.createGson().fromJson(jsonResponse, Centre[].class);
 
 		return centres;
+	}
+
+	// Custom Fields and Custom Field Sets
+	/**
+	 * Get CustomFieldValue object details by Custom Field ID
+	 * 
+	 * @param fieldId
+	 *            The id of the required CustomFieldValue
+	 * 
+	 * @return CustomFieldValue
+	 * 
+	 * @throws MambuApiException
+	 */
+	// TODO: to be tested with Mambu 3.3, see MBU-2486
+	public CustomFieldValue getCustomField(String fieldId) throws MambuApiException {
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(APIData.CUSTOM_FIELDS + "/" + fieldId));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET, ContentType.JSON);
+
+		CustomFieldValue caustomFiledValue = (CustomFieldValue) GsonUtils.createGson().fromJson(jsonResponse,
+				CustomFieldValue.class);
+
+		return caustomFiledValue;
+	}
+	/**
+	 * Get Custom Field Sets
+	 * 
+	 * @param customFieldType
+	 *            The type of the required CustomField Set. Example CLIENT_INFO, GROUP_INFO, LOAN_ACCOUNT_INFO,
+	 *            SAVINGS_ACCOUNT_INFO, BRANCH_INFO, USER_INFO Can be null - all types requested.
+	 * 
+	 * @return List of CustomFieldSet sets
+	 * 
+	 * @throws MambuApiException
+	 */
+	// TODO: to be tested with Mambu 3.3, see MBU-2486
+	public List<CustomFieldSet> getCustomFieldSets(CustomField.Type customFieldType) throws MambuApiException {
+
+		// create the api call
+
+		String urlString = new String(mambuAPIService.createUrl(APIData.CUSTOM_FIELD_SETS));
+		// Add Custom Filed Type Param
+		ParamsMap params = new ParamsMap();
+		String customFieldTypeString = (customFieldType == null) ? null : customFieldType.name();
+
+		params.addParam(APIData.CUSTOM_FIELD_SETS_TYPE, customFieldTypeString); // if null, all types are requested
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+
+		Type collectionType = new TypeToken<List<CustomFieldSet>>() {}.getType();
+		List<CustomFieldSet> sustomFieldSets = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
+
+		return sustomFieldSets;
 	}
 }

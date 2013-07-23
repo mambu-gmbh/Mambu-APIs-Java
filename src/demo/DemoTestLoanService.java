@@ -1,11 +1,18 @@
 package demo;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
+import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.services.LoansService;
+import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.core.shared.model.Money;
 import com.mambu.loans.shared.model.LoanAccount;
+import com.mambu.loans.shared.model.LoanAccount.RepaymentPeriodUnit;
 import com.mambu.loans.shared.model.LoanProduct;
 import com.mambu.loans.shared.model.LoanTransaction;
 
@@ -17,10 +24,10 @@ import com.mambu.loans.shared.model.LoanTransaction;
  */
 public class DemoTestLoanService {
 
-	private static String CLIENT_ID = "548919675"; // 046360136 282600987
+	private static String CLIENT_ID = "729859576"; // 548919675 282600987 729859576
 
 	private static String GROUP_ID = "118035060"; // 118035060 588752540
-	private static String LOAN_ACCOUNT_ID = "UXPP562"; // DTQK377 WETZ340 RRSF961 PRTO161 DLWY699
+	private static String LOAN_ACCOUNT_ID = "RNTV156"; // DTQK377 WETZ340 RRSF961 PRTO161 DLWY699
 	private static String BRANCH_ID = "NE008"; // GBK 001
 
 	public static void main(String[] args) {
@@ -28,6 +35,9 @@ public class DemoTestLoanService {
 		DemoUtil.setUp();
 
 		try {
+
+			testCreateJsonAccount();
+			testGetLoanAccountDetails();
 
 			testGetLoanProducts();
 
@@ -48,11 +58,14 @@ public class DemoTestLoanService {
 			testRepayLoanAccount();
 			testApplyFeeToLoanAccount();
 
+			// Show latest transactions now
 			testGetLoanAccountTransactions();
 
 			// Products
 			testGetLoanProducts();
 			testGetLoanProductById();
+
+			testCreateJsonAccount();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Loan Service");
@@ -79,6 +92,67 @@ public class DemoTestLoanService {
 
 	}
 
+	// Create Loan Account
+	public static void testCreateJsonAccount() throws MambuApiException {
+		System.out.println("\nIn testCreateJsonAccount");
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		LoanAccount account = new LoanAccount();
+		account.setId(null);
+		account.setAccountHolderKey("8ad661123b36cfaf013b42c2e0f46dca"); // CLIENT_ID "8ad661123b36cfaf013b42c2e0f46dca"
+		account.setAccountHolderType(AccountHolderType.CLIENT);
+		account.setProductTypeKey("8ad661123b36cfaf013b42cbcf2c6dd3");// "8ad661123b36cfaf013b42cbcf2c6dd3"
+		account.setLoanAmount(new Money(7500.00));
+		account.setInterestRate(new BigDecimal("3.2"));
+		account.setRepaymentInstallments(20);
+		// From Product
+		account.setRepaymentPeriodUnit(RepaymentPeriodUnit.DAYS);
+		account.setRepaymentPeriodCount(1);
+		// Set Custom fields to null in the account
+		account.setCustomFieldValues(null);
+
+		// ADd Custom Fields
+
+		List<CustomFieldValue> clientCustomInformation = new ArrayList<CustomFieldValue>();
+
+		CustomFieldValue custField1 = new CustomFieldValue();
+		String customFieldId = "Loan_Purpose_Loan_Accounts";
+		String customFieldValue = "My Loan Purpose 5";
+
+		custField1.setCustomFieldId(customFieldId);
+		custField1.setValue(customFieldValue);
+		// Add new field to the list
+		clientCustomInformation.add(custField1);
+		// Field #2
+		// Loan_Originator_Loan_Accounts
+		CustomFieldValue custField2 = new CustomFieldValue();
+		customFieldId = "Loan_Originator_Loan_Accounts";
+		customFieldValue = "Trust";
+
+		custField2.setCustomFieldId(customFieldId);
+		custField2.setValue(customFieldValue);
+		// Add new field to the list
+		clientCustomInformation.add(custField2);
+
+		// Add All custom fields
+		// account.setCustomFieldValues(clientCustomInformation);
+
+		// Create Account Expanded
+		LoanAccountExpanded accountExpanded = new LoanAccountExpanded();
+		accountExpanded.setLoanAccount(account);
+		accountExpanded.setCustomInformation(clientCustomInformation);
+
+		// Create Account in Mambu
+		LoanAccountExpanded newAccount = loanService.createAccount(accountExpanded);
+
+		// accented E
+
+		System.out.println("Loan Account created OK, ID=" + newAccount.getLoanAccount().getId() + " Name= "
+				+ newAccount.getLoanAccount().getLoanName() + " Account Holder Key="
+				+ newAccount.getLoanAccount().getAccountHolderKey());
+
+	}
 	// / Transactions testing
 
 	public static void testDisburseLoanAccountWithDetails() throws MambuApiException {
@@ -102,7 +176,7 @@ public class DemoTestLoanService {
 				firstRepaymentDate, paymentMethod, bankNumber, receiptNumber, checkNumber, bankAccountNumber,
 				bankRoutingNumber, notes);
 
-		System.out.println("\nLoan for Disbursment with Details: Trans Id=" + transaction.getTransactionId()
+		System.out.println("\nLoan for Disbursement with Details: Transaction Id=" + transaction.getTransactionId()
 				+ " amount=" + transaction.getAmount().toString());
 	}
 
