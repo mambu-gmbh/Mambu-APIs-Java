@@ -51,6 +51,7 @@ public class DemoTestUsersService {
 		Date d1 = new Date();
 
 		List<User> users = usersService.getUsers();
+
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
@@ -68,7 +69,9 @@ public class DemoTestUsersService {
 
 		System.out.println("\nIn testGetUsersByPage" + " offset=" + offset + " limit=" + limit);
 		Date d1 = new Date();
+
 		UsersService usersService = MambuAPIFactory.getUsersService();
+
 		List<User> users = usersService.getUsers(offset, limit);
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
@@ -90,6 +93,7 @@ public class DemoTestUsersService {
 		String branchId = BRANCH_ID; // GBK 001
 		System.out
 				.println("\nIn testGetPaginatedUsers ByBranch=" + branchId + "  offset=" + offset + " limit=" + limit);
+
 		List<User> users = usersService.getUsers(branchId, null, null); // RICHMOND BRANCH
 
 		System.out.println("testGetPaginatedUsers OK, barnch ID=" + BRANCH_ID);
@@ -107,7 +111,9 @@ public class DemoTestUsersService {
 
 		System.out.println("\nIn testGetUserById=" + userId);
 		Date d1 = new Date();
+
 		User user = usersService.getUserById(userId);
+
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
@@ -116,7 +122,6 @@ public class DemoTestUsersService {
 
 	}
 
-	// getUserByUsername(
 	public static void testGetUserByUsername() throws MambuApiException {
 
 		UsersService usersService = MambuAPIFactory.getUsersService();

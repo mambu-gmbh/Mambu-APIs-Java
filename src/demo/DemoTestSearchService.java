@@ -1,6 +1,7 @@
 package demo;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -47,13 +48,19 @@ public class DemoTestSearchService {
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
-		String query = "i";
+		String query = "m";
 		String offset = "0";
-		String limit = "10";
+		String limit = "200";
+
+		Date d1 = new Date();
 
 		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, null, offset, limit);
 
-		System.out.println("Search All types with a query=" + query + "  Returned=" + results.size());
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
+
+		System.out.println("Search All types with a query=" + query + "  Returned=" + results.size() + " Total time="
+				+ diff);
 
 		logSearchResults(results);
 
@@ -63,14 +70,17 @@ public class DemoTestSearchService {
 		System.out.println("\nIn testSearchClientsGroups");
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
-		String query = "ir";
+		String query = "i";
 		String offset = "0";
-		String limit = "100";
+		String limit = "300";
 		List<Type> searchTypes = Arrays.asList(Type.CLIENT, Type.GROUP); // or null
 
+		Date d1 = new Date();
 		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, offset, limit);
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
 
-		System.out.println("Search Clients for query=" + query + "Returned=" + results.size());
+		System.out.println("Search Clients for query=" + query + "Returned=" + results.size() + " Total time=" + diff);
 
 		logSearchResults(results);
 
@@ -105,9 +115,15 @@ public class DemoTestSearchService {
 
 		List<Type> searchTypes = Arrays.asList(Type.USER, Type.BRANCH); // or null
 
+		Date d1 = new Date();
+
 		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, offset, limit);
 
-		System.out.println("Search Users/Branches for query=" + query + "Returned=" + results.size());
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
+
+		System.out.println("Search Users/Branches for query=" + query + "Returned=" + results.size() + " Total time="
+				+ diff);
 
 		logSearchResults(results);
 

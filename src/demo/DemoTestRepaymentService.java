@@ -28,7 +28,7 @@ public class DemoTestRepaymentService {
 
 			testGetLoanAccountRepayments();
 
-			// TODO: this API doesn't work now: returns all
+			// TODO: the API Repayment with Limit -doesn't work now: returns all
 			testGetLoanAccountRepaymentsWithLimit();
 
 			testGetRepaymentsDueFromTo();

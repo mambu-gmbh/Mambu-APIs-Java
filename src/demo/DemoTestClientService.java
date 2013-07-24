@@ -1,5 +1,7 @@
 package demo;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.mambu.apisdk.MambuAPIFactory;
@@ -8,6 +10,9 @@ import com.mambu.apisdk.services.ClientsService;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
+import com.mambu.clients.shared.model.IdentificationDocument;
+import com.mambu.core.shared.model.Address;
+import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.Gender;
 
 /**
@@ -20,7 +25,8 @@ import com.mambu.core.shared.model.Gender;
  */
 public class DemoTestClientService {
 
-	private static String CLIENT_ID = "250213653"; // 078911120 046360136 729859576 078911120 250213653
+	private static String CLIENT_ID = "428946702"; // 250213653 078911120 046360136 729859576 078911120 250213653
+													// 363317853
 
 	private static String GROUP_ID = "588752540"; // 414659806 588752540
 
@@ -34,26 +40,25 @@ public class DemoTestClientService {
 
 		try {
 
-			testGetClient();
+			testCreateJsonClient();
 
+			testGetClientDetails();
+
+			// testCreateFullDetailsClient(); // Not needed as we now have json create version
+
+			testGetClient();
 			testGetClientDetails();
 
 			testGetClientbyFullName();
 			testGetClientByLastNameBirthday();
 			testGetClientByDocIdLastName();
 
-			// TODO: GroupDetails API issue. Uncomment and replace temp when API is fixed // testGetGroup();
-			testGetGroupTemp();
+			testGetGroup();
+			testGetGroupDetails();
 
-			// TODO: Uncomment and replace temp when API is fixed // testGetGroupDetails();
-			testGetGroupDetailsTemp();
-
-			testCreateBasicClient();
-
-			testCreateFullDetailsClient();
-			testCreateBasicClient();
-
+			// testCreateBasicClient();
 			testGetClientsByBranchOfficerState();
+
 			testGetGroupsByBranchOfficer();
 
 		} catch (MambuApiException e) {
@@ -147,13 +152,6 @@ public class DemoTestClientService {
 		System.out.println("testGetGroup OK, name=" + clientService.getGroup(GROUP_ID).getGroupName());
 
 	}
-	public static void testGetGroupTemp() throws MambuApiException {
-		System.out.println("\nIn testGetGroupTemp - NOTE: USING groupDetails workaround");
-		ClientsService clientService = MambuAPIFactory.getClientService();
-
-		System.out.println("testGetGroup OK, name=" + clientService.getGroupList(GROUP_ID).getGroupName());
-
-	}
 
 	public static void testGetGroupDetails() throws MambuApiException {
 		System.out.println("\nIn testGetGroupDetails");
@@ -164,16 +162,87 @@ public class DemoTestClientService {
 				+ clientService.getGroupDetails(GROUP_ID).getGroup().getGroupName());
 
 	}
-	public static void testGetGroupDetailsTemp() throws MambuApiException {
-		System.out.println("\nIn testGetGroupDetailsTemp - NOTE: USING groupDetails workaround");
+
+	public static void testCreateJsonClient() throws MambuApiException {
+		System.out.println("\nIn testCreateJsonClient");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
-		System.out.println("testGetGroupDetails Ok, name="
-				+ clientService.getGroupDetailsList(GROUP_ID).getGroup().getGroupName());
+		Client clientIn = new Client("Mike123", "Lastname123");
+
+		clientIn.setId(null);
+		clientIn.setLoanCycle(null);
+		clientIn.setGroupLoanCycle(null);
+		clientIn.setToInactive();
+		clientIn.setToActive(new Date());
+
+		Date today = new Date();
+		Date tomorrow = new Date(today.getTime() + (1000 * 60 * 60 * 24));
+		clientIn.setCreationDate(tomorrow);
+		clientIn.setEmailAddress("MD_Json@test.ca");
+		clientIn.setHomePhone("604.271.7033");
+		clientIn.setMiddleName(" Middle ");
+		clientIn.setMobilePhone1("1-778-2344");
+		clientIn.setMobilePhone2("2-778-2344");
+		clientIn.setBirthDate(new Date(1982 - 1900, 6 - 1, 27)); // year, month, day
+
+		// Create Expanded Client
+		ClientExpanded clExpanded = new ClientExpanded(clientIn);
+		// Add address
+		List<Address> addresses = new ArrayList<Address>();
+		Address address = new Address();
+		address.setLine1("Line1JsonAddress");
+		address.setCity("Kharkiv");
+		address.setIndexInList(0);
+		addresses.add(address);
+		clExpanded.setAddresses(addresses);
+		// ADd doc IDs
+		List<IdentificationDocument> idDocs = new ArrayList<IdentificationDocument>();
+		IdentificationDocument doc = new IdentificationDocument();
+		doc.setDocumentId("PasspId");
+		doc.setDocumentType("Passport");
+		idDocs.add(doc);
+		clExpanded.setIdDocuments(idDocs);
+		List<CustomFieldValue> clientCustomInformation = new ArrayList<CustomFieldValue>();
+
+		CustomFieldValue custField1 = new CustomFieldValue();
+		String customFieldId = "Family_Size_Clients";
+		String customFieldValue = "15";
+
+		custField1.setCustomFieldId(customFieldId);
+		custField1.setValue(customFieldValue);
+		// Add new field to the list
+		clientCustomInformation.add(custField1);
+
+		CustomFieldValue custField2 = new CustomFieldValue();
+		customFieldId = "From_Hollywood_Clients";
+		customFieldValue = "TRUE";
+
+		custField2.setCustomFieldId(customFieldId);
+		custField2.setValue(customFieldValue);
+
+		// Add new field to the list
+		clientCustomInformation.add(custField2);
+		CustomFieldValue custField3 = new CustomFieldValue();
+		customFieldId = "F2_NUMBER_Clients";
+		customFieldValue = "15";
+
+		custField3.setCustomFieldId(customFieldId);
+		custField3.setValue(customFieldValue);
+		// Add new field to the list
+		clientCustomInformation.add(custField3);
+		// Add All custom fields
+		clExpanded.setCustomFieldValues(clientCustomInformation);
+
+		// Create in Mambu using Json API
+		ClientExpanded client = clientService.createClient(clExpanded);
+
+		System.out.println("Client created, OK, ID=" + client.getClient().getId() + " Full name= "
+				+ client.getClient().getFullName() + " First, Last=" + client.getClient().getFirstName());
+		// TODO: Creating Addresses for the Client is not supported yet
+		// + "  Address Line 1=" + client.getAddresses() == null ? "" : client.getAddresses().get(0).getLine1());
 
 	}
-
 	public static void testCreateBasicClient() throws MambuApiException {
 		System.out.println("\nIn testCreateBasicClient");
 
@@ -193,7 +262,8 @@ public class DemoTestClientService {
 		// String firstName = new String("\u0416" + "\u041A"); // Russian Unicode letetrs
 		// String firstName = new String("AB" + "\u0416"); // Russian Unicode letetrs
 		String firstName = new String("AFirst" + Integer.toString((int) Math.random()));
-		String lastName = "Асин"; // "\u00c1\u00c9" - Spanish Unicode letters
+		// String lastName = "Асин"; // "\u00c1\u00c9" - Spanish Unicode letters
+		String lastName = "Acin"; // "\u00c1\u00c9" - Spanish Unicode letters
 
 		String homephone = "1-778-980-234";
 		String mobilephone = "980-456-789";

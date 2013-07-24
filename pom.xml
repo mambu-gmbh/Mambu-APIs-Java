@@ -4,7 +4,7 @@
 	<groupId>Mambu-APIs-Java</groupId>
 	<artifactId>Mambu-APIs-Java</artifactId>
 	<name>Mambu Java APIs SDK</name>
-	<version>3.1-SNAPSHOT</version>
+	<version>3.2-SNAPSHOT</version>
 	<url>http://www.mambu.com</url>
 	<build>
 		<!-- This section was inserted to fix provelm with Maeven plug in for Eclipse: 
@@ -109,9 +109,9 @@
 		<dependency>
 			<groupId>com.mambu</groupId>
 			<artifactId>mambumodels</artifactId>
-			<version>3.1</version>
+			<version>3.2</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/mambu-models-v3.1.jar
+			<systemPath>${project.basedir}/lib/mambu-models-v3.2.jar
 			</systemPath>
 			<optional>false</optional>
 		</dependency>

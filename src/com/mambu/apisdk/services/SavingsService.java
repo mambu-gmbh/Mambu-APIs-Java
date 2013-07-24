@@ -93,7 +93,7 @@ public class SavingsService {
 		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/" + accountId));
 		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		SavingsAccount account = GsonUtils.createResponse().fromJson(jsonResposne, SavingsAccount.class);
+		SavingsAccount account = GsonUtils.createGson().fromJson(jsonResposne, SavingsAccount.class);
 
 		return account;
 	}
@@ -116,7 +116,7 @@ public class SavingsService {
 
 		String jsonResposne = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 
-		SavingsAccount account = GsonUtils.createResponse().fromJson(jsonResposne, SavingsAccount.class);
+		SavingsAccount account = GsonUtils.createGson().fromJson(jsonResposne, SavingsAccount.class);
 
 		return account;
 	}
@@ -138,7 +138,7 @@ public class SavingsService {
 
 		Type collectionType = new TypeToken<List<SavingsAccount>>() {}.getType();
 
-		List<SavingsAccount> accounts = (List<SavingsAccount>) GsonUtils.createResponse().fromJson(jsonResponse,
+		List<SavingsAccount> accounts = (List<SavingsAccount>) GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);
 
 		return accounts;
@@ -165,7 +165,7 @@ public class SavingsService {
 		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/" + accountId + "/" + TRANSACTIONS));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
 
-		SavingsAccount savingsAccount = GsonUtils.createResponse().fromJson(jsonResponse, SavingsAccount.class);
+		SavingsAccount savingsAccount = GsonUtils.createGson().fromJson(jsonResponse, SavingsAccount.class);
 
 		return savingsAccount;
 	}
@@ -201,7 +201,7 @@ public class SavingsService {
 
 		Type collectionType = new TypeToken<List<SavingsTransaction>>() {}.getType();
 
-		List<SavingsTransaction> transactions = (List<SavingsTransaction>) GsonUtils.createResponse().fromJson(
+		List<SavingsTransaction> transactions = (List<SavingsTransaction>) GsonUtils.createGson().fromJson(
 				jsonResponse, collectionType);
 
 		return transactions;
@@ -267,7 +267,7 @@ public class SavingsService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
 
-		SavingsTransaction transaction = GsonUtils.createResponse().fromJson(jsonResponse, SavingsTransaction.class);
+		SavingsTransaction transaction = GsonUtils.createGson().fromJson(jsonResponse, SavingsTransaction.class);
 
 		return transaction;
 	}
@@ -306,7 +306,7 @@ public class SavingsService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
 
-		SavingsTransaction transaction = GsonUtils.createResponse().fromJson(jsonResponse, SavingsTransaction.class);
+		SavingsTransaction transaction = GsonUtils.createGson().fromJson(jsonResponse, SavingsTransaction.class);
 
 		return transaction;
 	}
@@ -350,7 +350,7 @@ public class SavingsService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
 
-		SavingsTransaction transaction = GsonUtils.createResponse().fromJson(jsonResponse, SavingsTransaction.class);
+		SavingsTransaction transaction = GsonUtils.createGson().fromJson(jsonResponse, SavingsTransaction.class);
 
 		return transaction;
 	}
@@ -373,7 +373,7 @@ public class SavingsService {
 
 		Type collectionType = new TypeToken<List<SavingsAccount>>() {}.getType();
 
-		List<SavingsAccount> accounts = (List<SavingsAccount>) GsonUtils.createResponse().fromJson(jsonResponse,
+		List<SavingsAccount> accounts = (List<SavingsAccount>) GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);
 
 		return accounts;
@@ -412,7 +412,7 @@ public class SavingsService {
 
 		Type collectionType = new TypeToken<List<SavingsAccount>>() {}.getType();
 
-		List<SavingsAccount> accounts = (List<SavingsAccount>) GsonUtils.createResponse().fromJson(jsonResponse,
+		List<SavingsAccount> accounts = (List<SavingsAccount>) GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);
 		return accounts;
 	}
@@ -438,7 +438,7 @@ public class SavingsService {
 
 		Type collectionType = new TypeToken<List<SavingsProduct>>() {}.getType();
 
-		List<SavingsProduct> products = GsonUtils.createResponse().fromJson(jsonResposne, collectionType);
+		List<SavingsProduct> products = GsonUtils.createGson().fromJson(jsonResposne, collectionType);
 
 		return products;
 	}
@@ -458,7 +458,7 @@ public class SavingsService {
 		String urlString = new String(mambuAPIService.createUrl(SAVINGSRODUCTS + "/" + productId));
 		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		SavingsProduct product = GsonUtils.createResponse().fromJson(jsonResposne, SavingsProduct.class);
+		SavingsProduct product = GsonUtils.createGson().fromJson(jsonResposne, SavingsProduct.class);
 		return product;
 	}
 
