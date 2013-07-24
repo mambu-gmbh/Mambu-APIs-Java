@@ -45,7 +45,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	private String encodedAuthorization;
 	private final String UTF8_charset = HTTP.UTF_8;
 	private final String wwwFormUrlEncodedContentType = "application/x-www-form-urlencoded; charset=UTF-8";
-	
+
 	// TODO: add charset when https://mambucom.jira.com/browse/MBU-4137 is fixed
 	private final String jsonContentType = "application/json"; // "application/json; charset=UTF-8";
 
@@ -61,14 +61,14 @@ public class RequestExecutorImpl implements RequestExecutor {
 	// Without params and with default contentType (ContentType.WWW_FORM)
 	@Override
 	public String executeRequest(String urlString, Method method) throws MambuApiException {
-		// invoke with default contentType (FORM)
+		// invoke with default contentType (WWW_FORM)
 		return executeRequest(urlString, null, method, ContentType.WWW_FORM);
 	}
 
 	// With params and with default contentType (ContentType.WWW_FORM)
 	@Override
 	public String executeRequest(String urlString, ParamsMap params, Method method) throws MambuApiException {
-		// invoke with default contentType (FORM)
+		// invoke with default contentType (WWW_FORM)
 		return executeRequest(urlString, params, method, ContentType.WWW_FORM);
 	}
 
@@ -102,7 +102,14 @@ public class RequestExecutorImpl implements RequestExecutor {
 			if (params == null)
 				params = new ParamsMap();
 			params.addParam(APPLICATION_KEY, applicationKey);
-			LOGGER.info("Added Application key=" + applicationKey);
+
+			// Log the App key (the first 3 and last 3 chars only)
+			final int keyLength = applicationKey.length();
+			final int printLength = 3;
+			// Mambu App Keys are very long but just to prevent any errors need to ensure there is enough to print
+			if (keyLength >= printLength)
+				LOGGER.info("Added Application key=" + applicationKey.substring(0, printLength) + "..."
+						+ applicationKey.substring(keyLength - printLength, keyLength));
 		}
 
 		String response = "";
@@ -124,7 +131,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 		return response;
 	}
-
 	/**
 	 * Executes a POST request as per the interface specification
 	 */
@@ -161,7 +167,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 				break;
 
 			case JSON:
-				// Parameter )jsson sring) is expected as JSON_OBJECT parameter name
+				// Parameter (json string) is expected as JSON_OBJECT parameter name
 				StringEntity jsonEntity = new StringEntity(params.get(APIData.JSON_OBJECT), UTF8_charset);
 
 				LOGGER.info("Posting JSON request:  URL=" + urlString + " String Entity=" + jsonEntity.toString());

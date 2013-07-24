@@ -54,7 +54,8 @@ public class MambuAPIService {
 	 * 
 	 * @param urlString
 	 * @param method
-	 * @return
+	 * @return HTTP response String. The response string for the http request. It is either an application specific
+	 *         response (with the content being specific for each request) or an error response for the http request.
 	 * @throws MambuApiException
 	 * @throws IOException
 	 * @throws MalformedURLException

@@ -1,6 +1,7 @@
 package demo;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -44,7 +45,7 @@ public class DemoTestClientService {
 
 			testGetClientDetails();
 
-			// testCreateFullDetailsClient(); // Not needed as we now have json create version
+			testCreateFullDetailsClient();
 
 			testGetClient();
 			testGetClientDetails();
@@ -56,7 +57,7 @@ public class DemoTestClientService {
 			testGetGroup();
 			testGetGroupDetails();
 
-			// testCreateBasicClient();
+			testCreateBasicClient();
 			testGetClientsByBranchOfficerState();
 
 			testGetGroupsByBranchOfficer();
@@ -184,7 +185,12 @@ public class DemoTestClientService {
 		clientIn.setMiddleName(" Middle ");
 		clientIn.setMobilePhone1("1-778-2344");
 		clientIn.setMobilePhone2("2-778-2344");
-		clientIn.setBirthDate(new Date(1982 - 1900, 6 - 1, 27)); // year, month, day
+		// Birthday
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(1983, 8, 15); // format: year, month, day_of_month
+		Date birthdate = calendar.getTime();
+
+		clientIn.setBirthDate(birthdate);
 
 		// Create Expanded Client
 		ClientExpanded clExpanded = new ClientExpanded(clientIn);
@@ -239,7 +245,8 @@ public class DemoTestClientService {
 
 		System.out.println("Client created, OK, ID=" + client.getClient().getId() + " Full name= "
 				+ client.getClient().getFullName() + " First, Last=" + client.getClient().getFirstName());
-		// TODO: Creating Addresses for the Client is not supported yet
+
+		// TODO: Creating Addresses for the Client is not supported yet, see MBU-4210
 		// + "  Address Line 1=" + client.getAddresses() == null ? "" : client.getAddresses().get(0).getLine1());
 
 	}
@@ -260,7 +267,6 @@ public class DemoTestClientService {
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
 		// String firstName = new String("\u0416" + "\u041A"); // Russian Unicode letetrs
-		// String firstName = new String("AB" + "\u0416"); // Russian Unicode letetrs
 		String firstName = new String("AFirst" + Integer.toString((int) Math.random()));
 		// String lastName = "Асин"; // "\u00c1\u00c9" - Spanish Unicode letters
 		String lastName = "Acin"; // "\u00c1\u00c9" - Spanish Unicode letters

@@ -47,7 +47,7 @@ public interface RequestExecutor {
 	 *            the method (e.g. GET or PUT)
 	 * @param paramsMap
 	 *            the parameters eg: {clientId=id}
-	 * @return Response String
+	 * @return Mambu Response String
 	 * @throws MambuApiException
 	 */
 
@@ -66,9 +66,11 @@ public interface RequestExecutor {
 	 *            enum for the content type string (e.g WWW_FORM or JSON: will be using respectively the
 	 *            "application/x-www-form-urlencoded; charset=UTF-8" or "application/json; charset=UTF-8";)
 	 * 
-	 * @return Response String
+	 * @return Mambu Response String
 	 * @throws MambuApiException
 	 */
+	// TODO: Currently json content type is set to :"application/json". The charset=UTF-8 part will be add when MBU-4137
+	// is fixed
 	public String executeRequest(String urlString, ParamsMap params, Method method, ContentType contentTypeFormat)
 			throws MambuApiException;
 
@@ -84,9 +86,11 @@ public interface RequestExecutor {
 	 *            enum for the content type string (e.g WWW_FORM or JSON: will be using respectively the
 	 *            "application/x-www-form-urlencoded; charset=UTF-8" or "application/json; charset=UTF-8";)
 	 * 
-	 * @return Response String
+	 * @return Mambu Response String
 	 * @throws MambuApiException
 	 */
+	// TODO: Currently json content type is set to :"application/json". The charset=UTF-8 part will be add when MBU-4137
+	// is fixed
 	public String executeRequest(String urlString, Method method, ContentType contentTypeFormat)
 			throws MambuApiException;
 
