@@ -13,6 +13,7 @@ import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.apisdk.services.RepaymentsService;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.services.SearchService;
+import com.mambu.apisdk.services.TasksService;
 import com.mambu.apisdk.services.UsersService;
 
 /**
@@ -165,6 +166,16 @@ public class MambuAPIFactory {
 	public static SearchService getSearchService() throws MambuApiException {
 		validateFactorySetUp();
 		return injector.getInstance(SearchService.class);
+	}
+	/***
+	 * Get an instance of the {@link TasksService} class
+	 * 
+	 * @return the obtained instance
+	 * @throws MambuApiException
+	 */
+	public static TasksService getTasksService() throws MambuApiException {
+		validateFactorySetUp();
+		return injector.getInstance(TasksService.class);
 	}
 	/***
 	 * Setter for an Application Key

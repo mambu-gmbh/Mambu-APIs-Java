@@ -63,7 +63,7 @@ public class ClientsService {
 	/**
 	 * Requests a client by their Mambu ID
 	 * 
-	 * @param accountId
+	 * @param clientId
 	 * @return the Mambu client model
 	 * @throws MambuApiException
 	 */
@@ -108,7 +108,7 @@ public class ClientsService {
 	 * Requests a client by their Last name and Birth date
 	 * 
 	 * @param clientLastName
-	 * @param clientBirthday
+	 * @param birthDay
 	 *            ("yyyy-MM-dd")
 	 * 
 	 * @return list of Mambu clients
@@ -130,6 +130,66 @@ public class ClientsService {
 
 		return clients;
 
+	}
+
+	/**
+	 * Requests a list of all matching clients
+	 * 
+	 * @param active True if active Clients should retrieved, false for inactive Clients
+	 * @return the list of Mambu clients
+	 * @throws MambuApiException
+	 */
+	public List<Client> getClients(boolean active) throws MambuApiException {
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(CLIENTS));
+
+		ParamsMap params = new ParamsMap();
+
+		params.addParam(CLIENT_STATE,(active ? "ACTIVE" : "INACTIVE"));
+		
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+
+		Type collectionType = new TypeToken<List<Client>>() {}.getType();
+		List<Client> clients = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
+
+		return clients;
+
+	}
+
+	/**
+	 * Requests a list of clients, limited by offset/limit
+	 * 
+	 * @param active True if active Clients should retrieved, false for inactive Clients
+	 * @param offset Offset to start loading Clients, has to be >= 0
+	 * @param limit Limit of Clients to load, has to be > 0   
+	 * @return the list of Mambu clients
+	 * @throws MambuApiException
+	 */
+	public List<Client> getClients(boolean active,int offset, int limit) throws MambuApiException 
+	{
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(CLIENTS));
+
+		ParamsMap params = new ParamsMap();
+		
+		if((offset < 0) || (limit < 1))
+		{
+			throw new MambuApiException(new IllegalArgumentException("Offset has to be >= 0, limit has to be > 0"));
+		}
+		else
+		{
+			params.addParam(CLIENT_STATE,(active ? "ACTIVE" : "INACTIVE"));
+			params.addParam(APIData.OFFSET, String.valueOf(offset));
+			params.addParam(APIData.LIMIT, String.valueOf(limit));
+			
+			String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+	
+			Type collectionType = new TypeToken<List<Client>>() {}.getType();
+			List<Client> clients = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
+	
+			return clients;
+		}
 	}
 
 	/**
@@ -270,7 +330,6 @@ public class ClientsService {
 	 * 
 	 * @param firstName
 	 * @param lastName
-	 * @param email
 	 * @return
 	 * @throws MambuApiException
 	 */
@@ -326,9 +385,9 @@ public class ClientsService {
 	/***
 	 * Get Clients by branch id, credit officer, clientState
 	 * 
-	 * @param branchID
+	 * @param branchId
 	 *            the ID of the Client's branch
-	 * @param creditOfficerUsername
+	 * @param creditOfficerUserName
 	 *            - the username of the credit officer to whom the CLients are assigned to
 	 * @param clientState
 	 *            - the desired state of a Client to filter on (eg: ACTIVE) *
@@ -362,9 +421,9 @@ public class ClientsService {
 	/***
 	 * Get Groups by branch id, credit officer
 	 * 
-	 * @param branchID
+	 * @param branchId
 	 *            the ID of the Group's branch
-	 * @param creditOfficerUsername
+	 * @param creditOfficerUserName
 	 *            the username of the credit officer to whom the Groups are assigned to
 	 * 
 	 * @return the list of Groups matching these parameters
