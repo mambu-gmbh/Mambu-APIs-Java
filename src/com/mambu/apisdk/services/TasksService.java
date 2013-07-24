@@ -9,6 +9,7 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.tasks.shared.model.Task;
 
@@ -46,7 +47,7 @@ public class TasksService {
 
 		// Convert object to json
 
-		String jsonTask = GsonUtils.createResponse().toJson(task, Task.class);
+		String jsonTask = GsonUtils.createGson().toJson(task, Task.class);
 		String jsonTaskRequest = String.format("{\"task\":%s}", jsonTask);
 
 		System.out.println("Create json request=" + jsonTaskRequest);
@@ -57,11 +58,9 @@ public class TasksService {
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(TASKS + "/"));
 
-		String jsonResposne = mambuAPIService.executeRequest(urlString, params,
-				Method.POST_JSON);
+		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.POST, ContentType.JSON);
 
-		Task taskResult = GsonUtils.createResponse().fromJson(jsonResposne,
-				Task.class);
+		Task taskResult = GsonUtils.createGson().fromJson(jsonResposne, Task.class);
 
 		return taskResult;
 	}

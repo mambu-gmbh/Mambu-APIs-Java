@@ -43,6 +43,78 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 	}
 
 	/***
+	 * Test the retrieval of more/all clients
+	 * 
+	 */
+	@Test
+	public void testGetClientsActive() throws MambuApiException {
+
+		ParamsMap params = new ParamsMap();
+		params.addParam("state", "ACTIVE");
+
+		// execute
+		service.getClients(true);
+
+		// verify
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET);
+	}
+
+	/***
+	 * Test the retrieval of more/all clients
+	 * 
+	 */
+	@Test
+	public void testGetClientsInactive() throws MambuApiException {
+
+		ParamsMap params = new ParamsMap();
+		params.addParam("state", "INACTIVE");
+
+		// execute
+		service.getClients(false);
+
+		// verify
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET);
+	}
+
+	/***
+	 * Test the retrieval of more/all clients
+	 * 
+	 */
+	@Test
+	public void testGetClientsActivePaged() throws MambuApiException {
+
+		ParamsMap params = new ParamsMap();
+		params.addParam("state", "ACTIVE");
+		params.addParam("offset", "0");
+		params.addParam("limit", "50");
+
+		// execute
+		service.getClients(true, 0, 50);
+
+		// verify
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET);
+	}
+
+	/***
+	 * Test the retrieval of more/all clients
+	 * 
+	 */
+	@Test
+	public void testGetClientsInactivePaged() throws MambuApiException {
+
+		ParamsMap params = new ParamsMap();
+		params.addParam("state", "INACTIVE");
+		params.addParam("offset", "0");
+		params.addParam("limit", "50");
+
+		// execute
+		service.getClients(false, 0, 50);
+
+		// verify
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET);
+	}
+
+	/***
 	 * Test the retrieval of a full details client with a given id
 	 * 
 	 */
