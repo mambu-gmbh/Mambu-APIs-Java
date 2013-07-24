@@ -62,7 +62,7 @@ public class DemoUtil {
 				System.out.println("DemoUtil: APP KEY specified");
 
 		} catch (IOException e) {
-			System.out.println("  Exception reading config.properties file in Demo Test Loan Service");
+			System.out.println("  Exception reading config.properties file in Demo Util Service");
 			Logger.getAnonymousLogger().severe("Could not read file config.properties");
 
 			e.printStackTrace();
