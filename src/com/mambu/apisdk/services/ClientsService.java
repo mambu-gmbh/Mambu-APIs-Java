@@ -132,9 +132,9 @@ public class ClientsService {
 	}
 
 	/**
-	 * Requests a list of clients
+	 * Requests a list of all matching clients
 	 * 
-	 * @param active True if active Clients should retrieved
+	 * @param active True if active Clients should retrieved, false for inactive Clients
 	 * @return the list of Mambu clients
 	 * @throws MambuApiException
 	 */
@@ -157,32 +157,38 @@ public class ClientsService {
 	}
 
 	/**
-	 * Requests a list of clients
+	 * Requests a list of clients, limited by offset/limit
 	 * 
-	 * @param active True if active Clients should retrieved
-	 * @param offset Offset to state loading Clients
-	 * @param limit Limit of Clients to load   
+	 * @param active True if active Clients should retrieved, false for inactive Clients
+	 * @param offset Offset to start loading Clients, has to be >= 0
+	 * @param limit Limit of Clients to load, has to be > 0   
 	 * @return the list of Mambu clients
 	 * @throws MambuApiException
 	 */
-	public List<Client> getClients(boolean active,int offset, int limit) throws MambuApiException {
-
+	public List<Client> getClients(boolean active,int offset, int limit) throws MambuApiException 
+	{
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(CLIENTS));
 
 		ParamsMap params = new ParamsMap();
-
-		params.addParam(CLIENT_STATE,(active ? "ACTIVE" : "INACTIVE"));
-		params.addParam(APIData.OFFSET, String.valueOf(offset));
-		params.addParam(APIData.LIMIT, String.valueOf(limit));
 		
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
-
-		Type collectionType = new TypeToken<List<Client>>() {}.getType();
-		List<Client> clients = GsonUtils.createResponse().fromJson(jsonResponse, collectionType);
-
-		return clients;
-
+		if((offset < 0) || (limit < 1))
+		{
+			throw new MambuApiException(new IllegalArgumentException("Offset has to be >= 0, limit has to be > 0"));
+		}
+		else
+		{
+			params.addParam(CLIENT_STATE,(active ? "ACTIVE" : "INACTIVE"));
+			params.addParam(APIData.OFFSET, String.valueOf(offset));
+			params.addParam(APIData.LIMIT, String.valueOf(limit));
+			
+			String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+	
+			Type collectionType = new TypeToken<List<Client>>() {}.getType();
+			List<Client> clients = GsonUtils.createResponse().fromJson(jsonResponse, collectionType);
+	
+			return clients;
+		}
 	}
 
 	/**
