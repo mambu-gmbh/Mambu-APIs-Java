@@ -62,7 +62,7 @@ public class RepaymentsService {
 		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
 
 		Type collectionType = new TypeToken<List<Repayment>>() {}.getType();
-		List<Repayment> repayments = GsonUtils.createResponse().fromJson(jsonResposne, collectionType);
+		List<Repayment> repayments = GsonUtils.createGson().fromJson(jsonResposne, collectionType);
 		return repayments;
 	}
 
@@ -87,7 +87,7 @@ public class RepaymentsService {
 		String jsonResposne = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 		Type collectionType = new TypeToken<List<Repayment>>() {}.getType();
 
-		List<Repayment> repayments = GsonUtils.createResponse().fromJson(jsonResposne, collectionType);
+		List<Repayment> repayments = GsonUtils.createGson().fromJson(jsonResposne, collectionType);
 
 		return repayments;
 	}
@@ -115,7 +115,7 @@ public class RepaymentsService {
 		String jsonResposne = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 
 		Type collectionType = new TypeToken<List<Repayment>>() {}.getType();
-		List<Repayment> repayments = GsonUtils.createResponse().fromJson(jsonResposne, collectionType);
+		List<Repayment> repayments = GsonUtils.createGson().fromJson(jsonResposne, collectionType);
 		return repayments;
 	}
 

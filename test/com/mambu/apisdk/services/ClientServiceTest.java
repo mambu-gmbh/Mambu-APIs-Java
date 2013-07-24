@@ -49,11 +49,14 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 	@Test
 	public void testGetClientsActive() throws MambuApiException {
 
+		ParamsMap params = new ParamsMap();
+		params.addParam("state", "ACTIVE");
+
 		// execute
 		service.getClients(true);
 
 		// verify
-		verify(executor).executeRequest("https://demo.mambutest.com/api/clients?state=ACTIVE", Method.GET);
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET);
 	}
 
 	/***
@@ -63,11 +66,14 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 	@Test
 	public void testGetClientsInactive() throws MambuApiException {
 
+		ParamsMap params = new ParamsMap();
+		params.addParam("state", "INACTIVE");
+
 		// execute
 		service.getClients(false);
 
 		// verify
-		verify(executor).executeRequest("https://demo.mambutest.com/api/clients?state=INACTIVE", Method.GET);
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET);
 	}
 
 	/***
@@ -77,11 +83,16 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 	@Test
 	public void testGetClientsActivePaged() throws MambuApiException {
 
+		ParamsMap params = new ParamsMap();
+		params.addParam("state", "ACTIVE");
+		params.addParam("offset", "0");
+		params.addParam("limit", "50");
+
 		// execute
-		service.getClients(true,0,50);
+		service.getClients(true, 0, 50);
 
 		// verify
-		verify(executor).executeRequest("https://demo.mambutest.com/api/clients?state=ACTIVE&offset=0&limit=50", Method.GET);
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET);
 	}
 
 	/***
@@ -91,11 +102,16 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 	@Test
 	public void testGetClientsInactivePaged() throws MambuApiException {
 
+		ParamsMap params = new ParamsMap();
+		params.addParam("state", "INACTIVE");
+		params.addParam("offset", "0");
+		params.addParam("limit", "50");
+
 		// execute
-		service.getClients(false,0,50);
+		service.getClients(false, 0, 50);
 
 		// verify
-		verify(executor).executeRequest("https://demo.mambutest.com/api/clients?state=INACTIVE&offset=0&limit=50", Method.GET);
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET);
 	}
 
 	/***

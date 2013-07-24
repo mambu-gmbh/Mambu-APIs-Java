@@ -49,7 +49,7 @@ public class IntelligenceService {
 		String urlString = new String(mambuAPIService.createUrl(APIData.INDICATORS + "/" + indicator.toString()));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		HashMap<String, String> result = GsonUtils.createResponse().fromJson(jsonResponse,
+		HashMap<String, String> result = GsonUtils.createGson().fromJson(jsonResponse,
 				new TypeToken<HashMap<String, String>>() {}.getType());
 		if (result != null) {
 			String resultString = result.get(indicator.toString());

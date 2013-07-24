@@ -80,9 +80,15 @@ public class APIData {
 	// Intelligence API
 	public static final String INDICATORS = "indicators";
 
-	// Organizatoion services
+	// Organization services
 	public static String BRANCHES = "branches";
+	public static String CENTRES = "centres";
 	public static String CURRENCIES = "currencies";
+
+	// Custom fields and Custom Field Sets
+	public static String CUSTOM_FIELDS = "customfields";
+	public static String CUSTOM_FIELD_SETS = "customfieldsets";
+	public static String CUSTOM_FIELD_SETS_TYPE = "type";
 
 	// Repayments
 	public static final String REPAYMENTS = "repayments";
@@ -109,5 +115,9 @@ public class APIData {
 	public static String BIRTH_DATE = "birthdate";
 	public static String EMAIL_ADDRESS = "email";
 	public static String ID_DOCUMENT = "idDocument";
+
+	// Added to support Json object creation API
+	public static String yyyyMmddFormat = "yyyy-MM-dd";
+	public static String JSON_OBJECT = "JSON";
 
 }

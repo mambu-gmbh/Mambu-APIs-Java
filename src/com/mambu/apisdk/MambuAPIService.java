@@ -79,6 +79,48 @@ public class MambuAPIService {
 
 		return executor.executeRequest(urlString, params, method);
 	}
+
+	/**
+	 * Executes the request for a given url, some parameters using a specified method and also a specified contentType
+	 * format. See more info here: http://stackoverflow.com/questions/2793150/how-to-use-java
+	 * -net-urlconnection-to-fire-and-handle-http-requests
+	 * 
+	 * @param urlString
+	 * @param paramsMap
+	 * @param method
+	 * @param RequestExecutor
+	 *            .ContentType contentTypeFormat
+	 * @return
+	 * @throws MambuApiException
+	 * @throws IOException
+	 * @throws MalformedURLException
+	 */
+	public String executeRequest(String urlString, ParamsMap params, Method method,
+			RequestExecutor.ContentType contentTypeFormat) throws MambuApiException {
+
+		return executor.executeRequest(urlString, params, method, contentTypeFormat);
+	}
+
+	/**
+	 * Executes the request for a given url (with parameters) using a specified method and specified contentType format.
+	 * See more info here: http://stackoverflow.com/questions/2793150/how-to-use-java
+	 * -net-urlconnection-to-fire-and-handle-http-requests
+	 * 
+	 * @param urlString
+	 * @param method
+	 * @param RequestExecutor
+	 *            .ContentType contentTypeFormat
+	 * @return
+	 * @throws MambuApiException
+	 * @throws IOException
+	 * @throws MalformedURLException
+	 */
+	public String executeRequest(String urlString, Method method, RequestExecutor.ContentType contentTypeFormat)
+			throws MambuApiException {
+
+		return executor.executeRequest(urlString, method, contentTypeFormat);
+	}
+
 	/**
 	 * Creates the URL for the request executor
 	 * 

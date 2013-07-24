@@ -94,7 +94,7 @@ public class SearchService {
 		java.lang.reflect.Type collectionType = new TypeToken<Map<SearchResult.Type, List<SearchResult>>>() {}
 				.getType();
 
-		Map<SearchResult.Type, List<SearchResult>> results = GsonUtils.createResponse().fromJson(jsonResponse,
+		Map<SearchResult.Type, List<SearchResult>> results = GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);
 
 		return results;

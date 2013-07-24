@@ -64,7 +64,7 @@ public class UsersService {
 
 		Type collectionType = new TypeToken<List<User>>() {}.getType();
 
-		List<User> users = (List<User>) GsonUtils.createResponse().fromJson(jsonResponse, collectionType);
+		List<User> users = (List<User>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return users;
 
@@ -113,7 +113,7 @@ public class UsersService {
 
 		Type collectionType = new TypeToken<List<User>>() {}.getType();
 
-		List<User> users = (List<User>) GsonUtils.createResponse().fromJson(jsonResponse, collectionType);
+		List<User> users = (List<User>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return users;
 	}
@@ -136,7 +136,7 @@ public class UsersService {
 		params.put(FULL_DETAILS, "true");
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		User user = GsonUtils.createResponse().fromJson(jsonResponse, User.class);
+		User user = GsonUtils.createGson().fromJson(jsonResponse, User.class);
 
 		return user;
 	}
