@@ -35,11 +35,10 @@ public class MambuAPIService {
 	 *            password to connect with to the apis
 	 * @param domainName
 	 *            based domain name for the tenant (eg: mytenant.mambu.com)
-	 * @throws MambuApiException
 	 */
 	@Inject
 	public MambuAPIService(@Domain String domainName, @Username String username, @Password String password,
-			RequestExecutor executor, URLHelper urlHelper) throws MambuApiException {
+			RequestExecutor executor, URLHelper urlHelper) {
 
 		this.urlHelper = urlHelper;
 		this.executor = executor;

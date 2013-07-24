@@ -156,6 +156,7 @@ public class SavingsService {
 	 * 
 	 */
 	// TODO: This API is not implemented yet. Keep it private until the API is implemented
+	@SuppressWarnings("unused")
 	private SavingsAccount approveSavingsAccount(String accountId, String notes) throws MambuApiException {
 
 		ParamsMap paramsMap = new ParamsMap();

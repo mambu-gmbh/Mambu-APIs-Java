@@ -77,7 +77,7 @@ public class DemoTestClientService {
 
 	}
 	
-	public static void testGetClients() throws MambuApiException
+	public static void testGetClients()
 	{
 		try
 		{

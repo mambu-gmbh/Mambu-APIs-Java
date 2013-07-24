@@ -102,6 +102,7 @@ public class AccountingService {
 	 * @throws MambuApiException
 	 *             in case of an error
 	 */
+	@SuppressWarnings("unchecked")
 	public List<GLJournalEntry> getGLJournalEntries(Date fromDate, Date toDate, int offset, int limit)
 			throws MambuApiException {
 		String url = mambuAPIService.createUrl(String.format("%s?from=%s&to=%s", APIData.GLJOURNALENTRIES,

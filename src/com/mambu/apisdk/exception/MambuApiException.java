@@ -32,7 +32,7 @@ public class MambuApiException extends Exception {
 		String className = new String();
 		String classNameMessage = new String("");
 
-		Class eClass = e.getClass();
+		Class<? extends Exception> eClass = e.getClass();
 
 		if (eClass != null) {
 

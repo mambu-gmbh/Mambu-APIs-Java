@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<jardesc>
+    <jar path="Mambu-APIs-Java/build/Mambu-APIs-Java-3.2-bin.jar"/>
+    <options buildIfNeeded="true" compress="true" descriptionLocation="/Mambu-APIs-Java/build/build-bin-jar.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="false" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+    <selectedProjects/>
+    <manifest generateManifest="true" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
+        <sealing sealJar="false">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
+        <file path="/Mambu-APIs-Java/pom.xml"/>
+        <javaElement handleIdentifier="=Mambu-APIs-Java/src&lt;com.mambu"/>
+        <file path="/Mambu-APIs-Java/src/.DS_Store"/>
+        <javaElement handleIdentifier="=Mambu-APIs-Java/src&lt;com"/>
+        <file path="/Mambu-APIs-Java/README.md"/>
+        <file path="/Mambu-APIs-Java/logger.properties"/>
+        <javaElement handleIdentifier="=Mambu-APIs-Java/src&lt;com.mambu.apisdk.exception"/>
+        <file path="/Mambu-APIs-Java/config.properties"/>
+        <javaElement handleIdentifier="=Mambu-APIs-Java/src&lt;com.mambu.apisdk.services"/>
+        <javaElement handleIdentifier="=Mambu-APIs-Java/src&lt;com.mambu.apisdk.model"/>
+        <javaElement handleIdentifier="=Mambu-APIs-Java/src&lt;com.mambu.apisdk.util"/>
+        <javaElement handleIdentifier="=Mambu-APIs-Java/src&lt;com.mambu.apisdk"/>
+    </selectedElements>
+</jardesc>

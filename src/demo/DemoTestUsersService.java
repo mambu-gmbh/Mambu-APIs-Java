@@ -125,7 +125,7 @@ public class DemoTestUsersService {
 	public static void testGetUserByUsername() throws MambuApiException {
 
 		UsersService usersService = MambuAPIFactory.getUsersService();
-		String username = "Funmi"; // USER_NAME
+		String username = USER_NAME;
 		System.out.println("\nIn testGetUserByUsername with name =" + username);
 		User user = usersService.getUserByUsername(username);
 
