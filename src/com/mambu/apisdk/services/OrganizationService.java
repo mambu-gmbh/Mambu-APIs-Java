@@ -201,7 +201,7 @@ public class OrganizationService {
 	public CustomFieldValue getCustomField(String fieldId) throws MambuApiException {
 
 		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(APIData.CUSTOM_FIELDS + "/" + fieldId));
+		String urlString = new String(mambuAPIService.createUrl(CUSTOM_FIELDS + "/" + fieldId));
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET, ContentType.JSON);
 
@@ -226,7 +226,7 @@ public class OrganizationService {
 
 		// create the api call
 
-		String urlString = new String(mambuAPIService.createUrl(APIData.CUSTOM_FIELD_SETS));
+		String urlString = new String(mambuAPIService.createUrl(CUSTOM_FIELD_SETS));
 		// Add Custom Filed Type Param
 		ParamsMap params = new ParamsMap();
 		String customFieldTypeString = (customFieldType == null) ? null : customFieldType.name();
