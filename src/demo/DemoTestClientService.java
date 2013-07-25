@@ -26,13 +26,11 @@ import com.mambu.core.shared.model.Gender;
  */
 public class DemoTestClientService {
 
-	private static String CLIENT_ID = "428946702"; // 250213653 078911120 046360136 729859576 078911120 250213653
-													// 363317853
+	private static String CLIENT_ID = "428946702";
+	private static String GROUP_ID = "433436320";
 
-	private static String GROUP_ID = "588752540"; // 414659806 588752540
-
-	private static String BRANCH_ID = "Richmond01";
-	private static String CREDIT_OFFICER_USER_NAME = "MichaelD";
+	private static String BRANCH_ID = "1";
+	private static String CREDIT_OFFICER_USER_NAME = "demo";
 	private static String CLIENT_STATE = "ACTIVE"; // PENDING_APPROVAL BLACKLISTED INACTIVE
 
 	public static void main(String[] args) {
@@ -42,13 +40,13 @@ public class DemoTestClientService {
 		try {
 
 			testCreateJsonClient();
-
-			testGetClientDetails();
-
+			testCreateBasicClient();
 			testCreateFullDetailsClient();
 
 			testGetClient();
 			testGetClientDetails();
+
+			testGetClients();
 
 			testGetClientbyFullName();
 			testGetClientByLastNameBirthday();
@@ -57,7 +55,6 @@ public class DemoTestClientService {
 			testGetGroup();
 			testGetGroupDetails();
 
-			testCreateBasicClient();
 			testGetClientsByBranchOfficerState();
 
 			testGetGroupsByBranchOfficer();
@@ -78,11 +75,31 @@ public class DemoTestClientService {
 
 	}
 
+	public static void testGetClients() {
+		try {
+			System.out.println("\nIn testGetClients");
+			ClientsService clientService = MambuAPIFactory.getClientService();
+
+			System.out.println("Sucessfully returned " + clientService.getClients(true).size() + " clients(active)...");
+			System.out.println("Sucessfully returned " + clientService.getClients(false).size()
+					+ " clients(inactive)...");
+
+			System.out.println("Sucessfully returned " + clientService.getClients(true, 0, 10).size()
+					+ " clients(active,pagesize of 10)...");
+			System.out.println("Sucessfully returned " + clientService.getClients(false, 0, 10).size()
+					+ " clients(inactive,pagesize of 10)...");
+		} catch (MambuApiException e) {
+			System.out.println("Exception caught in Demo Test Clients");
+			System.out.println("Error code=" + e.getErrorCode());
+			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
+		}
+	}
+
 	public static void testGetClientbyFullName() throws MambuApiException {
 		System.out.println("\nIn testGetClientbyFullName");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
-		;
+
 		String lastname = "Chernaya"; // Chernaya FullClient
 		String firstName = "Irina"; // Irina API
 
@@ -185,6 +202,7 @@ public class DemoTestClientService {
 		clientIn.setMiddleName(" Middle ");
 		clientIn.setMobilePhone1("1-778-2344");
 		clientIn.setMobilePhone2("2-778-2344");
+
 		// Birthday
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(1983, 8, 15); // format: year, month, day_of_month

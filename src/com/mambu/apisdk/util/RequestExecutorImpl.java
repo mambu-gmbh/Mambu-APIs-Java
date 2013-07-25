@@ -121,6 +121,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 			case POST:
 				response = executePostRequest(urlString, params, contentTypeFormat);
 				break;
+			default:
+				throw new IllegalArgumentException("Only method GET or POST is supported, not " + method.name() + ".");
 			}
 		} catch (MalformedURLException e) {
 			LOGGER.severe("MalformedURLException: " + e.getMessage());
@@ -156,7 +158,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 			switch (contentTypeFormat) {
 
 			case WWW_FORM:
-
 				// convert parms to a list for HttpEntity
 				List<NameValuePair> httpParams = getListFromParams(params);
 				// use UTF-8 to encode

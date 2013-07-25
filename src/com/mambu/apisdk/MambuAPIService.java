@@ -35,11 +35,10 @@ public class MambuAPIService {
 	 *            password to connect with to the apis
 	 * @param domainName
 	 *            based domain name for the tenant (eg: mytenant.mambu.com)
-	 * @throws MambuApiException
 	 */
 	@Inject
 	public MambuAPIService(@Domain String domainName, @Username String username, @Password String password,
-			RequestExecutor executor, URLHelper urlHelper) throws MambuApiException {
+			RequestExecutor executor, URLHelper urlHelper) {
 
 		this.urlHelper = urlHelper;
 		this.executor = executor;
@@ -131,5 +130,22 @@ public class MambuAPIService {
 	public String createUrl(String details) {
 
 		return urlHelper.createUrl(details);
+	}
+
+	/**
+	 * Returns an url containing limit/offset params.
+	 * @param details URL details
+	 * @param offset offset to start from
+	 * @param limit max. number of entries
+	 * @return URL for a limited query
+	 */
+	public String	createUrl(String details, int offset, int limit)
+	{
+		String	url	=this.createUrl(details);
+		
+		if(limit != -1) url+=(url.contains("?") ? "&" : "?") + "limit=" + limit;
+		if(offset != -1) url+=(url.contains("?") ? "&" : "?") + "offset=" + offset;
+		
+		return(url);
 	}
 }
