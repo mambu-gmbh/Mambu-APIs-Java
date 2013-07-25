@@ -1,6 +1,7 @@
 package demo;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -25,10 +26,8 @@ import com.mambu.core.shared.model.Gender;
  */
 public class DemoTestClientService {
 
-	private static String CLIENT_ID = "556267"; // 250213653 078911120 046360136 729859576 078911120 250213653
-													// 363317853
-
-	private static String GROUP_ID = "433436320"; // 414659806 588752540
+	private static String CLIENT_ID = "428946702";
+	private static String GROUP_ID = "433436320";
 
 	private static String BRANCH_ID = "1";
 	private static String CREDIT_OFFICER_USER_NAME = "demo";
@@ -41,13 +40,13 @@ public class DemoTestClientService {
 		try {
 
 			testCreateJsonClient();
+			testCreateBasicClient();
+			testCreateFullDetailsClient();
 
 			testGetClient();
-			testGetClients();
-
 			testGetClientDetails();
 
-			// testCreateFullDetailsClient(); // Not needed as we now have json create version
+			testGetClients();
 
 			testGetClientbyFullName();
 			testGetClientByLastNameBirthday();
@@ -56,7 +55,6 @@ public class DemoTestClientService {
 			testGetGroup();
 			testGetGroupDetails();
 
-			// testCreateBasicClient();
 			testGetClientsByBranchOfficerState();
 
 			testGetGroupsByBranchOfficer();
@@ -76,21 +74,21 @@ public class DemoTestClientService {
 		System.out.println("Client Service by ID Ok, ID=" + myClient.getId());
 
 	}
-	
-	public static void testGetClients()
-	{
-		try
-		{
+
+	public static void testGetClients() {
+		try {
 			System.out.println("\nIn testGetClients");
 			ClientsService clientService = MambuAPIFactory.getClientService();
 
 			System.out.println("Sucessfully returned " + clientService.getClients(true).size() + " clients(active)...");
-			System.out.println("Sucessfully returned " + clientService.getClients(false).size() + " clients(inactive)...");
-			
-			System.out.println("Sucessfully returned " + clientService.getClients(true,0,10).size() + " clients(active,pagesize of 10)...");
-			System.out.println("Sucessfully returned " + clientService.getClients(false,0,10).size() + " clients(inactive,pagesize of 10)...");
-		}
-		catch (MambuApiException e) {
+			System.out.println("Sucessfully returned " + clientService.getClients(false).size()
+					+ " clients(inactive)...");
+
+			System.out.println("Sucessfully returned " + clientService.getClients(true, 0, 10).size()
+					+ " clients(active,pagesize of 10)...");
+			System.out.println("Sucessfully returned " + clientService.getClients(false, 0, 10).size()
+					+ " clients(inactive,pagesize of 10)...");
+		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Clients");
 			System.out.println("Error code=" + e.getErrorCode());
 			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
@@ -101,7 +99,7 @@ public class DemoTestClientService {
 		System.out.println("\nIn testGetClientbyFullName");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
-		
+
 		String lastname = "Chernaya"; // Chernaya FullClient
 		String firstName = "Irina"; // Irina API
 
@@ -204,7 +202,13 @@ public class DemoTestClientService {
 		clientIn.setMiddleName(" Middle ");
 		clientIn.setMobilePhone1("1-778-2344");
 		clientIn.setMobilePhone2("2-778-2344");
-		clientIn.setBirthDate(new Date(1982 - 1900, 6 - 1, 27)); // year, month, day
+
+		// Birthday
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(1983, 8, 15); // format: year, month, day_of_month
+		Date birthdate = calendar.getTime();
+
+		clientIn.setBirthDate(birthdate);
 
 		// Create Expanded Client
 		ClientExpanded clExpanded = new ClientExpanded(clientIn);
@@ -259,7 +263,8 @@ public class DemoTestClientService {
 
 		System.out.println("Client created, OK, ID=" + client.getClient().getId() + " Full name= "
 				+ client.getClient().getFullName() + " First, Last=" + client.getClient().getFirstName());
-		// TODO: Creating Addresses for the Client is not supported yet
+
+		// TODO: Creating Addresses for the Client is not supported yet, see MBU-4210
 		// + "  Address Line 1=" + client.getAddresses() == null ? "" : client.getAddresses().get(0).getLine1());
 
 	}
@@ -280,7 +285,6 @@ public class DemoTestClientService {
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
 		// String firstName = new String("\u0416" + "\u041A"); // Russian Unicode letetrs
-		// String firstName = new String("AB" + "\u0416"); // Russian Unicode letetrs
 		String firstName = new String("AFirst" + Integer.toString((int) Math.random()));
 		// String lastName = "Асин"; // "\u00c1\u00c9" - Spanish Unicode letters
 		String lastName = "Acin"; // "\u00c1\u00c9" - Spanish Unicode letters

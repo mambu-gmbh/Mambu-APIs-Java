@@ -128,10 +128,13 @@ public class OrganizationService {
 
 	/** Centres **/
 	/**
-	 * Requests a centre by their Mambu ID
+	 * <<<<<<< HEAD Requests a centre by their Mambu ID
 	 * 
 	 * @param centreId
-	 * @return the Mambu centre model
+	 * @return the Mambu centre model ======= Requests a centre details by their Mambu ID
+	 * 
+	 * @param centreId
+	 * @return the Mambu centre model (with full details) >>>>>>> 053ab4e5f945cd061dbc7a17c813b5a84f5b76bc
 	 * @throws MambuApiException
 	 */
 	public Centre getCentre(String centreId) throws MambuApiException {
@@ -172,14 +175,14 @@ public class OrganizationService {
 
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(APIData.CENTRES));
-		String jsonResponse;
+
 		ParamsMap params = new ParamsMap();
 
 		params.addParam(APIData.BRANCH_ID, branchId); // if null, all centres are searched
 		params.put(OFFSET, offset);
 		params.put(LIMIT, limit);
 
-		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
 		Centre centres[] = (Centre[]) GsonUtils.createGson().fromJson(jsonResponse, Centre[].class);
 
@@ -225,8 +228,8 @@ public class OrganizationService {
 	public List<CustomFieldSet> getCustomFieldSets(CustomField.Type customFieldType) throws MambuApiException {
 
 		// create the api call
-
 		String urlString = new String(mambuAPIService.createUrl(CUSTOM_FIELD_SETS));
+
 		// Add Custom Filed Type Param
 		ParamsMap params = new ParamsMap();
 		String customFieldTypeString = (customFieldType == null) ? null : customFieldType.name();
