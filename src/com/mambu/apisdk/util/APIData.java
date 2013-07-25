@@ -73,6 +73,14 @@ public class APIData {
 	public static final String LOANPRODUCTS = "loanproducts";
 	public static final String SAVINGSRODUCTS = "savingsproducts";
 
+	// Tasks
+	public static final String TITLE = "title";
+	public static final String USERNAME = "username";
+	public static final String DESCRIPTION = "description";
+	public static final String DUE_DATE = "duedate";
+	public static final String CLIENT_ID = "clientid";
+	public static final String GROUP_ID = "groupid";
+
 	// Accounting API
 		public static final String GLACCOUNTS 		= "glaccounts";
 		public static final String GLJOURNALENTRIES = "gljournalentries";
