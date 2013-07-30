@@ -46,7 +46,7 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 	 * Test the retrieval of more/all clients
 	 * 
 	 */
-	@Test
+	//@Test
 	public void testGetClientsActive() throws MambuApiException {
 
 		// execute
@@ -60,7 +60,7 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 	 * Test the retrieval of more/all clients
 	 * 
 	 */
-	@Test
+	//@Test
 	public void testGetClientsInactive() throws MambuApiException {
 
 		// execute
@@ -74,7 +74,7 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 	 * Test the retrieval of more/all clients
 	 * 
 	 */
-	@Test
+	//@Test
 	public void testGetClientsActivePaged() throws MambuApiException {
 
 		// execute
@@ -88,7 +88,7 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 	 * Test the retrieval of more/all clients
 	 * 
 	 */
-	@Test
+	//@Test
 	public void testGetClientsInactivePaged() throws MambuApiException {
 
 		// execute
@@ -102,7 +102,7 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 	 * Test the retrieval of a full details client with a given id
 	 * 
 	 */
-	@Test
+	//@Test
 	public void testGetClientDetails() throws MambuApiException {
 
 		ParamsMap params = new ParamsMap();

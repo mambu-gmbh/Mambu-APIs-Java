@@ -27,6 +27,13 @@ import com.mambu.loans.shared.model.LoanTransaction;
  */
 @Singleton
 public class LoansService {
+	
+	/**
+	 * Two basic account-states
+	 */
+	public enum AccountStates {
+		ACTIVE,ACTIVE_IN_ARREARS
+	}	
 
 	private static final String LOANS = APIData.LOANS;
 	private static final String CLIENTS = APIData.CLIENTS;
@@ -176,7 +183,6 @@ public class LoansService {
 	 * @param accountId
 	 * @param disbursalDate
 	 * @param firstRepaymentDate
-	 * @param type
 	 * @param bankNumber
 	 * @param receiptNumber
 	 * @param checkNumber
@@ -321,7 +327,7 @@ public class LoansService {
 
 		return transaction;
 	}
-
+	
 	/****
 	 * Apply FEE to a loan account
 	 * 
@@ -356,9 +362,9 @@ public class LoansService {
 	/***
 	 * Get the loan accounts by branch is, credit officer, accountState
 	 * 
-	 * @param Parameters
+	 * @param branchId
 	 *            branchID The ID of the branch to which the loan accounts are assigned to
-	 * @param creditOfficerUsername
+	 * @param creditOfficerUserName
 	 *            - The username of the credit officer to whom the loans are assigned to
 	 * @param accountState
 	 *            - The desired state of the accounts to filter on (eg: APPROVED) *
@@ -389,6 +395,55 @@ public class LoansService {
 				collectionType);
 		return accounts;
 	}
+
+	/**
+	 * Get a list of loan accounts, limited for paging
+	 * @param accountState Accountstate to query
+	 * @param offset Offset to start from, has to be >= 0
+	 * @param limit Limit of accounts to load > 0
+	 * @return List of LoanAccounts
+	 * @throws MambuApiException in case of an error
+	 */
+	public List<LoanAccount> getLoanAccounts(AccountStates accountState, int offset, int limit) throws MambuApiException {
+		return(this.getLoanAccounts(accountState.toString(), offset, limit)) ;
+	}
+	
+	/**
+	 * Get a list of loan accounts, limited for paging
+	 * @param accountState Accountstate to query
+	 * @param offset Offset to start from, has to be >= 0
+	 * @param limit Limit of accounts to load > 0
+	 * @return List of LoanAccounts
+	 * @throws MambuApiException in case of an error
+	 */
+	public List<LoanAccount> getLoanAccounts(String accountState, int offset, int limit) throws MambuApiException {
+
+		if((offset < 0) || (limit <= 0))
+		{
+			throw new MambuApiException(new IllegalArgumentException("Offset has to be >= 0, limit has to be > 0"));
+		}
+		else
+		{
+			String urlString = new String(mambuAPIService.createUrl(LOANS + "/"));
+	
+			ParamsMap params = new ParamsMap();
+			params.addParam(ACCOUNT_STATE, accountState);
+			params.addParam(FULL_DETAILS, Boolean.TRUE.toString());
+			params.put(APIData.OFFSET, String.valueOf(offset));
+			params.put(APIData.LIMIT, String.valueOf(limit));
+	
+			String jsonResponse;
+	
+			jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+	
+			Type collectionType = new TypeToken<List<LoanAccount>>() {}.getType();
+	
+			List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createResponse().fromJson(jsonResponse,
+					collectionType);
+			return accounts;
+		}
+	}
+
 	// Loan Products
 	/***
 	 * Get a list of Loan Products
