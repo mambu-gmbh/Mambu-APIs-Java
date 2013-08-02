@@ -116,7 +116,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		try {
 			switch (method) {
 			case GET:
-				response = executeGetRequest(urlString, params, contentTypeFormat);
+				response = executeGetRequest(urlString, params);
 				break;
 			case POST:
 				response = executePostRequest(urlString, params, contentTypeFormat);
@@ -151,8 +151,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		httpPost.setHeader("Content-Type", contentType);
 		httpPost.setHeader("Authorization", "Basic " + encodedAuthorization);
 
-		LOGGER.info("POST With ContentType=" + contentType + " URL=" + urlString + " Params as URL string="
-				+ params.getURLString());
+		LOGGER.info("POST With ContentType=" + contentType + " URL=" + urlString);
 
 		if (params != null && params.size() > 0) {
 			switch (contentTypeFormat) {
@@ -165,15 +164,18 @@ public class RequestExecutorImpl implements RequestExecutor {
 				HttpEntity postEntity = new UrlEncodedFormEntity(httpParams, UTF8_charset);
 
 				httpPost.setEntity(postEntity);
+
+				LOGGER.info("WWW_FORM: Params as URL string=" + params.getURLString());
 				break;
 
 			case JSON:
 				// Parameter (json string) is expected as JSON_OBJECT parameter name
-				StringEntity jsonEntity = new StringEntity(params.get(APIData.JSON_OBJECT), UTF8_charset);
-
-				LOGGER.info("Posting JSON request:  URL=" + urlString + " String Entity=" + jsonEntity.toString());
+				final String jsonString = params.get(APIData.JSON_OBJECT);
+				StringEntity jsonEntity = new StringEntity(jsonString, UTF8_charset);
 
 				httpPost.setEntity(jsonEntity);
+
+				LOGGER.info("JSON: jsonString=" + jsonString);
 				break;
 			}
 
@@ -221,20 +223,15 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * 
 	 * @param urlString
 	 */
-	private String executeGetRequest(String urlString, ParamsMap params, ContentType contentTypeFormat)
-			throws MalformedURLException, IOException, MambuApiException {
+	private String executeGetRequest(String urlString, ParamsMap params) throws MalformedURLException, IOException,
+			MambuApiException {
 		String response = "";
 		Integer errorCode = null;
-
-		// "application/x-www-form-urlencoded; charset=UTF-8";
-		// Get properly formatted ContentType
-
-		final String contentType = getFormattedContentTypeString(contentTypeFormat);
 
 		if (params != null && params.size() > 0) {
 			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
 		}
-		LOGGER.info("GET with ContentType=" + contentType + ". URL with params=" + urlString);
+		LOGGER.info("GET with URL with params=" + urlString);
 
 		HttpParams httpParameters = new BasicHttpParams();
 
@@ -243,7 +240,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		HttpGet httpGet = new HttpGet(urlString);
 		// add Authorozation header
 		httpGet.setHeader("Authorization", "Basic " + encodedAuthorization);
-		httpGet.setHeader("Content-Type", contentType);
+		// setHeader("Content-Type") not need for GET requests
 
 		// execute
 		HttpResponse httpResponse = httpClient.execute(httpGet);

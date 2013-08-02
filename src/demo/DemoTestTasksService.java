@@ -1,5 +1,6 @@
 package demo;
 
+import java.util.Date;
 import java.util.List;
 
 import com.mambu.apisdk.MambuAPIFactory;
@@ -26,6 +27,10 @@ public class DemoTestTasksService {
 
 		try {
 
+			// available since Mambu 1.11
+			testCreateTaskFromEncoded();
+
+			// available since Mambu 3.3
 			testCreateTaskJson();
 
 		} catch (MambuApiException e) {
@@ -37,7 +42,7 @@ public class DemoTestTasksService {
 	}
 
 	public static void testCreateTaskJson() throws MambuApiException {
-		System.out.println("\nIn testCreateTask");
+		System.out.println("\nIn testCreateTaskJson");
 
 		UsersService usersService = MambuAPIFactory.getUsersService();
 		User thomas = usersService.getUserByUsername("demo");
@@ -63,6 +68,39 @@ public class DemoTestTasksService {
 		task.setTaskLinkType(OwnerType.CLIENT);
 
 		task = tasksService.createTask(task);
+
+		System.out.println("Created task =" + task + "  Returned=" + task.getId());
+
+	}
+
+	public static void testCreateTaskFromEncoded() throws MambuApiException {
+		System.out.println("\nIn testCreateTaskFromEncoded");
+
+		UsersService usersService = MambuAPIFactory.getUsersService();
+		User user = usersService.getUserByUsername("demo");
+
+		ClientsService clientsService = MambuAPIFactory.getClientService();
+		List<Client> clients = clientsService.getClientByFullName("Doe", "John");
+		Client client;
+		if (clients.isEmpty()) {
+			client = clientsService.createClient("John", "Doe");
+		} else {
+			client = clients.iterator().next();
+		}
+
+		TasksService tasksService = MambuAPIFactory.getTasksService();
+
+		Task task = new Task();
+		task.setTitle("Task #1");
+		task.setAssignedUserKey(user.getEncodedKey());
+		// don't set due date directly since date format will be invalid (should not contain time)
+		task.setDaysUntilDue(0);
+		task.setCreatedByUserKey(user.getEncodedKey());
+		task.setTaskLinkKey(client.getEncodedKey());
+		task.setTaskLinkType(OwnerType.CLIENT);
+
+		task = tasksService.createTask(task.getTitle(), user.getUsername(), task.getDescription(), new Date(),
+				task.getTaskLinkKey(), null);
 
 		System.out.println("Created task =" + task + "  Returned=" + task.getId());
 
