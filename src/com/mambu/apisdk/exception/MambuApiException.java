@@ -57,6 +57,13 @@ public class MambuApiException extends Exception {
 		this.errorMessage = errorMessage;
 	}
 
+	// Create new exception using MambuApiResponseMessage object and the HTTP error code
+	public MambuApiException(Integer errorCode, MambuApiResponseMessage responseMessage) {
+		super();
+		this.errorCode = errorCode;
+		this.errorMessage = responseMessage.getMambuResponseMessage();
+	}
+
 	public Integer getErrorCode() {
 		return errorCode;
 	}

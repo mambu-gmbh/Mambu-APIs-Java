@@ -32,15 +32,13 @@ public class DemoTestOrganizationService {
 			// testCustomField();
 			// testGetCustomFieldSetsByType();
 
-			testGetCentre();
-
 			testGetCentresByPage();
-
-			testGetCentresByBranch();
+			testGetCentre();
 
 			testGetCurrency();
 
 			testGetAllBranches();
+			testGetCentresByBranch();
 
 			testGetBranchesByPage();
 
@@ -60,11 +58,11 @@ public class DemoTestOrganizationService {
 		String offset = null;
 		String limit = null;
 		Date d1 = new Date();
-		Branch branches[] = organizationService.getBranches(offset, limit);
+		List<Branch> branches = organizationService.getBranches(offset, limit);
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
-		System.out.println("All Total=" + branches.length + " Total time=" + diff);
+		System.out.println("All Total=" + branches.size() + " Total time=" + diff);
 		for (Branch branch : branches) {
 			System.out.println(" Name=" + branch.getName() + "\tId=" + branch.getId());
 		}
@@ -81,11 +79,11 @@ public class DemoTestOrganizationService {
 		System.out.println("\nIn testGetBranchesByPage" + "  Offset=" + offset + "  Limit=" + limit);
 
 		Date d1 = new Date();
-		Branch branches[] = organizationService.getBranches(offset, limit);
+		List<Branch> branches = organizationService.getBranches(offset, limit);
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
-		System.out.println("Total Branches=" + branches.length + " Total time=" + diff);
+		System.out.println("Total Branches=" + branches.size() + " Total time=" + diff);
 		for (Branch branch : branches) {
 			System.out.println(" Name=" + branch.getName() + "\tId=" + branch.getId());
 		}
@@ -109,7 +107,7 @@ public class DemoTestOrganizationService {
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
-		String centreId = "Richmond_Center_1";
+		String centreId = "Richmond_Center 1"; // Richmond_Center_1 CanWest_001
 		System.out.println("\nIn testGetCentre by ID." + "  Centre ID=" + centreId);
 
 		Date d1 = new Date();
@@ -132,11 +130,11 @@ public class DemoTestOrganizationService {
 		System.out.println("\nIn testGetCentresByPage" + "  Offset=" + offset + "  Limit=" + limit);
 
 		Date d1 = new Date();
-		Centre centres[] = organizationService.getCentres(branchId, offset, limit);
+		List<Centre> centres = organizationService.getCentres(branchId, offset, limit);
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
-		System.out.println("Total Centres=" + centres.length + " Total time=" + diff);
+		System.out.println("Total Centres=" + centres.size() + " Total time=" + diff);
 		for (Centre centre : centres) {
 			System.out.println(" Name=" + centre.getName() + "\tId=" + centre.getId());
 		}
@@ -154,11 +152,11 @@ public class DemoTestOrganizationService {
 				+ limit);
 
 		Date d1 = new Date();
-		Centre centres[] = organizationService.getCentres(branchId, offset, limit);
+		List<Centre> centres = organizationService.getCentres(branchId, offset, limit);
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
-		System.out.println("Total Centres=" + centres.length + " for branch=" + branchId + ". Total time=" + diff);
+		System.out.println("Total Centres=" + centres.size() + " for branch=" + branchId + ". Total time=" + diff);
 		for (Centre centre : centres) {
 			System.out.println(" Name=" + centre.getName() + "\tId=" + centre.getId());
 		}

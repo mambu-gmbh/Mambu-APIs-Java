@@ -4,12 +4,14 @@
 package com.mambu.apisdk.services;
 
 import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
 import java.util.List;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.exception.MambuApiResponseMessage;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
@@ -61,6 +63,7 @@ public class OrganizationService {
 
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(CURRENCIES));
+
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
 		// convert to collection
@@ -83,23 +86,23 @@ public class OrganizationService {
 	 * @throws MambuApiException
 	 */
 
-	public Branch[] getBranches(String offset, String limit) throws MambuApiException {
+	public List<Branch> getBranches(String offset, String limit) throws MambuApiException {
 
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(BRANCHES));
-		String jsonResponse;
+
 		ParamsMap params = new ParamsMap();
 
 		params.put(OFFSET, offset);
 		params.put(LIMIT, limit);
 
-		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Branch branches[] = (Branch[]) GsonUtils.createGson().fromJson(jsonResponse, Branch[].class);
+		Type collectionType = new TypeToken<List<Branch>>() {}.getType();
+		List<Branch> branches = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return branches;
 	}
-
 	/**
 	 * Requests a branch by their Mambu ID
 	 * 
@@ -109,15 +112,24 @@ public class OrganizationService {
 	 */
 	public Branch getBranch(String branchId) throws MambuApiException {
 
-		// Replace spaces with url-encoding symbol "+". Spaces in IDs crash API wrappers
-		branchId = branchId.trim().replace(" ", "+");
+		// Verify that ID doesn't contain spaces. Spaces in IDs crash API wrappers
+		branchId = branchId.trim();
+		if (branchId.contains(" ")) {
+			// Return the same API exception that would be returned by Mambu in case of Invalid ID parameter
+			// Message constructor: (returnStatus, errorSource) results in this message added to exception:
+			// {"returnCode":800,"returnStatus":"INVALID_BRANCH_ID""};
+			MambuApiResponseMessage responseMsg = new MambuApiResponseMessage("INVALID_BRANCH_ID", null);
+
+			final int apiErrorCode = HttpURLConnection.HTTP_NOT_FOUND; // 403
+			throw new MambuApiException(apiErrorCode, responseMsg);
+		}
 
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(BRANCHES + "/" + branchId));
 
 		ParamsMap params = new ParamsMap();
-
 		params.put(FULL_DETAILS, "true");
+
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
 		Branch branch = (Branch) GsonUtils.createGson().fromJson(jsonResponse, Branch.class);
@@ -136,8 +148,20 @@ public class OrganizationService {
 	 */
 	public Centre getCentre(String centreId) throws MambuApiException {
 
-		// Replace spaces with url-encoding symbol "+". Spaces in IDs crash API wrappers
-		centreId = centreId.trim().replace(" ", "+");
+		// Verify that ID doesn't contain spaces. Spaces in IDs crash API wrappers
+
+		centreId = centreId.trim();
+		if (centreId.contains(" ")) {
+			// Return the same API exception that would be returned by Mambu in case of Invalid ID parameter
+			// This Message constructor: (returnStatus, errorSource) results in:
+			// {"returnCode":851,"returnStatus":"INVALID_CENTRE_ID""} added to the exception message;
+
+			MambuApiResponseMessage responseMsg = new MambuApiResponseMessage("INVALID_CENTRE_ID", null);
+
+			final int apiErrorCode = HttpURLConnection.HTTP_NOT_FOUND; // 403
+			throw new MambuApiException(apiErrorCode, responseMsg);
+
+		}
 
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(APIData.CENTRES + "/" + centreId));
@@ -168,7 +192,7 @@ public class OrganizationService {
 	 * @throws MambuApiException
 	 */
 
-	public Centre[] getCentres(String branchId, String offset, String limit) throws MambuApiException {
+	public List<Centre> getCentres(String branchId, String offset, String limit) throws MambuApiException {
 
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(APIData.CENTRES));
@@ -181,7 +205,8 @@ public class OrganizationService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Centre centres[] = (Centre[]) GsonUtils.createGson().fromJson(jsonResponse, Centre[].class);
+		Type collectionType = new TypeToken<List<Centre>>() {}.getType();
+		List<Centre> centres = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return centres;
 	}

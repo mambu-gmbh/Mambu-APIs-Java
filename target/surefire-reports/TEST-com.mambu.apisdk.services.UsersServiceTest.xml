@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuite failures="0" time="0.029" errors="0" skipped="0" tests="2" name="com.mambu.apisdk.services.UsersServiceTest">
+<testsuite failures="0" time="0.013" errors="0" skipped="0" tests="2" name="com.mambu.apisdk.services.UsersServiceTest">
   <properties>
     <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
     <property name="sun.boot.library.path" value="/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Libraries"/>
@@ -27,7 +27,7 @@
 "/>
     <property name="java.vm.specification.vendor" value="Sun Microsystems Inc."/>
     <property name="os.name" value="Mac OS X"/>
-    <property name="classworlds.conf" value="/Users/miked/Development/Android/Projects/.metadata/.plugins/org.eclipse.m2e.core/launches/m2conf7712808924316382302.tmp"/>
+    <property name="classworlds.conf" value="/Users/miked/Development/Android/Projects/.metadata/.plugins/org.eclipse.m2e.core/launches/m2conf7243664625888885242.tmp"/>
     <property name="sun.jnu.encoding" value="MacRoman"/>
     <property name="java.library.path" value=".:/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
@@ -64,6 +64,6 @@
     <property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="sun.cpu.isalist" value=""/>
   </properties>
-  <testcase time="0.017" classname="com.mambu.apisdk.services.UsersServiceTest" name="testGetUsers"/>
-  <testcase time="0.008" classname="com.mambu.apisdk.services.UsersServiceTest" name="testGetUsersFilteredByBranch"/>
+  <testcase time="0.002" classname="com.mambu.apisdk.services.UsersServiceTest" name="testGetUsers"/>
+  <testcase time="0.01" classname="com.mambu.apisdk.services.UsersServiceTest" name="testGetUsersFilteredByBranch"/>
 </testsuite>
