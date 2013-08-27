@@ -13,9 +13,9 @@ public class APIData {
 	public static enum ACCOUNT_TYPE {
 		LOAN, SAVINGS
 	};
-	
-	//----- Date Formatting -----
-	public static	final DateFormat	URLDATE_FORMATTER	=new SimpleDateFormat("yyyy-MM-dd");
+
+	// ----- Date Formatting -----
+	public static final DateFormat URLDATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd");
 
 	// Users API
 
@@ -73,9 +73,17 @@ public class APIData {
 	public static final String LOANPRODUCTS = "loanproducts";
 	public static final String SAVINGSRODUCTS = "savingsproducts";
 
+	// Tasks
+	public static final String TITLE = "title";
+	public static final String USERNAME = "username";
+	public static final String DESCRIPTION = "description";
+	public static final String DUE_DATE = "duedate";
+	public static final String CLIENT_ID = "clientid";
+	public static final String GROUP_ID = "groupid";
+
 	// Accounting API
-		public static final String GLACCOUNTS 		= "glaccounts";
-		public static final String GLJOURNALENTRIES = "gljournalentries";
+	public static final String GLACCOUNTS = "glaccounts";
+	public static final String GLJOURNALENTRIES = "gljournalentries";
 
 	// Intelligence API
 	public static final String INDICATORS = "indicators";
@@ -101,7 +109,7 @@ public class APIData {
 	public static String SEARCH = "search";
 	public static String QUERY = "query";
 	public static String SEARCH_TYPES = "type";
-	
+
 	// Tasks API
 	// API's endpoint
 	public static String TASKS = "tasks";
