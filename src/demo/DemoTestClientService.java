@@ -248,8 +248,8 @@ public class DemoTestClientService {
 		// Add new field to the list
 		clientCustomInformation.add(custField2);
 		CustomFieldValue custField3 = new CustomFieldValue();
-		customFieldId = "F2_NUMBER_Clients";
-		customFieldValue = "15";
+		customFieldId = "Occupation_Clients";
+		customFieldValue = "Programmer";
 
 		custField3.setCustomFieldId(customFieldId);
 		custField3.setValue(customFieldValue);
@@ -264,8 +264,13 @@ public class DemoTestClientService {
 		System.out.println("Client created, OK, ID=" + client.getClient().getId() + " Full name= "
 				+ client.getClient().getFullName() + " First, Last=" + client.getClient().getFirstName());
 
-		// TODO: Creating Addresses for the Client is not supported yet, see MBU-4210
-		// + "  Address Line 1=" + client.getAddresses() == null ? "" : client.getAddresses().get(0).getLine1());
+		// TODO: In Mambu: issue MBU-4210 allows to create Clients with the address info (in 3.3). It works and the
+		// address is created, but the address info is NOT returned with the Response, so one would need to re-request
+		// this client with full details to get created address information
+
+		// This always return ZERO addresses in 3.3, even if the address was created successfully
+		List<Address> addressOut = client.getAddresses();
+		System.out.println("\nClient address, total=" + addressOut.size());
 
 	}
 	public static void testCreateBasicClient() throws MambuApiException {

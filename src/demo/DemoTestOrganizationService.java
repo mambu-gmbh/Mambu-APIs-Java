@@ -9,7 +9,6 @@ import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
-import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 
@@ -28,9 +27,9 @@ public class DemoTestOrganizationService {
 		DemoUtil.setUp();
 
 		try {
-			// TODO:Custom Fields API to be tested with Mambu 3.3, see MBU-2486
-			// testCustomField();
-			// testGetCustomFieldSetsByType();
+
+			testGetCustomField();
+			testGetCustomFieldSetsByType();
 
 			testGetCentresByPage();
 			testGetCentre();
@@ -177,30 +176,31 @@ public class DemoTestOrganizationService {
 
 	}
 	// Get Custom Field by ID
-	public static void testCustomField() throws MambuApiException {
+	public static void testGetCustomField() throws MambuApiException {
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		String fieldId = "Family_Size_Clients";
-		System.out.println("\nIn testCustomField by ID." + "  Field ID=" + fieldId);
+		System.out.println("\nIn testGetCustomField by ID." + "  Field ID=" + fieldId);
 
 		Date d1 = new Date();
-		CustomFieldValue customFieldValue = organizationService.getCustomField(fieldId);
+
+		CustomField customField = organizationService.getCustomField(fieldId);
+
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
-		System.out.println("CustomFieldValue: ID=" + customFieldValue.getCustomFieldId() + " Value="
-				+ customFieldValue.getValue() + " Name=" + customFieldValue.getCustomField().getName() + " Total time="
-				+ diff);
+		System.out.println("CustomField: ID=" + customField.getId() + "\tName=" + customField.getName()
+				+ " \tData Type=" + customField.getDataType().name() + " Total time=" + diff);
 
 	}
-
 	// Get CustomFieldSets by Type
 	public static void testGetCustomFieldSetsByType() throws MambuApiException {
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
-		CustomField.Type customFieldType = CustomField.Type.CLIENT_INFO; //
+		// E.g. CustomField.Type.CLIENT_INFO, CustomField.Type.LOAN_ACCOUNT_INFO, etc
+		CustomField.Type customFieldType = CustomField.Type.LOAN_ACCOUNT_INFO;
 
 		System.out.println("\nIn testGetCustomFieldSetsByType");
 
@@ -211,7 +211,14 @@ public class DemoTestOrganizationService {
 
 		System.out.println("Total Sets returned=" + sustomFieldSets.size() + " Total time=" + diff);
 		for (CustomFieldSet set : sustomFieldSets) {
-			System.out.println(" Name=" + set.getName() + "\tType=" + set.getType().toString());
+			List<CustomField> customFields = set.getCustomFields();
+			System.out.println(" Name=" + set.getName() + "\tType=" + set.getType().toString() + "  Total Fields="
+					+ customFields.size());
+			System.out.println("List of fields:\n");
+			for (CustomField field : customFields) {
+				System.out.println("Field Name=" + field.getName() + "\tDataType=" + field.getDataType().toString()
+						+ "\tIsDefault=" + field.isDefault().toString() + "\tType=" + field.getType().toString());
+			}
 		}
 		System.out.println();
 
