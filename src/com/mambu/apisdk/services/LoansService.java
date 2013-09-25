@@ -49,6 +49,7 @@ public class LoansService {
 	private static final String TYPE_REPAYMENT = APIData.TYPE_REPAYMENT;
 	private static final String TYPE_DISBURSMENT = APIData.TYPE_DISBURSMENT;
 	private static final String TYPE_APPROVAL = APIData.TYPE_APPROVAL;
+	private static final String TYPE_REJECT = APIData.TYPE_REJECT;
 	private static final String TYPE_FEE = APIData.TYPE_FEE;
 
 	private static final String AMOUNT = APIData.AMOUNT;
@@ -157,6 +158,34 @@ public class LoansService {
 		ParamsMap paramsMap = new ParamsMap();
 		// MD
 		paramsMap.addParam(TYPE, TYPE_APPROVAL);
+		paramsMap.addParam(NOTES, notes);
+
+		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId + "/" + TRANSACTIONS));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
+
+		LoanAccount laonAccount = GsonUtils.createGson().fromJson(jsonResponse, LoanAccount.class);
+
+		return laonAccount;
+	}
+	
+	/****
+	 * Reject a loan account if the user has permission to reject loan accounts.
+	 * 
+	 * @param accountId
+	 *            the id of the account
+	 * @param notes
+	 *            the reason why the account was reject
+	 * @return LoanAccount
+	 * @throws MambuApiException
+	 */
+
+	public LoanAccount rejectLoanAccount(String accountId, String notes) throws MambuApiException {
+		// E.g. format: POST "type=REJECT" /api/loans/KHGJ593/transactions
+
+		ParamsMap paramsMap = new ParamsMap();
+		// MD
+		paramsMap.addParam(TYPE, TYPE_REJECT);
 		paramsMap.addParam(NOTES, notes);
 
 		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId + "/" + TRANSACTIONS));
