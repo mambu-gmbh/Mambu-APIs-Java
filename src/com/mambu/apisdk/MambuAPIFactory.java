@@ -7,6 +7,7 @@ import com.google.inject.Injector;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.AccountingService;
 import com.mambu.apisdk.services.ClientsService;
+import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.services.IntelligenceService;
 import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.services.OrganizationService;
@@ -176,6 +177,16 @@ public class MambuAPIFactory {
 	public static TasksService getTasksService() throws MambuApiException {
 		validateFactorySetUp();
 		return injector.getInstance(TasksService.class);
+	}
+	/***
+	 * Get an instance of the {@link DocumentsService} class
+	 * 
+	 * @return the obtained instance
+	 * @throws MambuApiException
+	 */
+	public static DocumentsService getDocumentsService() throws MambuApiException {
+		validateFactorySetUp();
+		return injector.getInstance(DocumentsService.class);
 	}
 	/***
 	 * Setter for an Application Key

@@ -83,8 +83,8 @@ public class APIData {
 	public static final String GROUP_ID = "groupid";
 
 	// Accounting API
-		public static final String GLACCOUNTS 		= "glaccounts";
-		public static final String GLJOURNALENTRIES = "gljournalentries";
+	public static final String GLACCOUNTS 		= "glaccounts";
+	public static final String GLJOURNALENTRIES = "gljournalentries";
 
 	// Intelligence API
 	public static final String INDICATORS = "indicators";
@@ -114,6 +114,10 @@ public class APIData {
 	// Tasks API
 	// API's endpoint
 	public static String TASKS = "tasks";
+	
+	// Documents API
+	// API's endpoint
+	public static String DOCUMENTS = "documents";
 
 	// Client fields
 	public static String FIRST_NAME = "firstName";
