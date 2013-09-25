@@ -20,7 +20,6 @@ import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
-import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 
@@ -213,27 +212,25 @@ public class OrganizationService {
 
 	// Custom Fields and Custom Field Sets
 	/**
-	 * Get CustomFieldValue object details by Custom Field ID
+	 * Get CustomField object details by Custom Field ID
 	 * 
 	 * @param fieldId
-	 *            The id of the required CustomFieldValue
+	 *            The id of the required CustomField
 	 * 
-	 * @return CustomFieldValue
+	 * @return CustomField
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: to be tested with Mambu 3.3, see MBU-2486
-	public CustomFieldValue getCustomField(String fieldId) throws MambuApiException {
+	public CustomField getCustomField(String fieldId) throws MambuApiException {
 
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(CUSTOM_FIELDS + "/" + fieldId));
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET, ContentType.JSON);
 
-		CustomFieldValue caustomFiledValue = (CustomFieldValue) GsonUtils.createGson().fromJson(jsonResponse,
-				CustomFieldValue.class);
+		CustomField caustomFiled = (CustomField) GsonUtils.createGson().fromJson(jsonResponse, CustomField.class);
 
-		return caustomFiledValue;
+		return caustomFiled;
 	}
 	/**
 	 * Get Custom Field Sets
