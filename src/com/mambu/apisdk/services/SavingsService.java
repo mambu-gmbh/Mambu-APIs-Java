@@ -8,12 +8,14 @@ import java.util.List;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
+import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.APIData.ACCOUNT_TYPE;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
@@ -461,6 +463,50 @@ public class SavingsService {
 
 		SavingsProduct product = GsonUtils.createGson().fromJson(jsonResposne, SavingsProduct.class);
 		return product;
+	}
+	
+	/***
+	 * Create a new JSONSavingsAccount using JSONSavingsAccount object and
+	 * sending it via the JSON API. This API allows creating JSONSavingsAccount
+	 * with details, including creating custom field values.
+	 * 
+	 * 
+	 * @param savingsAccount
+	 * 
+	 * @return SavingsAccount
+	 * 
+	 *         Note: only the basic details for the custom fields are returned
+	 *         on success. To get full details a user must invoke
+	 *         getSavingsAccountDetails() after the JSONSavingsAccount was
+	 *         created.
+	 * @throws MambuApiException
+	 */
+	public JSONSavingsAccount createAccount(JSONSavingsAccount savingsAccount)
+			throws MambuApiException {
+
+		// Convert object to json
+		// parse SavingsAccount object into json string using specific date time
+		// format
+		final String dateTimeFormat = APIData.yyyyMmddFormat;
+		final String jsonData = GsonUtils.createGson(dateTimeFormat).toJson(
+				savingsAccount, JSONSavingsAccount.class);
+
+		System.out.println("Input Savings Account In json format=" + jsonData);
+
+		ParamsMap params = new ParamsMap();
+		// Add json string as JSON_OBJECT
+		params.put(APIData.JSON_OBJECT, jsonData);
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/"));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params,
+				Method.POST, ContentType.JSON);
+
+		savingsAccount = GsonUtils.createGson().fromJson(jsonResponse,
+				JSONSavingsAccount.class);
+
+		return savingsAccount;
 	}
 
 }

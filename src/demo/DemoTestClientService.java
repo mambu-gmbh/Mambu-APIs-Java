@@ -26,10 +26,10 @@ import com.mambu.core.shared.model.Gender;
  */
 public class DemoTestClientService {
 
-	private static String CLIENT_ID = "428946702";
-	private static String GROUP_ID = "433436320";
+	private static String CLIENT_ID = "0";
+	private static String GROUP_ID = "700439187";
 
-	private static String BRANCH_ID = "1";
+	private static String BRANCH_ID = "2";
 	private static String CREDIT_OFFICER_USER_NAME = "demo";
 	private static String CLIENT_STATE = "ACTIVE"; // PENDING_APPROVAL BLACKLISTED INACTIVE
 
@@ -230,7 +230,7 @@ public class DemoTestClientService {
 		List<CustomFieldValue> clientCustomInformation = new ArrayList<CustomFieldValue>();
 
 		CustomFieldValue custField1 = new CustomFieldValue();
-		String customFieldId = "Family_Size_Clients";
+		String customFieldId = "Family_Members_Clients";
 		String customFieldValue = "15";
 
 		custField1.setCustomFieldId(customFieldId);
@@ -239,7 +239,7 @@ public class DemoTestClientService {
 		clientCustomInformation.add(custField1);
 
 		CustomFieldValue custField2 = new CustomFieldValue();
-		customFieldId = "From_Hollywood_Clients";
+		customFieldId = "Has_children_Clients";
 		customFieldValue = "TRUE";
 
 		custField2.setCustomFieldId(customFieldId);
@@ -248,8 +248,8 @@ public class DemoTestClientService {
 		// Add new field to the list
 		clientCustomInformation.add(custField2);
 		CustomFieldValue custField3 = new CustomFieldValue();
-		customFieldId = "Occupation_Clients";
-		customFieldValue = "Programmer";
+		customFieldId = "Position_Clients";
+		customFieldValue = "15";
 
 		custField3.setCustomFieldId(customFieldId);
 		custField3.setValue(customFieldValue);
