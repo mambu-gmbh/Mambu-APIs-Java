@@ -29,6 +29,7 @@ public class DemoTestLoanService {
 	private static String GROUP_ID = "118035060"; // 118035060 588752540
 	private static String LOAN_ACCOUNT_ID = "RNTV156"; // DTQK377 WETZ340 RRSF961 PRTO161 DLWY699
 	private static String BRANCH_ID = "NE008"; // GBK 001
+	private static String NEW_LOAN_ACCOUNT_ID; // will be assigned after creation in testCreateJsonAccount()
 
 	public static void main(String[] args) {
 
@@ -66,6 +67,8 @@ public class DemoTestLoanService {
 			testGetLoanProductById();
 
 			testCreateJsonAccount();
+
+			testRejectLoanAccount();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Loan Service");
@@ -148,6 +151,8 @@ public class DemoTestLoanService {
 
 		// accented E
 
+		NEW_LOAN_ACCOUNT_ID=newAccount.getLoanAccount().getId();
+		
 		System.out.println("Loan Account created OK, ID=" + newAccount.getLoanAccount().getId() + " Name= "
 				+ newAccount.getLoanAccount().getLoanName() + " Account Holder Key="
 				+ newAccount.getLoanAccount().getAccountHolderKey());
@@ -160,8 +165,8 @@ public class DemoTestLoanService {
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		String accountId = LOAN_ACCOUNT_ID;
 		String amount = "10000.00";
+		String accountId = NEW_LOAN_ACCOUNT_ID;
 		String disbursalDate = "2013-4-3";
 		String firstRepaymentDate = null; // "2012-12-06";
 		String paymentMethod = "CASH";// CASH CHECK RECEIPT BANK_TRANSFER
@@ -208,10 +213,10 @@ public class DemoTestLoanService {
 		String bankAccountNumber = "BANK_ACCT4567";
 		String bankRoutingNumber = "BNK_ROUT_2344";
 
-		LoanTransaction transaction = loanService.makeLoanRepayment(LOAN_ACCOUNT_ID, amount, date, notes,
+		LoanTransaction transaction = loanService.makeLoanRepayment(NEW_LOAN_ACCOUNT_ID, amount, date, notes,
 				paymentMethod, receiptNumber, bankNumber, checkNumber, bankAccountNumber, bankRoutingNumber);
 
-		System.out.println("repayed loan account with the " + LOAN_ACCOUNT_ID + " id response=" + "   for amount="
+		System.out.println("repayed loan account with the " + NEW_LOAN_ACCOUNT_ID + " id response=" + "   for amount="
 				+ transaction.getAmount());
 	}
 
@@ -219,9 +224,9 @@ public class DemoTestLoanService {
 		System.out.println("\nIn test Applying Fee to a Loan Account");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
-		String accountId = LOAN_ACCOUNT_ID;
 		String amount = "10";
 		String repaymentNumber = "100";
+		String accountId = NEW_LOAN_ACCOUNT_ID;
 		String notes = "Notes for applying fee to a loan";
 
 		LoanTransaction transaction = loanService.applyFeeToLoanAccount(accountId, amount, repaymentNumber, notes);
@@ -288,9 +293,19 @@ public class DemoTestLoanService {
 		System.out.println("\nIn test Approve LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		LoanAccount account = loanService.approveLoanAccount(LOAN_ACCOUNT_ID, "some demo notes");
+		LoanAccount account = loanService.approveLoanAccount(NEW_LOAN_ACCOUNT_ID, "some demo notes");
 
-		System.out.println("Approving loan account with the " + LOAN_ACCOUNT_ID + " Loan name" + account.getLoanName()
+		System.out.println("Approving loan account with the " + NEW_LOAN_ACCOUNT_ID + " Loan name" + account.getLoanName()
+				+ "  Account State=" + account.getState().toString());
+	}
+	
+	public static void testRejectLoanAccount() throws MambuApiException {
+		System.out.println("\nIn test Reject LoanAccount");
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		LoanAccount account = loanService.rejectLoanAccount(NEW_LOAN_ACCOUNT_ID, "some demo notes ', \" ü = : \n as");
+
+		System.out.println("Rejecting loan account with the " + NEW_LOAN_ACCOUNT_ID + " Loan name" + account.getLoanName()
 				+ "  Account State=" + account.getState().toString());
 	}
 
