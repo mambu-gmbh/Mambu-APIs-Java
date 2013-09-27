@@ -41,30 +41,26 @@ public class DocumentsService {
 	 * Create a new task using a Task object and as json request
 	 * 
 	 * @param document
-	 *            the new document object to be uploaded containing all
-	 *            mandatory fields
+	 *            the new document object to be uploaded containing all mandatory fields
+	 * 
 	 * @return the new document parsed as an object returned from the API call
+	 * 
 	 * @throws MambuApiException
 	 */
-	public Document uploadDocument(JSONDocument document)
-			throws MambuApiException {
+	public Document uploadDocument(JSONDocument document) throws MambuApiException {
 
 		// Convert object to json
-		String jsonDocument = GsonUtils.createGson().toJson(document,
-				JSONDocument.class);
+		String jsonDocument = GsonUtils.createGson().toJson(document, JSONDocument.class);
 
 		ParamsMap params = new ParamsMap();
 		params.put(APIData.JSON_OBJECT, jsonDocument);
 
 		// create the api call
-		String urlString = new String(
-				mambuAPIService.createUrl(DOCUMENTS + "/"));
+		String urlString = new String(mambuAPIService.createUrl(DOCUMENTS + "/"));
 
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params,
-				Method.POST, ContentType.JSON);
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.POST, ContentType.JSON);
 
-		Document documentResult = GsonUtils.createGson().fromJson(
-				jsonResponse, Document.class);
+		Document documentResult = GsonUtils.createGson().fromJson(jsonResponse, Document.class);
 
 		return documentResult;
 	}

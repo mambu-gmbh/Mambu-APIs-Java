@@ -42,7 +42,9 @@ public class AccountingService {
 	 * Requests a gl account by its gl code
 	 * 
 	 * @param glCode
+	 * 
 	 * @return the Mambu gl account
+	 * 
 	 * @throws MambuApiException
 	 */
 	public GLAccount getGLAccount(String glCode) throws MambuApiException {
@@ -59,7 +61,9 @@ public class AccountingService {
 	 * Requests a gl account by its gl code with a balance over a certain date range
 	 * 
 	 * @param glCode
+	 * 
 	 * @return the Mambu gl account
+	 * 
 	 * @throws MambuApiException
 	 */
 	public GLAccount getGLAccount(String glCode, String fromDate, String toDate) throws MambuApiException {
@@ -79,7 +83,9 @@ public class AccountingService {
 	 *            range starting from
 	 * @param toDate
 	 *            range ending at
+	 * 
 	 * @return a List of GLJournalEntries
+	 * 
 	 * @throws MambuApiException
 	 *             in case of an error
 	 */
@@ -98,7 +104,9 @@ public class AccountingService {
 	 *            offset to start pagination
 	 * @param limit
 	 *            page-size
+	 * 
 	 * @return a List of GLJournalEntries
+	 * 
 	 * @throws MambuApiException
 	 *             in case of an error
 	 */
@@ -108,7 +116,8 @@ public class AccountingService {
 		String url = mambuAPIService.createUrl(String.format("%s?from=%s&to=%s", APIData.GLJOURNALENTRIES,
 				APIData.URLDATE_FORMATTER.format(fromDate), APIData.URLDATE_FORMATTER.format(toDate)), offset, limit);
 		String jsonResponse = mambuAPIService.executeRequest(url, Method.GET);
-		Type collectionType = new TypeToken<List<GLJournalEntry>>() {}.getType();
+		Type collectionType = new TypeToken<List<GLJournalEntry>>() {
+		}.getType();
 
 		return ((List<GLJournalEntry>) GsonUtils.createGson().fromJson(jsonResponse, collectionType));
 	}
@@ -117,7 +126,9 @@ public class AccountingService {
 	 * Returns the gl account response with given url & parameters
 	 * 
 	 * @param url
-	 * @return
+	 * 
+	 * @return GLAccount from Mambu
+	 * 
 	 * @throws MambuApiException
 	 */
 	private GLAccount getGLAccountResponse(String url) throws MambuApiException {

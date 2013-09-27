@@ -83,10 +83,10 @@ public class LoansService {
 	 * 
 	 * @param accountId
 	 *            the id of the account
+	 * 
 	 * @return the loan account
 	 * 
 	 * @throws MambuApiException
-	 * 
 	 */
 	public LoanAccount getLoanAccount(String accountId) throws MambuApiException {
 
@@ -113,7 +113,8 @@ public class LoansService {
 		String urlString = new String(mambuAPIService.createUrl(CLIENTS + "/" + clientId + "/" + LOANS));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		Type collectionType = new TypeToken<List<LoanAccount>>() {}.getType();
+		Type collectionType = new TypeToken<List<LoanAccount>>() {
+		}.getType();
 
 		List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 		return accounts;
@@ -135,7 +136,8 @@ public class LoansService {
 		String urlString = new String(mambuAPIService.createUrl(GROUPS + "/" + groupId + "/" + LOANS));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		Type collectionType = new TypeToken<List<LoanAccount>>() {}.getType();
+		Type collectionType = new TypeToken<List<LoanAccount>>() {
+		}.getType();
 
 		List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
@@ -148,10 +150,11 @@ public class LoansService {
 	 * 
 	 * @param accountId
 	 *            the id of the account
+	 * 
 	 * @return LoanAccount
+	 * 
 	 * @throws MambuApiException
 	 */
-
 	public LoanAccount approveLoanAccount(String accountId, String notes) throws MambuApiException {
 		// E.g. format: POST "type=APPROVAL" /api/loans/KHGJ593/transactions
 
@@ -168,7 +171,7 @@ public class LoansService {
 
 		return laonAccount;
 	}
-	
+
 	/****
 	 * Reject a loan account if the user has permission to reject loan accounts.
 	 * 
@@ -176,10 +179,11 @@ public class LoansService {
 	 *            the id of the account
 	 * @param notes
 	 *            the reason why the account was reject
+	 * 
 	 * @return LoanAccount
+	 * 
 	 * @throws MambuApiException
 	 */
-
 	public LoanAccount rejectLoanAccount(String accountId, String notes) throws MambuApiException {
 		// E.g. format: POST "type=REJECT" /api/loans/KHGJ593/transactions
 
@@ -205,13 +209,14 @@ public class LoansService {
 	 * @param accountId
 	 * @param disbursalDate
 	 * @param firstRepaymentDate
-	 * @param type
 	 * @param bankNumber
 	 * @param receiptNumber
 	 * @param checkNumber
 	 * @param bankAccountNumber
 	 * @param bankRoutingNumber
 	 * @param notes
+	 * @param amount
+	 * @param paymentMethod
 	 * 
 	 * @return Loan Transaction
 	 * 
@@ -221,7 +226,8 @@ public class LoansService {
 			String firstRepaymentDate, String paymentMethod, String bankNumber, String receiptNumber,
 			String checkNumber, String bankAccountNumber, String bankRoutingNumber, String notes)
 			throws MambuApiException {
-		// Example: POST "type=DISBURSMENT&date=2012-10-04&firstRepaymentDate=2012-10-08&notes=using transactions"
+		// Example: POST
+		// "type=DISBURSMENT&date=2012-10-04&firstRepaymentDate=2012-10-08&notes=using transactions"
 		// /api/loans/KHGJ593/transactions
 
 		ParamsMap paramsMap = new ParamsMap();
@@ -253,10 +259,10 @@ public class LoansService {
 	 * 
 	 * @param accountId
 	 *            the id of the account
+	 * 
 	 * @return the loan account
 	 * 
 	 * @throws MambuApiException
-	 * 
 	 */
 	public LoanAccount getLoanAccountDetails(String accountId) throws MambuApiException {
 
@@ -276,18 +282,18 @@ public class LoansService {
 	 * allows creating LoanAccount with details, including creating custom fields.
 	 * 
 	 * 
-	 * @param LoanAccountExpanded
+	 * @param loan
 	 * 
-	 * @return LoanAccountExpanded
-	 * 
-	 *         Note: only the basic details for the custom fields are returned on success. To get full details a user
+	 * @return Note: only the basic details for the custom fields are returned on success. To get full details a user
 	 *         must invoke getLoanAccountDetails() after the LoanAccount was created.
+	 * 
 	 * @throws MambuApiException
 	 */
 	public LoanAccountExpanded createAccount(LoanAccountExpanded loan) throws MambuApiException {
 
 		// Convert object to json
-		// parse LoanAccountExpanded object into json string using specific date time format
+		// parse LoanAccountExpanded object into json string using specific date
+		// time format
 		final String dateTimeFormat = APIData.yyyyMmddFormat;
 		final String jsonData = GsonUtils.createGson(dateTimeFormat).toJson(loan, LoanAccountExpanded.class);
 
@@ -306,16 +312,17 @@ public class LoansService {
 
 		return account;
 	}
+
 	/***
 	 * Get loan account Transactions by Loan id and offset and limit
 	 * 
 	 * @param accountId
 	 *            the id of the account offset - first transaction number limit - last transaction number Note: if
 	 *            offset and limit both equal null, all transactions are returned (Note: transaction are sorted by date)
+	 * 
 	 * @return the list of loan account transactions
 	 * 
 	 * @throws MambuApiException
-	 * 
 	 */
 	@SuppressWarnings("unchecked")
 	public List<LoanTransaction> getLoanAccountTransactions(String accountId, String offset, String limit)
@@ -331,13 +338,15 @@ public class LoansService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 
-		Type collectionType = new TypeToken<List<LoanTransaction>>() {}.getType();
+		Type collectionType = new TypeToken<List<LoanTransaction>>() {
+		}.getType();
 
 		List<LoanTransaction> transactions = (List<LoanTransaction>) GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);
 
 		return transactions;
 	}
+
 	/****
 	 * Repayments on a loan account if the user has permission to repay loans, the maximum exposure is not exceeded for
 	 * the client, the account was in Approved state
@@ -357,7 +366,6 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
-
 	public LoanTransaction makeLoanRepayment(String accountId, String amount, String date, String notes,
 			String paymentMethod, String receiptNumber, String bankNumber, String checkNumber,
 			String bankAccountNumber, String bankRoutingNumber) throws MambuApiException {
@@ -420,12 +428,14 @@ public class LoansService {
 	/***
 	 * Get the loan accounts by branch is, credit officer, accountState
 	 * 
-	 * @param Parameters
+	 * @param branchId
 	 *            branchID The ID of the branch to which the loan accounts are assigned to
-	 * @param creditOfficerUsername
-	 *            - The username of the credit officer to whom the loans are assigned to
+	 * @param creditOfficerUserName
+	 *            The username of the credit officer to whom the loans are assigned to
 	 * @param accountState
-	 *            - The desired state of the accounts to filter on (eg: APPROVED) *
+	 *            The desired state of the accounts to filter on (eg: APPROVED)
+	 * @param limit
+	 * 
 	 * @return the list of loan accounts matching these parameters
 	 * 
 	 * @throws MambuApiException
@@ -447,11 +457,13 @@ public class LoansService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<LoanAccount>>() {}.getType();
+		Type collectionType = new TypeToken<List<LoanAccount>>() {
+		}.getType();
 
 		List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 		return accounts;
 	}
+
 	// Loan Products
 	/***
 	 * Get a list of Loan Products
@@ -459,7 +471,6 @@ public class LoansService {
 	 * @return the List of Loan Products
 	 * 
 	 * @throws MambuApiException
-	 * 
 	 */
 	public List<LoanProduct> getLoanProducts(String offset, String limit) throws MambuApiException {
 
@@ -471,7 +482,8 @@ public class LoansService {
 
 		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<LoanProduct>>() {}.getType();
+		Type collectionType = new TypeToken<List<LoanProduct>>() {
+		}.getType();
 
 		List<LoanProduct> products = GsonUtils.createGson().fromJson(jsonResposne, collectionType);
 
@@ -483,10 +495,10 @@ public class LoansService {
 	 * 
 	 * @param productId
 	 *            the id of the loan product
+	 * 
 	 * @return the Loan Product
 	 * 
 	 * @throws MambuApiException
-	 * 
 	 */
 	public LoanProduct getLoanProduct(String productId) throws MambuApiException {
 

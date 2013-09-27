@@ -48,13 +48,15 @@ public class MambuAPIService {
 
 	/**
 	 * Executes the request for a given url string using a specified method See more info here:
-	 * http://stackoverflow.com/questions/2793150/how-to-use-java-net-urlconnection-to-fire-and-handle-http-requests
+	 * http://stackoverflow.com/questions/2793150/how-to-use-java -net-urlconnection-to-fire-and-handle-http-requests
 	 * 
 	 * 
 	 * @param urlString
 	 * @param method
+	 * 
 	 * @return HTTP response String. The response string for the http request. It is either an application specific
 	 *         response (with the content being specific for each request) or an error response for the http request.
+	 * 
 	 * @throws MambuApiException
 	 * @throws IOException
 	 * @throws MalformedURLException
@@ -68,15 +70,16 @@ public class MambuAPIService {
 	 * http://stackoverflow.com/questions/2793150/how-to-use-java -net-urlconnection-to-fire-and-handle-http-requests
 	 * 
 	 * @param urlString
-	 * @param paramsMap
+	 * @param params
 	 * @param method
-	 * @return
+	 * 
+	 * @return String
+	 * 
 	 * @throws MambuApiException
 	 * @throws IOException
 	 * @throws MalformedURLException
 	 */
 	public String executeRequest(String urlString, ParamsMap params, Method method) throws MambuApiException {
-
 		return executor.executeRequest(urlString, params, method);
 	}
 
@@ -86,18 +89,18 @@ public class MambuAPIService {
 	 * -net-urlconnection-to-fire-and-handle-http-requests
 	 * 
 	 * @param urlString
-	 * @param paramsMap
+	 * @param params
 	 * @param method
-	 * @param RequestExecutor
-	 *            .ContentType contentTypeFormat
-	 * @return
+	 * @param contentTypeFormat
+	 * 
+	 * @return String
+	 * 
 	 * @throws MambuApiException
 	 * @throws IOException
 	 * @throws MalformedURLException
 	 */
 	public String executeRequest(String urlString, ParamsMap params, Method method,
 			RequestExecutor.ContentType contentTypeFormat) throws MambuApiException {
-
 		return executor.executeRequest(urlString, params, method, contentTypeFormat);
 	}
 
@@ -108,44 +111,50 @@ public class MambuAPIService {
 	 * 
 	 * @param urlString
 	 * @param method
-	 * @param RequestExecutor
-	 *            .ContentType contentTypeFormat
-	 * @return
+	 * @param contentTypeFormat
+	 * 
+	 * @return String
+	 * 
 	 * @throws MambuApiException
 	 * @throws IOException
 	 * @throws MalformedURLException
 	 */
 	public String executeRequest(String urlString, Method method, RequestExecutor.ContentType contentTypeFormat)
 			throws MambuApiException {
-
 		return executor.executeRequest(urlString, method, contentTypeFormat);
 	}
 
 	/**
 	 * Creates the URL for the request executor
 	 * 
-	 * @param tenant
-	 * @return
+	 * @param details
+	 * 
+	 * @return String
 	 */
 	public String createUrl(String details) {
-
 		return urlHelper.createUrl(details);
 	}
 
 	/**
 	 * Returns an url containing limit/offset params.
-	 * @param details URL details
-	 * @param offset offset to start from
-	 * @param limit max. number of entries
+	 * 
+	 * @param details
+	 *            URL details
+	 * @param offset
+	 *            offset to start from
+	 * @param limit
+	 *            max. number of entries
+	 * 
 	 * @return URL for a limited query
 	 */
-	public String	createUrl(String details, int offset, int limit)
-	{
-		String	url	=this.createUrl(details);
-		
-		if(limit != -1) url+=(url.contains("?") ? "&" : "?") + "limit=" + limit;
-		if(offset != -1) url+=(url.contains("?") ? "&" : "?") + "offset=" + offset;
-		
-		return(url);
+	public String createUrl(String details, int offset, int limit) {
+		String url = this.createUrl(details);
+
+		if (limit != -1)
+			url += (url.contains("?") ? "&" : "?") + "limit=" + limit;
+		if (offset != -1)
+			url += (url.contains("?") ? "&" : "?") + "offset=" + offset;
+
+		return (url);
 	}
 }

@@ -31,6 +31,7 @@ public class MambuApiResponseMessage {
 		returnStatus = null;
 		errorSource = null;
 	}
+
 	// Constructor with individual response parts
 	public MambuApiResponseMessage(int code, String status, String source) {
 		returnCode = code;
@@ -48,6 +49,7 @@ public class MambuApiResponseMessage {
 		errorSource = source;
 
 	}
+
 	// Constructor with the actual Mambu's exception error message
 	// e.g ,"returnStatus":"REQUIRED_CUSTOM_FIELD_MISSING","errorSource":"Loan_Purpose_Loan_Accounts"
 	// Given an API error message the application can convert it into a MambuApiResponseMessage object
@@ -68,6 +70,7 @@ public class MambuApiResponseMessage {
 		errorSource = obj.errorSource;
 
 	}
+
 	// Constructor with Mambu Api exception.
 	// Given Mambu's APIexception the application can convert it into a MambuApiResponseMessage object
 	public MambuApiResponseMessage(MambuApiException e) {
@@ -75,6 +78,7 @@ public class MambuApiResponseMessage {
 		this(e.getMessage());
 
 	}
+
 	// Copy constructor
 	public MambuApiResponseMessage(MambuApiResponseMessage obj) {
 		this(obj.getReturnCode(), obj.getReturnStatus(), obj.getErrorSource());
@@ -85,9 +89,11 @@ public class MambuApiResponseMessage {
 	public int getReturnCode() {
 		return returnCode;
 	}
+
 	public String getReturnStatus() {
 		return returnStatus;
 	}
+
 	public String getErrorSource() {
 		return errorSource;
 	}

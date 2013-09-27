@@ -30,10 +30,10 @@ public class URLHelper {
 	 * 
 	 * @param details
 	 *            the extra details
+	 * 
 	 * @return the created URL String
 	 */
 	public String createUrl(String details) {
-
 		details = details == null ? "" : details;
 		return WEB_PROTOCOL + "://" + domainName + "/api/" + details;
 	}
@@ -45,10 +45,10 @@ public class URLHelper {
 	 *            the already created URL String
 	 * @param paramsMap
 	 *            the params which must be added
+	 * 
 	 * @return the complete URL
 	 */
 	public String createUrlWithParams(String urlString, ParamsMap paramsMap) {
-
 		return urlString + DELIMITER + paramsMap.getURLString();
 	}
 }

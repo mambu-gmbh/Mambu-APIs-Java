@@ -85,6 +85,7 @@ public class SavingsService {
 	 * 
 	 * @param accountId
 	 *            the id of the account
+	 * 
 	 * @return the savings account
 	 * 
 	 * @throws MambuApiException
@@ -105,6 +106,7 @@ public class SavingsService {
 	 * 
 	 * @param accountId
 	 *            the id of the account
+	 * 
 	 * @return the savings account
 	 * 
 	 * @throws MambuApiException
@@ -122,6 +124,7 @@ public class SavingsService {
 
 		return account;
 	}
+
 	/***
 	 * Get all the savings accounts for a given client
 	 * 
@@ -138,7 +141,8 @@ public class SavingsService {
 		String urlString = new String(mambuAPIService.createUrl(CLIENTS + "/" + clientId + "/" + SAVINGS));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		Type collectionType = new TypeToken<List<SavingsAccount>>() {}.getType();
+		Type collectionType = new TypeToken<List<SavingsAccount>>() {
+		}.getType();
 
 		List<SavingsAccount> accounts = (List<SavingsAccount>) GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);
@@ -152,12 +156,13 @@ public class SavingsService {
 	 * 
 	 * @param accountId
 	 *            the id of the account
-	 * @return
+	 * 
+	 * @return the approved SavingsAccount from Mambu
+	 * 
 	 * @throws MambuApiException
-	 * 
-	 * 
 	 */
-	// TODO: This API is not implemented yet. Keep it private until the API is implemented
+	// TODO: This API is not implemented yet. Keep it private until the API is
+	// implemented
 	@SuppressWarnings("unused")
 	private SavingsAccount approveSavingsAccount(String accountId, String notes) throws MambuApiException {
 
@@ -179,10 +184,11 @@ public class SavingsService {
 	 * @param accountId
 	 *            the id of the account
 	 * @param offset
-	 *            - first transaction number
+	 *            first transaction number
 	 * @param limit
-	 *            - last transaction number Note: if offset and limit both equal null, all transactions are returned
+	 *            last transaction number Note: if offset and limit both equal null, all transactions are returned
 	 *            (Note: transaction are sorted by date)
+	 * 
 	 * @return the list of savings transactions
 	 * 
 	 * @throws MambuApiException
@@ -202,13 +208,15 @@ public class SavingsService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 
-		Type collectionType = new TypeToken<List<SavingsTransaction>>() {}.getType();
+		Type collectionType = new TypeToken<List<SavingsTransaction>>() {
+		}.getType();
 
 		List<SavingsTransaction> transactions = (List<SavingsTransaction>) GsonUtils.createGson().fromJson(
 				jsonResponse, collectionType);
 
 		return transactions;
 	}
+
 	// helper method
 	private void addPaymentMethodAccountDetails(ParamsMap paramsMap, String amount, String date, String notes,
 			String paymentMethod, String receiptNumber, String bankNumber, String checkNumber,
@@ -317,25 +325,25 @@ public class SavingsService {
 	/****
 	 * Make a Transfer from an account.
 	 * 
-	 * @param accountId
+	 * @param fromAccountId
 	 *            the id of the account the amount to transfer from
 	 * @param destinationAccountKey
-	 *            - the id of the account to transfer to
+	 *            the id of the account to transfer to
 	 * @param destinationAccountType
 	 *            (SavingsService.Loan or SavingsService.Savings)
-	 * @param amunt
-	 *            - amount to transfer
+	 * @param amount
+	 *            amount to transfer
 	 * @param notes
 	 * 
 	 * @return Savings Transaction
 	 * 
 	 * @throws MambuApiException
 	 */
-
 	public SavingsTransaction makeTransfer(String fromAccountId, String destinationAccountKey,
 			APIData.ACCOUNT_TYPE destinationAccountType, String amount, String notes) throws MambuApiException {
 
-		// E.g .format: POST "type=TYPE_TRANSFER" /api/savings/KHGJ593/transactions
+		// E.g .format: POST "type=TYPE_TRANSFER"
+		// /api/savings/KHGJ593/transactions
 
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_TRANSFER);
@@ -374,7 +382,8 @@ public class SavingsService {
 		String urlString = new String(mambuAPIService.createUrl(GROUPS + "/" + groupId + "/" + SAVINGS));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		Type collectionType = new TypeToken<List<SavingsAccount>>() {}.getType();
+		Type collectionType = new TypeToken<List<SavingsAccount>>() {
+		}.getType();
 
 		List<SavingsAccount> accounts = (List<SavingsAccount>) GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);
@@ -385,12 +394,12 @@ public class SavingsService {
 	/***
 	 * Get the Savings accounts by branch is, credit officer, accountState
 	 * 
-	 * @param Parameters
-	 *            branchID The ID of the branch to which the accounts are assigned to
-	 * @param creditOfficerUsername
-	 *            -=the username of the credit officer to whom the accounts are assigned to
+	 * @param branchId
+	 *            The ID of the branch to which the accounts are assigned to
+	 * @param creditOfficerUserName
+	 *            the username of the credit officer to whom the accounts are assigned to
 	 * @param accountState
-	 *            -the state of the accounts to filter on (eg: APPROVED)
+	 *            the state of the accounts to filter on (eg: APPROVED)
 	 * 
 	 * @return the list of Savings accounts matching these parameters
 	 * 
@@ -413,7 +422,8 @@ public class SavingsService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<SavingsAccount>>() {}.getType();
+		Type collectionType = new TypeToken<List<SavingsAccount>>() {
+		}.getType();
 
 		List<SavingsAccount> accounts = (List<SavingsAccount>) GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);
@@ -427,7 +437,6 @@ public class SavingsService {
 	 * @return the List of Savings Products
 	 * 
 	 * @throws MambuApiException
-	 * 
 	 */
 	public List<SavingsProduct> getSavingsProducts(String offset, String limit) throws MambuApiException {
 
@@ -439,7 +448,8 @@ public class SavingsService {
 
 		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<SavingsProduct>>() {}.getType();
+		Type collectionType = new TypeToken<List<SavingsProduct>>() {
+		}.getType();
 
 		List<SavingsProduct> products = GsonUtils.createGson().fromJson(jsonResposne, collectionType);
 
@@ -454,7 +464,6 @@ public class SavingsService {
 	 * @return the Savings Product
 	 * 
 	 * @throws MambuApiException
-	 * 
 	 */
 	public SavingsProduct getSavingsProduct(String productId) throws MambuApiException {
 
@@ -464,32 +473,27 @@ public class SavingsService {
 		SavingsProduct product = GsonUtils.createGson().fromJson(jsonResposne, SavingsProduct.class);
 		return product;
 	}
-	
+
 	/***
-	 * Create a new JSONSavingsAccount using JSONSavingsAccount object and
-	 * sending it via the JSON API. This API allows creating JSONSavingsAccount
-	 * with details, including creating custom field values.
+	 * Create a new JSONSavingsAccount using JSONSavingsAccount object and sending it via the JSON API. This API allows
+	 * creating JSONSavingsAccount with details, including creating custom field values.
 	 * 
 	 * 
 	 * @param savingsAccount
 	 * 
 	 * @return SavingsAccount
 	 * 
-	 *         Note: only the basic details for the custom fields are returned
-	 *         on success. To get full details a user must invoke
-	 *         getSavingsAccountDetails() after the JSONSavingsAccount was
-	 *         created.
+	 *         Note: only the basic details for the custom fields are returned on success. To get full details a user
+	 *         must invoke getSavingsAccountDetails() after the JSONSavingsAccount was created.
 	 * @throws MambuApiException
 	 */
-	public JSONSavingsAccount createAccount(JSONSavingsAccount savingsAccount)
-			throws MambuApiException {
+	public JSONSavingsAccount createAccount(JSONSavingsAccount savingsAccount) throws MambuApiException {
 
 		// Convert object to json
 		// parse SavingsAccount object into json string using specific date time
 		// format
 		final String dateTimeFormat = APIData.yyyyMmddFormat;
-		final String jsonData = GsonUtils.createGson(dateTimeFormat).toJson(
-				savingsAccount, JSONSavingsAccount.class);
+		final String jsonData = GsonUtils.createGson(dateTimeFormat).toJson(savingsAccount, JSONSavingsAccount.class);
 
 		System.out.println("Input Savings Account In json format=" + jsonData);
 
@@ -500,11 +504,9 @@ public class SavingsService {
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/"));
 
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params,
-				Method.POST, ContentType.JSON);
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.POST, ContentType.JSON);
 
-		savingsAccount = GsonUtils.createGson().fromJson(jsonResponse,
-				JSONSavingsAccount.class);
+		savingsAccount = GsonUtils.createGson().fromJson(jsonResponse, JSONSavingsAccount.class);
 
 		return savingsAccount;
 	}

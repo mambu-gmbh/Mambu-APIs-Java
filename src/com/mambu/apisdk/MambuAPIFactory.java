@@ -71,10 +71,12 @@ public class MambuAPIFactory {
 		}
 
 	}
+
 	/***
 	 * Get an instance of the ClientService class
 	 * 
 	 * @return the obtained instance
+	 * 
 	 * @throws MambuApiException
 	 */
 	public static ClientsService getClientService() throws MambuApiException {
@@ -86,6 +88,7 @@ public class MambuAPIFactory {
 	 * Get an instance of the LoanService class
 	 * 
 	 * @return the obtained instance
+	 * 
 	 * @throws MambuApiException
 	 */
 	public static LoansService getLoanService() throws MambuApiException {
@@ -97,6 +100,7 @@ public class MambuAPIFactory {
 	 * Get an instance of the SavingsService class
 	 * 
 	 * @return the obtained instance
+	 * 
 	 * @throws MambuApiException
 	 */
 	public static SavingsService getSavingsService() throws MambuApiException {
@@ -108,6 +112,7 @@ public class MambuAPIFactory {
 	 * Get an instance of the IntelligenceService class
 	 * 
 	 * @return the obtained instance
+	 * 
 	 * @throws MambuApiException
 	 */
 	public static IntelligenceService getIntelligenceService() throws MambuApiException {
@@ -119,6 +124,7 @@ public class MambuAPIFactory {
 	 * Get an instance of the RepaymentsService class
 	 * 
 	 * @return the obtained instance
+	 * 
 	 * @throws MambuApiException
 	 */
 	public static RepaymentsService getRepaymentsService() throws MambuApiException {
@@ -130,6 +136,7 @@ public class MambuAPIFactory {
 	 * Get an instance of the OrganizationService class
 	 * 
 	 * @return the obtained instance
+	 * 
 	 * @throws MambuApiException
 	 */
 	public static OrganizationService getOrganizationService() throws MambuApiException {
@@ -141,6 +148,7 @@ public class MambuAPIFactory {
 	 * Get an instance of the AccountingService class
 	 * 
 	 * @return the obtained instance
+	 * 
 	 * @throws MambuApiException
 	 */
 	public static AccountingService getAccountingService() throws MambuApiException {
@@ -152,59 +160,65 @@ public class MambuAPIFactory {
 	 * Get an instance of the UsersService class
 	 * 
 	 * @return the obtained instance
+	 * 
 	 * @throws MambuApiException
 	 */
 	public static UsersService getUsersService() throws MambuApiException {
 		validateFactorySetUp();
 		return injector.getInstance(UsersService.class);
 	}
+
 	/***
 	 * Get an instance of the SearchService class
 	 * 
 	 * @return the obtained instance
+	 * 
 	 * @throws MambuApiException
 	 */
 	public static SearchService getSearchService() throws MambuApiException {
 		validateFactorySetUp();
 		return injector.getInstance(SearchService.class);
 	}
+
 	/***
 	 * Get an instance of the {@link TasksService} class
 	 * 
 	 * @return the obtained instance
+	 * 
 	 * @throws MambuApiException
 	 */
 	public static TasksService getTasksService() throws MambuApiException {
 		validateFactorySetUp();
 		return injector.getInstance(TasksService.class);
 	}
+
 	/***
 	 * Get an instance of the {@link DocumentsService} class
 	 * 
 	 * @return the obtained instance
+	 * 
 	 * @throws MambuApiException
 	 */
 	public static DocumentsService getDocumentsService() throws MambuApiException {
 		validateFactorySetUp();
 		return injector.getInstance(DocumentsService.class);
 	}
+
 	/***
 	 * Setter for an Application Key
 	 * 
-	 * @param applicationKey
-	 * @return void
+	 * @param appKey
 	 */
 	public static void setApplicationKey(String appKey) {
-
 		applicationKey = appKey;
 	}
+
 	/***
 	 * Getter for an Application Key
 	 * 
 	 * @return String
 	 */
 	public static String getApplicationKey() {
-
 		return applicationKey;
 	}
 }
