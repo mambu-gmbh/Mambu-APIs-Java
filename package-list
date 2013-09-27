@@ -1,4 +1,6 @@
-
 com.mambu.apisdk
 com.mambu.apisdk.exception
+com.mambu.apisdk.model
+com.mambu.apisdk.services
 com.mambu.apisdk.util
+demo
