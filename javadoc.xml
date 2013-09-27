@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="javadoc">
+    <target name="javadoc">
+        <javadoc access="public" author="true" classpath="target/lib/mockito-all-1.8.5.jar:target/lib/commons-codec-1.4.jar:target/lib/javax.inject-1.jar:target/lib/junit-4.8.1.jar:target/lib/gson-1.7.1.jar:target/lib/aopalliance-1.0.jar:target/lib/gwt-user-1.5.3.jar:lib/Mambu-APIs-Java-3.2-SNAPSHOT-jar-with-dependencies.jar:target/lib/commons-logging-1.1.1.jar:lib/Mambu-APIs-Java-3.2-SNAPSHOT.jar:target/lib/transaction-api-1.1.jar:target/lib/commons-io-1.3.2.jar:target/lib/guice-3.0.jar:target/lib/jdo-api-3.0.jar:lib/mambu-models-v3.3.jar:target/lib/httpcore-4.1.2.jar:build/Mambu-APIs-Java-3.2-bin.jar:target/lib/httpclient-4.1.2.jar" destdir="doc" doctitle="Mambu Java API Wrapper" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="demo,com.mambu.apisdk.exception,com.mambu.apisdk.services,com.mambu.apisdk,com.mambu.apisdk.util,com.mambu.apisdk.model" source="1.6" sourcepath="test:src" splitindex="false" use="true" version="true"/>
+    </target>
+</project>

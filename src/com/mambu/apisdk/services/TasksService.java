@@ -52,7 +52,9 @@ public class TasksService {
 	 * 
 	 * @param task
 	 *            the new task object contain all mandatory fields
+	 * 
 	 * @return the new task parsed as an object returned from the API call
+	 * 
 	 * @throws MambuApiException
 	 */
 	public Task createTask(Task task) throws MambuApiException {
@@ -86,7 +88,9 @@ public class TasksService {
 	 * @param dueDate
 	 * @param clientId
 	 * @param groupId
+	 * 
 	 * @return the new task parsed as an object returned from the API call
+	 * 
 	 * @throws MambuApiException
 	 */
 	public Task createTask(String title, String username, String description, Date dueDate, String clientId,

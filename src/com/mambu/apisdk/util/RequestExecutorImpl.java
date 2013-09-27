@@ -83,6 +83,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// No params version
 		return executeRequest(urlString, null, method, contentTypeFormat);
 	}
+
 	/*
 	 * Use this method to specify the requests's Content Type (must be used if content type is not WWW_FORM, for example
 	 * for the json content type)
@@ -133,6 +134,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 		return response;
 	}
+
 	/**
 	 * Executes a POST request as per the interface specification
 	 */
@@ -218,6 +220,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		return response;
 
 	}
+
 	/***
 	 * Execute a GET request as per the interface specification
 	 * 
@@ -284,11 +287,14 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		return response;
 	}
+
 	/**
 	 * Reads a stream into a String
 	 * 
 	 * @param content
+	 * 
 	 * @return
+	 * 
 	 * @throws IOException
 	 */
 	private String readStream(InputStream content) throws IOException {
@@ -316,7 +322,9 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * Convert Params Map into a List<NameValuePair> for HttpPpost
 	 * 
 	 * @param params
+	 * 
 	 * @return List<NameValuePair>
+	 * 
 	 * @throws
 	 */
 	private List<NameValuePair> getListFromParams(ParamsMap params) {
@@ -332,6 +340,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 		return nameValuePairs;
 	}
+
 	/**
 	 * Get the formatted content type string for the content type enum value
 	 */

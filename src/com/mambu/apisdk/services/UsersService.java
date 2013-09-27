@@ -44,10 +44,15 @@ public class UsersService {
 	}
 
 	/**
-	 * Get all the users
+	 * Get all the users with offset and limit
 	 * 
-	 * @param
+	 * @param offset
+	 *            the offset of the response. If not set a value of 0 is used by default
+	 * @param limit
+	 *            the maximum number of response entries. If not set a value of 50 is used by default
+	 * 
 	 * @return List of all Users
+	 * 
 	 * @throws MambuApiException
 	 */
 	@SuppressWarnings("unchecked")
@@ -62,30 +67,27 @@ public class UsersService {
 		params.put(LIMIT, limit);
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<User>>() {}.getType();
+		Type collectionType = new TypeToken<List<User>>() {
+		}.getType();
 
 		List<User> users = (List<User>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return users;
 
 	}
+
 	/**
-	 * Get users with offset and limit
+	 * Get users (first 50 per default)
 	 * 
-	 * @param offset
-	 *            the offset of the response. If not set a value of 0 is used by default
-	 * @param limit
-	 *            the maximum number of response entries. If not set a value of 50 is used by default
 	 * @return List of Users
+	 * 
 	 * @throws MambuApiException
 	 */
 	public List<User> getUsers() throws MambuApiException {
-
 		List<User> users = getUsers(null, null);
-
 		return users;
-
 	}
+
 	/**
 	 * Get a paginated list of users filtered by branch
 	 * 
@@ -95,7 +97,9 @@ public class UsersService {
 	 *            the offset of the response. If not set a value of 0 is used by default
 	 * @param limit
 	 *            the maximum number of response entries. If not set a value of 50 is used by default
-	 * @return
+	 * 
+	 * @return list of Users
+	 * 
 	 * @throws MambuApiException
 	 */
 	@SuppressWarnings("unchecked")
@@ -111,7 +115,8 @@ public class UsersService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<User>>() {}.getType();
+		Type collectionType = new TypeToken<List<User>>() {
+		}.getType();
 
 		List<User> users = (List<User>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
@@ -123,7 +128,9 @@ public class UsersService {
 	 * 
 	 * @param userId
 	 *            the id of the user to filter.
+	 * 
 	 * @return User - with full details
+	 * 
 	 * @throws MambuApiException
 	 */
 
@@ -146,10 +153,11 @@ public class UsersService {
 	 * 
 	 * NOTE: This is just a convenience method, it uses the getById() API. One can use getById() diretcly too.
 	 * 
-	 * 
 	 * @param userName
 	 *            the username of the user to filter
+	 * 
 	 * @return User - with full details
+	 * 
 	 * @throws MambuApiException
 	 */
 

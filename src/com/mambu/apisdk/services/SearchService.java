@@ -48,6 +48,7 @@ public class SearchService {
 	public SearchService(MambuAPIService mambuAPIService) {
 		this.mambuAPIService = mambuAPIService;
 	}
+
 	/***
 	 * Get a Map of search results <SearchResul, List<SearchResult> for a given query and an optional list of search
 	 * types
@@ -91,8 +92,8 @@ public class SearchService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
 
-		java.lang.reflect.Type collectionType = new TypeToken<Map<SearchResult.Type, List<SearchResult>>>() {}
-				.getType();
+		java.lang.reflect.Type collectionType = new TypeToken<Map<SearchResult.Type, List<SearchResult>>>() {
+		}.getType();
 
 		Map<SearchResult.Type, List<SearchResult>> results = GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);

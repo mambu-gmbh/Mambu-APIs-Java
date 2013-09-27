@@ -29,10 +29,10 @@ import com.mambu.apisdk.MambuAPIFactory;
  */
 public class DemoUtil {
 
-	private static String domain = "decisions21.sandbox.mambu.com"; // Domain name. Format example: demo.mambucloud.com
+	private static String domain = "subdomain.sandbox.mambu.com"; // Domain name. Format example: demo.mambucloud.com
 
-	private static String user = "MichaelD"; // Mambu Username
-	private static String password = "michaeld"; // User password
+	private static String user = "username"; // Mambu Username
+	private static String password = "password"; // User password
 
 	public static void setUp() {
 		// get Logging properties file

@@ -56,6 +56,7 @@ public class OrganizationService {
 	 * Requests the organization currency
 	 * 
 	 * @return the Mambu gl account
+	 * 
 	 * @throws MambuApiException
 	 */
 	public Currency getCurrency() throws MambuApiException {
@@ -74,6 +75,7 @@ public class OrganizationService {
 			return null;
 		}
 	}
+
 	/**
 	 * Get a paginated list of branches
 	 * 
@@ -81,10 +83,11 @@ public class OrganizationService {
 	 *            the offset of the response. If not set a value of 0 is used by default
 	 * @param limit
 	 *            the maximum number of response entries. If not set a value of 50 is used by default
-	 * @return
+	 * 
+	 * @return List<Branch>
+	 * 
 	 * @throws MambuApiException
 	 */
-
 	public List<Branch> getBranches(String offset, String limit) throws MambuApiException {
 
 		// create the api call
@@ -97,25 +100,32 @@ public class OrganizationService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<Branch>>() {}.getType();
+		Type collectionType = new TypeToken<List<Branch>>() {
+		}.getType();
 		List<Branch> branches = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return branches;
 	}
+
 	/**
 	 * Requests a branch by their Mambu ID
 	 * 
 	 * @param branchId
+	 * 
 	 * @return the Mambu branch model
+	 * 
 	 * @throws MambuApiException
 	 */
 	public Branch getBranch(String branchId) throws MambuApiException {
 
-		// Verify that ID doesn't contain spaces. Spaces in IDs crash API wrappers
+		// Verify that ID doesn't contain spaces. Spaces in IDs crash API
+		// wrappers
 		branchId = branchId.trim();
 		if (branchId.contains(" ")) {
-			// Return the same API exception that would be returned by Mambu in case of Invalid ID parameter
-			// Message constructor: (returnStatus, errorSource) results in this message added to exception:
+			// Return the same API exception that would be returned by Mambu in
+			// case of Invalid ID parameter
+			// Message constructor: (returnStatus, errorSource) results in this
+			// message added to exception:
 			// {"returnCode":800,"returnStatus":"INVALID_BRANCH_ID""};
 			MambuApiResponseMessage responseMsg = new MambuApiResponseMessage("INVALID_BRANCH_ID", null);
 
@@ -142,18 +152,23 @@ public class OrganizationService {
 	 * Requests a centre details by their Mambu ID
 	 * 
 	 * @param centreId
+	 * 
 	 * @return the Mambu centre model (with full details)
+	 * 
 	 * @throws MambuApiException
 	 */
 	public Centre getCentre(String centreId) throws MambuApiException {
 
-		// Verify that ID doesn't contain spaces. Spaces in IDs crash API wrappers
+		// Verify that ID doesn't contain spaces. Spaces in IDs crash API
+		// wrappers
 
 		centreId = centreId.trim();
 		if (centreId.contains(" ")) {
-			// Return the same API exception that would be returned by Mambu in case of Invalid ID parameter
+			// Return the same API exception that would be returned by Mambu in
+			// case of Invalid ID parameter
 			// This Message constructor: (returnStatus, errorSource) results in:
-			// {"returnCode":851,"returnStatus":"INVALID_CENTRE_ID""} added to the exception message;
+			// {"returnCode":851,"returnStatus":"INVALID_CENTRE_ID""} added to
+			// the exception message;
 
 			MambuApiResponseMessage responseMsg = new MambuApiResponseMessage("INVALID_CENTRE_ID", null);
 
@@ -179,18 +194,17 @@ public class OrganizationService {
 	/**
 	 * Get paginated list of centres
 	 * 
-	 * @param branchID
+	 * @param branchId
 	 *            Centers for the specified branch are returned. If NULL, all centres are searched
-	 * 
 	 * @param offset
 	 *            the offset of the response. If not set a value of 0 is used by default
 	 * @param limit
 	 *            the maximum number of response entries. If not set a value of 50 is used by default
+	 * 
 	 * @return an array of Centres
 	 * 
 	 * @throws MambuApiException
 	 */
-
 	public List<Centre> getCentres(String branchId, String offset, String limit) throws MambuApiException {
 
 		// create the api call
@@ -198,13 +212,15 @@ public class OrganizationService {
 
 		ParamsMap params = new ParamsMap();
 
-		params.addParam(APIData.BRANCH_ID, branchId); // if null, all centres are searched
+		params.addParam(APIData.BRANCH_ID, branchId); // if null, all centres
+														// are searched
 		params.put(OFFSET, offset);
 		params.put(LIMIT, limit);
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<Centre>>() {}.getType();
+		Type collectionType = new TypeToken<List<Centre>>() {
+		}.getType();
 		List<Centre> centres = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return centres;
@@ -232,6 +248,7 @@ public class OrganizationService {
 
 		return caustomFiled;
 	}
+
 	/**
 	 * Get Custom Field Sets
 	 * 
@@ -253,11 +270,17 @@ public class OrganizationService {
 		ParamsMap params = new ParamsMap();
 		String customFieldTypeString = (customFieldType == null) ? null : customFieldType.name();
 
-		params.addParam(APIData.CUSTOM_FIELD_SETS_TYPE, customFieldTypeString); // if null, all types are requested
+		params.addParam(APIData.CUSTOM_FIELD_SETS_TYPE, customFieldTypeString); // if
+																				// null,
+																				// all
+																				// types
+																				// are
+																				// requested
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<CustomFieldSet>>() {}.getType();
+		Type collectionType = new TypeToken<List<CustomFieldSet>>() {
+		}.getType();
 		List<CustomFieldSet> sustomFieldSets = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return sustomFieldSets;

@@ -39,8 +39,10 @@ public class IntelligenceService {
 	/**
 	 * Requests a mambu indicator value as a BigDecimal value
 	 * 
-	 * @param glCode
+	 * @param indicator
+	 * 
 	 * @return the big decimal indicator value
+	 * 
 	 * @throws MambuApiException
 	 */
 	public BigDecimal getIndicator(Indicator indicator) throws MambuApiException {
@@ -50,7 +52,8 @@ public class IntelligenceService {
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
 		HashMap<String, String> result = GsonUtils.createGson().fromJson(jsonResponse,
-				new TypeToken<HashMap<String, String>>() {}.getType());
+				new TypeToken<HashMap<String, String>>() {
+				}.getType());
 		if (result != null) {
 			String resultString = result.get(indicator.toString());
 			return new BigDecimal(resultString);

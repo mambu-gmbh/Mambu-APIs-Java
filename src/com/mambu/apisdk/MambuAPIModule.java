@@ -39,6 +39,7 @@ public class MambuAPIModule extends AbstractModule {
 		this.password = password;
 
 	}
+
 	/***
 	 * Define the bindings used in the wrapper application
 	 */

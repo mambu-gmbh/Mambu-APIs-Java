@@ -51,17 +51,18 @@ public class RepaymentsService {
 	 * 
 	 * @param accountId
 	 *            the id of the loan account
+	 * 
 	 * @return the List of Repayments
 	 * 
 	 * @throws MambuApiException
-	 * 
 	 */
 	public List<Repayment> getLoanAccountRepayments(String accountId) throws MambuApiException {
 
 		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId) + "/" + REPAYMENTS);
 		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		Type collectionType = new TypeToken<List<Repayment>>() {}.getType();
+		Type collectionType = new TypeToken<List<Repayment>>() {
+		}.getType();
 		List<Repayment> repayments = GsonUtils.createGson().fromJson(jsonResposne, collectionType);
 		return repayments;
 	}
@@ -69,12 +70,12 @@ public class RepaymentsService {
 	/***
 	 * Get a loan account Repayments between FromDate and ToDate
 	 * 
-	 * @param fromdate
-	 *            and ToDate
+	 * @param dueFomString
+	 * @param dueToString
+	 * 
 	 * @return the List of Repayments
 	 * 
 	 * @throws MambuApiException
-	 * 
 	 */
 	public List<Repayment> getRapaymentsDueFromTo(String dueFomString, String dueToString) throws MambuApiException {
 		// E.g. GET /api/repayments?dueFrom=2011-01-05&dueTo=2011-06-07
@@ -85,22 +86,24 @@ public class RepaymentsService {
 		paramsMap.put(DUE_TO, dueToString);
 
 		String jsonResposne = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
-		Type collectionType = new TypeToken<List<Repayment>>() {}.getType();
+		Type collectionType = new TypeToken<List<Repayment>>() {
+		}.getType();
 
 		List<Repayment> repayments = GsonUtils.createGson().fromJson(jsonResposne, collectionType);
 
 		return repayments;
 	}
+
 	/***
 	 * Get a all Repayments by Loan account id with an offset and limit params
 	 * 
 	 * @param accountId
 	 *            the id of the loan account limit - last transaction number Note: if offset and limit both equal null,
 	 *            all transactions are returned
+	 * 
 	 * @return the List of Repayments
 	 * 
 	 * @throws MambuApiException
-	 * 
 	 */
 	// TODO: The offset and limit params are not supported by repayments. API returns all. To be investigated further
 	public List<Repayment> getLoanAccountRepayments(String accountId, String offset, String limit)
@@ -114,7 +117,8 @@ public class RepaymentsService {
 
 		String jsonResposne = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 
-		Type collectionType = new TypeToken<List<Repayment>>() {}.getType();
+		Type collectionType = new TypeToken<List<Repayment>>() {
+		}.getType();
 		List<Repayment> repayments = GsonUtils.createGson().fromJson(jsonResposne, collectionType);
 		return repayments;
 	}
