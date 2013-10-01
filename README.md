@@ -29,14 +29,16 @@ There is a list of services which are provided through a factory.
 The list will be updated constantly and currently contains:
 
 - AccountingService
-- ClientService
+- ClientsService
+- DocumentsService
 - IntelligenceService
-- LoanService
+- LoansService
 - OrganizationService
 - RepaymentsService
 - SavingsService
-- UsersService
+- SearchService
 - TasksService
+- UsersService
 
 To use the factory, some date must be provided in order to set it up:
 

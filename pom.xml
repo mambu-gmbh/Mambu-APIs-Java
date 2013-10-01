@@ -4,10 +4,10 @@
 	<groupId>Mambu-APIs-Java</groupId>
 	<artifactId>Mambu-APIs-Java</artifactId>
 	<name>Mambu Java APIs SDK</name>
-	<version>3.2-SNAPSHOT</version>
+	<version>3.3-bin</version>
 	<url>http://www.mambu.com</url>
 	<build>
-		<!-- This section was inserted to fix provelm with Maeven plug in for Eclipse: 
+		<!-- This section was inserted to fix problem with Maeven plug in for Eclipse: 
 			m2e -->
 		<pluginManagement>
 			<plugins>
@@ -50,25 +50,8 @@
 					<target>1.6</target>
 				</configuration>
 			</plugin>
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.2.1</version>
-				<configuration>
-					<outputDirectory>${project.basedir}/lib</outputDirectory>
-					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
-				</configuration>
-				<executions>
-					<execution>
-						<id>make-assembly</id> <!-- this is used for inheritance merges -->
-						<phase>package</phase> <!-- bind to the packaging phase -->
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
@@ -88,11 +71,15 @@
 					</execution>
 				</executions>
 			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
-					<outputDirectory>${project.basedir}/lib</outputDirectory>
+					<outputDirectory>${project.basedir}/build</outputDirectory>
+					<excludes>
+						<exclude>demo/*.*</exclude>
+					</excludes>
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
@@ -103,15 +90,30 @@
 				</configuration>
 			</plugin>
 		</plugins>
+		
+		<resources>
+			<resource>
+				<!--   <targetPath>META-INF/maven/Mambu-APIs-Java/</targetPath> -->
+				<filtering>false</filtering>
+				<directory>${project.basedir}</directory>
+				<includes>
+					<include>config.properties</include>
+					<include>logger.properties</include>
+					<include>pom.xml</include>
+					<include>README.md</include>
+				</includes>
+
+			</resource>
+		</resources>
 
 	</build>
 	<dependencies>
 		<dependency>
 			<groupId>com.mambu</groupId>
 			<artifactId>mambumodels</artifactId>
-			<version>3.2</version>
+			<version>3.3</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/mambu-models-v3.2.jar
+			<systemPath>${project.basedir}/lib/mambu-models-v3.3.jar
 			</systemPath>
 			<optional>false</optional>
 		</dependency>
