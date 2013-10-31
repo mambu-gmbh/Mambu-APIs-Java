@@ -114,6 +114,7 @@ public class APIData {
 	// Tasks API
 	// API's endpoint
 	public static String TASKS = "tasks";
+	public static String STATUS = "status";
 
 	// Documents API
 	// API's endpoint

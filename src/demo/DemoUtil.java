@@ -3,11 +3,17 @@ package demo;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import com.mambu.apisdk.MambuAPIFactory;
+import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.services.ClientsService;
+import com.mambu.apisdk.services.UsersService;
+import com.mambu.clients.shared.model.Client;
+import com.mambu.core.shared.model.User;
 
 /**
  * Helper class to be used with Demo programs. It defines and handles:
@@ -29,10 +35,17 @@ import com.mambu.apisdk.MambuAPIFactory;
  */
 public class DemoUtil {
 
+	// "subdomain.sandbox.mambu.com"
 	private static String domain = "subdomain.sandbox.mambu.com"; // Domain name. Format example: demo.mambucloud.com
+	// username
+	private static String user = "demo"; // Mambu Username
+	// password
+	private static String password = "demo"; // User password
 
-	private static String user = "username"; // Mambu Username
-	private static String password = "password"; // User password
+	// Demo Data
+	final static String demoClientLastName = "Doe"; // Doe Chernaya
+	final static String demoClientFirstName = "John"; // John Irina
+	final static String demoUsername = "demo"; // demo MichaelD
 
 	public static void setUp() {
 		// get Logging properties file
@@ -75,4 +88,28 @@ public class DemoUtil {
 		MambuAPIFactory.setApplicationKey(appKeyValue);
 
 	}
+
+	// Get Demo User
+	public static User getDemoUser() throws MambuApiException {
+
+		UsersService usersService = MambuAPIFactory.getUsersService();
+		User user = usersService.getUserByUsername(demoUsername);
+
+		return user;
+	}
+
+	// Get or Create a Demo Client
+	public static Client getDemoClient() throws MambuApiException {
+
+		ClientsService clientsService = MambuAPIFactory.getClientService();
+		List<Client> clients = clientsService.getClientByFullName(demoClientLastName, demoClientFirstName);
+		Client client;
+		if (clients.isEmpty()) {
+			client = clientsService.createClient(demoClientFirstName, demoClientLastName);
+		} else {
+			client = clients.iterator().next();
+		}
+		return client;
+	}
+
 }

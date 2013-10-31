@@ -18,6 +18,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -122,8 +123,12 @@ public class RequestExecutorImpl implements RequestExecutor {
 			case POST:
 				response = executePostRequest(urlString, params, contentTypeFormat);
 				break;
+			case DELETE:
+				response = executeDeleteRequest(urlString);
+				break;
 			default:
-				throw new IllegalArgumentException("Only method GET or POST is supported, not " + method.name() + ".");
+				throw new IllegalArgumentException("Only methods GET, POST and DELETE are supported, not "
+						+ method.name() + ".");
 			}
 		} catch (MalformedURLException e) {
 			LOGGER.severe("MalformedURLException: " + e.getMessage());
@@ -258,6 +263,58 @@ public class RequestExecutorImpl implements RequestExecutor {
 		} else {
 			LOGGER.info("response is NULL, so no contentType");
 		}
+
+		InputStream content = null;
+		// Get the response Entity
+		HttpEntity entity = httpResponse.getEntity();
+
+		if (entity != null) {
+			content = entity.getContent();
+			if (content != null)
+				response = readStream(content);
+		}
+		// if status is not Ok - set error code
+		if (status != HttpURLConnection.HTTP_OK) {
+			errorCode = status;
+			LOGGER.info("Error status=" + status + " Error response=" + response);
+		}
+
+		if (errorCode == null)
+			// For logging only: log successful response
+			LOGGER.info("Status=" + status + "\nResponse=" + response);
+
+		// check if we hit an error
+		if (errorCode != null) {
+			// pass to MambuApiException the content that goes with the error code
+			LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response);
+			throw new MambuApiException(errorCode, response);
+		}
+
+		return response;
+	}
+	/***
+	 * Execute a DELETE request as per the interface specification
+	 * 
+	 * @param urlString
+	 */
+	private String executeDeleteRequest(String urlString) throws MalformedURLException, IOException, MambuApiException {
+		String response = "";
+		Integer errorCode = null;
+
+		LOGGER.info("DELETE with URL with params=" + urlString);
+
+		HttpParams httpParameters = new BasicHttpParams();
+
+		HttpClient httpClient = new DefaultHttpClient(httpParameters);
+
+		HttpDelete httpDelete = new HttpDelete(urlString);
+		httpDelete.setHeader("Authorization", "Basic " + encodedAuthorization);
+
+		// execute
+		HttpResponse httpResponse = httpClient.execute(httpDelete);
+
+		// get status
+		int status = httpResponse.getStatusLine().getStatusCode();
 
 		InputStream content = null;
 		// Get the response Entity

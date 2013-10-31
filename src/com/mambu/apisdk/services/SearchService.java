@@ -20,7 +20,7 @@ import com.mambu.core.shared.model.SearchResult;
 /**
  * Service class which handles the API operations available for the Seacrh
  * 
- * @author manilkis
+ * @author mdanilkis
  * 
  */
 

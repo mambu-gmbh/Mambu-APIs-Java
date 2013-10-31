@@ -14,7 +14,7 @@ import com.mambu.core.shared.model.SearchResult.Type;
 /**
  * Test class to show example usage of the api calls
  * 
- * @author manilkis
+ * @author mdanilkis
  * 
  */
 public class DemoTestSearchService {

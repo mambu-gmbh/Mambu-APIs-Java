@@ -1,5 +1,13 @@
 package demo;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+
+import org.apache.commons.codec.binary.Base64;
+
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -20,15 +28,14 @@ public class DemoTestDocumentsService {
 		DemoUtil.setUp();
 
 		try {
+			testUploadDocumentFromFile();
 
 			testUploadDocument();
 
 		} catch (MambuApiException e) {
-			System.out
-					.println("Exception caught in Demo Test Document Service");
+			System.out.println("Exception caught in Demo Test Document Service");
 			System.out.println("Error code=" + e.getErrorCode());
-			System.out.println(" Cause=" + e.getCause() + ".  Message="
-					+ e.getMessage());
+			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
 		}
 
 	}
@@ -37,8 +44,7 @@ public class DemoTestDocumentsService {
 
 		System.out.println("\nIn testUploadDocument");
 
-		DocumentsService documentsService = MambuAPIFactory
-				.getDocumentsService();
+		DocumentsService documentsService = MambuAPIFactory.getDocumentsService();
 
 		JSONDocument jsonDocument = new JSONDocument();
 
@@ -55,12 +61,98 @@ public class DemoTestDocumentsService {
 		String documentContent = "VGhpcyBpcyBhIHNhbXBsZSB0ZXh0IGRvY3VtZW50IGluIFVURi04IHdpdGggc3BlY2lhbCBjaGFyYWN0ZXJzIGxpa2Ugw6TDtsO8PcOpJyIu";
 		jsonDocument.setDocumentContent(documentContent);
 
-		Document documentResponse = documentsService
-				.uploadDocument(jsonDocument);
+		Document documentResponse = documentsService.uploadDocument(jsonDocument);
 
-		System.out.println("Document uploaded OK, ID="
-				+ documentResponse.getId() + " Name= "
-				+ documentResponse.getName() + " Document Holder Key="
-				+ documentResponse.getDocumentHolderKey());
+		System.out.println("Document uploaded OK, ID=" + documentResponse.getId() + " Name= "
+				+ documentResponse.getName() + " Document Holder Key=" + documentResponse.getDocumentHolderKey());
+	}
+
+	public static void testUploadDocumentFromFile() throws MambuApiException {
+		System.out.println("\nIn testUploadDocumentFromFile");
+
+		// Our Test file to upload
+		final String filePath = "./test/data/test_photo_3m_1.JPG";
+
+		// Encode this file
+		String encodedString = encodeFileIntoBase64String(filePath);
+
+		if (encodedString == null) {
+			System.out.println("Failed encoding the file");
+			return;
+		}
+
+		JSONDocument jsonDocument = new JSONDocument();
+
+		Document document = new Document();
+		document.setCreatedByUserKey("1");
+		document.setDescription("Sample JPEG file");
+
+		// / Loan: 8a24a0b141a804030141aacf6ac42d1f // Client: 8ad3e12340719f2b0140878460884524
+		document.setDocumentHolderKey("8a24a0b141a804030141aacf6ac42d1f");
+		// OwnerType.LOAN_ACCOUNT or OwnerType.CLIENT
+		document.setDocumentHolderType(OwnerType.LOAN_ACCOUNT);
+		document.setName("Loan Sample JPEG file");
+		document.setOriginalFilename("sample-original.jpg");
+		document.setType("jpg");
+		jsonDocument.setDocument(document);
+
+		// Set the encoded strings
+		String documentContent = encodedString;
+
+		// Set the Json document
+		jsonDocument.setDocumentContent(documentContent);
+
+		// Upload
+		DocumentsService documentsService = MambuAPIFactory.getDocumentsService();
+		Document documentResponse = documentsService.uploadDocument(jsonDocument);
+
+		System.out.println("Document uploaded OK, ID=" + documentResponse.getId() + " Name= "
+				+ documentResponse.getName() + " Document Holder Key=" + documentResponse.getDocumentHolderKey());
+	}
+
+	// Private Helpers
+	private static String encodeFileIntoBase64String(String absolutePath) {
+		final String methodName = "encodeFileIntoBase64String";
+
+		System.out.println("Encoding image file=" + absolutePath);
+
+		InputStream inputStream = null;
+		try {
+			inputStream = new FileInputStream(absolutePath);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			System.out.println("Picture file not found. Path=" + absolutePath);
+			return null;
+		}
+
+		// Convert file to bytes stream
+		byte[] bytes;
+		byte[] buffer = new byte[8192];
+		int bytesRead;
+		ByteArrayOutputStream output = new ByteArrayOutputStream();
+		try {
+			while ((bytesRead = inputStream.read(buffer)) != -1) {
+				output.write(buffer, 0, bytesRead);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out
+					.println(methodName + " IO Exception reading file=" + absolutePath + " Message=" + e.getMessage());
+			return null;
+		}
+		bytes = output.toByteArray();
+
+		// Encode the byte stream
+		String encodedString = Base64.encodeBase64URLSafeString(bytes);
+
+		// Close open streams
+		try {
+			inputStream.close();
+			output.close();
+		} catch (IOException e) {
+
+		}
+		return encodedString;
+
 	}
 }
