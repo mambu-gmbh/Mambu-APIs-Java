@@ -8,6 +8,7 @@ import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
+import com.mambu.apisdk.util.APIData.IMAGE_SIZE_TYPE;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
@@ -25,6 +26,8 @@ public class DocumentsService {
 	private MambuAPIService mambuAPIService;
 
 	private static String DOCUMENTS = APIData.DOCUMENTS;
+	private static String IMAGES = APIData.IMAGES;
+	private static String SIZE = APIData.SIZE;
 
 	/***
 	 * Create a new documents service
@@ -38,7 +41,7 @@ public class DocumentsService {
 	}
 
 	/***
-	 * Create a new task using a Task object and as json request
+	 * Upload new Document using a JSONDocument object and as json request
 	 * 
 	 * @param document
 	 *            the new document object to be uploaded containing all mandatory fields
@@ -65,4 +68,41 @@ public class DocumentsService {
 		return documentResult;
 	}
 
+	/***
+	 * Get an Image file using file's encoded key and the preferred image size
+	 * 
+	 * @param imageKy
+	 *            a key to access image file (e.g. client's profile picture key: client.getProfilePictureKey())
+	 * @param sizeType
+	 *            a desired size to be returned. E.g LARGE, MEDIUM, SMALL_THUMB, TINY_THUMB. Can be null to get full
+	 *            size
+	 * 
+	 * @return base64EncodedImage a base64 string with encoded image file
+	 * 
+	 * @throws MambuApiException
+	 */
+	public String getImage(String imageKey, IMAGE_SIZE_TYPE sizeType) throws MambuApiException {
+
+		// Add size type as a parameter
+		ParamsMap params = new ParamsMap();
+		if (sizeType != null)
+			params.put(SIZE, sizeType.name());
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(IMAGES + "/" + imageKey));
+
+		String apiResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+
+		// Get only the encoded part. Mambu returns this format: "data:image/jpg;base64,/9j...."
+		// We need to strip off the "data:image/jpg;base64," part
+		final String encodingStartsAfter = "base64,";
+		final int dataStart = apiResponse.indexOf(encodingStartsAfter) + encodingStartsAfter.length();
+
+		String base64EncodedString = apiResponse.substring(dataStart);
+
+		// Strip of all \r\n. Otherwise fails to parse this image into bitmap
+		base64EncodedString = base64EncodedString.replaceAll("(\\\\r)?\\\\n", "");
+
+		return base64EncodedString;
+	}
 }

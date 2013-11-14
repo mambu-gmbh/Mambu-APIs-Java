@@ -6,6 +6,7 @@ import java.util.List;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.OrganizationService;
+import com.mambu.core.shared.model.Address;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
@@ -20,13 +21,18 @@ import com.mambu.organization.shared.model.Centre;
  */
 public class DemoTestOrganizationService {
 
-	private static String BRANCH_ID = "Richmond01"; // Richmond01 TAK 001
+	private static String BRANCH_ID = "Richmond_001"; // Richmond01 TAK 001
 
 	public static void main(String[] args) {
 
 		DemoUtil.setUp();
 
 		try {
+
+			testGetCentresWithDetailsByPage();
+			testGetAllBranchesWithDetails();
+
+			testGetAllBranches();
 
 			testGetCustomField();
 			testGetCustomFieldSetsByType();
@@ -64,11 +70,35 @@ public class DemoTestOrganizationService {
 		System.out.println("All Total=" + branches.size() + " Total time=" + diff);
 		for (Branch branch : branches) {
 			System.out.println(" Name=" + branch.getName() + "\tId=" + branch.getId());
+			Address address = branch.getAddress();
+			if (address != null)
+				System.out.println(" And address=" + address.getLine1());
 		}
 		System.out.println();
 
 	}
+	public static void testGetAllBranchesWithDetails() throws MambuApiException {
+		System.out.println("\nIn testGetAllBranchesWithDetails");
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
+		String offset = null;
+		String limit = null;
+		Date d1 = new Date();
+		List<Branch> branches = organizationService.getBranchesWithDetails(offset, limit);
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
+
+		System.out.println("All Total=" + branches.size() + " Total time=" + diff);
+		for (Branch branch : branches) {
+			System.out.println(" Name=" + branch.getName() + "\tId=" + branch.getId());
+			Address address = branch.getAddress();
+			if (address != null)
+				System.out.println(" And address=" + address.getLine1());
+
+		}
+		System.out.println();
+
+	}
 	public static void testGetBranchesByPage() throws MambuApiException {
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
@@ -136,6 +166,30 @@ public class DemoTestOrganizationService {
 		System.out.println("Total Centres=" + centres.size() + " Total time=" + diff);
 		for (Centre centre : centres) {
 			System.out.println(" Name=" + centre.getName() + "\tId=" + centre.getId());
+		}
+		System.out.println();
+
+	}
+	public static void testGetCentresWithDetailsByPage() throws MambuApiException {
+
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+
+		String offset = "0";
+		String limit = "500";
+		String branchId = null;
+		System.out.println("\nIn testGetCentresByPage" + "  Offset=" + offset + "  Limit=" + limit);
+
+		Date d1 = new Date();
+		List<Centre> centres = organizationService.getCentresWithDetails(branchId, offset, limit);
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
+
+		System.out.println("Total Centres=" + centres.size() + " Total time=" + diff);
+		for (Centre centre : centres) {
+			System.out.println(" Name=" + centre.getName() + "\tId=" + centre.getId());
+			Address address = centre.getAddress();
+			if (address != null)
+				System.out.println(" And address=" + address.getLine1());
 		}
 		System.out.println();
 

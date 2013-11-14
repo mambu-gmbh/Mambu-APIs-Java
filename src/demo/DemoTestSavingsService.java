@@ -18,7 +18,7 @@ import com.mambu.savings.shared.model.SavingsType;
 /**
  * Test class to show example usage of the api calls
  * 
- * @author manilkis
+ * @author mdanilkis
  * 
  */
 public class DemoTestSavingsService {

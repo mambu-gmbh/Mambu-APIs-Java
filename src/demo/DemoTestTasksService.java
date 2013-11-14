@@ -1,17 +1,18 @@
 package demo;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.services.TasksService;
-import com.mambu.apisdk.services.UsersService;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.OwnerType;
 import com.mambu.tasks.shared.model.Task;
+import com.mambu.tasks.shared.model.TaskStatus;
 
 /**
  * Test class to show example usage of the api calls
@@ -21,17 +22,28 @@ import com.mambu.tasks.shared.model.Task;
  */
 public class DemoTestTasksService {
 
+	private static User demoUser;
+	private static Client demoClient;
+
 	public static void main(String[] args) {
 
 		DemoUtil.setUp();
 
 		try {
+			// Get demo entities needed for testing
+			demoUser = DemoUtil.getDemoUser();
+			demoClient = DemoUtil.getDemoClient();
 
 			// available since Mambu 1.11
 			testCreateTaskFromEncoded();
 
 			// available since Mambu 3.3
 			testCreateTaskJson();
+
+			// available since Mambu 3.3
+			testGetTasks();
+
+			testDeleteTask();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Tasks Service");
@@ -41,52 +53,41 @@ public class DemoTestTasksService {
 
 	}
 
-	public static void testCreateTaskJson() throws MambuApiException {
+	public static Task testCreateTaskJson() throws MambuApiException {
 		System.out.println("\nIn testCreateTaskJson");
 
-		UsersService usersService = MambuAPIFactory.getUsersService();
-		User thomas = usersService.getUserByUsername("demo");
-
-		ClientsService clientsService = MambuAPIFactory.getClientService();
-		List<Client> clients = clientsService.getClientByFullName("Doe", "John");
-		Client client;
-		if (clients.isEmpty()) {
-			client = clientsService.createClient("John", "Doe");
-		} else {
-			client = clients.iterator().next();
-		}
+		User user = demoUser;
+		Client client = demoClient;
 
 		TasksService tasksService = MambuAPIFactory.getTasksService();
 
 		Task task = new Task();
 		task.setTitle("Task #1");
-		task.setAssignedUserKey(thomas.getEncodedKey());
-		// don't set due date directly since date format will be invalid (should not contain time)
-		task.setDaysUntilDue(0);
-		task.setCreatedByUserKey(thomas.getEncodedKey());
+		task.setAssignedUserKey(user.getEncodedKey());
+
+		final int dueDaysFromNow = 5;
+		Date today = new Date();
+		Date someDaysFromNow = new Date(today.getTime() + (24 * dueDaysFromNow * 1000 * 60 * 60));
+		task.setDueDate(someDaysFromNow);
+
+		task.setCreatedByUserKey(user.getEncodedKey());
 		task.setTaskLinkKey(client.getEncodedKey());
 		task.setTaskLinkType(OwnerType.CLIENT);
 
 		task = tasksService.createTask(task);
 
-		System.out.println("Created task =" + task + "  Returned=" + task.getId());
+		System.out.println("Created task =" + task + "  Returned ID=" + task.getId() + " and Due Date="
+				+ task.getDueDate());
+
+		return task;
 
 	}
 
 	public static void testCreateTaskFromEncoded() throws MambuApiException {
 		System.out.println("\nIn testCreateTaskFromEncoded");
 
-		UsersService usersService = MambuAPIFactory.getUsersService();
-		User user = usersService.getUserByUsername("demo");
-
-		ClientsService clientsService = MambuAPIFactory.getClientService();
-		List<Client> clients = clientsService.getClientByFullName("Doe", "John");
-		Client client;
-		if (clients.isEmpty()) {
-			client = clientsService.createClient("John", "Doe");
-		} else {
-			client = clients.iterator().next();
-		}
+		User user = demoUser;
+		Client client = demoClient;
 
 		TasksService tasksService = MambuAPIFactory.getTasksService();
 
@@ -106,4 +107,63 @@ public class DemoTestTasksService {
 
 	}
 
+	public static List<Task> testGetTasks() throws MambuApiException {
+		System.out.println("\nIn testGetTasks");
+
+		// Get Input params
+		String clientId = demoClient.getId(); // or null;
+		String username = demoUser.getUsername(); // or null;
+
+		TaskStatus taskStatus = TaskStatus.OPEN; // or TaskStatus.COMPLETED;
+		// Pagination params
+		String offset = "0"; // or null;
+		String limit = "50"; // or null;
+
+		TasksService tasksService = MambuAPIFactory.getTasksService();
+
+		List<Task> tasks = tasksService.getTasks(username, clientId, taskStatus, offset, limit);
+
+		System.out.println("Total tasks returned=" + tasks.size() + "\tFor User=" + username + "\tFor client ID= "
+				+ clientId + "\tfor Status=" + taskStatus.name());
+
+		for (Task task : tasks) {
+			System.out.println("Username=" + task.getAssignedUserName() + "\tClient Name=" + task.getTaskLinkName()
+					+ "\tClient Key=" + task.getTaskLinkKey() + "\tID=" + task.getId() + "\tTitle" + task.getTitle()
+					+ "\tStatus=" + task.getStatus().name());
+		}
+		System.out.println();
+
+		return tasks;
+	}
+
+	public static void testDeleteTask() throws MambuApiException {
+		System.out.println("\nIn testDeleteTask");
+
+		List<Task> someDemoTasks = testGetTasks();
+
+		if (someDemoTasks == null || someDemoTasks.isEmpty()) {
+			// Add New task
+			Task task = testCreateTaskJson();
+			someDemoTasks = new ArrayList<Task>();
+			someDemoTasks.add(task);
+		}
+
+		boolean testForSuccess = true; // or test for false
+
+		Task theTask;
+		String taskId;
+
+		if (testForSuccess) {
+			theTask = someDemoTasks.iterator().next();
+			taskId = String.valueOf(theTask.getId());
+		} else {
+			taskId = UUID.randomUUID().toString();
+			System.out.println("Testing Task deletion with random ID=" + taskId);
+		}
+
+		TasksService tasksService = MambuAPIFactory.getTasksService();
+		boolean status = tasksService.deleteTasks(taskId);
+
+		System.out.println("Deletion status=" + status);
+	}
 }
