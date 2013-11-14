@@ -36,16 +36,16 @@ import com.mambu.core.shared.model.User;
 public class DemoUtil {
 
 	// "subdomain.sandbox.mambu.com"
-	private static String domain = "decisions21.sandbox.mambu.com"; // Domain name. Format example: demo.mambucloud.com
+	private static String domain = "subdomain.sandbox.mambu.com"; // Domain name. Format example: demo.mambucloud.com
 	// username
-	private static String user = "MichaelD"; // demo Mambu Username
+	private static String user = "demo"; // demo Mambu Username
 	// password
-	private static String password = "michaeld"; // demo User password
+	private static String password = "demo"; // demo User password
 
 	// Demo Data
-	final static String demoClientLastName = "Chernaya"; // Doe Chernaya
-	final static String demoClientFirstName = "Irina"; // John Irina
-	final static String demoUsername = "MichaelD"; // demo MichaelD
+	final static String demoClientLastName = "Doe"; // Doe Chernaya
+	final static String demoClientFirstName = "John"; // John Irina
+	final static String demoUsername = "demo"; // demo MichaelD
 
 	public static void setUp() {
 		// get Logging properties file
