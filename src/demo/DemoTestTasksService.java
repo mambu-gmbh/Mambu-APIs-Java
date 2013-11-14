@@ -64,15 +64,20 @@ public class DemoTestTasksService {
 		Task task = new Task();
 		task.setTitle("Task #1");
 		task.setAssignedUserKey(user.getEncodedKey());
-		// don't set due date directly since date format will be invalid (should not contain time)
-		task.setDaysUntilDue(0);
+
+		final int dueDaysFromNow = 5;
+		Date today = new Date();
+		Date someDaysFromNow = new Date(today.getTime() + (24 * dueDaysFromNow * 1000 * 60 * 60));
+		task.setDueDate(someDaysFromNow);
+
 		task.setCreatedByUserKey(user.getEncodedKey());
 		task.setTaskLinkKey(client.getEncodedKey());
 		task.setTaskLinkType(OwnerType.CLIENT);
 
 		task = tasksService.createTask(task);
 
-		System.out.println("Created task =" + task + "  Returned=" + task.getId());
+		System.out.println("Created task =" + task + "  Returned ID=" + task.getId() + " and Due Date="
+				+ task.getDueDate());
 
 		return task;
 
@@ -108,10 +113,11 @@ public class DemoTestTasksService {
 		// Get Input params
 		String clientId = demoClient.getId(); // or null;
 		String username = demoUser.getUsername(); // or null;
+
 		TaskStatus taskStatus = TaskStatus.OPEN; // or TaskStatus.COMPLETED;
 		// Pagination params
 		String offset = "0"; // or null;
-		String limit = "5"; // or null;
+		String limit = "50"; // or null;
 
 		TasksService tasksService = MambuAPIFactory.getTasksService();
 
@@ -121,8 +127,9 @@ public class DemoTestTasksService {
 				+ clientId + "\tfor Status=" + taskStatus.name());
 
 		for (Task task : tasks) {
-			System.out.println("Username=" + task.getAssignedUserName() + "\tID=" + task.getId() + "\tTitle"
-					+ task.getTitle() + "\tStatus=" + task.getStatus().name());
+			System.out.println("Username=" + task.getAssignedUserName() + "\tClient Name=" + task.getTaskLinkName()
+					+ "\tClient Key=" + task.getTaskLinkKey() + "\tID=" + task.getId() + "\tTitle" + task.getTitle()
+					+ "\tStatus=" + task.getStatus().name());
 		}
 		System.out.println();
 

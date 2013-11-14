@@ -12,6 +12,8 @@ import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.DocumentsService;
+import com.mambu.apisdk.util.APIData.IMAGE_SIZE_TYPE;
+import com.mambu.clients.shared.model.Client;
 import com.mambu.docs.shared.model.Document;
 import com.mambu.docs.shared.model.OwnerType;
 
@@ -23,11 +25,17 @@ import com.mambu.docs.shared.model.OwnerType;
  */
 public class DemoTestDocumentsService {
 
+	private static Client demoClient;
+
 	public static void main(String[] args) {
 
 		DemoUtil.setUp();
 
 		try {
+			demoClient = DemoUtil.getDemoClient();
+
+			testGetImage();
+
 			testUploadDocumentFromFile();
 
 			testUploadDocument();
@@ -71,7 +79,8 @@ public class DemoTestDocumentsService {
 		System.out.println("\nIn testUploadDocumentFromFile");
 
 		// Our Test file to upload
-		final String filePath = "./test/data/test_photo_3m_1.JPG";
+		// final String filePath = "./test/data/test_photo_3m_1.JPG";
+		final String filePath = "./test/data/Ira.JPG";
 
 		// Encode this file
 		String encodedString = encodeFileIntoBase64String(filePath);
@@ -80,6 +89,7 @@ public class DemoTestDocumentsService {
 			System.out.println("Failed encoding the file");
 			return;
 		}
+		System.out.println("Encoded string:" + encodedString);
 
 		JSONDocument jsonDocument = new JSONDocument();
 
@@ -108,6 +118,30 @@ public class DemoTestDocumentsService {
 
 		System.out.println("Document uploaded OK, ID=" + documentResponse.getId() + " Name= "
 				+ documentResponse.getName() + " Document Holder Key=" + documentResponse.getDocumentHolderKey());
+	}
+
+	//
+	public static void testGetImage() throws MambuApiException {
+		System.out.println("\nIn testGetImage");
+
+		DocumentsService documentsService = MambuAPIFactory.getDocumentsService();
+
+		final String imageKey = demoClient.getProfilePictureKey();
+
+		if (imageKey == null) {
+			System.out.println("testGetImage: Client =" + demoClient.getFullName()
+					+ "  doesn't have a picture attached. Choose another");
+			return;
+		}
+
+		// LARGE, MEDIUM, SMALL_THUMB , TINY_THUMB or null for full size
+		final IMAGE_SIZE_TYPE sizeType = IMAGE_SIZE_TYPE.MEDIUM; // null
+
+		String base64EncodedImage = documentsService.getImage(imageKey, sizeType);
+
+		System.out.println("\ntestGetImage Ok, Length==" + base64EncodedImage.length() + "\nEncoded String="
+				+ base64EncodedImage);
+
 	}
 
 	// Private Helpers
@@ -144,6 +178,8 @@ public class DemoTestDocumentsService {
 
 		// Encode the byte stream
 		String encodedString = Base64.encodeBase64URLSafeString(bytes);
+		boolean isBase64 = Base64.isArrayByteBase64(encodedString.getBytes());
+		System.out.println("Encoded document. Is String Base64=" + isBase64);
 
 		// Close open streams
 		try {
@@ -155,4 +191,5 @@ public class DemoTestDocumentsService {
 		return encodedString;
 
 	}
+
 }

@@ -10,6 +10,7 @@ import java.util.List;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
+import com.mambu.api.server.handler.tasks.model.JSONTask;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.exception.MambuApiResponseMessage;
@@ -65,11 +66,11 @@ public class TasksService {
 	public Task createTask(Task task) throws MambuApiException {
 
 		// Convert object to json
+		JSONTask inputJsonTask = new JSONTask(task);
+		final String dateTimeFormat = APIData.yyyyMmddFormat;
+		String jsonTaskRequest = GsonUtils.createGson(dateTimeFormat).toJson(inputJsonTask, JSONTask.class);
 
-		String jsonTask = GsonUtils.createGson().toJson(task, Task.class);
-		String jsonTaskRequest = String.format("{\"task\":%s}", jsonTask);
-
-		System.out.println("Create json request=" + jsonTaskRequest);
+		// System.out.println("Create json request=" + jsonTaskRequest);
 
 		ParamsMap params = new ParamsMap();
 		params.put("JSON", jsonTaskRequest);
@@ -79,7 +80,9 @@ public class TasksService {
 
 		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.POST, ContentType.JSON);
 
-		Task taskResult = GsonUtils.createGson().fromJson(jsonResposne, Task.class);
+		JSONTask jsonTask = GsonUtils.createGson().fromJson(jsonResposne, JSONTask.class);
+		// Get Tsk from JsonTask
+		Task taskResult = jsonTask.getTask();
 
 		return taskResult;
 	}

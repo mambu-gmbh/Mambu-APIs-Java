@@ -120,6 +120,16 @@ public class APIData {
 	// API's endpoint
 	public static String DOCUMENTS = "documents";
 
+	// Image downloads
+	// API end point
+	public static String IMAGES = "images";
+	// Params for Image downloads
+	public static String SIZE = "size";
+
+	public enum IMAGE_SIZE_TYPE {
+		LARGE, MEDIUM, SMALL_THUMB, TINY_THUMB
+	}
+
 	// Client fields
 	public static String FIRST_NAME = "firstName";
 	public static String LAST_NAME = "lastName";
