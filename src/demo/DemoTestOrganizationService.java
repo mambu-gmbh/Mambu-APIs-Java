@@ -234,7 +234,7 @@ public class DemoTestOrganizationService {
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
-		String fieldId = "Family_Size_Clients";
+		String fieldId = "Special_Installements_Loan_Accou";
 		System.out.println("\nIn testGetCustomField by ID." + "  Field ID=" + fieldId);
 
 		Date d1 = new Date();
@@ -270,8 +270,9 @@ public class DemoTestOrganizationService {
 					+ customFields.size());
 			System.out.println("List of fields:\n");
 			for (CustomField field : customFields) {
-				System.out.println("Field Name=" + field.getName() + "\tDataType=" + field.getDataType().toString()
-						+ "\tIsDefault=" + field.isDefault().toString() + "\tType=" + field.getType().toString());
+				System.out.println("Field ID=" + field.getId() + "\tField Name=" + field.getName() + "\tDataType="
+						+ field.getDataType().toString() + "\tIsDefault=" + field.isDefault().toString() + "\tType="
+						+ field.getType().toString());
 			}
 		}
 		System.out.println();

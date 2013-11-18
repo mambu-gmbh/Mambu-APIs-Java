@@ -9,6 +9,8 @@ import java.text.SimpleDateFormat;
 //
 public class APIData {
 
+	public final static String APPLICATION_KEY = "appkey";
+
 	//
 	public static enum ACCOUNT_TYPE {
 		LOAN, SAVINGS

@@ -9,6 +9,7 @@ import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.util.APIData;
+import com.mambu.clients.shared.model.Client;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
@@ -23,18 +24,22 @@ import com.mambu.savings.shared.model.SavingsType;
  */
 public class DemoTestSavingsService {
 
-	private static String CLIENT_ID = "729859576";
-
 	private static String GROUP_ID = "118035060";
 	private static String SAVINGS_ACCOUNT_ID;
 	private static String TO_LOAN_ACCOUNT_ID = "ZKII792";
+
+	private static Client demoClient;
+	private static SavingsProduct demoSavingsProduct;
 
 	public static void main(String[] args) {
 
 		DemoUtil.setUp();
 
 		try {
-			
+			// Get Demo data
+			demoClient = DemoUtil.getDemoClient();
+			demoSavingsProduct = DemoUtil.getDemoSavingsProduct();
+
 			testCreateSavingsAccount();
 
 			testGetSavingsAccount();
@@ -90,9 +95,10 @@ public class DemoTestSavingsService {
 		System.out.println("\nIn testGetSavingsAccountsFor Client");
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
-		List<SavingsAccount> savingsAccounts = savingsService.getSavingsAccountsForClient(CLIENT_ID);
+		String clientid = demoClient.getId();
+		List<SavingsAccount> savingsAccounts = savingsService.getSavingsAccountsForClient(clientid);
 
-		System.out.println("Got Savings accounts for the client with the " + CLIENT_ID + " id, Total="
+		System.out.println("Got Savings accounts for the client with the " + clientid + " id, Total="
 				+ savingsAccounts.size());
 		for (SavingsAccount account : savingsAccounts) {
 			System.out.print(account.getName() + " ");
@@ -255,20 +261,19 @@ public class DemoTestSavingsService {
 				+ product.getTypeOfProduct().name());
 
 	}
-	
+
 	public static void testCreateSavingsAccount() throws MambuApiException {
 		System.out.println("\nIn testCreateSavingsAccount");
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
 
 		SavingsAccount savingsAccount = new SavingsAccount();
-		savingsAccount.setProductTypeKey("8a3615ef414e97d30141500808255d4d");
+		savingsAccount.setProductTypeKey(demoSavingsProduct.getEncodedKey());
 		savingsAccount.setId(null);
 		savingsAccount.setAccountState(AccountState.PENDING_APPROVAL);
 		savingsAccount.setName("My Savings Account");
 		savingsAccount.setAccountType(SavingsType.SAVINGS_PLAN);
-		savingsAccount
-				.setClientAccountHolderKey("8a38a2c9415022670141507a1eb4001c");
+		savingsAccount.setClientAccountHolderKey(demoClient.getEncodedKey());
 
 		// Add Custom Fields
 		List<CustomFieldValue> clientCustomInformation = new ArrayList<CustomFieldValue>();
@@ -283,20 +288,16 @@ public class DemoTestSavingsService {
 		custField2.setValue("Daily");
 		clientCustomInformation.add(custField2);
 
-		JSONSavingsAccount jsonSavingsAccount = new JSONSavingsAccount(
-				savingsAccount);
+		JSONSavingsAccount jsonSavingsAccount = new JSONSavingsAccount(savingsAccount);
 		jsonSavingsAccount.setCustomInformation(clientCustomInformation);
 
 		// Create Account in Mambu
 		jsonSavingsAccount = service.createAccount(jsonSavingsAccount);
 
 		SAVINGS_ACCOUNT_ID = jsonSavingsAccount.getSavingsAccount().getId();
-		
-		System.out
-				.println("Savings Account created OK, ID="
-						+ savingsAccount.getId() + " Name= "
-						+ savingsAccount.getName() + " Account Holder Key="
-						+ savingsAccount.getAccountHolderKey());
+
+		System.out.println("Savings Account created OK, ID=" + savingsAccount.getId() + " Name= "
+				+ savingsAccount.getName() + " Account Holder Key=" + savingsAccount.getAccountHolderKey());
 
 	}
 }

@@ -50,7 +50,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	// TODO: add charset when https://mambucom.jira.com/browse/MBU-4137 is fixed
 	private final String jsonContentType = "application/json"; // "application/json; charset=UTF-8";
 
-	private final String APPLICATION_KEY = "appkey"; // as per JIRA issue MBU-3236
+	private final String APPLICATION_KEY = APIData.APPLICATION_KEY; // as per JIRA issue MBU-3236
 
 	private final static Logger LOGGER = Logger.getLogger(RequestExecutorImpl.class.getName());
 
@@ -96,8 +96,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// Add 'Application Key', if it was set by the application
 		// Mambu may handle API requests differently for different Application Keys
 
-		// TODO: revisit applicationKey implementation for json request when MBU-3892 is fixed in 3.3 (App Key for Json)
-
 		String applicationKey = MambuAPIFactory.getApplicationKey();
 		if (applicationKey != null) {
 			// add application key to the params map
@@ -124,7 +122,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 				response = executePostRequest(urlString, params, contentTypeFormat);
 				break;
 			case DELETE:
-				response = executeDeleteRequest(urlString);
+				response = executeDeleteRequest(urlString, params);
 				break;
 			default:
 				throw new IllegalArgumentException("Only methods GET, POST and DELETE are supported, not "
@@ -178,11 +176,16 @@ public class RequestExecutorImpl implements RequestExecutor {
 			case JSON:
 				// Parameter (json string) is expected as JSON_OBJECT parameter name
 				final String jsonString = params.get(APIData.JSON_OBJECT);
-				StringEntity jsonEntity = new StringEntity(jsonString, UTF8_charset);
+
+				// Add APPKEY to jsonString (see MBU-3892, implemented in 3.3 release)
+				String jsonWithAppKey = addAppKeyToJson(jsonString, params);
+
+				// Format jsonEntity
+				StringEntity jsonEntity = new StringEntity(jsonWithAppKey, UTF8_charset);
 
 				httpPost.setEntity(jsonEntity);
 
-				LOGGER.info("JSON: jsonString=" + jsonString);
+				LOGGER.info("JSON: jsonString=" + jsonWithAppKey);
 				break;
 			}
 
@@ -225,7 +228,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 		return response;
 
 	}
-
 	/***
 	 * Execute a GET request as per the interface specification
 	 * 
@@ -296,10 +298,18 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * Execute a DELETE request as per the interface specification
 	 * 
 	 * @param urlString
+	 * 
+	 * @param params
+	 *            ParamsMap with parameters
 	 */
-	private String executeDeleteRequest(String urlString) throws MalformedURLException, IOException, MambuApiException {
+	private String executeDeleteRequest(String urlString, ParamsMap params) throws MalformedURLException, IOException,
+			MambuApiException {
 		String response = "";
 		Integer errorCode = null;
+
+		if (params != null && params.size() > 0) {
+			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
+		}
 
 		LOGGER.info("DELETE with URL with params=" + urlString);
 
@@ -410,6 +420,37 @@ public class RequestExecutorImpl implements RequestExecutor {
 		default:
 			return wwwFormUrlEncodedContentType;
 		}
+	}
 
+	/**
+	 * Add json formatted appKey value to the original json string
+	 * 
+	 * @param jsonString
+	 *            original json string
+	 * 
+	 * @param params
+	 *            the ParamsMap containing the appKey value (optionally)
+	 * 
+	 * @return jsonStringWithAppKey json string with appKey added
+	 */
+	private String addAppKeyToJson(String jsonString, ParamsMap params) {
+		if (params == null)
+			return jsonString;
+
+		String appKey = params.get(APPLICATION_KEY);
+		if (appKey == null || appKey.length() == 0)
+			return jsonString;
+
+		// First Compile the following string: {"appKey":"appKeyValue",
+		// This formatted appKey string will be placed in front (instead of the first "{") in the original json
+		final String appKeyStart = "{\"" + APPLICATION_KEY + "\":\"";
+		final String appKeyEnd = "\", ";
+		final String appKeyString = appKeyStart.concat(appKey).concat(appKeyEnd);
+
+		// Put this formatted appKeyString in place of the first "{"
+		final int beginIndex = jsonString.indexOf("{");
+		final String jsonWithAppKey = appKeyString.concat(jsonString.substring(beginIndex + 1));
+
+		return jsonWithAppKey;
 	}
 }

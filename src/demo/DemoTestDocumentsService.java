@@ -14,8 +14,10 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.util.APIData.IMAGE_SIZE_TYPE;
 import com.mambu.clients.shared.model.Client;
+import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
 import com.mambu.docs.shared.model.OwnerType;
+import com.mambu.loans.shared.model.LoanAccount;
 
 /**
  * Test class to show example usage of the documents api calls
@@ -25,20 +27,26 @@ import com.mambu.docs.shared.model.OwnerType;
  */
 public class DemoTestDocumentsService {
 
+	private static User demoUser;
 	private static Client demoClient;
+	private static LoanAccount demoLoanAccount;
+
+	private static String UPLOADED_DOCUMENT_KEY = "";
 
 	public static void main(String[] args) {
 
 		DemoUtil.setUp();
 
 		try {
+			demoUser = DemoUtil.getDemoUser();
 			demoClient = DemoUtil.getDemoClient();
-
-			testGetImage();
+			demoLoanAccount = DemoUtil.getDemoLoanAccount();
 
 			testUploadDocumentFromFile();
 
 			testUploadDocument();
+
+			testGetImage();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Document Service");
@@ -57,9 +65,9 @@ public class DemoTestDocumentsService {
 		JSONDocument jsonDocument = new JSONDocument();
 
 		Document document = new Document();
-		document.setCreatedByUserKey("8a3615ef414e97d301415007253359f7");
+		document.setCreatedByUserKey(demoUser.getEncodedKey());
 		document.setDescription("Sample text file");
-		document.setDocumentHolderKey("8a38a2c9415022670141507a1eb4001c");
+		document.setDocumentHolderKey(demoClient.getEncodedKey());
 		document.setDocumentHolderType(OwnerType.CLIENT);
 		document.setName("sample.txt");
 		document.setOriginalFilename("sample-original.txt");
@@ -70,6 +78,8 @@ public class DemoTestDocumentsService {
 		jsonDocument.setDocumentContent(documentContent);
 
 		Document documentResponse = documentsService.uploadDocument(jsonDocument);
+		// Save the key
+		UPLOADED_DOCUMENT_KEY = documentResponse.getEncodedKey();
 
 		System.out.println("Document uploaded OK, ID=" + documentResponse.getId() + " Name= "
 				+ documentResponse.getName() + " Document Holder Key=" + documentResponse.getDocumentHolderKey());
@@ -98,7 +108,7 @@ public class DemoTestDocumentsService {
 		document.setDescription("Sample JPEG file");
 
 		// / Loan: 8a24a0b141a804030141aacf6ac42d1f // Client: 8ad3e12340719f2b0140878460884524
-		document.setDocumentHolderKey("8a24a0b141a804030141aacf6ac42d1f");
+		document.setDocumentHolderKey(demoLoanAccount.getEncodedKey());
 		// OwnerType.LOAN_ACCOUNT or OwnerType.CLIENT
 		document.setDocumentHolderType(OwnerType.LOAN_ACCOUNT);
 		document.setName("Loan Sample JPEG file");
@@ -115,7 +125,8 @@ public class DemoTestDocumentsService {
 		// Upload
 		DocumentsService documentsService = MambuAPIFactory.getDocumentsService();
 		Document documentResponse = documentsService.uploadDocument(jsonDocument);
-
+		// Save the key
+		UPLOADED_DOCUMENT_KEY = documentResponse.getEncodedKey();
 		System.out.println("Document uploaded OK, ID=" + documentResponse.getId() + " Name= "
 				+ documentResponse.getName() + " Document Holder Key=" + documentResponse.getDocumentHolderKey());
 	}
@@ -126,12 +137,13 @@ public class DemoTestDocumentsService {
 
 		DocumentsService documentsService = MambuAPIFactory.getDocumentsService();
 
-		final String imageKey = demoClient.getProfilePictureKey();
+		String imageKey = demoClient.getProfilePictureKey();
 
 		if (imageKey == null) {
+			imageKey = UPLOADED_DOCUMENT_KEY;
 			System.out.println("testGetImage: Client =" + demoClient.getFullName()
-					+ "  doesn't have a picture attached. Choose another");
-			return;
+					+ "  doesn't have a picture attached. Getting the just uploaded image, Key=" + imageKey);
+
 		}
 
 		// LARGE, MEDIUM, SMALL_THUMB , TINY_THUMB or null for full size
