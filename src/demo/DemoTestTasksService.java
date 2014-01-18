@@ -124,7 +124,7 @@ public class DemoTestTasksService {
 		List<Task> tasks = tasksService.getTasks(username, clientId, taskStatus, offset, limit);
 
 		System.out.println("Total tasks returned=" + tasks.size() + "\tFor User=" + username + "\tFor client ID= "
-				+ clientId + "\tfor Status=" + taskStatus.name());
+				+ clientId + "\tfor Status=" + taskStatus);
 
 		for (Task task : tasks) {
 			System.out.println("Username=" + task.getAssignedUserName() + "\tClient Name=" + task.getTaskLinkName()

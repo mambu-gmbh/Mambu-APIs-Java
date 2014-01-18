@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -88,18 +89,21 @@ public class DemoTestDocumentsService {
 	public static void testUploadDocumentFromFile() throws MambuApiException {
 		System.out.println("\nIn testUploadDocumentFromFile");
 
-		// Our Test file to upload
-		// final String filePath = "./test/data/test_photo_3m_1.JPG";
-		final String filePath = "./test/data/Ira.JPG";
+		// Our Test file to upload.
+		final String filePath = "./test/data/IMG_1.JPG";
 
 		// Encode this file
+		Date d1 = new Date();
 		String encodedString = encodeFileIntoBase64String(filePath);
-
+		Date d2 = new Date();
+		long diff1 = d2.getTime() - d1.getTime();
 		if (encodedString == null) {
 			System.out.println("Failed encoding the file");
 			return;
 		}
-		System.out.println("Encoded string:" + encodedString);
+
+		System.out.println("Time to encode file=" + diff1 + " Length=" + encodedString.length() + " Encoded string:"
+				+ encodedString);
 
 		JSONDocument jsonDocument = new JSONDocument();
 
@@ -114,23 +118,25 @@ public class DemoTestDocumentsService {
 		document.setName("Loan Sample JPEG file");
 		document.setOriginalFilename("sample-original.jpg");
 		document.setType("jpg");
+
 		jsonDocument.setDocument(document);
 
 		// Set the encoded strings
-		String documentContent = encodedString;
-
-		// Set the Json document
-		jsonDocument.setDocumentContent(documentContent);
+		jsonDocument.setDocumentContent(encodedString);
 
 		// Upload
 		DocumentsService documentsService = MambuAPIFactory.getDocumentsService();
+
+		Date d3 = new Date();
 		Document documentResponse = documentsService.uploadDocument(jsonDocument);
+		Date d4 = new Date();
+		long diff2 = d4.getTime() - d3.getTime();
+		System.out.println("Time to upload document=" + diff2);
 		// Save the key
 		UPLOADED_DOCUMENT_KEY = documentResponse.getEncodedKey();
 		System.out.println("Document uploaded OK, ID=" + documentResponse.getId() + " Name= "
 				+ documentResponse.getName() + " Document Holder Key=" + documentResponse.getDocumentHolderKey());
 	}
-
 	//
 	public static void testGetImage() throws MambuApiException {
 		System.out.println("\nIn testGetImage");
@@ -143,7 +149,6 @@ public class DemoTestDocumentsService {
 			imageKey = UPLOADED_DOCUMENT_KEY;
 			System.out.println("testGetImage: Client =" + demoClient.getFullName()
 					+ "  doesn't have a picture attached. Getting the just uploaded image, Key=" + imageKey);
-
 		}
 
 		// LARGE, MEDIUM, SMALL_THUMB , TINY_THUMB or null for full size

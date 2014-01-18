@@ -81,7 +81,7 @@ public class TasksService {
 		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.POST, ContentType.JSON);
 
 		JSONTask jsonTask = GsonUtils.createGson().fromJson(jsonResposne, JSONTask.class);
-		// Get Tsk from JsonTask
+		// Get Task from JsonTask
 		Task taskResult = jsonTask.getTask();
 
 		return taskResult;
@@ -138,7 +138,10 @@ public class TasksService {
 	 * @param limit
 	 *            pagination limit
 	 * 
-	 * @return a list of tasks matching specified criteria
+	 * @return a list of tasks matching specified criteria. If tasksStatus is null then Open tasks are returned. To get
+	 *         tasks for the user a username must not be null. To get tasks for the client the clientId must not be null
+	 *         and the username must be null. If both username and clientId are not null then the clientId is ignored
+	 *         and all tasks for the user are returned.
 	 * 
 	 * @throws MambuApiException
 	 */
@@ -149,7 +152,9 @@ public class TasksService {
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(APIData.USERNAME, username);
 		paramsMap.addParam(APIData.CLIENT_ID, clientId);
-		paramsMap.addParam(APIData.STATUS, taskStatus.name());
+		if (taskStatus != null) {
+			paramsMap.addParam(APIData.STATUS, taskStatus.name());
+		}
 		paramsMap.put(APIData.OFFSET, offset);
 		paramsMap.put(APIData.LIMIT, limit);
 
@@ -164,7 +169,6 @@ public class TasksService {
 
 		return tasks;
 	}
-
 	/***
 	 * Delete task by its Id
 	 * 
@@ -182,13 +186,14 @@ public class TasksService {
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.DELETE);
 
 		// On success the response is: {"returnCode":0,"returnStatus":"SUCCESS"}
-		// An exception can be thrown: E.g, ({"returnCode":980,"returnStatus":"INVALID_TASK_ID"})
+		// An exception can be thrown: E.g. ({"returnCode":980,"returnStatus":"INVALID_TASK_ID"})
 
 		// Parse the response. (Though, as no exception was thrown here, must be a "SUCCESS" response)
 		boolean deletionStatus = false;
 		MambuApiResponseMessage response = new MambuApiResponseMessage(jsonResponse);
-		if (response.getReturnCode() == 0)
+		if (response.getReturnCode() == 0) {
 			deletionStatus = true;
+		}
 
 		return deletionStatus;
 	}

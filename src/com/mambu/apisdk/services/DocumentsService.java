@@ -83,10 +83,15 @@ public class DocumentsService {
 	 */
 	public String getImage(String imageKey, IMAGE_SIZE_TYPE sizeType) throws MambuApiException {
 
+		if (imageKey == null) {
+			throw new IllegalArgumentException("Image key cannot be null");
+		}
+
 		// Add size type as a parameter
 		ParamsMap params = new ParamsMap();
-		if (sizeType != null)
+		if (sizeType != null) {
 			params.put(SIZE, sizeType.name());
+		}
 
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(IMAGES + "/" + imageKey));
@@ -96,12 +101,23 @@ public class DocumentsService {
 		// Get only the encoded part. Mambu returns this format: "data:image/jpg;base64,/9j...."
 		// We need to strip off the "data:image/jpg;base64," part
 		final String encodingStartsAfter = "base64,";
-		final int dataStart = apiResponse.indexOf(encodingStartsAfter) + encodingStartsAfter.length();
 
-		String base64EncodedString = apiResponse.substring(dataStart);
+		// Check if the response format is as expected and return null otherwise
+		String base64EncodedString = null;
+		if (apiResponse != null && apiResponse.contains(encodingStartsAfter)) {
 
-		// Strip of all \r\n. Otherwise fails to parse this image into bitmap
-		base64EncodedString = base64EncodedString.replaceAll("(\\\\r)?\\\\n", "");
+			final int dataStart = apiResponse.indexOf(encodingStartsAfter) + encodingStartsAfter.length();
+
+			base64EncodedString = apiResponse.substring(dataStart);
+
+			// Strip of all \r\n. Otherwise fails to parse this image into bitmap
+			// TODO: It's quite expensive stripping off CRLFs. Need to raise an issue in Mambu not to use encoding with
+			// \r\n. Possibly use Apache Commons Codec library, which allows not making chunks vs.
+			// sun.misc.BASE64Encoder
+			// http://commons.apache.org/proper/commons-codec/apidocs/index.html?org/apache/commons/codec/binary/Base64OutputStream.html
+
+			base64EncodedString = base64EncodedString.replaceAll("(\\\\r)?\\\\n", "");
+		}
 
 		return base64EncodedString;
 	}

@@ -348,7 +348,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// check if we hit an error
 		if (errorCode != null) {
 			// pass to MambuApiException the content that goes with the error code
-			LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response);
+			LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response + " for url="
+					+ urlString);
 			throw new MambuApiException(errorCode, response);
 		}
 
@@ -434,23 +435,38 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * @return jsonStringWithAppKey json string with appKey added
 	 */
 	private String addAppKeyToJson(String jsonString, ParamsMap params) {
-		if (params == null)
+
+		if (params == null) {
 			return jsonString;
+		}
 
 		String appKey = params.get(APPLICATION_KEY);
-		if (appKey == null || appKey.length() == 0)
+		if (appKey == null || appKey.length() == 0) {
 			return jsonString;
+		}
 
-		// First Compile the following string: {"appKey":"appKeyValue",
-		// This formatted appKey string will be placed in front (instead of the first "{") in the original json
-		final String appKeyStart = "{\"" + APPLICATION_KEY + "\":\"";
-		final String appKeyEnd = "\", ";
-		final String appKeyString = appKeyStart.concat(appKey).concat(appKeyEnd);
+		// First compile the following string: "appKey":"appKeyValue",
+		// This formatted appKey string will be inserted after the very first "{" into the original json string
 
-		// Put this formatted appKeyString in place of the first "{"
-		final int beginIndex = jsonString.indexOf("{");
-		final String jsonWithAppKey = appKeyString.concat(jsonString.substring(beginIndex + 1));
+		final String appKeyString = "\"" + APPLICATION_KEY + "\":\"" + appKey + "\", ";
 
-		return jsonWithAppKey;
+		// Check if we have the string to insert into
+		if (jsonString == null || jsonString.length() == 0) {
+			// Nothing to insert into. Return just the appKey param (surrounded by the square brackets)
+			return "{" + appKeyString.replace(',', '}');
+		}
+
+		// Create initial String Buffer large enough to hold the resulting two strings
+		int jsonLength = jsonString.length();
+		int appKeyLength = appKeyString.length();
+
+		StringBuffer jsonWithAppKey = new StringBuffer(jsonLength + appKeyLength + 16);
+		// Append the json string and then insert into it the appKey string after the first "{"
+		jsonWithAppKey.append(jsonString);
+
+		final int position = jsonWithAppKey.indexOf("{");
+		jsonWithAppKey.insert(position + 1, appKeyString);
+
+		return jsonWithAppKey.toString();
 	}
 }
