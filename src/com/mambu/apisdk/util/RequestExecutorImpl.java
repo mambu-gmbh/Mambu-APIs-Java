@@ -18,6 +18,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -49,7 +50,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	// TODO: add charset when https://mambucom.jira.com/browse/MBU-4137 is fixed
 	private final String jsonContentType = "application/json"; // "application/json; charset=UTF-8";
 
-	private final String APPLICATION_KEY = "appkey"; // as per JIRA issue MBU-3236
+	private final String APPLICATION_KEY = APIData.APPLICATION_KEY; // as per JIRA issue MBU-3236
 
 	private final static Logger LOGGER = Logger.getLogger(RequestExecutorImpl.class.getName());
 
@@ -95,8 +96,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// Add 'Application Key', if it was set by the application
 		// Mambu may handle API requests differently for different Application Keys
 
-		// TODO: revisit applicationKey implementation for json request when MBU-3892 is fixed in 3.3 (App Key for Json)
-
 		String applicationKey = MambuAPIFactory.getApplicationKey();
 		if (applicationKey != null) {
 			// add application key to the params map
@@ -122,8 +121,12 @@ public class RequestExecutorImpl implements RequestExecutor {
 			case POST:
 				response = executePostRequest(urlString, params, contentTypeFormat);
 				break;
+			case DELETE:
+				response = executeDeleteRequest(urlString, params);
+				break;
 			default:
-				throw new IllegalArgumentException("Only method GET or POST is supported, not " + method.name() + ".");
+				throw new IllegalArgumentException("Only methods GET, POST and DELETE are supported, not "
+						+ method.name() + ".");
 			}
 		} catch (MalformedURLException e) {
 			LOGGER.severe("MalformedURLException: " + e.getMessage());
@@ -173,11 +176,16 @@ public class RequestExecutorImpl implements RequestExecutor {
 			case JSON:
 				// Parameter (json string) is expected as JSON_OBJECT parameter name
 				final String jsonString = params.get(APIData.JSON_OBJECT);
-				StringEntity jsonEntity = new StringEntity(jsonString, UTF8_charset);
+
+				// Add APPKEY to jsonString (see MBU-3892, implemented in 3.3 release)
+				String jsonWithAppKey = addAppKeyToJson(jsonString, params);
+
+				// Format jsonEntity
+				StringEntity jsonEntity = new StringEntity(jsonWithAppKey, UTF8_charset);
 
 				httpPost.setEntity(jsonEntity);
 
-				LOGGER.info("JSON: jsonString=" + jsonString);
+				LOGGER.info("JSON: jsonString=" + jsonWithAppKey);
 				break;
 			}
 
@@ -220,7 +228,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 		return response;
 
 	}
-
 	/***
 	 * Execute a GET request as per the interface specification
 	 * 
@@ -282,6 +289,67 @@ public class RequestExecutorImpl implements RequestExecutor {
 		if (errorCode != null) {
 			// pass to MambuApiException the content that goes with the error code
 			LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response);
+			throw new MambuApiException(errorCode, response);
+		}
+
+		return response;
+	}
+	/***
+	 * Execute a DELETE request as per the interface specification
+	 * 
+	 * @param urlString
+	 * 
+	 * @param params
+	 *            ParamsMap with parameters
+	 */
+	private String executeDeleteRequest(String urlString, ParamsMap params) throws MalformedURLException, IOException,
+			MambuApiException {
+		String response = "";
+		Integer errorCode = null;
+
+		if (params != null && params.size() > 0) {
+			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
+		}
+
+		LOGGER.info("DELETE with URL with params=" + urlString);
+
+		HttpParams httpParameters = new BasicHttpParams();
+
+		HttpClient httpClient = new DefaultHttpClient(httpParameters);
+
+		HttpDelete httpDelete = new HttpDelete(urlString);
+		httpDelete.setHeader("Authorization", "Basic " + encodedAuthorization);
+
+		// execute
+		HttpResponse httpResponse = httpClient.execute(httpDelete);
+
+		// get status
+		int status = httpResponse.getStatusLine().getStatusCode();
+
+		InputStream content = null;
+		// Get the response Entity
+		HttpEntity entity = httpResponse.getEntity();
+
+		if (entity != null) {
+			content = entity.getContent();
+			if (content != null)
+				response = readStream(content);
+		}
+		// if status is not Ok - set error code
+		if (status != HttpURLConnection.HTTP_OK) {
+			errorCode = status;
+			LOGGER.info("Error status=" + status + " Error response=" + response);
+		}
+
+		if (errorCode == null)
+			// For logging only: log successful response
+			LOGGER.info("Status=" + status + "\nResponse=" + response);
+
+		// check if we hit an error
+		if (errorCode != null) {
+			// pass to MambuApiException the content that goes with the error code
+			LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response + " for url="
+					+ urlString);
 			throw new MambuApiException(errorCode, response);
 		}
 
@@ -353,6 +421,52 @@ public class RequestExecutorImpl implements RequestExecutor {
 		default:
 			return wwwFormUrlEncodedContentType;
 		}
+	}
 
+	/**
+	 * Add json formatted appKey value to the original json string
+	 * 
+	 * @param jsonString
+	 *            original json string
+	 * 
+	 * @param params
+	 *            the ParamsMap containing the appKey value (optionally)
+	 * 
+	 * @return jsonStringWithAppKey json string with appKey added
+	 */
+	private String addAppKeyToJson(String jsonString, ParamsMap params) {
+
+		if (params == null) {
+			return jsonString;
+		}
+
+		String appKey = params.get(APPLICATION_KEY);
+		if (appKey == null || appKey.length() == 0) {
+			return jsonString;
+		}
+
+		// First compile the following string: "appKey":"appKeyValue",
+		// This formatted appKey string will be inserted after the very first "{" into the original json string
+
+		final String appKeyString = "\"" + APPLICATION_KEY + "\":\"" + appKey + "\", ";
+
+		// Check if we have the string to insert into
+		if (jsonString == null || jsonString.length() == 0) {
+			// Nothing to insert into. Return just the appKey param (surrounded by the square brackets)
+			return "{" + appKeyString.replace(',', '}');
+		}
+
+		// Create initial String Buffer large enough to hold the resulting two strings
+		int jsonLength = jsonString.length();
+		int appKeyLength = appKeyString.length();
+
+		StringBuffer jsonWithAppKey = new StringBuffer(jsonLength + appKeyLength + 16);
+		// Append the json string and then insert into it the appKey string after the first "{"
+		jsonWithAppKey.append(jsonString);
+
+		final int position = jsonWithAppKey.indexOf("{");
+		jsonWithAppKey.insert(position + 1, appKeyString);
+
+		return jsonWithAppKey.toString();
 	}
 }

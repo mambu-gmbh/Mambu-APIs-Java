@@ -3,11 +3,23 @@ package demo;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import com.mambu.apisdk.MambuAPIFactory;
+import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.services.ClientsService;
+import com.mambu.apisdk.services.LoansService;
+import com.mambu.apisdk.services.SavingsService;
+import com.mambu.apisdk.services.UsersService;
+import com.mambu.clients.shared.model.Client;
+import com.mambu.clients.shared.model.Group;
+import com.mambu.core.shared.model.User;
+import com.mambu.loans.shared.model.LoanAccount;
+import com.mambu.loans.shared.model.LoanProduct;
+import com.mambu.savings.shared.model.SavingsProduct;
 
 /**
  * Helper class to be used with Demo programs. It defines and handles:
@@ -29,10 +41,19 @@ import com.mambu.apisdk.MambuAPIFactory;
  */
 public class DemoUtil {
 
+	// "subdomain.sandbox.mambu.com"
 	private static String domain = "subdomain.sandbox.mambu.com"; // Domain name. Format example: demo.mambucloud.com
+	// username
+	private static String user = "demo"; // demo Mambu Username
+	// password
+	private static String password = "demo"; // demo User password
 
-	private static String user = "username"; // Mambu Username
-	private static String password = "password"; // User password
+	// Demo Data
+	final static String demoClientLastName = "Doe"; // Doe Chernaya
+	final static String demoClientFirstName = "John"; // John Irina
+	final static String demoUsername = "demo"; // demo MichaelD
+
+	final static String demoGroupId = "654288991"; //
 
 	public static void setUp() {
 		// get Logging properties file
@@ -74,5 +95,91 @@ public class DemoUtil {
 		// set up App Key
 		MambuAPIFactory.setApplicationKey(appKeyValue);
 
+	}
+
+	// Get Demo User
+	public static User getDemoUser() throws MambuApiException {
+
+		UsersService usersService = MambuAPIFactory.getUsersService();
+		User user = usersService.getUserByUsername(demoUsername);
+
+		return user;
+	}
+
+	// Get or Create a Demo Client
+	public static Client getDemoClient() throws MambuApiException {
+
+		ClientsService clientsService = MambuAPIFactory.getClientService();
+		List<Client> clients = clientsService.getClientByFullName(demoClientLastName, demoClientFirstName);
+		Client client;
+		if (clients.isEmpty()) {
+			client = clientsService.createClient(demoClientFirstName, demoClientLastName);
+		} else {
+			client = clients.iterator().next();
+		}
+		return client;
+	}
+	public static Group getDemoGroup() throws MambuApiException {
+
+		ClientsService clientsService = MambuAPIFactory.getClientService();
+		// all groups for our demo user
+		List<Group> groups = clientsService.getGroupsByBranchOfficer(null, demoUsername, "0", "5");
+
+		if (groups != null) {
+			int randomIndex = (int) Math.random() * (groups.size() - 1);
+			return groups.get(randomIndex);
+		}
+
+		System.out.println("getDemoGroup: no groups for the Demo User in the demo data");
+
+		return null;
+
+	}
+
+	public static LoanProduct getDemoLoanProduct() throws MambuApiException {
+
+		LoansService service = MambuAPIFactory.getLoanService();
+		// all groups for our demo user
+		List<LoanProduct> products = service.getLoanProducts("0", "5");
+
+		if (products != null) {
+			int randomIndex = (int) (Math.random() * (products.size() - 1));
+			return products.get(randomIndex);
+		}
+
+		System.out.println("getDemoLoanProduct: no Loan products defined");
+
+		return null;
+
+	}
+	public static SavingsProduct getDemoSavingsProduct() throws MambuApiException {
+
+		SavingsService service = MambuAPIFactory.getSavingsService();
+		// all groups for our demo user
+		List<SavingsProduct> products = service.getSavingsProducts("0", "5");
+
+		if (products != null) {
+			int randomIndex = (int) (Math.random() * (products.size() - 1));
+			return products.get(randomIndex);
+		}
+
+		System.out.println("getDemoSavingsProduct: no Savings products defined");
+
+		return null;
+	}
+	public static LoanAccount getDemoLoanAccount() throws MambuApiException {
+
+		LoansService service = MambuAPIFactory.getLoanService();
+		// all groups for our demo user
+		List<LoanAccount> loans = service.getLoanAccountsByBranchOfficerState(null, demoUsername, null, "0", "5");
+
+		if (loans != null) {
+			int randomIndex = (int) (Math.random() * (loans.size() - 1));
+			return loans.get(randomIndex);
+		}
+
+		System.out.println("getDemoLoanAccount: no Loan Accounts the Demo User exist");
+
+		return null;
 	}
 }

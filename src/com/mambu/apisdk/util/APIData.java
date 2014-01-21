@@ -9,6 +9,8 @@ import java.text.SimpleDateFormat;
 //
 public class APIData {
 
+	public final static String APPLICATION_KEY = "appkey";
+
 	//
 	public static enum ACCOUNT_TYPE {
 		LOAN, SAVINGS
@@ -114,10 +116,21 @@ public class APIData {
 	// Tasks API
 	// API's endpoint
 	public static String TASKS = "tasks";
+	public static String STATUS = "status";
 
 	// Documents API
 	// API's endpoint
 	public static String DOCUMENTS = "documents";
+
+	// Image downloads
+	// API end point
+	public static String IMAGES = "images";
+	// Params for Image downloads
+	public static String SIZE = "size";
+
+	public enum IMAGE_SIZE_TYPE {
+		LARGE, MEDIUM, SMALL_THUMB, TINY_THUMB
+	}
 
 	// Client fields
 	public static String FIRST_NAME = "firstName";
