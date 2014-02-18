@@ -11,8 +11,11 @@ import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.services.LoansService;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
+import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.Money;
+import com.mambu.loans.shared.model.Guaranty;
+import com.mambu.loans.shared.model.Guaranty.GuarantyType;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanAccount.RepaymentPeriodUnit;
 import com.mambu.loans.shared.model.LoanProduct;
@@ -34,6 +37,8 @@ public class DemoTestLoanService {
 	private static Group demoGroup;
 	private static LoanProduct demoProduct;
 
+	private static LoanAccountExpanded newAccount;
+
 	public static void main(String[] args) {
 
 		DemoUtil.setUp();
@@ -46,7 +51,9 @@ public class DemoTestLoanService {
 			demoProduct = DemoUtil.getDemoLoanProduct();
 
 			testCreateJsonAccount();
+			testApproveLoanAccount();
 			testGetLoanAccountDetails();
+			testUpdateLoanAccount();
 
 			testGetLoanProducts();
 
@@ -85,7 +92,6 @@ public class DemoTestLoanService {
 		}
 
 	}
-
 	public static void testGetLoanAccount() throws MambuApiException {
 		System.out.println("\nIn testGetLoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
@@ -114,26 +120,29 @@ public class DemoTestLoanService {
 
 		LoanAccount account = new LoanAccount();
 		account.setId(null);
-		account.setAccountHolderKey(demoClient.getEncodedKey()); // CLIENT_ID "8ad661123b36cfaf013b42c2e0f46dca"
+		account.setAccountHolderKey(demoClient.getEncodedKey()); // CLIENT_ID
 		account.setAccountHolderType(AccountHolderType.CLIENT);
-		account.setProductTypeKey(demoProduct.getEncodedKey());
 
-		account.setLoanAmount(new Money(7500.00));
+		account.setProductTypeKey(demoProduct.getEncodedKey()); //
+
+		// The required fields below depend on the selected product type
+		account.setLoanAmount(new Money(5500.00));
 		account.setInterestRate(new BigDecimal("3.2"));
 		account.setRepaymentInstallments(20);
+		account.setGracePeriod(1);
 		// From Product
 		account.setRepaymentPeriodUnit(RepaymentPeriodUnit.DAYS);
 		account.setRepaymentPeriodCount(1);
+
 		// Set Custom fields to null in the account
 		account.setCustomFieldValues(null);
-
 		// ADd Custom Fields
 
 		List<CustomFieldValue> clientCustomInformation = new ArrayList<CustomFieldValue>();
 
 		CustomFieldValue custField1 = new CustomFieldValue();
-		String customFieldId = "Repayment_Loan_Accounts";
-		String customFieldValue = "My Loan Purpose 5";
+		String customFieldId = "Loan_Purpose_Loan_Accounts";
+		String customFieldValue = "My Loan_Purpose";
 
 		custField1.setCustomFieldId(customFieldId);
 		custField1.setValue(customFieldValue);
@@ -142,16 +151,31 @@ public class DemoTestLoanService {
 		// Field #2
 		// Loan_Originator_Loan_Accounts
 		CustomFieldValue custField2 = new CustomFieldValue();
-		customFieldId = "Special_Installements_Loan_Accou";
-		customFieldValue = "Ten";
+		customFieldId = "Loan_Originator_Loan_Accounts";
+		customFieldValue = "Bank";
 
 		custField2.setCustomFieldId(customFieldId);
 		custField2.setValue(customFieldValue);
 		// Add new field to the list
 		clientCustomInformation.add(custField2);
 
-		// Add All custom fields
-		// account.setCustomFieldValues(clientCustomInformation);
+		// Set Guarantees
+		ArrayList<Guaranty> guarantees = new ArrayList<Guaranty>();
+		// GuarantyType.GUARANTOR
+		Guaranty guarantySecurity = new Guaranty(GuarantyType.GUARANTOR);
+		guarantySecurity.setAmount(new Money((double) 450.0));
+		guarantySecurity.setGuarantorKey("8ad661123b36cfaf013b42c9545abd23");
+		guarantySecurity.setSavingsAccountKey("8ad661123b36cfaf013b42c954566dd1");
+		guarantees.add(guarantySecurity);
+
+		// GuarantyType.ASSET
+		Guaranty guarantyAsset = new Guaranty(GuarantyType.ASSET);
+		guarantyAsset.setAssetName("Asset Name as a collateral");
+		guarantyAsset.setAmount(new Money((double) 180.0));
+		guarantees.add(guarantyAsset);
+
+		// Add all guarantees to Loan account
+		account.setGuarantees(guarantees);
 
 		// Create Account Expanded
 		LoanAccountExpanded accountExpanded = new LoanAccountExpanded();
@@ -159,7 +183,7 @@ public class DemoTestLoanService {
 		accountExpanded.setCustomInformation(clientCustomInformation);
 
 		// Create Account in Mambu
-		LoanAccountExpanded newAccount = loanService.createAccount(accountExpanded);
+		newAccount = loanService.createAccount(accountExpanded);
 
 		// accented E
 
@@ -168,6 +192,60 @@ public class DemoTestLoanService {
 		System.out.println("Loan Account created OK, ID=" + newAccount.getLoanAccount().getId() + " Name= "
 				+ newAccount.getLoanAccount().getLoanName() + " Account Holder Key="
 				+ newAccount.getLoanAccount().getAccountHolderKey());
+
+		// Check returned custom fields after create. For LoanAccountExpanded custom information is not part of the
+		// LoanAccount but is a member of LoanAccountExoended. So get it from there
+		List<CustomFieldValue> updatedCustomFields = newAccount.getCustomInformation();
+
+		if (updatedCustomFields != null) {
+			System.out.println("Custom Fields for Account\n");
+			for (CustomFieldValue value : updatedCustomFields) {
+				System.out.println("CustomFieldKey" + value.getCustomFieldKey() + "\tValue" + value.getValue()
+						+ "\tName" + value.getCustomField().getName());
+
+			}
+		}
+	}
+	// Update Loan account
+	public static void testUpdateLoanAccount() throws MambuApiException {
+		System.out.println("\nIn testUpdateLoanAccount");
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		// Use the newly created account and update some custom fields
+		LoanAccountExpanded updatedAccount = newAccount;
+		List<CustomFieldValue> customFields = updatedAccount.getCustomInformation();
+		String customFieldIdToModifyValue = "Loan_Purpose_Loan_Accounts";
+		if (customFields != null) {
+
+			for (CustomFieldValue value : customFields) {
+				CustomField field = value.getCustomField();
+				String fieldId = field.getId();
+
+				if (fieldId.equals(customFieldIdToModifyValue)) {
+					// Update the value for this field
+					value.setValue("Value updated by testUpdateLoanAccount");
+				}
+			}
+		}
+
+		// Update account in Mambu
+		LoanAccountExpanded updatedAccountResult = loanService.updateAccount(updatedAccount);
+
+		System.out.println("Loan Update OK, ID=" + updatedAccountResult.getLoanAccount().getId() + "\tAccount Name="
+				+ updatedAccountResult.getLoanAccount().getName());
+
+		// Get returned custom fields
+		List<CustomFieldValue> updatedCustomFields = updatedAccountResult.getCustomInformation();
+
+		if (updatedCustomFields != null) {
+			System.out.println("Custom Fields for Loan Account\n");
+			for (CustomFieldValue value : updatedCustomFields) {
+				System.out.println("CustomFieldKey" + value.getCustomFieldKey() + "\tValue" + value.getValue()
+						+ "\tName" + value.getCustomField().getName());
+
+			}
+		}
 
 	}
 	// / Transactions testing
@@ -294,9 +372,11 @@ public class DemoTestLoanService {
 				+ " id, Total= " + loanAccounts.size());
 		int i = 0;
 		for (LoanAccount account : loanAccounts) {
-			if (i > 0)
-				System.out.print(", ");
-			System.out.print(account.getLoanName());
+			if (i > 0) {
+				System.out.print("\n");
+			}
+			System.out.print(" Account id=" + account.getId() + "\tAccount Name=" + account.getLoanName());
+			i++;
 		}
 		System.out.println();
 	}

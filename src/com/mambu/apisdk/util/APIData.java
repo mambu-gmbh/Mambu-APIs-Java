@@ -51,6 +51,11 @@ public class APIData {
 	public static final String TYPE_WITHDRAWAL = "WITHDRAWAL";
 	public static final String TYPE_TRANSFER = "TRANSFER";
 
+	// Type of account closer transaction
+	public static enum CLOSER_TYPE {
+		REJECT, WITHDRAW
+	};
+
 	public static final String AMOUNT = "amount";
 
 	public static final String PAYMENT_METHOD = "method";

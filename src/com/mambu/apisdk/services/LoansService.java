@@ -113,8 +113,7 @@ public class LoansService {
 		String urlString = new String(mambuAPIService.createUrl(CLIENTS + "/" + clientId + "/" + LOANS));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		Type collectionType = new TypeToken<List<LoanAccount>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<LoanAccount>>() {}.getType();
 
 		List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 		return accounts;
@@ -136,8 +135,7 @@ public class LoansService {
 		String urlString = new String(mambuAPIService.createUrl(GROUPS + "/" + groupId + "/" + LOANS));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		Type collectionType = new TypeToken<List<LoanAccount>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<LoanAccount>>() {}.getType();
 
 		List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
@@ -155,6 +153,8 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	// TODO: Need to raise an issue in Mambu: Approve API Account object in the response doesn't contain custom fields.
+	// Such response cannot be used for account details display
 	public LoanAccount approveLoanAccount(String accountId, String notes) throws MambuApiException {
 		// E.g. format: POST "type=APPROVAL" /api/loans/KHGJ593/transactions
 
@@ -264,6 +264,8 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	// TODO: Need to raise an issue in Mambu: getLoanAccountDetails() doesn't return guarantees information.
+	// Note:: when creating Loan Account with guarantees, the create response correctly returns guarantees
 	public LoanAccount getLoanAccountDetails(String accountId) throws MambuApiException {
 
 		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId));
@@ -278,19 +280,30 @@ public class LoansService {
 	}
 
 	/***
-	 * Create a new LoanAccount (expanded) using LoanAccountExpanded object and sending it as a Json api. This API
-	 * allows creating LoanAccount with details, including creating custom fields.
+	 * Create a new LoanAccount using LoanAccountExpanded object and sending it as a Json api. This API allows creating
+	 * LoanAccount with details, including creating custom fields.
 	 * 
 	 * 
 	 * @param loan
+	 *            LoanAccountExtended object containing LoanAccount. LoanAccount encodedKey must be null for account
+	 *            creation
 	 * 
-	 * @return Note: only the basic details for the custom fields are returned on success. To get full details a user
-	 *         must invoke getLoanAccountDetails() after the LoanAccount was created.
+	 * @return loanAccountExpanded a LoanAccountExpanded object containing LoanAccount and CustomInformation fields
 	 * 
 	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
 	 */
 	public LoanAccountExpanded createAccount(LoanAccountExpanded loan) throws MambuApiException {
 
+		if (loan == null || loan.getLoanAccount() == null) {
+			throw new IllegalArgumentException("Account must not be NULL");
+		}
+
+		LoanAccount inputAccount = loan.getLoanAccount();
+		String encodedKey = inputAccount.getEncodedKey();
+		if (encodedKey != null) {
+			throw new IllegalArgumentException("Cannot create Account, the encoded key must be null");
+		}
 		// Convert object to json
 		// parse LoanAccountExpanded object into json string using specific date
 		// time format
@@ -312,7 +325,52 @@ public class LoansService {
 
 		return account;
 	}
+	/***
+	 * Update an existent LoanAccount using LoanAccountExpanded object and sending it as a Json api. This API allows
+	 * updating LoanAccount with details. As of Mambu 3.4 only custom fields can be updated.
+	 * 
+	 * 
+	 * @param loan
+	 *            LoanAccountExtended object containing LoanAccount. LoanAccount encodedKey must be NOT null for account
+	 *            update
+	 * 
+	 * @return loanAccountExpanded a LoanAccountExpanded object containing LoanAccount and CustomInformation fields
+	 * 
+	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
+	 */
+	public LoanAccountExpanded updateAccount(LoanAccountExpanded loan) throws MambuApiException {
 
+		if (loan == null || loan.getLoanAccount() == null) {
+			throw new IllegalArgumentException("Account must not be NULL");
+		}
+
+		LoanAccount inputAccount = loan.getLoanAccount();
+		String encodedKey = inputAccount.getEncodedKey();
+		if (encodedKey == null) {
+			throw new IllegalArgumentException("Cannot update Account, the encoded key must be NOT null");
+		}
+		// Convert object to json
+		// parse LoanAccountExpanded object into json string using specific date
+		// time format
+		final String dateTimeFormat = APIData.yyyyMmddFormat;
+		final String jsonData = GsonUtils.createGson(dateTimeFormat).toJson(loan, LoanAccountExpanded.class);
+
+		// System.out.println("Input Loan Details In json format=" + jsonData);
+
+		ParamsMap params = new ParamsMap();
+		// Add json string as JSON_OBJECT
+		params.put(APIData.JSON_OBJECT, jsonData);
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(LOANS + "/"));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.POST, ContentType.JSON);
+
+		LoanAccountExpanded account = GsonUtils.createGson().fromJson(jsonResponse, LoanAccountExpanded.class);
+
+		return account;
+	}
 	/***
 	 * Get loan account Transactions by Loan id and offset and limit
 	 * 
@@ -338,8 +396,7 @@ public class LoansService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 
-		Type collectionType = new TypeToken<List<LoanTransaction>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<LoanTransaction>>() {}.getType();
 
 		List<LoanTransaction> transactions = (List<LoanTransaction>) GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);
@@ -457,8 +514,7 @@ public class LoansService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<LoanAccount>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<LoanAccount>>() {}.getType();
 
 		List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 		return accounts;
@@ -482,8 +538,7 @@ public class LoansService {
 
 		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<LoanProduct>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<LoanProduct>>() {}.getType();
 
 		List<LoanProduct> products = GsonUtils.createGson().fromJson(jsonResposne, collectionType);
 

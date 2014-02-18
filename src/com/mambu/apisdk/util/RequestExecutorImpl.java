@@ -9,6 +9,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Base64;
@@ -44,13 +45,13 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 	private URLHelper urlHelper;
 	private String encodedAuthorization;
-	private final String UTF8_charset = HTTP.UTF_8;
-	private final String wwwFormUrlEncodedContentType = "application/x-www-form-urlencoded; charset=UTF-8";
+	private final static String UTF8_charset = HTTP.UTF_8;
+	private final static String wwwFormUrlEncodedContentType = "application/x-www-form-urlencoded; charset=UTF-8";
 
-	// TODO: add charset when https://mambucom.jira.com/browse/MBU-4137 is fixed
-	private final String jsonContentType = "application/json"; // "application/json; charset=UTF-8";
+	// Added charset charset=UTF-8, MBU-4137 is now fixed
+	private final static String jsonContentType = "application/json; charset=UTF-8"; // "application/json"
 
-	private final String APPLICATION_KEY = APIData.APPLICATION_KEY; // as per JIRA issue MBU-3236
+	private final static String APPLICATION_KEY = APIData.APPLICATION_KEY; // as per JIRA issue MBU-3236
 
 	private final static Logger LOGGER = Logger.getLogger(RequestExecutorImpl.class.getName());
 
@@ -104,12 +105,17 @@ public class RequestExecutorImpl implements RequestExecutor {
 			params.addParam(APPLICATION_KEY, applicationKey);
 
 			// Log the App key (the first 3 and last 3 chars only)
-			final int keyLength = applicationKey.length();
-			final int printLength = 3;
-			// Mambu App Keys are very long but just to prevent any errors need to ensure there is enough to print
-			if (keyLength >= printLength)
-				LOGGER.info("Added Application key=" + applicationKey.substring(0, printLength) + "..."
-						+ applicationKey.substring(keyLength - printLength, keyLength));
+			// Wrap LOGGER calls with a check for the Logger Level:
+			// See http://www.sw-engineering-candies.com/blog-1/thewronguseofloggingcanbeaperformancekillerinjava
+			if (LOGGER.isLoggable(Level.INFO)) {
+				final int keyLength = applicationKey.length();
+				final int printLength = 3;
+				// Mambu App Keys are very long but just to prevent any errors need to ensure there is enough to print
+				if (keyLength >= printLength) {
+					LOGGER.info("Added Application key=" + applicationKey.substring(0, printLength) + "..."
+							+ applicationKey.substring(keyLength - printLength, keyLength));
+				}
+			}
 		}
 
 		String response = "";
@@ -156,7 +162,9 @@ public class RequestExecutorImpl implements RequestExecutor {
 		httpPost.setHeader("Content-Type", contentType);
 		httpPost.setHeader("Authorization", "Basic " + encodedAuthorization);
 
-		LOGGER.info("POST With ContentType=" + contentType + " URL=" + urlString);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("POST With ContentType=" + contentType + " URL=" + urlString);
+		}
 
 		if (params != null && params.size() > 0) {
 			switch (contentTypeFormat) {
@@ -170,7 +178,9 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 				httpPost.setEntity(postEntity);
 
-				LOGGER.info("WWW_FORM: Params as URL string=" + params.getURLString());
+				if (LOGGER.isLoggable(Level.INFO)) {
+					LOGGER.info("WWW_FORM: Params as URL string=" + params.getURLString());
+				}
 				break;
 
 			case JSON:
@@ -185,10 +195,11 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 				httpPost.setEntity(jsonEntity);
 
-				LOGGER.info("JSON: jsonString=" + jsonWithAppKey);
+				if (LOGGER.isLoggable(Level.INFO)) {
+					LOGGER.info("JSON: jsonString=" + jsonWithAppKey);
+				}
 				break;
 			}
-
 		}
 
 		// execute
@@ -211,17 +222,24 @@ public class RequestExecutorImpl implements RequestExecutor {
 		if (status != HttpURLConnection.HTTP_OK && status != HttpURLConnection.HTTP_CREATED) {
 
 			errorCode = status;
-			LOGGER.info("Error status=" + status + " Error response=" + response);
+			if (LOGGER.isLoggable(Level.INFO)) {
+				LOGGER.info("Error status=" + status + " Error response=" + response);
+			}
 		}
 
 		if (errorCode == null)
 			// For logging only: log successful response
-			LOGGER.info("Status=" + status + "\nResponse=" + response);
+			if (LOGGER.isLoggable(Level.INFO)) {
+				LOGGER.info("Status=" + status + "\nResponse=" + response);
+			}
 
 		// check if we hit an error
 		if (errorCode != null) {
 			// pass to MambuApiException the content that goes with the error code
-			LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response);
+			if (LOGGER.isLoggable(Level.WARNING)) {
+				LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response + " for url="
+						+ urlString);
+			}
 			throw new MambuApiException(errorCode, response);
 		}
 
@@ -241,7 +259,9 @@ public class RequestExecutorImpl implements RequestExecutor {
 		if (params != null && params.size() > 0) {
 			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
 		}
-		LOGGER.info("GET with URL with params=" + urlString);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("GET with URL with params=" + urlString);
+		}
 
 		HttpParams httpParameters = new BasicHttpParams();
 
@@ -261,9 +281,13 @@ public class RequestExecutorImpl implements RequestExecutor {
 		String contentTypeStr = "";
 		if (responseContentType != null) {
 			contentTypeStr = responseContentType.getValue();
-			LOGGER.info("contentType in Response=" + contentTypeStr);
+			if (LOGGER.isLoggable(Level.INFO)) {
+				LOGGER.info("contentType in Response=" + contentTypeStr);
+			}
 		} else {
-			LOGGER.info("response is NULL, so no contentType");
+			if (LOGGER.isLoggable(Level.INFO)) {
+				LOGGER.info("response is NULL, so no contentType");
+			}
 		}
 
 		InputStream content = null;
@@ -278,17 +302,23 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// if status is not Ok - set error code
 		if (status != HttpURLConnection.HTTP_OK) {
 			errorCode = status;
-			LOGGER.info("Error status=" + status + " Error response=" + response);
+			if (LOGGER.isLoggable(Level.INFO)) {
+				LOGGER.info("Error status=" + status + " Error response=" + response);
+			}
 		}
 
-		if (errorCode == null)
+		if (errorCode == null && LOGGER.isLoggable(Level.INFO)) {
 			// For logging only: log successful response
 			LOGGER.info("Status=" + status + "\nResponse=" + response);
+		}
 
 		// check if we hit an error
 		if (errorCode != null) {
 			// pass to MambuApiException the content that goes with the error code
-			LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response);
+			if (LOGGER.isLoggable(Level.WARNING)) {
+				LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response + " for url="
+						+ urlString);
+			}
 			throw new MambuApiException(errorCode, response);
 		}
 
@@ -311,7 +341,9 @@ public class RequestExecutorImpl implements RequestExecutor {
 			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
 		}
 
-		LOGGER.info("DELETE with URL with params=" + urlString);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("DELETE with URL with params=" + urlString);
+		}
 
 		HttpParams httpParameters = new BasicHttpParams();
 
@@ -338,18 +370,23 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// if status is not Ok - set error code
 		if (status != HttpURLConnection.HTTP_OK) {
 			errorCode = status;
-			LOGGER.info("Error status=" + status + " Error response=" + response);
+			if (LOGGER.isLoggable(Level.INFO)) {
+				LOGGER.info("Error status=" + status + " Error response=" + response);
+			}
 		}
 
-		if (errorCode == null)
+		if (errorCode == null && LOGGER.isLoggable(Level.INFO)) {
 			// For logging only: log successful response
 			LOGGER.info("Status=" + status + "\nResponse=" + response);
+		}
 
 		// check if we hit an error
 		if (errorCode != null) {
 			// pass to MambuApiException the content that goes with the error code
-			LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response + " for url="
-					+ urlString);
+			if (LOGGER.isLoggable(Level.WARNING)) {
+				LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response + " for url="
+						+ urlString);
+			}
 			throw new MambuApiException(errorCode, response);
 		}
 

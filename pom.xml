@@ -4,8 +4,11 @@
 	<groupId>Mambu-APIs-Java</groupId>
 	<artifactId>Mambu-APIs-Java</artifactId>
 	<name>Mambu Java APIs SDK</name>
-	<version>3.3-bin</version>
+	<version>3.4-bin</version>
 	<url>http://www.mambu.com</url>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 	<build>
 		<!-- This section was inserted to fix problem with Maeven plug in for Eclipse: 
 			m2e -->
@@ -90,10 +93,10 @@
 				</configuration>
 			</plugin>
 		</plugins>
-		
+
 		<resources>
 			<resource>
-				<!--   <targetPath>META-INF/maven/Mambu-APIs-Java/</targetPath> -->
+				<!-- <targetPath>META-INF/maven/Mambu-APIs-Java/</targetPath> -->
 				<filtering>false</filtering>
 				<directory>${project.basedir}</directory>
 				<includes>
@@ -111,9 +114,9 @@
 		<dependency>
 			<groupId>com.mambu</groupId>
 			<artifactId>mambumodels</artifactId>
-			<version>3.3</version>
+			<version>3.4</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/mambu-models-v3.3.jar
+			<systemPath>${project.basedir}/lib/mambu-models-v3.4.jar
 			</systemPath>
 			<optional>false</optional>
 		</dependency>

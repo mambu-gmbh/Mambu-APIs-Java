@@ -59,13 +59,17 @@ public class SearchService {
 	 *            list, in brackets,separated by comma of search types to query. E.g. [CLIENT, GROUP]. Null if searching
 	 *            for all types (defined by SearchResult.Type). The results of the query shall be limited to the
 	 *            specified types
+	 * @param limit
+	 *            maximum number of results to return. If null, Mambu defaults this to 100.
+	 * 
 	 * 
 	 * @return Map<SearchResult.Type, List<SearchResult>> is returned. Empty map and/or Mambu exception if not found
 	 * 
 	 * @throws MambuApiException
 	 */
 	public Map<SearchResult.Type, List<SearchResult>> search(String query, List<SearchResult.Type> searchTypes,
-			String offset, String limit) throws MambuApiException {
+			String limit) throws MambuApiException {
+
 		String urlString = new String(mambuAPIService.createUrl(SEARCH));
 
 		// strip possible blank chars
@@ -74,7 +78,6 @@ public class SearchService {
 		ParamsMap paramsMap = new ParamsMap();
 
 		paramsMap.addParam(QUERY, query);
-		paramsMap.addParam(OFFSET, offset);
 		paramsMap.addParam(LIMIT, limit);
 
 		// Add search Types, if any
@@ -92,8 +95,8 @@ public class SearchService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
 
-		java.lang.reflect.Type collectionType = new TypeToken<Map<SearchResult.Type, List<SearchResult>>>() {
-		}.getType();
+		java.lang.reflect.Type collectionType = new TypeToken<Map<SearchResult.Type, List<SearchResult>>>() {}
+				.getType();
 
 		Map<SearchResult.Type, List<SearchResult>> results = GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);

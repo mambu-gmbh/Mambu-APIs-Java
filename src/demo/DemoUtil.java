@@ -99,6 +99,7 @@ public class DemoUtil {
 
 	// Get Demo User
 	public static User getDemoUser() throws MambuApiException {
+		System.out.println("\nIn getDemoUser");
 
 		UsersService usersService = MambuAPIFactory.getUsersService();
 		User user = usersService.getUserByUsername(demoUsername);
@@ -108,6 +109,7 @@ public class DemoUtil {
 
 	// Get or Create a Demo Client
 	public static Client getDemoClient() throws MambuApiException {
+		System.out.println("\nIn getDemoClient");
 
 		ClientsService clientsService = MambuAPIFactory.getClientService();
 		List<Client> clients = clientsService.getClientByFullName(demoClientLastName, demoClientFirstName);
@@ -120,6 +122,7 @@ public class DemoUtil {
 		return client;
 	}
 	public static Group getDemoGroup() throws MambuApiException {
+		System.out.println("\nIn getDemoGroup");
 
 		ClientsService clientsService = MambuAPIFactory.getClientService();
 		// all groups for our demo user
@@ -137,6 +140,7 @@ public class DemoUtil {
 	}
 
 	public static LoanProduct getDemoLoanProduct() throws MambuApiException {
+		System.out.println("\nIn getDemoLoanProduct");
 
 		LoansService service = MambuAPIFactory.getLoanService();
 		// all groups for our demo user
@@ -153,6 +157,7 @@ public class DemoUtil {
 
 	}
 	public static SavingsProduct getDemoSavingsProduct() throws MambuApiException {
+		System.out.println("\nIn getDemoSavingsProduct");
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
 		// all groups for our demo user
@@ -168,6 +173,7 @@ public class DemoUtil {
 		return null;
 	}
 	public static LoanAccount getDemoLoanAccount() throws MambuApiException {
+		System.out.println("\nIn getDemoLoanAccount");
 
 		LoansService service = MambuAPIFactory.getLoanService();
 		// all groups for our demo user

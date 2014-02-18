@@ -113,6 +113,11 @@ public class DemoTestTasksService {
 		// Get Input params
 		String clientId = demoClient.getId(); // or null;
 		String username = demoUser.getUsername(); // or null;
+		// TODO: Need to raise Mambu issue: GET requests (including getTasks()) do not work with params (names or ids)
+		// with UTF-8 chars. Mambu returns invalid name/id error.
+		clientId = demoClient.getId();
+		username = demoUser.getId();
+		username = null;
 
 		TaskStatus taskStatus = TaskStatus.OPEN; // or TaskStatus.COMPLETED;
 		// Pagination params

@@ -3,6 +3,9 @@
  */
 package com.mambu.apisdk.util;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mambu.apisdk.model.Domain;
@@ -18,6 +21,7 @@ public class URLHelper {
 
 	private String domainName;
 	private static String WEB_PROTOCOL = "https";
+	private static String API_ENDPOINT = "/api/";
 	private static String DELIMITER = "?";
 
 	@Inject
@@ -31,11 +35,23 @@ public class URLHelper {
 	 * @param details
 	 *            the extra details
 	 * 
-	 * @return the created URL String
+	 * @return the created URL String in url-encoded format
 	 */
 	public String createUrl(String details) {
 		details = details == null ? "" : details;
-		return WEB_PROTOCOL + "://" + domainName + "/api/" + details;
+
+		// URL String must be url-encoded to handle spaces and UTF-8 chars (See MBU-4669, implemented in Mambu 3.4)
+		String encodedUrl;
+		try {
+			URI uri = new URI(WEB_PROTOCOL, domainName, API_ENDPOINT + details, null);
+			encodedUrl = uri.toString();
+
+		} catch (URISyntaxException e) {
+
+			encodedUrl = WEB_PROTOCOL + "://" + domainName + API_ENDPOINT + details;
+		}
+
+		return encodedUrl;
 	}
 
 	/***

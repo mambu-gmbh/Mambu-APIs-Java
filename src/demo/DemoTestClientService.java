@@ -26,12 +26,14 @@ import com.mambu.core.shared.model.Gender;
  */
 public class DemoTestClientService {
 
-	private static String CLIENT_ID = "0";
+	private static String CLIENT_ID = "987ABCD";
+	private static String NEW_CLIENT_ID = "";
 	private static String GROUP_ID = "700439187";
 
 	private static String BRANCH_ID = "2";
 	private static String CREDIT_OFFICER_USER_NAME = "demo";
 	private static String CLIENT_STATE = "ACTIVE"; // PENDING_APPROVAL BLACKLISTED INACTIVE
+	private static ClientExpanded clientCreated;
 
 	public static void main(String[] args) {
 
@@ -44,6 +46,7 @@ public class DemoTestClientService {
 			testCreateFullDetailsClient();
 
 			testGetClient();
+			testUpdateClient();
 			testGetClientDetails();
 
 			testGetClients();
@@ -56,7 +59,6 @@ public class DemoTestClientService {
 			testGetGroupDetails();
 
 			testGetClientsByBranchOfficerState();
-
 			testGetGroupsByBranchOfficer();
 
 		} catch (MambuApiException e) {
@@ -80,14 +82,15 @@ public class DemoTestClientService {
 			System.out.println("\nIn testGetClients");
 			ClientsService clientService = MambuAPIFactory.getClientService();
 
-			System.out.println("Sucessfully returned " + clientService.getClients(true).size() + " clients(active)...");
-			System.out.println("Sucessfully returned " + clientService.getClients(false).size()
+			System.out
+					.println("Successfully returned " + clientService.getClients(true).size() + " clients(active)...");
+			System.out.println("Successfully returned " + clientService.getClients(false).size()
 					+ " clients(inactive)...");
 
-			System.out.println("Sucessfully returned " + clientService.getClients(true, 0, 10).size()
-					+ " clients(active,pagesize of 10)...");
-			System.out.println("Sucessfully returned " + clientService.getClients(false, 0, 10).size()
-					+ " clients(inactive,pagesize of 10)...");
+			System.out.println("Successfully returned " + clientService.getClients(true, 0, 10).size()
+					+ " clients(active,page size of 10)...");
+			System.out.println("Successfully returned " + clientService.getClients(false, 0, 10).size()
+					+ " clients(inactive,page size of 10)...");
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Clients");
 			System.out.println("Error code=" + e.getErrorCode());
@@ -136,7 +139,7 @@ public class DemoTestClientService {
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
-		ClientExpanded clientDetails = clientService.getClientDetails(CLIENT_ID);
+		ClientExpanded clientDetails = clientService.getClientDetails(NEW_CLIENT_ID);
 
 		System.out.println("testGetClientDetails Ok, name=" + clientDetails.getClient().getFullName()
 				+ ".  and Name +id " + clientDetails.getClient().getFullNameWithId());
@@ -186,9 +189,13 @@ public class DemoTestClientService {
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
-		Client clientIn = new Client("Mike123", "Lastname123");
+		Client clientIn = new Client("Миша456", "Lastname456"); // MikeNew
 
-		clientIn.setId(null);
+		// Миша_98713
+
+		int randomIndex = (int) (Math.random() * 1000000);
+		NEW_CLIENT_ID = "Миша_98713" + Integer.toString(randomIndex);
+		clientIn.setId(NEW_CLIENT_ID);
 		clientIn.setLoanCycle(null);
 		clientIn.setGroupLoanCycle(null);
 		clientIn.setToInactive();
@@ -230,7 +237,7 @@ public class DemoTestClientService {
 		List<CustomFieldValue> clientCustomInformation = new ArrayList<CustomFieldValue>();
 
 		CustomFieldValue custField1 = new CustomFieldValue();
-		String customFieldId = "Family_Members_Clients";
+		String customFieldId = "Family_Size_Clients";
 		String customFieldValue = "15";
 
 		custField1.setCustomFieldId(customFieldId);
@@ -239,7 +246,7 @@ public class DemoTestClientService {
 		clientCustomInformation.add(custField1);
 
 		CustomFieldValue custField2 = new CustomFieldValue();
-		customFieldId = "Has_children_Clients";
+		customFieldId = "From_Hollywood_Clients";
 		customFieldValue = "TRUE";
 
 		custField2.setCustomFieldId(customFieldId);
@@ -248,8 +255,8 @@ public class DemoTestClientService {
 		// Add new field to the list
 		clientCustomInformation.add(custField2);
 		CustomFieldValue custField3 = new CustomFieldValue();
-		customFieldId = "Position_Clients";
-		customFieldValue = "15";
+		customFieldId = "Custom_Field_6_Clients";
+		customFieldValue = "Custom_Field_6_Value";
 
 		custField3.setCustomFieldId(customFieldId);
 		custField3.setValue(customFieldValue);
@@ -259,18 +266,30 @@ public class DemoTestClientService {
 		clExpanded.setCustomFieldValues(clientCustomInformation);
 
 		// Create in Mambu using Json API
-		ClientExpanded client = clientService.createClient(clExpanded);
+		clientCreated = clientService.createClient(clExpanded);
 
-		System.out.println("Client created, OK, ID=" + client.getClient().getId() + " Full name= "
-				+ client.getClient().getFullName() + " First, Last=" + client.getClient().getFirstName());
+		System.out.println("Client created, OK, ID=" + clientCreated.getClient().getId() + " Full name= "
+				+ clientCreated.getClient().getFullName() + " First, Last=" + clientCreated.getClient().getFirstName());
 
-		// TODO: In Mambu: issue MBU-4210 allows to create Clients with the address info (in 3.3). It works and the
-		// address is created, but the address info is NOT returned with the Response, so one would need to re-request
-		// this client with full details to get created address information
-
-		// This always return ZERO addresses in 3.3, even if the address was created successfully
-		List<Address> addressOut = client.getAddresses();
+		List<Address> addressOut = clientCreated.getAddresses();
 		System.out.println("\nClient address, total=" + addressOut.size());
+
+	}
+	public static void testUpdateClient() throws MambuApiException {
+		System.out.println("\nIn testUpdateClient");
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		ClientExpanded clientUpdated = clientCreated;
+		Client client = clientUpdated.getClient();
+		client.setFirstName("Updated Name");
+		client.setLastName("Updated Last Name");
+		client.setId("newId123");
+
+		ClientExpanded clientExpandedResult = clientService.updateClient(clientUpdated);
+
+		System.out.println("Client Update OK, ID=" + clientExpandedResult.getClient().getId() + "\tLastName="
+				+ clientExpandedResult.getClient().getLastName() + "\tFirst Name ="
+				+ clientExpandedResult.getClient().getFirstName());
 
 	}
 	public static void testCreateBasicClient() throws MambuApiException {
@@ -346,4 +365,5 @@ public class DemoTestClientService {
 					+ "   Credit Officer id=" + group.getAssignedUserKey());
 		}
 	}
+
 }

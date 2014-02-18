@@ -110,8 +110,9 @@ public class DocumentsService {
 
 			base64EncodedString = apiResponse.substring(dataStart);
 
+			// TODO: need to raise an issue in Mambu to encode images without the \r\n sequences
 			// Strip of all \r\n. Otherwise fails to parse this image into bitmap
-			// TODO: It's quite expensive stripping off CRLFs. Need to raise an issue in Mambu not to use encoding with
+			// It's quite expensive stripping off CRLFs. Need to raise an issue in Mambu not to use encoding with
 			// \r\n. Possibly use Apache Commons Codec library, which allows not making chunks vs.
 			// sun.misc.BASE64Encoder
 			// http://commons.apache.org/proper/commons-codec/apidocs/index.html?org/apache/commons/codec/binary/Base64OutputStream.html

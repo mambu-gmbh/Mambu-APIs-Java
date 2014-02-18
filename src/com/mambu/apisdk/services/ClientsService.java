@@ -102,8 +102,7 @@ public class ClientsService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<Client>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<Client>>() {}.getType();
 		List<Client> clients = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return clients;
@@ -132,8 +131,7 @@ public class ClientsService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<Client>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<Client>>() {}.getType();
 		List<Client> clients = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return clients;
@@ -161,8 +159,7 @@ public class ClientsService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<Client>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<Client>>() {}.getType();
 		List<Client> clients = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return clients;
@@ -198,8 +195,7 @@ public class ClientsService {
 
 			String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-			Type collectionType = new TypeToken<List<Client>>() {
-			}.getType();
+			Type collectionType = new TypeToken<List<Client>>() {}.getType();
 			List<Client> clients = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 			return clients;
@@ -228,8 +224,7 @@ public class ClientsService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<Client>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<Client>>() {}.getType();
 		List<Client> clients = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return clients;
@@ -313,20 +308,24 @@ public class ClientsService {
 	 * could be deprecated in a future
 	 * 
 	 * @param clientDetails
+	 *            The encodedKey for the clientExpanded object must be null to create a new client
 	 * 
-	 * @return Note: only the basic details for the custom fields are returned on success. To get full details a user
-	 *         must invoke getClientDetails() after the client was created.
+	 * @return clientDetails for the newly created client.
 	 * 
 	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
 	 */
 	public ClientExpanded createClient(ClientExpanded clientDetails) throws MambuApiException {
 
+		// Get encodedKey and ensure it's NULL for the new client request
+		String encodedKey = clientDetails.getEncodedKey();
+		if (encodedKey != null) {
+			throw new IllegalArgumentException("Cannot create client, the encoded key must be null");
+		}
 		// Convert ClientExpanded object into json string using specific date
 		// time format
 		final String dateTimeFormat = APIData.yyyyMmddFormat;
 		String jsonClient = GsonUtils.createGson(dateTimeFormat).toJson(clientDetails, ClientExpanded.class);
-
-		// System.out.println("Client Details In json format=" + jsonClient);
 
 		ParamsMap params = new ParamsMap();
 		// Add json string as JSON_OBJECT
@@ -342,6 +341,48 @@ public class ClientsService {
 		return clientResult;
 	}
 
+	/***
+	 * Update an existent client (expanded) using ClientExpanded object and send it as a Json api. This API allows
+	 * updating Client with new details, including modifying client details, custom fields, address, contacts and
+	 * document IDs
+	 * 
+	 * Note: Available since Mambu 3.4
+	 * 
+	 * @param clientDetails
+	 *            client details to be updated. See MBU-3603 for full details. The encodedKey for the clientExpanded
+	 *            object must be NOT null to update an existent client. Client ID and Client Assignment are not
+	 *            modifiable
+	 * 
+	 * @return updated clientDetails
+	 * 
+	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
+	 */
+	public ClientExpanded updateClient(ClientExpanded clientDetails) throws MambuApiException {
+
+		// Verify that the encodedKey for this object is not NULL
+		String encodedKey = clientDetails.getEncodedKey();
+		if (encodedKey == null) {
+			throw new IllegalArgumentException("Cannot update client, encoded key for the object does not exist");
+		}
+		// Convert ClientExpanded object into json string using specific date
+		// time format
+		final String dateTimeFormat = APIData.yyyyMmddFormat;
+		String jsonClient = GsonUtils.createGson(dateTimeFormat).toJson(clientDetails, ClientExpanded.class);
+
+		ParamsMap params = new ParamsMap();
+		// Add json string as JSON_OBJECT
+		params.put(APIData.JSON_OBJECT, jsonClient);
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(CLIENTS + "/"));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.POST, ContentType.JSON);
+
+		ClientExpanded clientResult = GsonUtils.createGson().fromJson(jsonResponse, ClientExpanded.class);
+
+		return clientResult;
+	}
 	/***
 	 * Create a new client with only it's first name and last name
 	 * 
@@ -436,8 +477,7 @@ public class ClientsService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<Client>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<Client>>() {}.getType();
 
 		List<Client> clients = (List<Client>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 		return clients;
@@ -471,8 +511,7 @@ public class ClientsService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<Group>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<Group>>() {}.getType();
 
 		List<Group> groups = (List<Group>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 		return groups;

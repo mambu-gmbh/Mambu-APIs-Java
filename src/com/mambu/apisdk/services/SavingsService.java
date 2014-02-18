@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.exception.MambuApiResponseMessage;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.APIData.ACCOUNT_TYPE;
 import com.mambu.apisdk.util.GsonUtils;
@@ -141,8 +142,7 @@ public class SavingsService {
 		String urlString = new String(mambuAPIService.createUrl(CLIENTS + "/" + clientId + "/" + SAVINGS));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		Type collectionType = new TypeToken<List<SavingsAccount>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<SavingsAccount>>() {}.getType();
 
 		List<SavingsAccount> accounts = (List<SavingsAccount>) GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);
@@ -151,8 +151,7 @@ public class SavingsService {
 	}
 
 	/****
-	 * Approve a Savings account if the user has permission to approve savings, the maximum exposure is not exceeded for
-	 * the client, the account was in Pending Approval state and if the number of savings is not exceeded
+	 * Approve Savings account
 	 * 
 	 * @param accountId
 	 *            the id of the account
@@ -161,10 +160,9 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: This API is not implemented yet. Keep it private until the API is
-	// implemented
-	@SuppressWarnings("unused")
-	private SavingsAccount approveSavingsAccount(String accountId, String notes) throws MambuApiException {
+	// TODO: Need to raise an issue in Mambu: Approve API Account object in the response doesn't contain custom fields.
+	// Such response cannot be used for account details display
+	public SavingsAccount approveSavingsAccount(String accountId, String notes) throws MambuApiException {
 
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_APPROVAL);
@@ -208,8 +206,7 @@ public class SavingsService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 
-		Type collectionType = new TypeToken<List<SavingsTransaction>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<SavingsTransaction>>() {}.getType();
 
 		List<SavingsTransaction> transactions = (List<SavingsTransaction>) GsonUtils.createGson().fromJson(
 				jsonResponse, collectionType);
@@ -367,6 +364,77 @@ public class SavingsService {
 	}
 
 	/***
+	 * Delete Savings Account by its Id
+	 * 
+	 * Note: available since Mambu 3.4 See MBU-4581 for details.
+	 * 
+	 * @param accountId
+	 * 
+	 * @return status
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean deleteAccount(String accountId) throws MambuApiException {
+
+		if (accountId == null) {
+			throw new IllegalArgumentException("Account ID  must not  be null");
+		}
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/" + accountId));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.DELETE);
+
+		// On success the response is: {"returnCode":0,"returnStatus":"SUCCESS"}
+		// An exception can be thrown: E.g. ({"returnCode":980,"returnStatus":"INVALID_TASK_ID"})
+
+		// Parse the response. (Though, as no exception was thrown here, must be a "SUCCESS" response)
+		boolean deletionStatus = false;
+		MambuApiResponseMessage response = new MambuApiResponseMessage(jsonResponse);
+		if (response.getReturnCode() == 0) {
+			deletionStatus = true;
+		}
+
+		return deletionStatus;
+	}
+	/****
+	 * CLose Savings account specifying the type of closer (withdraw or reject)
+	 * 
+	 * Note: available since Mambu 3.4 See MBU-4581 for details.
+	 * 
+	 * @param accountId
+	 *            the id of the account the amount to withdraw notes
+	 * 
+	 * @param type
+	 *            type of closer (withdraw or reject)
+	 * @param notes
+	 * 
+	 * @return Savings Account
+	 * 
+	 * @throws MambuApiException
+	 */
+
+	public SavingsAccount closeAccount(String accountId, APIData.CLOSER_TYPE closerType, String notes)
+			throws MambuApiException {
+
+		if (accountId == null) {
+			throw new IllegalArgumentException("Account ID  must not  be null");
+		}
+		if (closerType == null) {
+			throw new IllegalArgumentException("Closer Type must not  be null");
+		}
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, closerType.name());
+		paramsMap.addParam(NOTES, notes);
+
+		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/" + accountId + "/" + TRANSACTIONS));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
+
+		SavingsAccount account = GsonUtils.createGson().fromJson(jsonResponse, SavingsAccount.class);
+
+		return account;
+	}
+	/***
 	 * Get all the savings accounts for a given group
 	 * 
 	 * @param groupId
@@ -382,8 +450,7 @@ public class SavingsService {
 		String urlString = new String(mambuAPIService.createUrl(GROUPS + "/" + groupId + "/" + SAVINGS));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		Type collectionType = new TypeToken<List<SavingsAccount>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<SavingsAccount>>() {}.getType();
 
 		List<SavingsAccount> accounts = (List<SavingsAccount>) GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);
@@ -392,14 +459,14 @@ public class SavingsService {
 	}
 
 	/***
-	 * Get the Savings accounts by branch is, credit officer, accountState
+	 * Get the Savings accounts by branch id, credit officer, accountState
 	 * 
 	 * @param branchId
 	 *            The ID of the branch to which the accounts are assigned to
 	 * @param creditOfficerUserName
 	 *            the username of the credit officer to whom the accounts are assigned to
 	 * @param accountState
-	 *            the state of the accounts to filter on (eg: APPROVED)
+	 *            the state of the accounts to filter on (e.g: APPROVED)
 	 * 
 	 * @return the list of Savings accounts matching these parameters
 	 * 
@@ -422,8 +489,7 @@ public class SavingsService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<SavingsAccount>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<SavingsAccount>>() {}.getType();
 
 		List<SavingsAccount> accounts = (List<SavingsAccount>) GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);
@@ -448,8 +514,7 @@ public class SavingsService {
 
 		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<SavingsProduct>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<SavingsProduct>>() {}.getType();
 
 		List<SavingsProduct> products = GsonUtils.createGson().fromJson(jsonResposne, collectionType);
 
@@ -475,27 +540,33 @@ public class SavingsService {
 	}
 
 	/***
-	 * Create a new JSONSavingsAccount using JSONSavingsAccount object and sending it via the JSON API. This API allows
-	 * creating JSONSavingsAccount with details, including creating custom field values.
+	 * Create new SavingsAccount using JSONSavingsAccount object and sending it via the JSON API. This API allows
+	 * creating SavingsAccount with details, including creating custom field values.
 	 * 
 	 * 
 	 * @param savingsAccount
+	 *            JSONSavingsAccount object containing SavingsAccount. SavingsAccount's encodedKey must be null for
+	 *            account create
 	 * 
-	 * @return SavingsAccount
+	 * @return savingsAccount
 	 * 
-	 *         Note: only the basic details for the custom fields are returned on success. To get full details a user
-	 *         must invoke getSavingsAccountDetails() after the JSONSavingsAccount was created.
 	 * @throws MambuApiException
 	 */
-	public JSONSavingsAccount createAccount(JSONSavingsAccount savingsAccount) throws MambuApiException {
+	public JSONSavingsAccount createAccount(JSONSavingsAccount account) throws MambuApiException {
 
+		if (account == null || account.getSavingsAccount() == null) {
+			throw new IllegalArgumentException("Account must not be NULL");
+		}
+
+		SavingsAccount inputAccount = account.getSavingsAccount();
+		String encodedKey = inputAccount.getEncodedKey();
+		if (encodedKey != null) {
+			throw new IllegalArgumentException("Cannot create  Account, the encoded key must be null");
+		}
 		// Convert object to json
-		// parse SavingsAccount object into json string using specific date time
-		// format
+		// parse SavingsAccount object into json string using specific date time format
 		final String dateTimeFormat = APIData.yyyyMmddFormat;
-		final String jsonData = GsonUtils.createGson(dateTimeFormat).toJson(savingsAccount, JSONSavingsAccount.class);
-
-		System.out.println("Input Savings Account In json format=" + jsonData);
+		final String jsonData = GsonUtils.createGson(dateTimeFormat).toJson(account, JSONSavingsAccount.class);
 
 		ParamsMap params = new ParamsMap();
 		// Add json string as JSON_OBJECT
@@ -506,7 +577,53 @@ public class SavingsService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.POST, ContentType.JSON);
 
-		savingsAccount = GsonUtils.createGson().fromJson(jsonResponse, JSONSavingsAccount.class);
+		JSONSavingsAccount savingsAccount = GsonUtils.createGson().fromJson(jsonResponse, JSONSavingsAccount.class);
+
+		return savingsAccount;
+	}
+
+	/***
+	 * Update an existent SavingsAccount using JSONSavingsAccount object and sending it via the JSON API. This API
+	 * allows updating JSONSavingsAccount with details. As of Mambu 3.4 only custom fields can be updated.
+	 * 
+	 * 
+	 * @param savingsAccount
+	 *            JSONSavingsAccount object containing SavingsAccount. SavingsAccount encodedKey must be NOT null for
+	 *            account update
+	 * 
+	 * @return savingsAccount
+	 * 
+	 * 
+	 * @throws MambuApiException
+	 */
+	public JSONSavingsAccount updateAccount(JSONSavingsAccount account) throws MambuApiException {
+
+		if (account == null || account.getSavingsAccount() == null) {
+			throw new IllegalArgumentException("Account must not be NULL");
+		}
+
+		SavingsAccount inputAccount = account.getSavingsAccount();
+		String encodedKey = inputAccount.getEncodedKey();
+		if (encodedKey == null) {
+			throw new IllegalArgumentException("Cannot update  Account, the encoded key must be NOT null");
+		}
+		// Convert object to json
+		// parse SavingsAccount object into json string using specific date time format
+		final String dateTimeFormat = APIData.yyyyMmddFormat;
+		final String jsonData = GsonUtils.createGson(dateTimeFormat).toJson(account, JSONSavingsAccount.class);
+
+		// System.out.println("Input Savings Account In json format=" + jsonData);
+
+		ParamsMap params = new ParamsMap();
+		// Add json string as JSON_OBJECT
+		params.put(APIData.JSON_OBJECT, jsonData);
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/"));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.POST, ContentType.JSON);
+
+		JSONSavingsAccount savingsAccount = GsonUtils.createGson().fromJson(jsonResponse, JSONSavingsAccount.class);
 
 		return savingsAccount;
 	}

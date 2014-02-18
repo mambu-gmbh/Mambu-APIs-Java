@@ -10,6 +10,7 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.clients.shared.model.Client;
+import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
@@ -31,6 +32,8 @@ public class DemoTestSavingsService {
 	private static Client demoClient;
 	private static SavingsProduct demoSavingsProduct;
 
+	private static JSONSavingsAccount newAccount;
+
 	public static void main(String[] args) {
 
 		DemoUtil.setUp();
@@ -41,26 +44,33 @@ public class DemoTestSavingsService {
 			demoSavingsProduct = DemoUtil.getDemoSavingsProduct();
 
 			testCreateSavingsAccount();
+			// Available since 3.4
+			testUpdateSavingsAccount();
 
-			testGetSavingsAccount();
-			testGetSavingsAccountDetails();
+			testApproveSavingsAccount();
+			/*
+						testGetSavingsAccount();
+						testGetSavingsAccountDetails();
+						// Available since 3.4
+						testCloseSavingsAccount();
+						testDeleteSavingsAccount();
 
-			testGetSavingsAccountsByBranchOfficerState();
+						testGetSavingsAccountsByBranchOfficerState();
 
-			testGetSavingsAccountsForClient();
+						testGetSavingsAccountsForClient();
 
-			testDepositToSavingsAccount();
-			testWithdrawalFromSavingsAccount();
+						testDepositToSavingsAccount();
+						testWithdrawalFromSavingsAccount();
 
-			testTransferFromSavingsAccount();
+						testTransferFromSavingsAccount();
 
-			testGetSavingsAccountTransactions();
+						testGetSavingsAccountTransactions();
 
-			testGetSavingsAccountsForGroup();
+						testGetSavingsAccountsForGroup();
 
-			testGetSavingsProducts();
-			testGetSavingsProductById();
-
+						testGetSavingsProducts();
+						testGetSavingsProductById();
+			*/
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Savings Service");
 			System.out.println("Error code=" + e.getErrorCode());
@@ -279,25 +289,132 @@ public class DemoTestSavingsService {
 		List<CustomFieldValue> clientCustomInformation = new ArrayList<CustomFieldValue>();
 
 		CustomFieldValue custField1 = new CustomFieldValue();
-		custField1.setCustomFieldId("Interest_Deposit_Accounts");
-		custField1.setValue("My Loan Purpose 5");
+		custField1.setCustomFieldId("Target_Deposit_Accounts");
+		custField1.setValue("Target Deposit Accounts Value");
 		clientCustomInformation.add(custField1);
 
 		CustomFieldValue custField2 = new CustomFieldValue();
-		custField2.setCustomFieldId("Deposit_frequency_Deposit_Accoun");
-		custField2.setValue("Daily");
+		custField2.setCustomFieldId("Type_Deposit_Accounts");
+		custField2.setValue("Type Deposit Accounts Value");
 		clientCustomInformation.add(custField2);
 
 		JSONSavingsAccount jsonSavingsAccount = new JSONSavingsAccount(savingsAccount);
 		jsonSavingsAccount.setCustomInformation(clientCustomInformation);
 
 		// Create Account in Mambu
-		jsonSavingsAccount = service.createAccount(jsonSavingsAccount);
+		newAccount = service.createAccount(jsonSavingsAccount);
+		SavingsAccount savingsAccountResult = newAccount.getSavingsAccount();
 
-		SAVINGS_ACCOUNT_ID = jsonSavingsAccount.getSavingsAccount().getId();
+		SAVINGS_ACCOUNT_ID = savingsAccountResult.getId();
 
-		System.out.println("Savings Account created OK, ID=" + savingsAccount.getId() + " Name= "
-				+ savingsAccount.getName() + " Account Holder Key=" + savingsAccount.getAccountHolderKey());
+		System.out.println("Savings Account created OK, ID=" + savingsAccountResult.getId() + " Name= "
+				+ savingsAccountResult.getName() + " Account Holder Key=" + savingsAccountResult.getAccountHolderKey());
 
+		// Get Custom Information from the JSONSavingsAccount
+		List<CustomFieldValue> updatedCustomFields = newAccount.getCustomInformation();
+
+		if (updatedCustomFields != null) {
+			System.out.println("Custom Fields for Account\n");
+			for (CustomFieldValue value : updatedCustomFields) {
+				System.out.println("CustomFieldKey" + value.getCustomFieldKey() + "\tValue" + value.getValue()
+						+ "\tName" + value.getCustomField().getName());
+
+			}
+		}
+	}
+
+	// Update Loan account
+	public static void testUpdateSavingsAccount() throws MambuApiException {
+		System.out.println("\nIn testUpdateSavingsAccount");
+
+		SavingsService service = MambuAPIFactory.getSavingsService();
+
+		// Use the newly created account and update some custom fields
+		JSONSavingsAccount updatedAccount = newAccount;
+		List<CustomFieldValue> customFields = updatedAccount.getCustomInformation();
+		String customFieldIdToModifyValue = "Target_Deposit_Accounts";
+		if (customFields != null) {
+
+			for (CustomFieldValue value : customFields) {
+				CustomField field = value.getCustomField();
+				String fieldId = field.getId();
+
+				if (fieldId.equals(customFieldIdToModifyValue)) {
+					// Update the value for this field
+					value.setValue("Value updated by testUpdateSavingsAccount");
+				}
+			}
+		}
+
+		// Update account in Mambu
+		JSONSavingsAccount updatedAccountResult = service.updateAccount(updatedAccount);
+
+		System.out.println("Savings Update OK, ID=" + updatedAccountResult.getSavingsAccount().getId()
+				+ "\tAccount Name=" + updatedAccountResult.getSavingsAccount().getName());
+
+		// Get returned custom fields
+		List<CustomFieldValue> updatedCustomFields = updatedAccountResult.getCustomInformation();
+
+		if (updatedCustomFields != null) {
+			System.out.println("Custom Fields for Loan Account\n");
+			for (CustomFieldValue value : updatedCustomFields) {
+				System.out.println("CustomFieldKey" + value.getCustomFieldKey() + "\tValue" + value.getValue()
+						+ "\tName" + value.getCustomField().getName());
+
+			}
+		}
+
+	}
+	public static void testApproveSavingsAccount() throws MambuApiException {
+		System.out.println("\nIn test Approve Savings Account");
+
+		SavingsService service = MambuAPIFactory.getSavingsService();
+
+		SavingsAccount account = service
+				.approveSavingsAccount(SAVINGS_ACCOUNT_ID, "Approve savings account demo notes");
+
+		System.out.println("Approved Savings account with id=" + account.getId() + "\tName=" + account.getName()
+				+ "\tAccount State=" + account.getAccountState().toString());
+
+		// Get returned custom fields
+		List<CustomFieldValue> updatedCustomFields = account.getCustomFieldValues();
+
+		if (updatedCustomFields != null) {
+			System.out.println("Custom Fields for this Account\n");
+			for (CustomFieldValue value : updatedCustomFields) {
+				System.out.println("CustomFieldKey" + value.getCustomFieldKey() + "\tValue" + value.getValue()
+						+ "\tName" + value.getCustomField().getName());
+
+			}
+		} else {
+			System.out.println("No Custom Fields for this Account\n");
+		}
+	}
+
+	public static void testDeleteSavingsAccount() throws MambuApiException {
+		System.out.println("\nIn test Delete Savings Account");
+
+		SavingsService service = MambuAPIFactory.getSavingsService();
+
+		String accountId = SAVINGS_ACCOUNT_ID;
+		boolean accountDeleted = service.deleteAccount(accountId);
+
+		System.out.println("Deleted Savings account with id=" + accountId + "\tDeletion status=" + accountDeleted);
+	}
+
+	public static void testCloseSavingsAccount() throws MambuApiException {
+		System.out.println("\nIn test Close Savings Account");
+
+		SavingsService service = MambuAPIFactory.getSavingsService();
+
+		String accountId = SAVINGS_ACCOUNT_ID;
+		APIData.CLOSER_TYPE closerType = APIData.CLOSER_TYPE.WITHDRAW; // APIData.CLOSER_TYPE.WITHDRAW //
+																		// APIData.CLOSER_TYPE.REJECT
+
+		String notes = "Account Closed notes";
+
+		SavingsAccount account = service.closeAccount(accountId, closerType, notes);
+
+		System.out.println("Closed account id:" + account.getId() + "\tState=" + account.getAccountState().name());
 	}
 }
