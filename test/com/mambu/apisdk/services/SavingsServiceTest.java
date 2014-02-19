@@ -43,8 +43,7 @@ public class SavingsServiceTest extends MambuAPIServiceTest {
 		savingsAccount.setProductTypeKey("8a3615ef414e97d30141500808255d4d");
 		savingsAccount.setAccountState(AccountState.PENDING_APPROVAL);
 		savingsAccount.setAccountType(SavingsType.CURRENT_ACCOUNT);
-		savingsAccount
-				.setClientAccountHolderKey("8ad661123b36cfaf013b42c2e0f46dca");
+		savingsAccount.setClientAccountHolderKey("8ad661123b36cfaf013b42c2e0f46dca");
 
 		// Add Custom Fields
 		List<CustomFieldValue> savingsAccountCustomInformation = new ArrayList<CustomFieldValue>();
@@ -59,13 +58,11 @@ public class SavingsServiceTest extends MambuAPIServiceTest {
 		custField2.setValue("Daily");
 		savingsAccountCustomInformation.add(custField2);
 
-		JSONSavingsAccount jsonSavingsAccount = new JSONSavingsAccount(
-				savingsAccount);
-		jsonSavingsAccount
-				.setCustomInformation(savingsAccountCustomInformation);
+		JSONSavingsAccount jsonSavingsAccount = new JSONSavingsAccount(savingsAccount);
+		jsonSavingsAccount.setCustomInformation(savingsAccountCustomInformation);
 
 		// Create Account in Mambu
-		service.createAccount(jsonSavingsAccount);
+		service.createSavingsAccount(jsonSavingsAccount);
 
 		ParamsMap params = new ParamsMap();
 		params.addParam(
@@ -91,8 +88,7 @@ public class SavingsServiceTest extends MambuAPIServiceTest {
 						+ "]" + "}");
 
 		// verify
-		Mockito.verify(executor).executeRequest(
-				"https://demo.mambutest.com/api/savings/", params, Method.POST,
+		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/savings/", params, Method.POST,
 				ContentType.JSON);
 	}
 }

@@ -87,7 +87,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 		accountExpanded.setCustomInformation(clientCustomInformation);
 
 		// Create Account in Mambu
-		service.createAccount(accountExpanded);
+		service.createLoanAccount(accountExpanded);
 
 		ParamsMap params = new ParamsMap();
 		params.addParam(
@@ -126,8 +126,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 						+ "]" + "}");
 
 		// verify
-		Mockito.verify(executor).executeRequest(
-				"https://demo.mambutest.com/api/loans/", params, Method.POST,
+		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/loans/", params, Method.POST,
 				ContentType.JSON);
 	}
 
@@ -135,17 +134,15 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 	public void rejectAccount() throws MambuApiException {
 
 		// Create Account in Mambu
-		service.rejectLoanAccount("8ad661123b36cfaf013b42c2e0f46dca",
-				"The automated approval failed.");
+		service.rejectLoanAccount("8ad661123b36cfaf013b42c2e0f46dca", "The automated approval failed.");
 
 		ParamsMap params = new ParamsMap();
 		params.addParam("type", "REJECT");
 		params.addParam("notes", "The automated approval failed.");
 
 		// verify
-		Mockito.verify(executor)
-				.executeRequest(
-						"https://demo.mambutest.com/api/loans/8ad661123b36cfaf013b42c2e0f46dca/transactions",
-						params, Method.POST);
+		Mockito.verify(executor).executeRequest(
+				"https://demo.mambutest.com/api/loans/8ad661123b36cfaf013b42c2e0f46dca/transactions", params,
+				Method.POST);
 	}
 }

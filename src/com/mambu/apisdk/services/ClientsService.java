@@ -358,6 +358,8 @@ public class ClientsService {
 	 * @throws MambuApiException
 	 * @throws IllegalArgumentException
 	 */
+	// TODO: update this API to add clientId to the URL when MBU-5278 is implemented (MBU-5278: Change the endpoint for
+	// Update API calls to be individually mapped per each component.)
 	public ClientExpanded updateClient(ClientExpanded clientDetails) throws MambuApiException {
 
 		// Verify that the encodedKey for this object is not NULL

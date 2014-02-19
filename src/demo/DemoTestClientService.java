@@ -15,6 +15,7 @@ import com.mambu.clients.shared.model.IdentificationDocument;
 import com.mambu.core.shared.model.Address;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.Gender;
+import com.mambu.core.shared.model.User;
 
 /**
  * 
@@ -26,20 +27,21 @@ import com.mambu.core.shared.model.Gender;
  */
 public class DemoTestClientService {
 
-	private static String CLIENT_ID = "987ABCD";
-	private static String NEW_CLIENT_ID = "";
-	private static String GROUP_ID = "700439187";
-
-	private static String BRANCH_ID = "2";
-	private static String CREDIT_OFFICER_USER_NAME = "demo";
-	private static String CLIENT_STATE = "ACTIVE"; // PENDING_APPROVAL BLACKLISTED INACTIVE
+	private static String NEW_CLIENT_ID;
 	private static ClientExpanded clientCreated;
+
+	private static Client demoClient;
+	private static Group demoGroup;
+	private static User demoUser;
 
 	public static void main(String[] args) {
 
 		DemoUtil.setUp();
 
 		try {
+			demoUser = DemoUtil.getDemoUser();
+			demoClient = DemoUtil.getDemoClient();
+			demoGroup = DemoUtil.getDemoGroup();
 
 			testCreateJsonClient();
 			testCreateBasicClient();
@@ -71,7 +73,7 @@ public class DemoTestClientService {
 		System.out.println("\nIn testGetClient");
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
-		Client myClient = clientService.getClient(CLIENT_ID);
+		Client myClient = clientService.getClient(demoClient.getEncodedKey());
 
 		System.out.println("Client Service by ID Ok, ID=" + myClient.getId());
 
@@ -170,7 +172,7 @@ public class DemoTestClientService {
 		System.out.println("\nIn testGetGroup");
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
-		System.out.println("testGetGroup OK, name=" + clientService.getGroup(GROUP_ID).getGroupName());
+		System.out.println("testGetGroup OK, name=" + clientService.getGroup(demoGroup.getId()).getGroupName());
 
 	}
 
@@ -180,7 +182,7 @@ public class DemoTestClientService {
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
 		System.out.println("testGetGroupDetails Ok, name="
-				+ clientService.getGroupDetails(GROUP_ID).getGroup().getGroupName());
+				+ clientService.getGroupDetails(demoGroup.getId()).getGroup().getGroupName());
 
 	}
 
@@ -332,9 +334,9 @@ public class DemoTestClientService {
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
-		String branchId = BRANCH_ID;
-		String creditOfficerUserName = CREDIT_OFFICER_USER_NAME;
-		String clientState = CLIENT_STATE; // ACTIVE PENDING_APPROVAL BLACKLISTED INACTIVE
+		String branchId = "branch_123";
+		String creditOfficerUserName = demoUser.getUsername();
+		String clientState = "ACTIVE"; // ACTIVE PENDING_APPROVAL BLACKLISTED INACTIVE
 		String offset = "0";
 		String limit = "1";
 		List<Client> clients = clientService.getClientsByBranchOfficerState(branchId, creditOfficerUserName,
@@ -353,7 +355,7 @@ public class DemoTestClientService {
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
 		String branchId = null; // BRANCH_ID;// "RICHMOND_001"; //Berlin_001 REICHMOND_001
-		String creditOfficerUserName = CREDIT_OFFICER_USER_NAME; //
+		String creditOfficerUserName = demoUser.getUsername(); //
 		String offset = "1";
 		String limit = "1";
 		List<Group> groups = clientService.getGroupsByBranchOfficer(branchId, creditOfficerUserName, offset, limit);

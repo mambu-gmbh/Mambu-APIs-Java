@@ -26,7 +26,6 @@ public class DemoTestSearchService {
 		try {
 
 			testSearchAll();
-			/*
 
 			testSearchClientsGroups();
 
@@ -35,7 +34,6 @@ public class DemoTestSearchService {
 			testSearchUsersBranches();
 
 			testTypesCombinations();
-			*/
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Search Service");

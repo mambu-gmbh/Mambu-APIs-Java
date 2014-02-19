@@ -151,4 +151,7 @@ public class APIData {
 	public static String yyyyMmddFormat = "yyyy-MM-dd";
 	public static String JSON_OBJECT = "JSON";
 
+	// Base64 encoded strings header's terminator in API responses
+	public static String BASE64_ENCODING_INDICATOR = ";base64,";
+
 }

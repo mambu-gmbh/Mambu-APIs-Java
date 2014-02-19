@@ -94,6 +94,10 @@ public class SavingsService {
 	 */
 	public SavingsAccount getSavingsAccount(String accountId) throws MambuApiException {
 
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not  be null or empty");
+		}
+
 		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/" + accountId));
 		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
 
@@ -115,6 +119,9 @@ public class SavingsService {
 	 */
 	public SavingsAccount getSavingsAccountDetails(String accountId) throws MambuApiException {
 
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not  be null or empty");
+		}
 		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/" + accountId));
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.put(FULL_DETAILS, "true");
@@ -139,6 +146,10 @@ public class SavingsService {
 	@SuppressWarnings("unchecked")
 	public List<SavingsAccount> getSavingsAccountsForClient(String clientId) throws MambuApiException {
 
+		if (clientId == null || clientId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Client ID must not  be null or empty");
+		}
+
 		String urlString = new String(mambuAPIService.createUrl(CLIENTS + "/" + clientId + "/" + SAVINGS));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
@@ -153,16 +164,21 @@ public class SavingsService {
 	/****
 	 * Approve Savings account
 	 * 
+	 * 
 	 * @param accountId
 	 *            the id of the account
 	 * 
 	 * @return the approved SavingsAccount from Mambu
 	 * 
+	 *         Note: the returned account object doesn't contain custom fields.
+	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: Need to raise an issue in Mambu: Approve API Account object in the response doesn't contain custom fields.
-	// Such response cannot be used for account details display
 	public SavingsAccount approveSavingsAccount(String accountId, String notes) throws MambuApiException {
+
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not  be null or empty");
+		}
 
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_APPROVAL);
@@ -196,6 +212,9 @@ public class SavingsService {
 	public List<SavingsTransaction> getSavingsAccountTransactions(String accountId, String offset, String limit)
 			throws MambuApiException {
 
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not  be null or empty");
+		}
 		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/" + accountId + "/" + TRANSACTIONS));
 
 		String jsonResponse;
@@ -265,6 +284,10 @@ public class SavingsService {
 			String paymentMethod, String receiptNumber, String bankNumber, String checkNumber,
 			String bankAccountNumber, String bankRoutingNumber) throws MambuApiException {
 
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not  be null or empty");
+		}
+
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_WITHDRAWAL);
 
@@ -304,6 +327,10 @@ public class SavingsService {
 			String paymentMethod, String receiptNumber, String bankNumber, String checkNumber,
 			String bankAccountNumber, String bankRoutingNumber) throws MambuApiException {
 
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID  must not  be null or empty");
+		}
+
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_DEPOSIT);
 
@@ -318,7 +345,6 @@ public class SavingsService {
 
 		return transaction;
 	}
-
 	/****
 	 * Make a Transfer from an account.
 	 * 
@@ -341,7 +367,13 @@ public class SavingsService {
 
 		// E.g .format: POST "type=TYPE_TRANSFER"
 		// /api/savings/KHGJ593/transactions
+		if (fromAccountId == null || fromAccountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("From Account ID  must not  be null or empty");
+		}
 
+		if (destinationAccountKey == null || destinationAccountKey.trim().isEmpty()) {
+			throw new IllegalArgumentException("Destination Account ID  must not  be null or empty");
+		}
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_TRANSFER);
 
@@ -374,10 +406,10 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public boolean deleteAccount(String accountId) throws MambuApiException {
+	public boolean deleteSavingsAccount(String accountId) throws MambuApiException {
 
-		if (accountId == null) {
-			throw new IllegalArgumentException("Account ID  must not  be null");
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID  must not  be null or empty");
 		}
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/" + accountId));
@@ -385,7 +417,7 @@ public class SavingsService {
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.DELETE);
 
 		// On success the response is: {"returnCode":0,"returnStatus":"SUCCESS"}
-		// An exception can be thrown: E.g. ({"returnCode":980,"returnStatus":"INVALID_TASK_ID"})
+		// An exception can be thrown: E.g. ({"returnCode":400,"returnStatus":"INVALID_SAVINGS_ACCOUNT_ID"})
 
 		// Parse the response. (Though, as no exception was thrown here, must be a "SUCCESS" response)
 		boolean deletionStatus = false;
@@ -397,30 +429,30 @@ public class SavingsService {
 		return deletionStatus;
 	}
 	/****
-	 * CLose Savings account specifying the type of closer (withdraw or reject)
+	 * Close Savings account specifying the type of closer (withdraw or reject)
 	 * 
 	 * Note: available since Mambu 3.4 See MBU-4581 for details.
 	 * 
 	 * @param accountId
-	 *            the id of the account the amount to withdraw notes
+	 *            the id of the account to withdraw
 	 * 
 	 * @param type
 	 *            type of closer (withdraw or reject)
 	 * @param notes
 	 * 
-	 * @return Savings Account
+	 * @return savings account
 	 * 
 	 * @throws MambuApiException
 	 */
 
-	public SavingsAccount closeAccount(String accountId, APIData.CLOSER_TYPE closerType, String notes)
+	public SavingsAccount closeSavingsAccount(String accountId, APIData.CLOSER_TYPE closerType, String notes)
 			throws MambuApiException {
 
-		if (accountId == null) {
-			throw new IllegalArgumentException("Account ID  must not  be null");
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not  be null or empty");
 		}
 		if (closerType == null) {
-			throw new IllegalArgumentException("Closer Type must not  be null");
+			throw new NullPointerException("Closer Type must not  be null");
 		}
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, closerType.name());
@@ -532,6 +564,9 @@ public class SavingsService {
 	 */
 	public SavingsProduct getSavingsProduct(String productId) throws MambuApiException {
 
+		if (productId == null || productId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Product ID must not  be null or empty");
+		}
 		String urlString = new String(mambuAPIService.createUrl(SAVINGSRODUCTS + "/" + productId));
 		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
 
@@ -552,7 +587,7 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public JSONSavingsAccount createAccount(JSONSavingsAccount account) throws MambuApiException {
+	public JSONSavingsAccount createSavingsAccount(JSONSavingsAccount account) throws MambuApiException {
 
 		if (account == null || account.getSavingsAccount() == null) {
 			throw new IllegalArgumentException("Account must not be NULL");
@@ -596,7 +631,9 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public JSONSavingsAccount updateAccount(JSONSavingsAccount account) throws MambuApiException {
+	// TODO: update this API to add accountId to the URL when MBU-5278 is implemented (MBU-5278: Change the endpoint for
+	// Update API calls to be individually mapped per each component.)
+	public JSONSavingsAccount updateSavingsAccount(JSONSavingsAccount account) throws MambuApiException {
 
 		if (account == null || account.getSavingsAccount() == null) {
 			throw new IllegalArgumentException("Account must not be NULL");

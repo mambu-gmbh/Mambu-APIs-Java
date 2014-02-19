@@ -65,6 +65,10 @@ public class URLHelper {
 	 * @return the complete URL
 	 */
 	public String createUrlWithParams(String urlString, ParamsMap paramsMap) {
-		return urlString + DELIMITER + paramsMap.getURLString();
+		if (paramsMap != null) {
+			return urlString + DELIMITER + paramsMap.getURLString();
+		} else {
+			return urlString;
+		}
 	}
 }

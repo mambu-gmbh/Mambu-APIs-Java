@@ -183,7 +183,7 @@ public class DemoTestLoanService {
 		accountExpanded.setCustomInformation(clientCustomInformation);
 
 		// Create Account in Mambu
-		newAccount = loanService.createAccount(accountExpanded);
+		newAccount = loanService.createLoanAccount(accountExpanded);
 
 		// accented E
 
@@ -230,7 +230,7 @@ public class DemoTestLoanService {
 		}
 
 		// Update account in Mambu
-		LoanAccountExpanded updatedAccountResult = loanService.updateAccount(updatedAccount);
+		LoanAccountExpanded updatedAccountResult = loanService.updateLoanAccount(updatedAccount);
 
 		System.out.println("Loan Update OK, ID=" + updatedAccountResult.getLoanAccount().getId() + "\tAccount Name="
 				+ updatedAccountResult.getLoanAccount().getName());
