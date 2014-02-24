@@ -572,7 +572,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 				final int encodedCharsToShow = 20;
 				// Also add "..." to indicate that the output was truncated
 				jsonString = jsonString
-						.substring(0, contentStarts + documentContentParam.length() + encodedCharsToShow) + "...}";
+						.substring(0, contentStarts + documentContentParam.length() + encodedCharsToShow) + "...\"}";
 
 			}
 		}

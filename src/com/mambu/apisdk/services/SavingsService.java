@@ -452,7 +452,7 @@ public class SavingsService {
 			throw new IllegalArgumentException("Account ID must not  be null or empty");
 		}
 		if (closerType == null) {
-			throw new NullPointerException("Closer Type must not  be null");
+			throw new IllegalArgumentException("Closer Type must not  be null");
 		}
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, closerType.name());
