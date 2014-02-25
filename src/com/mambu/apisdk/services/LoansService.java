@@ -90,6 +90,10 @@ public class LoansService {
 	 */
 	public LoanAccount getLoanAccount(String accountId) throws MambuApiException {
 
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not  be null or empty");
+		}
+
 		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId));
 		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
 
@@ -110,11 +114,13 @@ public class LoansService {
 	@SuppressWarnings("unchecked")
 	public List<LoanAccount> getLoanAccountsForClient(String clientId) throws MambuApiException {
 
+		if (clientId == null || clientId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Client ID must not  be null or empty");
+		}
 		String urlString = new String(mambuAPIService.createUrl(CLIENTS + "/" + clientId + "/" + LOANS));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		Type collectionType = new TypeToken<List<LoanAccount>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<LoanAccount>>() {}.getType();
 
 		List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 		return accounts;
@@ -133,11 +139,14 @@ public class LoansService {
 	@SuppressWarnings("unchecked")
 	public List<LoanAccount> getLoanAccountsForGroup(String groupId) throws MambuApiException {
 
+		if (groupId == null || groupId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Group ID must not  be null or empty");
+		}
+
 		String urlString = new String(mambuAPIService.createUrl(GROUPS + "/" + groupId + "/" + LOANS));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		Type collectionType = new TypeToken<List<LoanAccount>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<LoanAccount>>() {}.getType();
 
 		List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
@@ -151,15 +160,19 @@ public class LoansService {
 	 * @param accountId
 	 *            the id of the account
 	 * 
-	 * @return LoanAccount
+	 * @return loanAccount
+	 * 
+	 *         Note: The account object in the response doesn't contain custom fields
 	 * 
 	 * @throws MambuApiException
 	 */
 	public LoanAccount approveLoanAccount(String accountId, String notes) throws MambuApiException {
 		// E.g. format: POST "type=APPROVAL" /api/loans/KHGJ593/transactions
 
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not  be null or empty");
+		}
 		ParamsMap paramsMap = new ParamsMap();
-		// MD
 		paramsMap.addParam(TYPE, TYPE_APPROVAL);
 		paramsMap.addParam(NOTES, notes);
 
@@ -187,8 +200,10 @@ public class LoansService {
 	public LoanAccount rejectLoanAccount(String accountId, String notes) throws MambuApiException {
 		// E.g. format: POST "type=REJECT" /api/loans/KHGJ593/transactions
 
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not  be null or empty");
+		}
 		ParamsMap paramsMap = new ParamsMap();
-		// MD
 		paramsMap.addParam(TYPE, TYPE_REJECT);
 		paramsMap.addParam(NOTES, notes);
 
@@ -230,6 +245,9 @@ public class LoansService {
 		// "type=DISBURSMENT&date=2012-10-04&firstRepaymentDate=2012-10-08&notes=using transactions"
 		// /api/loans/KHGJ593/transactions
 
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not  be null or empty");
+		}
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_DISBURSMENT);
 		paramsMap.addParam(AMOUNT, amount);
@@ -262,10 +280,16 @@ public class LoansService {
 	 * 
 	 * @return the loan account
 	 * 
+	 *         Note: the returned account doesn't have guarantees information.
+	 * 
 	 * @throws MambuApiException
 	 */
+
 	public LoanAccount getLoanAccountDetails(String accountId) throws MambuApiException {
 
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not  be null or empty");
+		}
 		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId));
 		ParamsMap paramsMap = new ParamsMap();
 
@@ -278,19 +302,76 @@ public class LoansService {
 	}
 
 	/***
-	 * Create a new LoanAccount (expanded) using LoanAccountExpanded object and sending it as a Json api. This API
-	 * allows creating LoanAccount with details, including creating custom fields.
+	 * Create a new LoanAccount using LoanAccountExpanded object and sending it as a Json api. This API allows creating
+	 * LoanAccount with details, including creating custom fields.
 	 * 
 	 * 
 	 * @param loan
+	 *            LoanAccountExtended object containing LoanAccount. LoanAccount encodedKey must be null for account
+	 *            creation
 	 * 
-	 * @return Note: only the basic details for the custom fields are returned on success. To get full details a user
-	 *         must invoke getLoanAccountDetails() after the LoanAccount was created.
+	 * @return newly created loan account with full details including custom fields
 	 * 
 	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
 	 */
-	public LoanAccountExpanded createAccount(LoanAccountExpanded loan) throws MambuApiException {
+	public LoanAccountExpanded createLoanAccount(LoanAccountExpanded loan) throws MambuApiException {
 
+		if (loan == null || loan.getLoanAccount() == null) {
+			throw new IllegalArgumentException("Account must not be NULL");
+		}
+
+		LoanAccount inputAccount = loan.getLoanAccount();
+		String encodedKey = inputAccount.getEncodedKey();
+		if (encodedKey != null) {
+			throw new IllegalArgumentException("Cannot create Account, the encoded key must be null");
+		}
+		// Convert object to json
+		// parse LoanAccountExpanded object into json string using specific date
+		// time format
+		final String dateTimeFormat = APIData.yyyyMmddFormat;
+		final String jsonData = GsonUtils.createGson(dateTimeFormat).toJson(loan, LoanAccountExpanded.class);
+
+		ParamsMap params = new ParamsMap();
+		// Add json string as JSON_OBJECT
+		params.put(APIData.JSON_OBJECT, jsonData);
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(LOANS + "/"));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.POST, ContentType.JSON);
+
+		LoanAccountExpanded account = GsonUtils.createGson().fromJson(jsonResponse, LoanAccountExpanded.class);
+
+		return account;
+	}
+	/***
+	 * Update an existent LoanAccount using LoanAccountExpanded object and sending it as a Json api. This API allows
+	 * updating LoanAccount with details. As of Mambu 3.4 only custom fields can be updated.
+	 * 
+	 * 
+	 * @param loan
+	 *            LoanAccountExtended object containing LoanAccount. LoanAccount encodedKey must be NOT null for account
+	 *            update
+	 * 
+	 * @return updated object containing both the LoanAccount and its CustomInformation fields
+	 * 
+	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
+	 */
+	// TODO: update this API to add accountid to the URL when MBU-5278 is implemented (MBU-5278: Change the endpoint for
+	// Update API calls to be individually mapped per each component.)
+	public LoanAccountExpanded updateLoanAccount(LoanAccountExpanded loan) throws MambuApiException {
+
+		if (loan == null || loan.getLoanAccount() == null) {
+			throw new IllegalArgumentException("Account must not be NULL");
+		}
+
+		LoanAccount inputAccount = loan.getLoanAccount();
+		String encodedKey = inputAccount.getEncodedKey();
+		if (encodedKey == null) {
+			throw new IllegalArgumentException("Cannot update Account, the encoded key must be NOT null");
+		}
 		// Convert object to json
 		// parse LoanAccountExpanded object into json string using specific date
 		// time format
@@ -312,7 +393,6 @@ public class LoansService {
 
 		return account;
 	}
-
 	/***
 	 * Get loan account Transactions by Loan id and offset and limit
 	 * 
@@ -328,6 +408,9 @@ public class LoansService {
 	public List<LoanTransaction> getLoanAccountTransactions(String accountId, String offset, String limit)
 			throws MambuApiException {
 
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not  be null or empty");
+		}
 		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId + "/" + TRANSACTIONS));
 
 		String jsonResponse;
@@ -338,8 +421,7 @@ public class LoansService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 
-		Type collectionType = new TypeToken<List<LoanTransaction>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<LoanTransaction>>() {}.getType();
 
 		List<LoanTransaction> transactions = (List<LoanTransaction>) GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);
@@ -371,6 +453,9 @@ public class LoansService {
 			String bankAccountNumber, String bankRoutingNumber) throws MambuApiException {
 
 		// E.g. format: POST "type=APPROVAL" /api/loans/KHGJ593/transactions
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not  be null or empty");
+		}
 
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_REPAYMENT);
@@ -409,6 +494,10 @@ public class LoansService {
 	 */
 	public LoanTransaction applyFeeToLoanAccount(String accountId, String amount, String repaymentNumber, String notes)
 			throws MambuApiException {
+
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not  be null or empty");
+		}
 
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_FEE);
@@ -457,8 +546,7 @@ public class LoansService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<LoanAccount>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<LoanAccount>>() {}.getType();
 
 		List<LoanAccount> accounts = (List<LoanAccount>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 		return accounts;
@@ -482,8 +570,7 @@ public class LoansService {
 
 		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<LoanProduct>>() {
-		}.getType();
+		Type collectionType = new TypeToken<List<LoanProduct>>() {}.getType();
 
 		List<LoanProduct> products = GsonUtils.createGson().fromJson(jsonResposne, collectionType);
 
@@ -502,6 +589,9 @@ public class LoansService {
 	 */
 	public LoanProduct getLoanProduct(String productId) throws MambuApiException {
 
+		if (productId == null || productId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Product ID must not  be null or empty");
+		}
 		String urlString = new String(mambuAPIService.createUrl(LOANPRODUCTS + "/" + productId));
 		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
 

@@ -1,11 +1,15 @@
 package demo;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.UsersService;
+import com.mambu.core.shared.model.Permissions;
+import com.mambu.core.shared.model.Permissions.Permission;
 import com.mambu.core.shared.model.User;
 
 /**
@@ -120,8 +124,20 @@ public class DemoTestUsersService {
 		System.out.println("testGetUserById OK, Total time=" + diff + "\nReturned user= " + user.getFirstName() + " "
 				+ user.getLastName() + " Id=" + user.getId() + " Username=" + user.getUsername());
 
-	}
+		// Verify that Permissions object is returned with API response. See MBU-4526 implemented in Mambu 3.4
+		Permissions permissions = user.getPermissions();
 
+		if (permissions == null) {
+			System.out.println("testGetUserById. User has NULL permissions");
+			return;
+		}
+		List<Permission> permissionList = permissions.getPermissions();
+		HashSet<Permission> permissionsHashSet = permissions.getPermissionSet();
+		HashMap<Permission, Boolean> permissionsMap = permissions.getPermissionsMap();
+
+		System.out.println("User Permissions. List size=" + permissionList.size() + " HashSet="
+				+ permissionsHashSet.size() + "  HashMap=" + permissionsMap.size());
+	}
 	public static void testGetUserByUsername() throws MambuApiException {
 
 		UsersService usersService = MambuAPIFactory.getUsersService();

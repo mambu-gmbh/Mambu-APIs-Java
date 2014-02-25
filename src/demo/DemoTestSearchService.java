@@ -49,12 +49,11 @@ public class DemoTestSearchService {
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
 		String query = "m";
-		String offset = "0";
-		String limit = "200";
+		String limit = "5";
 
 		Date d1 = new Date();
 
-		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, null, offset, limit);
+		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, null, limit);
 
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
@@ -71,12 +70,11 @@ public class DemoTestSearchService {
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
 		String query = "i";
-		String offset = "0";
 		String limit = "300";
 		List<Type> searchTypes = Arrays.asList(Type.CLIENT, Type.GROUP); // or null
 
 		Date d1 = new Date();
-		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, offset, limit);
+		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
@@ -91,12 +89,11 @@ public class DemoTestSearchService {
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
 		String query = "fish";
-		String offset = "0";
 		String limit = "100";
 
 		List<Type> searchTypes = Arrays.asList(Type.LOAN_ACCOUNT, Type.SAVINGS_ACCOUNT); // or null
 
-		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, offset, limit);
+		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
 
 		System.out.println("Search Loans/Savings for query=" + query + "Returned=" + results.size());
 
@@ -110,14 +107,13 @@ public class DemoTestSearchService {
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
 		String query = "Map";
-		String offset = "0";
 		String limit = "100";
 
 		List<Type> searchTypes = Arrays.asList(Type.USER, Type.BRANCH); // or null
 
 		Date d1 = new Date();
 
-		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, offset, limit);
+		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
 
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
@@ -135,14 +131,13 @@ public class DemoTestSearchService {
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
 		String query = "Бо"; // Russian Бо // \u00c1 Spanish A == UTF8 hex = c3 81
-		String offset = "0";
 		String limit = "100";
 
 		// Use different Search Types combinations as needed
 		// List<Type> searchTypes = Arrays.asList(Type.CLIENT, Type.GROUP, Type.LOAN_ACCOUNT, Type.SAVINGS_ACCOUNT,
 		// Type.USER); // or null
 		List<Type> searchTypes = Arrays.asList(Type.CLIENT);
-		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, offset, limit);
+		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
 
 		if (results != null)
 			System.out.println("Searching for query=" + query + " Types Returned=" + results.size());

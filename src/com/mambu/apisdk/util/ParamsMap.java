@@ -62,7 +62,7 @@ public class ParamsMap extends LinkedHashMap<String, String> {
 				String encodedValue = value;
 
 				try {
-					// encode encodes spaces with '+'
+					// URL encode values
 					encodedValue = URLEncoder.encode(value, HTTP.UTF_8);
 
 				} catch (UnsupportedEncodingException e) {

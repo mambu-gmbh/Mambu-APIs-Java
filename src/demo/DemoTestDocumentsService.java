@@ -32,7 +32,7 @@ public class DemoTestDocumentsService {
 	private static Client demoClient;
 	private static LoanAccount demoLoanAccount;
 
-	private static String UPLOADED_DOCUMENT_KEY = "";
+	private static String UPLOADED_DOCUMENT_KEY;
 
 	public static void main(String[] args) {
 

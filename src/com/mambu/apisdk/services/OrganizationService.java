@@ -4,14 +4,12 @@
 package com.mambu.apisdk.services;
 
 import java.lang.reflect.Type;
-import java.net.HttpURLConnection;
 import java.util.List;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.exception.MambuApiResponseMessage;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
@@ -148,21 +146,6 @@ public class OrganizationService {
 	 */
 	public Branch getBranch(String branchId) throws MambuApiException {
 
-		// Verify that ID doesn't contain spaces. Spaces in IDs crash API
-		// wrappers
-		branchId = branchId.trim();
-		if (branchId.contains(" ")) {
-			// Return the same API exception that would be returned by Mambu in
-			// case of Invalid ID parameter
-			// Message constructor: (returnStatus, errorSource) results in this
-			// message added to exception:
-			// {"returnCode":800,"returnStatus":"INVALID_BRANCH_ID""};
-			MambuApiResponseMessage responseMsg = new MambuApiResponseMessage("INVALID_BRANCH_ID", null);
-
-			final int apiErrorCode = HttpURLConnection.HTTP_NOT_FOUND; // 403
-			throw new MambuApiException(apiErrorCode, responseMsg);
-		}
-
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(BRANCHES + "/" + branchId));
 
@@ -188,24 +171,6 @@ public class OrganizationService {
 	 * @throws MambuApiException
 	 */
 	public Centre getCentre(String centreId) throws MambuApiException {
-
-		// Verify that ID doesn't contain spaces. Spaces in IDs crash API
-		// wrappers
-
-		centreId = centreId.trim();
-		if (centreId.contains(" ")) {
-			// Return the same API exception that would be returned by Mambu in
-			// case of Invalid ID parameter
-			// This Message constructor: (returnStatus, errorSource) results in:
-			// {"returnCode":851,"returnStatus":"INVALID_CENTRE_ID""} added to
-			// the exception message;
-
-			MambuApiResponseMessage responseMsg = new MambuApiResponseMessage("INVALID_CENTRE_ID", null);
-
-			final int apiErrorCode = HttpURLConnection.HTTP_NOT_FOUND; // 403
-			throw new MambuApiException(apiErrorCode, responseMsg);
-
-		}
 
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(APIData.CENTRES + "/" + centreId));
@@ -323,7 +288,6 @@ public class OrganizationService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: to be tested with Mambu 3.3, see MBU-2486
 	public List<CustomFieldSet> getCustomFieldSets(CustomField.Type customFieldType) throws MambuApiException {
 
 		// create the api call

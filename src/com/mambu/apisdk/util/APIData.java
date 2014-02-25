@@ -51,6 +51,11 @@ public class APIData {
 	public static final String TYPE_WITHDRAWAL = "WITHDRAWAL";
 	public static final String TYPE_TRANSFER = "TRANSFER";
 
+	// Type of account closer transaction
+	public static enum CLOSER_TYPE {
+		REJECT, WITHDRAW
+	};
+
 	public static final String AMOUNT = "amount";
 
 	public static final String PAYMENT_METHOD = "method";
@@ -145,5 +150,8 @@ public class APIData {
 	// Added to support Json object creation API
 	public static String yyyyMmddFormat = "yyyy-MM-dd";
 	public static String JSON_OBJECT = "JSON";
+
+	// Base64 encoded strings header's terminator in API responses
+	public static String BASE64_ENCODING_INDICATOR = ";base64,";
 
 }

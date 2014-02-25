@@ -9,6 +9,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Base64;
@@ -44,13 +45,13 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 	private URLHelper urlHelper;
 	private String encodedAuthorization;
-	private final String UTF8_charset = HTTP.UTF_8;
-	private final String wwwFormUrlEncodedContentType = "application/x-www-form-urlencoded; charset=UTF-8";
+	private final static String UTF8_charset = HTTP.UTF_8;
+	private final static String wwwFormUrlEncodedContentType = "application/x-www-form-urlencoded; charset=UTF-8";
 
-	// TODO: add charset when https://mambucom.jira.com/browse/MBU-4137 is fixed
-	private final String jsonContentType = "application/json"; // "application/json; charset=UTF-8";
+	// Added charset charset=UTF-8, MBU-4137 is now fixed
+	private final static String jsonContentType = "application/json; charset=UTF-8";
 
-	private final String APPLICATION_KEY = APIData.APPLICATION_KEY; // as per JIRA issue MBU-3236
+	private final static String APPLICATION_KEY = APIData.APPLICATION_KEY; // as per JIRA issue MBU-3236
 
 	private final static Logger LOGGER = Logger.getLogger(RequestExecutorImpl.class.getName());
 
@@ -93,23 +94,23 @@ public class RequestExecutorImpl implements RequestExecutor {
 	public String executeRequest(String urlString, ParamsMap params, Method method, ContentType contentTypeFormat)
 			throws MambuApiException {
 
+		// Log API Request details
+		logApiRequest(method, contentTypeFormat, urlString, params);
+
 		// Add 'Application Key', if it was set by the application
 		// Mambu may handle API requests differently for different Application Keys
 
 		String applicationKey = MambuAPIFactory.getApplicationKey();
 		if (applicationKey != null) {
 			// add application key to the params map
-			if (params == null)
+			if (params == null) {
 				params = new ParamsMap();
+			}
 			params.addParam(APPLICATION_KEY, applicationKey);
 
-			// Log the App key (the first 3 and last 3 chars only)
-			final int keyLength = applicationKey.length();
-			final int printLength = 3;
-			// Mambu App Keys are very long but just to prevent any errors need to ensure there is enough to print
-			if (keyLength >= printLength)
-				LOGGER.info("Added Application key=" + applicationKey.substring(0, printLength) + "..."
-						+ applicationKey.substring(keyLength - printLength, keyLength));
+			// Log that Application key was added
+			logAppKey(applicationKey);
+
 		}
 
 		String response = "";
@@ -156,39 +157,34 @@ public class RequestExecutorImpl implements RequestExecutor {
 		httpPost.setHeader("Content-Type", contentType);
 		httpPost.setHeader("Authorization", "Basic " + encodedAuthorization);
 
-		LOGGER.info("POST With ContentType=" + contentType + " URL=" + urlString);
-
 		if (params != null && params.size() > 0) {
 			switch (contentTypeFormat) {
 
 			case WWW_FORM:
 				// convert parms to a list for HttpEntity
 				List<NameValuePair> httpParams = getListFromParams(params);
-				// use UTF-8 to encode
 
+				// use UTF-8 to encode
 				HttpEntity postEntity = new UrlEncodedFormEntity(httpParams, UTF8_charset);
 
 				httpPost.setEntity(postEntity);
 
-				LOGGER.info("WWW_FORM: Params as URL string=" + params.getURLString());
 				break;
 
 			case JSON:
 				// Parameter (json string) is expected as JSON_OBJECT parameter name
-				final String jsonString = params.get(APIData.JSON_OBJECT);
+				String jsonString = params.get(APIData.JSON_OBJECT);
 
 				// Add APPKEY to jsonString (see MBU-3892, implemented in 3.3 release)
-				String jsonWithAppKey = addAppKeyToJson(jsonString, params);
+				jsonString = addAppKeyToJson(jsonString, params);
 
 				// Format jsonEntity
-				StringEntity jsonEntity = new StringEntity(jsonWithAppKey, UTF8_charset);
+				StringEntity jsonEntity = new StringEntity(jsonString, UTF8_charset);
 
 				httpPost.setEntity(jsonEntity);
 
-				LOGGER.info("JSON: jsonString=" + jsonWithAppKey);
 				break;
 			}
-
 		}
 
 		// execute
@@ -204,25 +200,25 @@ public class RequestExecutorImpl implements RequestExecutor {
 		if (entity != null) {
 
 			content = entity.getContent();
-			if (content != null)
+			if (content != null) {
 				response = readStream(content);
+			}
 		}
+
+		// Log Mambu response: success or error message
+		logApiResponse(status, response);
 
 		if (status != HttpURLConnection.HTTP_OK && status != HttpURLConnection.HTTP_CREATED) {
 
 			errorCode = status;
-			LOGGER.info("Error status=" + status + " Error response=" + response);
-		}
 
-		if (errorCode == null)
-			// For logging only: log successful response
-			LOGGER.info("Status=" + status + "\nResponse=" + response);
-
-		// check if we hit an error
-		if (errorCode != null) {
+			// Log raising exception
+			if (LOGGER.isLoggable(Level.WARNING)) {
+				LOGGER.warning("Creating exception, error code=" + errorCode + " for url=" + urlString);
+			}
 			// pass to MambuApiException the content that goes with the error code
-			LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response);
 			throw new MambuApiException(errorCode, response);
+
 		}
 
 		return response;
@@ -241,7 +237,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 		if (params != null && params.size() > 0) {
 			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
 		}
-		LOGGER.info("GET with URL with params=" + urlString);
 
 		HttpParams httpParameters = new BasicHttpParams();
 
@@ -261,9 +256,13 @@ public class RequestExecutorImpl implements RequestExecutor {
 		String contentTypeStr = "";
 		if (responseContentType != null) {
 			contentTypeStr = responseContentType.getValue();
-			LOGGER.info("contentType in Response=" + contentTypeStr);
+			if (LOGGER.isLoggable(Level.INFO)) {
+				LOGGER.info("contentType in Response=" + contentTypeStr);
+			}
 		} else {
-			LOGGER.info("response is NULL, so no contentType");
+			if (LOGGER.isLoggable(Level.INFO)) {
+				LOGGER.info("response is NULL, so no contentType");
+			}
 		}
 
 		InputStream content = null;
@@ -272,24 +271,25 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		if (entity != null) {
 			content = entity.getContent();
-			if (content != null)
+			if (content != null) {
 				response = readStream(content);
+			}
 		}
+
+		// Log Mambu response (we do not set content type for GET
+		logApiResponse(status, response);
+
 		// if status is not Ok - set error code
 		if (status != HttpURLConnection.HTTP_OK) {
 			errorCode = status;
-			LOGGER.info("Error status=" + status + " Error response=" + response);
-		}
 
-		if (errorCode == null)
-			// For logging only: log successful response
-			LOGGER.info("Status=" + status + "\nResponse=" + response);
-
-		// check if we hit an error
-		if (errorCode != null) {
+			// Log raising Mambu Exception
+			if (LOGGER.isLoggable(Level.WARNING)) {
+				LOGGER.warning("Creating Mambu exception for error code=" + errorCode + " for url=" + urlString);
+			}
 			// pass to MambuApiException the content that goes with the error code
-			LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response);
 			throw new MambuApiException(errorCode, response);
+
 		}
 
 		return response;
@@ -311,8 +311,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
 		}
 
-		LOGGER.info("DELETE with URL with params=" + urlString);
-
 		HttpParams httpParameters = new BasicHttpParams();
 
 		HttpClient httpClient = new DefaultHttpClient(httpParameters);
@@ -332,30 +330,29 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		if (entity != null) {
 			content = entity.getContent();
-			if (content != null)
+			if (content != null) {
 				response = readStream(content);
+			}
 		}
+
+		// Log Mambu response
+		logApiResponse(status, response);
+
 		// if status is not Ok - set error code
 		if (status != HttpURLConnection.HTTP_OK) {
 			errorCode = status;
-			LOGGER.info("Error status=" + status + " Error response=" + response);
-		}
 
-		if (errorCode == null)
-			// For logging only: log successful response
-			LOGGER.info("Status=" + status + "\nResponse=" + response);
-
-		// check if we hit an error
-		if (errorCode != null) {
+			// Log raising exception
+			if (LOGGER.isLoggable(Level.WARNING)) {
+				LOGGER.warning("Creating exception, error code=" + errorCode + " for url=" + urlString);
+			}
 			// pass to MambuApiException the content that goes with the error code
-			LOGGER.warning("Creating exception, error code=" + errorCode + " response=" + response + " for url="
-					+ urlString);
 			throw new MambuApiException(errorCode, response);
+
 		}
 
 		return response;
 	}
-
 	/**
 	 * Reads a stream into a String
 	 * 
@@ -468,5 +465,180 @@ public class RequestExecutorImpl implements RequestExecutor {
 		jsonWithAppKey.insert(position + 1, appKeyString);
 
 		return jsonWithAppKey.toString();
+	}
+
+	/**
+	 * Log API request details. This is a helper method for using consistent formating when using Java Logger to print
+	 * the details of the API request
+	 * 
+	 * @param method
+	 *            request's method
+	 * @param contentType
+	 *            request's content type
+	 * @param urlString
+	 *            request's url
+	 * @param params
+	 *            the ParamsMap.
+	 * 
+	 *            The method shall be invoked before the appKey is added to the map to avoid printing appKey details
+	 * 
+	 */
+	private void logApiRequest(Method method, ContentType contentType, String urlString, ParamsMap params) {
+
+		if (!LOGGER.isLoggable(Level.INFO) || method == null) {
+			return;
+		}
+
+		// Log Method and URL.
+		// Log params if applicable
+		// Log Json for Json requests
+		String logDetails = "\n" + method.name() + " with URL=";
+		String jsonString = null;
+		String urlWithParams = null;
+		switch (method) {
+		case GET:
+			// For GET add params to the url as in to be sent request itself
+			urlWithParams = new String((urlHelper.createUrlWithParams(urlString, params)));
+			logDetails = logDetails + urlWithParams;
+			break;
+
+		case POST:
+			switch (contentType) {
+			case WWW_FORM:
+				// Log URL and params as separate items
+				logDetails = logDetails + urlString;
+				if (params != null) {
+					String postParams = params.getURLString();
+					logDetails = logDetails + "\nPOST Params=" + postParams;
+				}
+				break;
+			case JSON:
+				// Log URL and Json string
+				logDetails = logDetails + urlString;
+				if (params != null) {
+					jsonString = params.get(APIData.JSON_OBJECT);
+				}
+				break;
+			}
+
+			break;
+		case DELETE:
+			// For DELETE ads params to the url as in to be sent request itself
+			urlWithParams = new String((urlHelper.createUrlWithParams(urlString, params)));
+			logDetails = logDetails + urlWithParams;
+			break;
+
+		default:
+			break;
+
+		}
+		// Add content type to logging, if not NULL
+		if (contentType != null) {
+			logDetails = logDetails + " (contentType=" + contentType + ")";
+		}
+
+		// Now we can Log URL and Params
+		LOGGER.info(logDetails);
+		// For Jsons - log the Json string
+		if (jsonString != null) {
+			logJsonInput(jsonString);
+		}
+
+	}
+	/**
+	 * Log Json string details. This is a helper method for modifying the original Json string to remove details that
+	 * are needed for logging (for example, encoded data when sending documents via Json)
+	 * 
+	 * @param jsonString
+	 *            json string in the API request
+	 * 
+	 */
+	private void logJsonInput(String jsonString) {
+
+		if (!LOGGER.isLoggable(Level.INFO) || jsonString == null) {
+			return;
+		}
+		// handle some special cases to have user friendly output
+		// Handle jsons with encoded documents. Encoded data is of no use for logging. Strip it out
+
+		// Documents API case - remove base64 encoding
+		// Find the documentContent tag (containng base64 string) and remove extra conetnt
+		final String documentRoot = "{\"document\":";
+		if (jsonString.startsWith(documentRoot)) {
+			final String documentContentParam = "\"documentContent\":";
+			int contentStarts = jsonString.indexOf(documentContentParam);
+			if (contentStarts != -1) {
+				// Get everything up to the documentContent plus some more
+				final int encodedCharsToShow = 20;
+				// Also add "..." to indicate that the output was truncated
+				jsonString = jsonString
+						.substring(0, contentStarts + documentContentParam.length() + encodedCharsToShow) + "...\"}";
+
+			}
+		}
+
+		LOGGER.info("Input JsonString=" + jsonString);
+
+	}
+
+	/**
+	 * Log API response details. This is a helper method for using consistent formating when using Java Logger to print
+	 * the details of the API response
+	 * 
+	 * @param status
+	 *            response status
+	 * @param response
+	 *            response string
+	 */
+	private void logApiResponse(int status, String response) {
+
+		if (!LOGGER.isLoggable(Level.INFO)) {
+			return;
+		}
+		// Log response details
+		if (status != HttpURLConnection.HTTP_OK && status != HttpURLConnection.HTTP_CREATED) {
+			// Error status. Log as error
+			LOGGER.info("Error status=" + status + " Error response=" + response);
+		} else {
+			// Log success Response.
+			// Handle special cases where response contains encoded strings which we don't need to see in the logger
+			// (for example, base64 encoded data when getting imagges and files)
+			// Find ";base64,";
+			final String encodedDataIndicator = APIData.BASE64_ENCODING_INDICATOR;
+			final int encodedDataStart = response.indexOf(encodedDataIndicator);
+			if (encodedDataStart != -1) {
+				// This is a reponse containing base64 encoded data. Strip the bulk of it out
+				final int howManyEncodedToShow = 20;
+				int totalCharsToShow = encodedDataStart + encodedDataIndicator.length() + howManyEncodedToShow;
+				// Get the needed part of this response and add "..." indicator
+				response = response.substring(0, totalCharsToShow) + "...\"";
+			}
+
+			// Log API response Status and the Response string
+			LOGGER.info("\nResponse Status=" + status + "\nResponse message=" + response);
+		}
+
+	}
+
+	/**
+	 * Log Application Key details. This is a helper method for logging partial applicaton key details to indicate the
+	 * that application key is used when building the API request
+	 * 
+	 * @param applicationKey
+	 *            Application Key string
+	 */
+	private void logAppKey(String applicationKey) {
+
+		if (!LOGGER.isLoggable(Level.INFO)) {
+			return;
+		}
+		final int keyLength = applicationKey.length();
+		final int printLength = 3;
+		// Mambu App Keys are very long but just to prevent any errors need to ensure there is enough to print
+		if (keyLength >= printLength) {
+			LOGGER.info("Added Application key=" + applicationKey.substring(0, printLength) + "..."
+					+ applicationKey.substring(keyLength - printLength, keyLength));
+		}
+
 	}
 }
