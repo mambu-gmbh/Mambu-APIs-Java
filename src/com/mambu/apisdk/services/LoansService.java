@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.exception.MambuApiResponseMessage;
 import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.GsonUtils;
@@ -22,7 +23,8 @@ import com.mambu.loans.shared.model.LoanProduct;
 import com.mambu.loans.shared.model.LoanTransaction;
 
 /**
- * Service class which handles API operations like retrieval, creation or changing state of loan accounts
+ * Service class which handles API operations like retrieval, creation or changing state of loan accounts. See full
+ * Mambu Loan API documentation at: http://api.mambu.com/customer/portal/articles/1162283-loans-api?b_id=874
  * 
  * @author ipenciuc
  * 
@@ -49,6 +51,7 @@ public class LoansService {
 	private static final String TYPE_REPAYMENT = APIData.TYPE_REPAYMENT;
 	private static final String TYPE_DISBURSMENT = APIData.TYPE_DISBURSMENT;
 	private static final String TYPE_APPROVAL = APIData.TYPE_APPROVAL;
+	private static final String TYPE_UNDO_APPROVAL = APIData.TYPE_UNDO_APPROVAL;
 	private static final String TYPE_REJECT = APIData.TYPE_REJECT;
 	private static final String TYPE_FEE = APIData.TYPE_FEE;
 
@@ -185,6 +188,64 @@ public class LoansService {
 		return laonAccount;
 	}
 
+	/****
+	 * Undo Approve for a loan account
+	 * 
+	 * @param accountId
+	 *            the id of the account
+	 * 
+	 * @return loanAccount
+	 * 
+	 *         Note: The account object in the response doesn't contain custom fields
+	 * 
+	 * @throws MambuApiException
+	 */
+	public LoanAccount undoApproveLoanAccount(String accountId, String notes) throws MambuApiException {
+		// E.g. format: POST "type=UNDO_APPROVAL" /api/loans/{id}/transactions
+
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not  be null or empty");
+		}
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, TYPE_UNDO_APPROVAL);
+		paramsMap.addParam(NOTES, notes);
+
+		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId + "/" + TRANSACTIONS));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
+
+		LoanAccount laonAccount = GsonUtils.createGson().fromJson(jsonResponse, LoanAccount.class);
+
+		return laonAccount;
+	}
+	/***
+	 * Delete Loan Account by its Id
+	 * 
+	 * @param loanAccountId
+	 * 
+	 * @return status
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean deleteLoanAccount(String loanAccountId) throws MambuApiException {
+
+		// create the api call
+		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + loanAccountId));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.DELETE);
+
+		// On success the response is: {"returnCode":0,"returnStatus":"SUCCESS"}
+		// An exception can be thrown: E.g. ({"returnCode":100,"returnStatus":"INVALID_LOAN_ACCOUNT_ID"})
+
+		// Parse the response. (Though, as no exception was thrown here, must be a "SUCCESS" response)
+		boolean deletionStatus = false;
+		MambuApiResponseMessage response = new MambuApiResponseMessage(jsonResponse);
+		if (response.getReturnCode() == 0) {
+			deletionStatus = true;
+		}
+
+		return deletionStatus;
+	}
 	/****
 	 * Reject a loan account if the user has permission to reject loan accounts.
 	 * 

@@ -1,5 +1,6 @@
 package com.mambu.apisdk.exception;
 
+import com.google.gson.JsonSyntaxException;
 import com.mambu.apisdk.util.APIExceptionData;
 import com.mambu.apisdk.util.GsonUtils;
 
@@ -60,17 +61,28 @@ public class MambuApiResponseMessage {
 			return;
 		}
 
-		MambuApiResponseMessage obj = (MambuApiResponseMessage) GsonUtils.createGson().fromJson(mambuResponse,
-				MambuApiResponseMessage.class);
-		if (obj == null) {
+		MambuApiResponseMessage obj = null;
+
+		// Need to check for valid Json format: not all Mambu exceptions would have properly formatted response
+		// (returnCode, returnStatus, errorSource). Mambu exceptions thrown for IO errors, for example, do not.
+
+		try {
+
+			obj = (MambuApiResponseMessage) GsonUtils.createGson().fromJson(mambuResponse,
+					MambuApiResponseMessage.class);
+
+		} catch (JsonSyntaxException e) {
+			returnCode = -1;
+			returnStatus = "";
+			errorSource = "";
 			return;
 		}
+
 		returnCode = obj.returnCode;
 		returnStatus = obj.returnStatus;
 		errorSource = obj.errorSource;
 
 	}
-
 	// Constructor with Mambu Api exception.
 	// Given Mambu's APIexception the application can convert it into a MambuApiResponseMessage object
 	public MambuApiResponseMessage(MambuApiException e) {
