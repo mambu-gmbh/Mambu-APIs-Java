@@ -139,7 +139,7 @@ public class APIData {
 	}
 
 	// Activities API
-	public static String ACTIVITIES = "activities";
+	public static final String ACTIVITIES = "activities";
 	public static final String FROM = "from";
 	public static final String TO = "to";
 	public static final String CENTRE_ID = "centreID";

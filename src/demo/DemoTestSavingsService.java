@@ -53,7 +53,7 @@ public class DemoTestSavingsService {
 
 			testGetSavingsAccount();
 			testGetSavingsAccountDetails();
-			// Available sunce 3.5
+			// Available since 3.5
 			testUndoApproveSavingsAccount();
 
 			// Available since 3.4
@@ -399,7 +399,7 @@ public class DemoTestSavingsService {
 		System.out.println("\nIn test Undo Approve Savings Account");
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
-		String accountId = "JLXD301"; // SAVINGS_ACCOUNT_ID
+		String accountId = SAVINGS_ACCOUNT_ID;
 		SavingsAccount account = service
 				.undoApproveSavingsAccount(accountId, "UNDO Approve Savings account demo notes");
 

@@ -55,12 +55,16 @@ public class ActivitiesService {
 	 * 
 	 * 
 	 * @param fromDate
-	 *            starting date for the time interval (mandatory)
+	 *            starting date for the time interval (mandatory). Only the full date without time is used, the date is
+	 *            inclusive
 	 * @param toDate
-	 *            end date for the time interval (mandatory)
+	 *            end date for the time interval (mandatory). Only the full date without time is used,the date is
+	 *            inclusive
 	 * @param mambuEntity
-	 *            Mambu Entity for requested activities. If Mmabu entity is null then all available activities for all
-	 *            entities supported by API are returned
+	 *            Mambu Entity for requested activities. If Mambu entity is null then all available activities for all
+	 *            entities supported by API are returned. The following classes are currently supported: Client, Group,
+	 *            Centre, Branch, LoanProduct, SavingsProduct, LoanAccount, SvaingsAccount, User
+	 * 
 	 * @param entityId
 	 *            the Id for the Mambu entity for requested activities
 	 * 
@@ -107,18 +111,11 @@ public class ActivitiesService {
 			throw new IllegalArgumentException("Invalid To Date");
 		}
 
-		// Get the name of the ID parameter based on the requested Mambu Class
-		String idParameterName = null;
+		// Get the name of the ID parameter based on the requested Mambu Class and add id to the ParamsMap
 		if (mambuEntity != null) {
-			try {
-				idParameterName = getIdParameterName(mambuEntity);
-			} catch (IllegalArgumentException e) {
-				throw e;
-			}
+			params.put(getIdParameterName(mambuEntity), entityId);
 		}
-		if (idParameterName != null) {
-			params.put(idParameterName, entityId);
-		}
+
 		// create the api call
 		String urlString = new String(mambuAPIService.createUrl(ACTIVITIES + "/"));
 
@@ -134,9 +131,11 @@ public class ActivitiesService {
 	 * A convenience method to GET All activities within a specified date interval
 	 * 
 	 * @param fromDate
-	 *            starting date for the time interval (mandatory)
+	 *            starting date for the time interval (mandatory).Only the full date without time is used, the date is
+	 *            inclusive
 	 * @param toDate
-	 *            end date for the time interval (mandatory)
+	 *            end date for the time interval (mandatory). Only the full date without time is used,the date is
+	 *            inclusive
 	 * 
 	 * @return a list of JSONActivities
 	 * 
@@ -154,7 +153,9 @@ public class ActivitiesService {
 	 * savingsAccountID or userID
 	 * 
 	 * @param mambuClass
-	 *            the class of the mambu entity for which the ID is provided
+	 *            the class of the mambu entity for which the ID is provided. The following classes are currently
+	 *            supported: Client, Group, Centre, Branch, LoanProduct, SavingsProduct, LoanAccount, SvaingsAccount,
+	 *            User
 	 * 
 	 * @return idParameterName the name of the parameter to be used in the API request (e.g clientID, loanAccountID,
 	 *         etc.)
