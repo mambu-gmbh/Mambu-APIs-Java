@@ -51,6 +51,7 @@ public class DemoTestLoanService {
 			demoProduct = DemoUtil.getDemoLoanProduct();
 
 			testCreateJsonAccount();
+
 			testApproveLoanAccount();
 			testGetLoanAccountDetails();
 			testUpdateLoanAccount();
@@ -84,6 +85,11 @@ public class DemoTestLoanService {
 			testCreateJsonAccount();
 
 			testRejectLoanAccount();
+
+			// Available since 3.5
+			testUndoApproveLoanAccount();
+
+			testDeleteLoanAccount();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Loan Service");
@@ -399,6 +405,28 @@ public class DemoTestLoanService {
 
 		System.out.println("Rejecting loan account with the " + NEW_LOAN_ACCOUNT_ID + " Loan name"
 				+ account.getLoanName() + "  Account State=" + account.getState().toString());
+	}
+
+	public static void testUndoApproveLoanAccount() throws MambuApiException {
+		System.out.println("\nIn test Undo Approve LoanAccount");
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		final String accountId = NEW_LOAN_ACCOUNT_ID;
+		LoanAccount account = loanService.undoApproveLoanAccount(accountId, "some undo approve demo notes");
+
+		System.out.println("Undo Approving loan account with the " + accountId + " Loan name " + account.getLoanName()
+				+ "  Account State=" + account.getState().toString());
+	}
+
+	public static void testDeleteLoanAccount() throws MambuApiException {
+		System.out.println("\nIn testDeleteLoanAccount");
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+		String loanAccountId = NEW_LOAN_ACCOUNT_ID;
+
+		boolean status = loanService.deleteLoanAccount(loanAccountId);
+
+		System.out.println("Deletion status=" + status);
 	}
 
 	// Loan Products

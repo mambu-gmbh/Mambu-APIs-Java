@@ -53,6 +53,9 @@ public class DemoTestSavingsService {
 
 			testGetSavingsAccount();
 			testGetSavingsAccountDetails();
+			// Available since 3.5
+			testUndoApproveSavingsAccount();
+
 			// Available since 3.4
 			testCloseSavingsAccount();
 			testDeleteSavingsAccount();
@@ -392,7 +395,18 @@ public class DemoTestSavingsService {
 			System.out.println("No Custom Fields for this Account\n");
 		}
 	}
+	public static void testUndoApproveSavingsAccount() throws MambuApiException {
+		System.out.println("\nIn test Undo Approve Savings Account");
 
+		SavingsService service = MambuAPIFactory.getSavingsService();
+		String accountId = SAVINGS_ACCOUNT_ID;
+		SavingsAccount account = service
+				.undoApproveSavingsAccount(accountId, "UNDO Approve Savings account demo notes");
+
+		System.out.println("UNDO Approved Savings account with id=" + account.getId() + "\tName=" + account.getName()
+				+ "\tAccount State=" + account.getAccountState().toString());
+
+	}
 	public static void testDeleteSavingsAccount() throws MambuApiException {
 		System.out.println("\nIn test Delete Savings Account");
 

@@ -45,6 +45,7 @@ public class APIData {
 	public static final String TYPE_REPAYMENT = "REPAYMENT";
 	public static final String TYPE_DISBURSMENT = "DISBURSMENT";
 	public static final String TYPE_APPROVAL = "APPROVAL";
+	public static final String TYPE_UNDO_APPROVAL = "UNDO_APPROVAL";
 	public static final String TYPE_REJECT = "REJECT";
 	public static final String TYPE_FEE = "FEE";
 	public static final String TYPE_DEPOSIT = "DEPOSIT";
@@ -136,6 +137,17 @@ public class APIData {
 	public enum IMAGE_SIZE_TYPE {
 		LARGE, MEDIUM, SMALL_THUMB, TINY_THUMB
 	}
+
+	// Activities API
+	public static final String ACTIVITIES = "activities";
+	public static final String FROM = "from";
+	public static final String TO = "to";
+	public static final String CENTRE_ID = "centreID";
+	public static final String SAVINGS_ACCOUNT_ID = "savingsAccountID";
+	public static final String LOAN_ACCOUNT_ID = "loanAccountID";
+	public static final String LOAN_PRODUCT_ID = "loanProductID";
+	public static final String SAVINGS_PRODUCT_ID = "savingsProductID";
+	public static final String USER_ID = "userID";
 
 	// Client fields
 	public static String FIRST_NAME = "firstName";

@@ -23,7 +23,8 @@ import com.mambu.savings.shared.model.SavingsProduct;
 import com.mambu.savings.shared.model.SavingsTransaction;
 
 /**
- * Service class which handles API operations like retrieval, creation or changing state of savings accounts
+ * Service class which handles API operations like retrieval, creation or changing state of savings accounts. See full
+ * Mambu Savings API documentation at http://api.mambu.com/customer/portal/articles/1162285-savings-api?b_id=874
  * 
  * @author ipenciuc
  * 
@@ -41,6 +42,7 @@ public class SavingsService {
 	private static final String TYPE_WITHDRAWAL = APIData.TYPE_WITHDRAWAL;
 	private static final String TYPE_TRANSFER = APIData.TYPE_TRANSFER;
 	private static final String TYPE_APPROVAL = APIData.TYPE_APPROVAL;
+	private static final String TYPE_UNDO_APPROVAL = APIData.TYPE_UNDO_APPROVAL;
 
 	private static final String AMOUNT = APIData.AMOUNT;
 	private static final String DATE = APIData.DATE;
@@ -192,6 +194,36 @@ public class SavingsService {
 		return savingsAccount;
 	}
 
+	/****
+	 * Undo Approve for a savings account
+	 * 
+	 * @param accountId
+	 *            the id of the savings account
+	 * 
+	 * @return savingsAccount
+	 * 
+	 *         Note: The account object in the response doesn't contain custom fields
+	 * 
+	 * @throws MambuApiException
+	 */
+	public SavingsAccount undoApproveSavingsAccount(String accountId, String notes) throws MambuApiException {
+		// E.g. format: POST "type=UNDO_APPROVAL" /api/savings/{id}/transactions
+
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not  be null or empty");
+		}
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, TYPE_UNDO_APPROVAL);
+		paramsMap.addParam(NOTES, notes);
+
+		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/" + accountId + "/" + TRANSACTIONS));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
+
+		SavingsAccount savingsAccount = GsonUtils.createGson().fromJson(jsonResponse, SavingsAccount.class);
+
+		return savingsAccount;
+	}
 	/***
 	 * Get Savings Account Transactions by an account id and offset and limit
 	 * 
