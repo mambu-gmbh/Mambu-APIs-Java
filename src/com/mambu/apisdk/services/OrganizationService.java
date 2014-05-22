@@ -50,6 +50,15 @@ public class OrganizationService {
 		this.mambuAPIService = mambuAPIService;
 	}
 
+	/***
+	 * Get current mambuAPIService
+	 * 
+	 * @return mambuAPIService the service responsible for the connection to the server
+	 */
+	public MambuAPIService getMambuAPIService() {
+		return mambuAPIService;
+	}
+
 	/**
 	 * Requests the organization currency
 	 * 
@@ -98,38 +107,8 @@ public class OrganizationService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<Branch>>() {}.getType();
-		List<Branch> branches = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
-
-		return branches;
-	}
-
-	/**
-	 * Get a paginated list of branches with full details, including addresses
-	 * 
-	 * @param offset
-	 *            the offset of the response. If not set a value of 0 is used by default
-	 * @param limit
-	 *            the maximum number of response entries. If not set a value of 50 is used by default
-	 * 
-	 * @return List<Branch>
-	 * 
-	 * @throws MambuApiException
-	 */
-	public List<Branch> getBranchesWithDetails(String offset, String limit) throws MambuApiException {
-
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(BRANCHES));
-
-		ParamsMap params = new ParamsMap();
-
-		params.put(OFFSET, offset);
-		params.put(LIMIT, limit);
-		params.put(FULL_DETAILS, "true");
-
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
-
-		Type collectionType = new TypeToken<List<Branch>>() {}.getType();
+		Type collectionType = new TypeToken<List<Branch>>() {
+		}.getType();
 		List<Branch> branches = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return branches;
@@ -187,41 +166,6 @@ public class OrganizationService {
 	}
 
 	/**
-	 * Get paginated list of centres with full Details
-	 * 
-	 * @param branchId
-	 *            Centers for the specified branch are returned. If NULL, all centres are searched
-	 * @param offset
-	 *            the offset of the response. If not set a value of 0 is used by default
-	 * @param limit
-	 *            the maximum number of response entries. If not set a value of 50 is used by default
-	 * 
-	 * @return an array of Centres
-	 * 
-	 * @throws MambuApiException
-	 */
-	public List<Centre> getCentresWithDetails(String branchId, String offset, String limit) throws MambuApiException {
-
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(APIData.CENTRES));
-
-		ParamsMap params = new ParamsMap();
-
-		params.addParam(APIData.BRANCH_ID, branchId); // if null, all centres
-														// are searched
-		params.put(OFFSET, offset);
-		params.put(LIMIT, limit);
-		params.put(FULL_DETAILS, "true");
-
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
-
-		Type collectionType = new TypeToken<List<Centre>>() {}.getType();
-		List<Centre> centres = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
-
-		return centres;
-	}
-
-	/**
 	 * Get paginated list of centres
 	 * 
 	 * @param branchId
@@ -249,11 +193,13 @@ public class OrganizationService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<Centre>>() {}.getType();
+		Type collectionType = new TypeToken<List<Centre>>() {
+		}.getType();
 		List<Centre> centres = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return centres;
 	}
+
 	// Custom Fields and Custom Field Sets
 	/**
 	 * Get CustomField object details by Custom Field ID
@@ -302,7 +248,8 @@ public class OrganizationService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<CustomFieldSet>>() {}.getType();
+		Type collectionType = new TypeToken<List<CustomFieldSet>>() {
+		}.getType();
 		List<CustomFieldSet> sustomFieldSets = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return sustomFieldSets;

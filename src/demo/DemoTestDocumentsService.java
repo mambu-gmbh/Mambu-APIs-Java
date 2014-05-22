@@ -6,19 +6,25 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
 
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.services.DocumentsService;
+import com.mambu.apisdk.services.LoansService;
+import com.mambu.apisdk.services.SavingsService;
+import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.APIData.IMAGE_SIZE_TYPE;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
 import com.mambu.docs.shared.model.OwnerType;
 import com.mambu.loans.shared.model.LoanAccount;
+import com.mambu.savings.shared.model.SavingsAccount;
 
 /**
  * Test class to show example usage of the documents api calls
@@ -31,8 +37,13 @@ public class DemoTestDocumentsService {
 	private static User demoUser;
 	private static Client demoClient;
 	private static LoanAccount demoLoanAccount;
+	private static SavingsAccount demoSavingsAccount;
 
 	private static String UPLOADED_DOCUMENT_KEY;
+
+	private static long CLIENT_DOCUMENT_ID;
+	private static long LOAN_DOCUMENT_ID;
+	private static long SAVAINGS_DOCUMENT_ID;
 
 	public static void main(String[] args) {
 
@@ -42,12 +53,17 @@ public class DemoTestDocumentsService {
 			demoUser = DemoUtil.getDemoUser();
 			demoClient = DemoUtil.getDemoClient();
 			demoLoanAccount = DemoUtil.getDemoLoanAccount();
+			demoSavingsAccount = DemoUtil.getDemoSavingsAccount();
 
 			testUploadDocumentFromFile();
 
 			testUploadDocument();
 
 			testGetImage();
+
+			testGetDocuments();
+
+			testGetDocument();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Document Service");
@@ -70,9 +86,12 @@ public class DemoTestDocumentsService {
 		document.setDescription("Sample text file");
 		document.setDocumentHolderKey(demoClient.getEncodedKey());
 		document.setDocumentHolderType(OwnerType.CLIENT);
-		document.setName("sample.txt");
+		// TODO: If name contains file with extension - upload in 3.6 version doesn't work.
+		// See https://mambucom.jira.com/browse/MBU-5816
+		document.setName("sample123");
 		document.setOriginalFilename("sample-original.txt");
 		document.setType("txt");
+
 		jsonDocument.setDocument(document);
 
 		String documentContent = "VGhpcyBpcyBhIHNhbXBsZSB0ZXh0IGRvY3VtZW50IGluIFVURi04IHdpdGggc3BlY2lhbCBjaGFyYWN0ZXJzIGxpa2Ugw6TDtsO8PcOpJyIu";
@@ -82,8 +101,9 @@ public class DemoTestDocumentsService {
 		// Save the key
 		UPLOADED_DOCUMENT_KEY = documentResponse.getEncodedKey();
 
-		System.out.println("Document uploaded OK, ID=" + documentResponse.getId() + " Name= "
-				+ documentResponse.getName() + " Document Holder Key=" + documentResponse.getDocumentHolderKey());
+		System.out.println("Document uploaded OK, ID=" + documentResponse.getId() + "\tName= "
+				+ documentResponse.getName() + "\tHolder Type=" + documentResponse.getDocumentHolderType()
+				+ "\tHolder Key=" + documentResponse.getDocumentHolderKey());
 	}
 
 	public static void testUploadDocumentFromFile() throws MambuApiException {
@@ -111,12 +131,15 @@ public class DemoTestDocumentsService {
 		document.setCreatedByUserKey("1");
 		document.setDescription("Sample JPEG file");
 
-		// / Loan: 8a24a0b141a804030141aacf6ac42d1f // Client: 8ad3e12340719f2b0140878460884524
 		document.setDocumentHolderKey(demoLoanAccount.getEncodedKey());
 		// OwnerType.LOAN_ACCOUNT or OwnerType.CLIENT
 		document.setDocumentHolderType(OwnerType.LOAN_ACCOUNT);
-		document.setName("Loan Sample JPEG file");
-		document.setOriginalFilename("sample-original.jpg");
+
+		// document.setName("Loan Sample JPEG file");
+		// TODO: If name has spaces - upload in 3.6 version doesn't work.
+		// See https://mambucom.jira.com/browse/MBU-5816
+		document.setName("test");
+		document.setOriginalFilename("abc d.txt");
 		document.setType("jpg");
 
 		jsonDocument.setDocument(document);
@@ -137,6 +160,7 @@ public class DemoTestDocumentsService {
 		System.out.println("Document uploaded OK, ID=" + documentResponse.getId() + " Name= "
 				+ documentResponse.getName() + " Document Holder Key=" + documentResponse.getDocumentHolderKey());
 	}
+
 	//
 	public static void testGetImage() throws MambuApiException {
 		System.out.println("\nIn testGetImage");
@@ -158,6 +182,77 @@ public class DemoTestDocumentsService {
 
 		System.out.println("\ntestGetImage Ok, Length==" + base64EncodedImage.length() + "\nEncoded String="
 				+ base64EncodedImage);
+
+	}
+
+	// This method tests the DocumentService helper method getDocuments(). DemoTestClientService, DemoTestLoansService
+	// and DemoTestSavingsService provide their own, service specific, demo test methods
+	public static void testGetDocuments() throws MambuApiException {
+		System.out.println("\nIn testGetDocuments");
+
+		List<Document> documents;
+
+		// Get documents for a demo Client
+		ClientsService clientService = MambuAPIFactory.getClientService();
+		documents = DocumentsService.getDocuments(clientService.getMambuAPIService(), APIData.CLIENTS,
+				demoClient.getId());
+
+		// Log the results
+		System.out.println("\nDocuments for a Client with ID=" + demoClient.getId());
+		logDocuments(documents);
+		// Save the first doc ID for subsequent getDocument() tests
+		if (documents != null && documents.size() > 0) {
+			CLIENT_DOCUMENT_ID = documents.get(0).getId();
+		}
+
+		// Get documents for a demo Loan Account
+		LoansService loansService = MambuAPIFactory.getLoanService();
+		documents = DocumentsService.getDocuments(loansService.getMambuAPIService(), APIData.LOANS,
+				demoLoanAccount.getId());
+
+		// Log the results
+		System.out.println("\nDocuments for a Loan Account with ID=" + demoLoanAccount.getId());
+		logDocuments(documents);
+		// Save the first doc ID for subsequent getDocument() tests
+		if (documents != null && documents.size() > 0) {
+			LOAN_DOCUMENT_ID = documents.get(0).getId();
+		}
+
+		// Get documents for a demo Savings Account
+		SavingsService savingsService = MambuAPIFactory.getSavingsService();
+		documents = DocumentsService.getDocuments(savingsService.getMambuAPIService(), APIData.SAVINGS,
+				demoSavingsAccount.getId());
+
+		// Log the results
+		System.out.println("\nDocuments for a Savings Account with ID=" + demoSavingsAccount.getId());
+		logDocuments(documents);
+		// Save the first doc ID for subsequent getDocument() tests
+		if (documents != null && documents.size() > 0) {
+			SAVAINGS_DOCUMENT_ID = documents.get(0).getId();
+		}
+
+	}
+
+	public static void testGetDocument() throws MambuApiException {
+		System.out.println("\nIn testGetDocument");
+
+		DocumentsService documentsService = MambuAPIFactory.getDocumentsService();
+		String document;
+
+		// Get document details for a client
+		System.out.println("\nDocument Details for a Client document with ID=" + CLIENT_DOCUMENT_ID);
+		document = documentsService.getDocument(CLIENT_DOCUMENT_ID);
+		System.out.println("\nContent:" + document);
+
+		// Get document details for a Loan Account
+		System.out.println("\nDocument Details for a Loan document with ID=" + LOAN_DOCUMENT_ID);
+		document = documentsService.getDocument(LOAN_DOCUMENT_ID);
+		System.out.println("\nContent:" + document);
+
+		// Get document details for a Savings Account
+		System.out.println("\nDocument Details for a Savings document with ID=" + LOAN_DOCUMENT_ID);
+		document = documentsService.getDocument(SAVAINGS_DOCUMENT_ID);
+		System.out.println("\nContent:" + document);
 
 	}
 
@@ -209,4 +304,32 @@ public class DemoTestDocumentsService {
 
 	}
 
+	// Log returned Documents
+	public static void logDocuments(List<Document> documents) {
+		if (documents == null) {
+			System.out.println("Null Documents input");
+			return;
+		}
+
+		if (documents.size() == 0) {
+			System.out.println("No documents returned");
+			return;
+		}
+
+		for (Document document : documents) {
+			logDocument(document);
+		}
+	}
+
+	// Log details for the returned Document
+	public static void logDocument(Document doc) {
+		if (doc == null) {
+			System.out.println("\nNULL Document returned");
+			return;
+		}
+		System.out.println("\nDocument Id=" + doc.getId() + "\tName=" + doc.getName() + "\tFile name="
+				+ doc.getOriginalFilename() + "\tType=" + doc.getType());
+		System.out.println("Holder Type=" + doc.getDocumentHolderType() + "\tHolder Key=" + doc.getDocumentHolderKey());
+
+	}
 }

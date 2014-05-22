@@ -35,7 +35,6 @@ public class SearchService {
 	private String QUERY = APIData.QUERY;
 	private String SEARCH_TYPES = APIData.SEARCH_TYPES;
 
-	private static final String OFFSET = APIData.OFFSET;
 	private static final String LIMIT = APIData.LIMIT;
 
 	/***
@@ -47,6 +46,15 @@ public class SearchService {
 	@Inject
 	public SearchService(MambuAPIService mambuAPIService) {
 		this.mambuAPIService = mambuAPIService;
+	}
+
+	/***
+	 * Get current mambuAPIService
+	 * 
+	 * @return mambuAPIService the service responsible for the connection to the server
+	 */
+	public MambuAPIService getMambuAPIService() {
+		return mambuAPIService;
 	}
 
 	/***

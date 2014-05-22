@@ -3,6 +3,10 @@
  */
 package com.mambu.apisdk.services;
 
+import java.lang.reflect.Type;
+import java.util.List;
+
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIService;
@@ -41,6 +45,15 @@ public class DocumentsService {
 	}
 
 	/***
+	 * Get current mambuAPIService
+	 * 
+	 * @return mambuAPIService the service responsible for the connection to the server
+	 */
+	public MambuAPIService getMambuAPIService() {
+		return mambuAPIService;
+	}
+
+	/***
 	 * Upload new Document using a JSONDocument object and as json request
 	 * 
 	 * @param document
@@ -66,6 +79,82 @@ public class DocumentsService {
 		Document documentResult = GsonUtils.createGson().fromJson(jsonResponse, Document.class);
 
 		return documentResult;
+	}
+
+	/***
+	 * Get all documents for a specific Mambu service by providing the API end point and entity ID. Note, this is a
+	 * Helper method intended to be used primarily by other Mambu services. Services supporting GET Document attachments
+	 * can implement their own wrapper for getDocuments() service by calling this helper method. For example,
+	 * ClientService implements getDocuments() by calling DocumentsService.getDocumnts(mambuAPIService, APIData.CLIENTS,
+	 * clientId). As of Mambu 3.6, the following services can request GET Documents: ClientService, LoanService and
+	 * SavingsService (this list could, potentially, be extended in a future to support other services, for example,
+	 * UserService, OrganizationService (for getting Branch and Centre attachments), etc.)
+	 * 
+	 * See {@link https://mambucom.jira.com/browse/MBU-5084} for more details
+	 * 
+	 * @param mambuAPIService
+	 *            Mambu Api service to use for executing API request
+	 * 
+	 * @param serviceEndPoint
+	 *            the API endpoint string for this service. E.g. APIData.CLIENT, APIData.LOANS, etc.
+	 * 
+	 * @param entityId
+	 *            the encoded key or id of the Mambu entity for which the attached documents are to be retrieved
+	 * 
+	 * @return documents attached to the entity
+	 * 
+	 * @throws MambuApiException
+	 */
+	public static List<Document> getDocuments(MambuAPIService mambuAPIService, String serviceEndPoint, String entityId)
+			throws MambuApiException {
+
+		if (mambuAPIService == null) {
+			throw new IllegalArgumentException("Mambu API Service must not be null");
+		}
+
+		if (serviceEndPoint == null || serviceEndPoint.trim().isEmpty()) {
+			throw new IllegalArgumentException("Service EndPoint must not be null or empty");
+		}
+		if (entityId == null || entityId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Entity ID must not be null or empty");
+		}
+
+		String urlString = new String(mambuAPIService.createUrl(serviceEndPoint + "/" + entityId + "/" + DOCUMENTS));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
+
+		// Parse the Json and get a list of returned documents
+		Type collectionType = new TypeToken<List<Document>>() {
+		}.getType();
+		List<Document> documents = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
+
+		return documents;
+	}
+
+	/***
+	 * Get base64 encoded document data by document id. A typical scenario would be getting a list of attachments for a
+	 * client/group/account via getDocuments() API and then retrieving a specific document (attachment) by its id with
+	 * this API call.
+	 * 
+	 * @param documentId
+	 *            the encoded key or id of the document
+	 * 
+	 * @return base64 encoded document content
+	 * 
+	 * @throws MambuApiException
+	 */
+	public String getDocument(long documentId) throws MambuApiException {
+
+		if (documentId <= 0) {
+			throw new IllegalArgumentException("Document ID must a positive number representing existent document id");
+		}
+		final String documentidParam = Long.toString(documentId);
+
+		String urlString = new String(mambuAPIService.createUrl(DOCUMENTS + "/" + documentidParam));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
+
+		return jsonResponse;
 	}
 
 	/***

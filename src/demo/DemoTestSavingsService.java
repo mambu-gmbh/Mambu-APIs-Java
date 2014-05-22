@@ -13,6 +13,7 @@ import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.docs.shared.model.Document;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
 import com.mambu.savings.shared.model.SavingsTransaction;
@@ -32,6 +33,7 @@ public class DemoTestSavingsService {
 	private static Client demoClient;
 	private static Group demoGroup;
 	private static SavingsProduct demoSavingsProduct;
+	private static SavingsAccount demoSavingsAccount;
 
 	private static JSONSavingsAccount newAccount;
 
@@ -44,8 +46,10 @@ public class DemoTestSavingsService {
 			demoClient = DemoUtil.getDemoClient();
 			demoGroup = DemoUtil.getDemoGroup();
 			demoSavingsProduct = DemoUtil.getDemoSavingsProduct();
+			demoSavingsAccount = DemoUtil.getDemoSavingsAccount();
 
 			testCreateSavingsAccount();
+
 			// Available since 3.4
 			testUpdateSavingsAccount();
 
@@ -53,6 +57,7 @@ public class DemoTestSavingsService {
 
 			testGetSavingsAccount();
 			testGetSavingsAccountDetails();
+
 			// Available since 3.5
 			testUndoApproveSavingsAccount();
 
@@ -69,12 +74,18 @@ public class DemoTestSavingsService {
 
 			testTransferFromSavingsAccount();
 
+			// Available since 3.6
+			testApplyFeeToSavingsAccount();
+
 			testGetSavingsAccountTransactions();
 
 			testGetSavingsAccountsForGroup();
 
 			testGetSavingsProducts();
 			testGetSavingsProductById();
+
+			// Available since Mambu 3.6
+			testGetDocuments();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Savings Service");
@@ -175,6 +186,7 @@ public class DemoTestSavingsService {
 						+ transaction.getBalance().toString());
 
 	}
+
 	// Deposit
 	public static void testDepositToSavingsAccount() throws MambuApiException {
 		System.out.println("\nIn testDepositToSavingsAccount");
@@ -219,6 +231,25 @@ public class DemoTestSavingsService {
 				+ "Amount=" + transaction.getAmount().toString() + " Transac Id=" + transaction.getTransactionId());
 
 	}
+
+	// Apply Arbitrary Fee. Available since 3.6
+	public static void testApplyFeeToSavingsAccount() throws MambuApiException {
+		System.out.println("\nIn testApplyFeeToSavingsAccount");
+
+		SavingsService savingsService = MambuAPIFactory.getSavingsService();
+		String amount = "45.00";
+		String notes = "Apply Fee to savings via API notes";
+
+		System.out.println("Demo Savings account " + demoSavingsAccount.getName() + " with Id="
+				+ demoSavingsAccount.getId());
+		String accountId = demoSavingsAccount.getId();
+		SavingsTransaction transaction = savingsService.applyFeeToSavingsAccount(accountId, amount, notes);
+
+		System.out.println("Apply Fee To Savings for account with  " + accountId + " id:" + ". Amount="
+				+ transaction.getAmount().toString() + " Balance =" + transaction.getBalance().toString());
+
+	}
+
 	public static void testGetSavingsAccountsByBranchOfficerState() throws MambuApiException {
 		System.out.println("\nIn testGetSavingsAccountsByBranchOfficerState");
 
@@ -370,6 +401,7 @@ public class DemoTestSavingsService {
 		}
 
 	}
+
 	public static void testApproveSavingsAccount() throws MambuApiException {
 		System.out.println("\nIn test Approve Savings Account");
 
@@ -395,6 +427,7 @@ public class DemoTestSavingsService {
 			System.out.println("No Custom Fields for this Account\n");
 		}
 	}
+
 	public static void testUndoApproveSavingsAccount() throws MambuApiException {
 		System.out.println("\nIn test Undo Approve Savings Account");
 
@@ -407,6 +440,7 @@ public class DemoTestSavingsService {
 				+ "\tAccount State=" + account.getAccountState().toString());
 
 	}
+
 	public static void testDeleteSavingsAccount() throws MambuApiException {
 		System.out.println("\nIn test Delete Savings Account");
 
@@ -432,5 +466,18 @@ public class DemoTestSavingsService {
 		SavingsAccount account = service.closeSavingsAccount(accountId, closerType, notes);
 
 		System.out.println("Closed account id:" + account.getId() + "\tState=" + account.getAccountState().name());
+	}
+
+	public static void testGetDocuments() throws MambuApiException {
+		System.out.println("\nIn testGetDocuments");
+
+		SavingsService savingsService = MambuAPIFactory.getSavingsService();
+
+		List<Document> documents = savingsService.getSavingsAccountDocuments(demoSavingsAccount.getId());
+
+		// Log returned documents using DemoTestDocumentsService helper
+		System.out.println("Documents returned for a Savings Account with ID=" + demoSavingsAccount.getId());
+		DemoTestDocumentsService.logDocuments(documents);
+
 	}
 }

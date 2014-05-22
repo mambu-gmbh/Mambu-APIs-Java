@@ -43,6 +43,15 @@ public class UsersService {
 		this.mambuAPIService = mambuAPIService;
 	}
 
+	/***
+	 * Get current mambuAPIService
+	 * 
+	 * @return mambuAPIService the service responsible for the connection to the server
+	 */
+	public MambuAPIService getMambuAPIService() {
+		return mambuAPIService;
+	}
+
 	/**
 	 * Get all the users with offset and limit
 	 * 
@@ -67,7 +76,8 @@ public class UsersService {
 		params.put(LIMIT, limit);
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<User>>() {}.getType();
+		Type collectionType = new TypeToken<List<User>>() {
+		}.getType();
 
 		List<User> users = (List<User>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
@@ -114,7 +124,8 @@ public class UsersService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<User>>() {}.getType();
+		Type collectionType = new TypeToken<List<User>>() {
+		}.getType();
 
 		List<User> users = (List<User>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 

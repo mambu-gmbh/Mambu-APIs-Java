@@ -29,9 +29,6 @@ public class DemoTestOrganizationService {
 
 		try {
 
-			testGetCentresWithDetailsByPage();
-			testGetAllBranchesWithDetails();
-
 			testGetAllBranches();
 
 			testGetCustomField();
@@ -56,6 +53,7 @@ public class DemoTestOrganizationService {
 		}
 
 	}
+
 	public static void testGetAllBranches() throws MambuApiException {
 		System.out.println("\nIn testGetAllBranches");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
@@ -77,28 +75,7 @@ public class DemoTestOrganizationService {
 		System.out.println();
 
 	}
-	public static void testGetAllBranchesWithDetails() throws MambuApiException {
-		System.out.println("\nIn testGetAllBranchesWithDetails");
-		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
-		String offset = null;
-		String limit = null;
-		Date d1 = new Date();
-		List<Branch> branches = organizationService.getBranchesWithDetails(offset, limit);
-		Date d2 = new Date();
-		long diff = d2.getTime() - d1.getTime();
-
-		System.out.println("All Total=" + branches.size() + " Total time=" + diff);
-		for (Branch branch : branches) {
-			System.out.println(" Name=" + branch.getName() + "\tId=" + branch.getId());
-			Address address = branch.getAddress();
-			if (address != null)
-				System.out.println(" And address=" + address.getLine1());
-
-		}
-		System.out.println();
-
-	}
 	public static void testGetBranchesByPage() throws MambuApiException {
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
@@ -132,6 +109,7 @@ public class DemoTestOrganizationService {
 		else
 			System.out.println("Not Found Branch id=" + BRANCH_ID);
 	}
+
 	public static void testGetCentre() throws MambuApiException {
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
@@ -170,30 +148,7 @@ public class DemoTestOrganizationService {
 		System.out.println();
 
 	}
-	public static void testGetCentresWithDetailsByPage() throws MambuApiException {
 
-		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
-
-		String offset = "0";
-		String limit = "500";
-		String branchId = null;
-		System.out.println("\nIn testGetCentresByPage" + "  Offset=" + offset + "  Limit=" + limit);
-
-		Date d1 = new Date();
-		List<Centre> centres = organizationService.getCentresWithDetails(branchId, offset, limit);
-		Date d2 = new Date();
-		long diff = d2.getTime() - d1.getTime();
-
-		System.out.println("Total Centres=" + centres.size() + " Total time=" + diff);
-		for (Centre centre : centres) {
-			System.out.println(" Name=" + centre.getName() + "\tId=" + centre.getId());
-			Address address = centre.getAddress();
-			if (address != null)
-				System.out.println(" And address=" + address.getLine1());
-		}
-		System.out.println();
-
-	}
 	public static void testGetCentresByBranch() throws MambuApiException {
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
@@ -229,6 +184,7 @@ public class DemoTestOrganizationService {
 				+ diff);
 
 	}
+
 	// Get Custom Field by ID
 	public static void testGetCustomField() throws MambuApiException {
 
@@ -248,6 +204,7 @@ public class DemoTestOrganizationService {
 				+ " \tData Type=" + customField.getDataType().name() + " Total time=" + diff);
 
 	}
+
 	// Get CustomFieldSets by Type
 	public static void testGetCustomFieldSetsByType() throws MambuApiException {
 
