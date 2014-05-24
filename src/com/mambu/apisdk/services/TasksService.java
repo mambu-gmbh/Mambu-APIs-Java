@@ -54,15 +54,6 @@ public class TasksService {
 	}
 
 	/***
-	 * Get current mambuAPIService
-	 * 
-	 * @return mambuAPIService the service responsible for the connection to the server
-	 */
-	public MambuAPIService getMambuAPIService() {
-		return mambuAPIService;
-	}
-
-	/***
 	 * Create a new task using a Task object in a json request
 	 * 
 	 * @param task
@@ -247,7 +238,7 @@ public class TasksService {
 		String jsonTaskRequest = GsonUtils.createGson().toJson(inputJsonTask, JSONTask.class);
 
 		ParamsMap params = new ParamsMap();
-		params.put("JSON", jsonTaskRequest);
+		params.put(APIData.JSON_OBJECT, jsonTaskRequest);
 
 		String jsonResposne = mambuAPIService.executeRequest(taskUrlString, params, Method.POST, ContentType.JSON);
 

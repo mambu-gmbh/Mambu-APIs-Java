@@ -61,15 +61,6 @@ public class ClientsService {
 		this.mambuAPIService = mambuAPIService;
 	}
 
-	/***
-	 * Get current mambuAPIService
-	 * 
-	 * @return mambuAPIService the service responsible for the connection to the server
-	 */
-	public MambuAPIService getMambuAPIService() {
-		return mambuAPIService;
-	}
-
 	/**
 	 * Requests a client by their Mambu ID
 	 * 
@@ -536,8 +527,7 @@ public class ClientsService {
 	}
 
 	/***
-	 * Get all documents for a specific Client. This is a convenience method for invoking
-	 * DocumentsService.getDocuments() service for getting documents for a Client
+	 * Get all documents for a specific Client.
 	 * 
 	 * @param clientId
 	 *            the encoded key or id of the Mambu client for which attached documents are to be retrieved
@@ -552,7 +542,7 @@ public class ClientsService {
 			throw new IllegalArgumentException("ClientId ID must not be null or empty");
 		}
 
-		return DocumentsService.getDocuments(mambuAPIService, CLIENTS, clientId);
+		return new DocumentsService(mambuAPIService).getDocuments(CLIENTS, clientId);
 	}
 
 	/***
@@ -560,7 +550,7 @@ public class ClientsService {
 	 * service for getting documents for a Group
 	 * 
 	 * @param groupId
-	 *            the encoded key or id of the Mambu client for which attached documents are to be retrieved
+	 *            the encoded key or id of the Mambu group for which attached documents are to be retrieved
 	 * 
 	 * @return documents attached to the entity
 	 * 
@@ -572,6 +562,6 @@ public class ClientsService {
 			throw new IllegalArgumentException("Group ID must not be null or empty");
 		}
 
-		return DocumentsService.getDocuments(mambuAPIService, GROUPS, groupId);
+		return new DocumentsService(mambuAPIService).getDocuments(GROUPS, groupId);
 	}
 }

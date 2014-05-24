@@ -50,15 +50,6 @@ public class ActivitiesService {
 	}
 
 	/***
-	 * Get current mambuAPIService
-	 * 
-	 * @return mambuAPIService the service responsible for the connection to the server
-	 */
-	public MambuAPIService getMambuAPIService() {
-		return mambuAPIService;
-	}
-
-	/***
 	 * GET all activity feed items within a specified date interval and (optionally) for a specified Mambu entity Allows
 	 * retrieving a list of activities within a date range which can be filtered by entity key.
 	 * 

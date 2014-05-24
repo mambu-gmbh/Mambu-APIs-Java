@@ -36,15 +36,6 @@ public class IntelligenceService {
 		this.mambuAPIService = mambuAPIService;
 	}
 
-	/***
-	 * Get current mambuAPIService
-	 * 
-	 * @return mambuAPIService the service responsible for the connection to the server
-	 */
-	public MambuAPIService getMambuAPIService() {
-		return mambuAPIService;
-	}
-
 	/**
 	 * Requests a mambu indicator value as a BigDecimal value
 	 * 

@@ -17,7 +17,6 @@ import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.services.SavingsService;
-import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.APIData.IMAGE_SIZE_TYPE;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.core.shared.model.User;
@@ -41,9 +40,9 @@ public class DemoTestDocumentsService {
 
 	private static String UPLOADED_DOCUMENT_KEY;
 
-	private static long CLIENT_DOCUMENT_ID;
-	private static long LOAN_DOCUMENT_ID;
-	private static long SAVAINGS_DOCUMENT_ID;
+	private static String CLIENT_DOCUMENT_ID;
+	private static String LOAN_DOCUMENT_ID;
+	private static String SAVAINGS_DOCUMENT_ID;
 
 	public static void main(String[] args) {
 
@@ -61,6 +60,7 @@ public class DemoTestDocumentsService {
 
 			testGetImage();
 
+			// Available since 3.6
 			testGetDocuments();
 
 			testGetDocument();
@@ -194,41 +194,38 @@ public class DemoTestDocumentsService {
 
 		// Get documents for a demo Client
 		ClientsService clientService = MambuAPIFactory.getClientService();
-		documents = DocumentsService.getDocuments(clientService.getMambuAPIService(), APIData.CLIENTS,
-				demoClient.getId());
+		documents = clientService.getClientDocuments(demoClient.getId());
 
 		// Log the results
 		System.out.println("\nDocuments for a Client with ID=" + demoClient.getId());
 		logDocuments(documents);
 		// Save the first doc ID for subsequent getDocument() tests
 		if (documents != null && documents.size() > 0) {
-			CLIENT_DOCUMENT_ID = documents.get(0).getId();
+			CLIENT_DOCUMENT_ID = documents.get(0).getEncodedKey();
 		}
 
 		// Get documents for a demo Loan Account
 		LoansService loansService = MambuAPIFactory.getLoanService();
-		documents = DocumentsService.getDocuments(loansService.getMambuAPIService(), APIData.LOANS,
-				demoLoanAccount.getId());
+		documents = loansService.getLoanAccountDocuments(demoLoanAccount.getId());
 
 		// Log the results
 		System.out.println("\nDocuments for a Loan Account with ID=" + demoLoanAccount.getId());
 		logDocuments(documents);
 		// Save the first doc ID for subsequent getDocument() tests
 		if (documents != null && documents.size() > 0) {
-			LOAN_DOCUMENT_ID = documents.get(0).getId();
+			LOAN_DOCUMENT_ID = documents.get(0).getEncodedKey();
 		}
 
 		// Get documents for a demo Savings Account
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
-		documents = DocumentsService.getDocuments(savingsService.getMambuAPIService(), APIData.SAVINGS,
-				demoSavingsAccount.getId());
+		documents = savingsService.getSavingsAccountDocuments(demoSavingsAccount.getId());
 
 		// Log the results
 		System.out.println("\nDocuments for a Savings Account with ID=" + demoSavingsAccount.getId());
 		logDocuments(documents);
 		// Save the first doc ID for subsequent getDocument() tests
 		if (documents != null && documents.size() > 0) {
-			SAVAINGS_DOCUMENT_ID = documents.get(0).getId();
+			SAVAINGS_DOCUMENT_ID = documents.get(0).getEncodedKey();
 		}
 
 	}
@@ -240,19 +237,31 @@ public class DemoTestDocumentsService {
 		String document;
 
 		// Get document details for a client
-		System.out.println("\nDocument Details for a Client document with ID=" + CLIENT_DOCUMENT_ID);
-		document = documentsService.getDocument(CLIENT_DOCUMENT_ID);
-		System.out.println("\nContent:" + document);
+		if (CLIENT_DOCUMENT_ID != null) {
+			System.out.println("\nDocument Details for a Client document with ID=" + CLIENT_DOCUMENT_ID);
+			document = documentsService.getDocument(CLIENT_DOCUMENT_ID);
+			System.out.println("\nContent:" + document);
+		} else {
+			System.out.println("\nNo Documents attached to a client with ID" + CLIENT_DOCUMENT_ID);
+		}
 
 		// Get document details for a Loan Account
-		System.out.println("\nDocument Details for a Loan document with ID=" + LOAN_DOCUMENT_ID);
-		document = documentsService.getDocument(LOAN_DOCUMENT_ID);
-		System.out.println("\nContent:" + document);
+		if (LOAN_DOCUMENT_ID != null) {
+			System.out.println("\nDocument Details for a Loan document with ID=" + LOAN_DOCUMENT_ID);
+			document = documentsService.getDocument(LOAN_DOCUMENT_ID);
+			System.out.println("\nContent:" + document);
+		} else {
+			System.out.println("\nNo Documents attached to a loan with ID" + LOAN_DOCUMENT_ID);
+		}
 
 		// Get document details for a Savings Account
-		System.out.println("\nDocument Details for a Savings document with ID=" + LOAN_DOCUMENT_ID);
-		document = documentsService.getDocument(SAVAINGS_DOCUMENT_ID);
-		System.out.println("\nContent:" + document);
+		if (SAVAINGS_DOCUMENT_ID != null) {
+			System.out.println("\nDocument Details for a Savings document with ID=" + LOAN_DOCUMENT_ID);
+			document = documentsService.getDocument(SAVAINGS_DOCUMENT_ID);
+			System.out.println("\nContent:" + document);
+		} else {
+			System.out.println("\nNo Documents attached to a savings with ID" + SAVAINGS_DOCUMENT_ID);
+		}
 
 	}
 

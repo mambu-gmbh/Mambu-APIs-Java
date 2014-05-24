@@ -47,15 +47,6 @@ public class RepaymentsService {
 	}
 
 	/***
-	 * Get current mambuAPIService
-	 * 
-	 * @return mambuAPIService the service responsible for the connection to the server
-	 */
-	public MambuAPIService getMambuAPIService() {
-		return mambuAPIService;
-	}
-
-	/***
 	 * Get a all Repayments by Loan account id
 	 * 
 	 * @param accountId

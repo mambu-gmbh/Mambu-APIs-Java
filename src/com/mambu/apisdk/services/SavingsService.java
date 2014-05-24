@@ -87,15 +87,6 @@ public class SavingsService {
 	}
 
 	/***
-	 * Get current mambuAPIService
-	 * 
-	 * @return mambuAPIService the service responsible for the connection to the server
-	 */
-	public MambuAPIService getMambuAPIService() {
-		return mambuAPIService;
-	}
-
-	/***
 	 * Get a savings account by its id
 	 * 
 	 * @param accountId
@@ -464,6 +455,10 @@ public class SavingsService {
 			throw new IllegalArgumentException("Account ID must not  be null or empty");
 		}
 
+		if (amount == null || amount.trim().isEmpty()) {
+			throw new IllegalArgumentException("Amount must not  be null or empty");
+		}
+
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_FEE);
 		paramsMap.addParam(AMOUNT, amount);
@@ -750,8 +745,7 @@ public class SavingsService {
 	}
 
 	/***
-	 * Get all documents for a specific Savings Account. This is a convenience method for invoking
-	 * DocumentsService.getDocuments() service for getting documents for a Savings Account
+	 * Get all documents for a specific Savings Account
 	 * 
 	 * @param accountId
 	 *            the encoded key or id of the savings account for which attached documents are to be retrieved
@@ -766,6 +760,6 @@ public class SavingsService {
 			throw new IllegalArgumentException("Account ID must not be null or empty");
 		}
 
-		return DocumentsService.getDocuments(mambuAPIService, SAVINGS, accountId);
+		return new DocumentsService(mambuAPIService).getDocuments(SAVINGS, accountId);
 	}
 }

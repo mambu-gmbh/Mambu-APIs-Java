@@ -45,15 +45,6 @@ public class DocumentsService {
 	}
 
 	/***
-	 * Get current mambuAPIService
-	 * 
-	 * @return mambuAPIService the service responsible for the connection to the server
-	 */
-	public MambuAPIService getMambuAPIService() {
-		return mambuAPIService;
-	}
-
-	/***
 	 * Upload new Document using a JSONDocument object and as json request
 	 * 
 	 * @param document
@@ -105,8 +96,7 @@ public class DocumentsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public static List<Document> getDocuments(MambuAPIService mambuAPIService, String serviceEndPoint, String entityId)
-			throws MambuApiException {
+	protected List<Document> getDocuments(String serviceEndPoint, String entityId) throws MambuApiException {
 
 		if (mambuAPIService == null) {
 			throw new IllegalArgumentException("Mambu API Service must not be null");
@@ -143,14 +133,13 @@ public class DocumentsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public String getDocument(long documentId) throws MambuApiException {
+	public String getDocument(String documentId) throws MambuApiException {
 
-		if (documentId <= 0) {
-			throw new IllegalArgumentException("Document ID must a positive number representing existent document id");
+		if (documentId == null || documentId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Docuemnt ID must not be null or empty");
 		}
-		final String documentidParam = Long.toString(documentId);
 
-		String urlString = new String(mambuAPIService.createUrl(DOCUMENTS + "/" + documentidParam));
+		String urlString = new String(mambuAPIService.createUrl(DOCUMENTS + "/" + documentId));
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 

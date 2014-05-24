@@ -43,15 +43,6 @@ public class UsersService {
 		this.mambuAPIService = mambuAPIService;
 	}
 
-	/***
-	 * Get current mambuAPIService
-	 * 
-	 * @return mambuAPIService the service responsible for the connection to the server
-	 */
-	public MambuAPIService getMambuAPIService() {
-		return mambuAPIService;
-	}
-
 	/**
 	 * Get all the users with offset and limit
 	 * 

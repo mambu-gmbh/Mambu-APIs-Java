@@ -85,15 +85,6 @@ public class LoansService {
 	}
 
 	/***
-	 * Get current mambuAPIService
-	 * 
-	 * @return mambuAPIService the service responsible for the connection to the server
-	 */
-	public MambuAPIService getMambuAPIService() {
-		return mambuAPIService;
-	}
-
-	/***
 	 * Get a loan account by its id
 	 * 
 	 * @param accountId
@@ -736,8 +727,7 @@ public class LoansService {
 	}
 
 	/***
-	 * Get all documents for a specific Loan Account. This is a convenience method for invoking
-	 * DocumentsService.getDocuments() service for getting documents for a Loan Account
+	 * Get all documents for a specific Loan Account
 	 * 
 	 * @param accountId
 	 *            the encoded key or id of the loan account for which attached documents are to be retrieved
@@ -752,6 +742,6 @@ public class LoansService {
 			throw new IllegalArgumentException("Account ID must not be null or empty");
 		}
 
-		return DocumentsService.getDocuments(mambuAPIService, LOANS, accountId);
+		return new DocumentsService(mambuAPIService).getDocuments(LOANS, accountId);
 	}
 }

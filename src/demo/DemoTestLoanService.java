@@ -413,7 +413,7 @@ public class DemoTestLoanService {
 		System.out.println("\nIn test Reject LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		LoanAccount account = loanService.rejectLoanAccount(NEW_LOAN_ACCOUNT_ID, "some demo notes");
+		LoanAccount account = loanService.rejectLoanAccount(NEW_LOAN_ACCOUNT_ID, "some demo notes ', \" ü = : \n as");
 
 		System.out.println("Rejecting loan account with the " + NEW_LOAN_ACCOUNT_ID + " Loan name"
 				+ account.getLoanName() + "  Account State=" + account.getState().toString());
