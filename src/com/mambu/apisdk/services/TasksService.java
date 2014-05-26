@@ -54,10 +54,10 @@ public class TasksService {
 	}
 
 	/***
-	 * Create a new task using a Task object and as json request
+	 * Create a new task using a Task object in a json request
 	 * 
 	 * @param task
-	 *            the new task object contain all mandatory fields
+	 *            the new task object containing all mandatory fields. The encoded key must be null for new tasks
 	 * 
 	 * @return the new task parsed as an object returned from the API call
 	 * 
@@ -65,26 +65,44 @@ public class TasksService {
 	 */
 	public Task createTask(Task task) throws MambuApiException {
 
-		// Convert object to json
-		JSONTask inputJsonTask = new JSONTask(task);
-		final String dateTimeFormat = APIData.yyyyMmddFormat;
-		String jsonTaskRequest = GsonUtils.createGson(dateTimeFormat).toJson(inputJsonTask, JSONTask.class);
+		// Get encodedKey and ensure it's NULL for the new client request
+		String encodedKey = task.getEncodedKey();
 
-		// System.out.println("Create json request=" + jsonTaskRequest);
+		if (encodedKey != null) {
+			throw new IllegalArgumentException("Cannot create Task, the encoded key must be null");
+		}
 
-		ParamsMap params = new ParamsMap();
-		params.put("JSON", jsonTaskRequest);
-
-		// create the api call
+		// create task api call
 		String urlString = new String(mambuAPIService.createUrl(TASKS + "/"));
 
-		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.POST, ContentType.JSON);
+		return submitTaskJsonRequest(urlString, task);
 
-		JSONTask jsonTask = GsonUtils.createGson().fromJson(jsonResposne, JSONTask.class);
-		// Get Task from JsonTask
-		Task taskResult = jsonTask.getTask();
+	}
 
-		return taskResult;
+	/***
+	 * Update an existent task using a Task object in a json request
+	 * 
+	 * @param task
+	 *            the existent task object containing all mandatory fields. The encoded key must not be null for
+	 *            updating tasks
+	 * 
+	 * @return the updated task parsed as an object returned from the API call
+	 * 
+	 * @throws MambuApiException
+	 */
+	public Task updateTask(Task task) throws MambuApiException {
+
+		// Get encodedKey and ensure it's NOT NULL for task update requests
+		String encodedKey = task.getEncodedKey();
+		if (encodedKey == null) {
+			throw new IllegalArgumentException("Cannot update Task, the encoded key must be NOT null");
+		}
+
+		// Update task api call. Since Mambu 3.6 the task id or encoded key should be used in update API calls
+		String urlString = new String(mambuAPIService.createUrl(TASKS + "/" + encodedKey));
+
+		return submitTaskJsonRequest(urlString, task);
+
 	}
 
 	/**
@@ -163,12 +181,14 @@ public class TasksService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 
-		Type collectionType = new TypeToken<List<Task>>() {}.getType();
+		Type collectionType = new TypeToken<List<Task>>() {
+		}.getType();
 
 		List<Task> tasks = (List<Task>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return tasks;
 	}
+
 	/***
 	 * Delete task by its Id
 	 * 
@@ -198,4 +218,35 @@ public class TasksService {
 		return deletionStatus;
 	}
 
+	/***
+	 * Helper method to submit the Create or Update API request with Task's Json request
+	 * 
+	 * @param taskUrlString
+	 *            the url to either create or to update task, The update url must include task's encoded Key or Id. The
+	 *            create request must not.
+	 * 
+	 * @param task
+	 *            task to be created or updated
+	 * @return task
+	 * 
+	 * @throws MambuApiException
+	 */
+	private Task submitTaskJsonRequest(String taskUrlString, Task task) throws MambuApiException {
+
+		// Convert object to json
+		JSONTask inputJsonTask = new JSONTask(task);
+		String jsonTaskRequest = GsonUtils.createGson().toJson(inputJsonTask, JSONTask.class);
+
+		ParamsMap params = new ParamsMap();
+		params.put(APIData.JSON_OBJECT, jsonTaskRequest);
+
+		String jsonResposne = mambuAPIService.executeRequest(taskUrlString, params, Method.POST, ContentType.JSON);
+
+		JSONTask jsonTask = GsonUtils.createGson().fromJson(jsonResposne, JSONTask.class);
+		// Get Task from JsonTask
+		Task taskResult = jsonTask.getTask();
+
+		return taskResult;
+
+	}
 }

@@ -18,6 +18,7 @@ import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
+import com.mambu.docs.shared.model.Document;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
 import com.mambu.savings.shared.model.SavingsTransaction;
@@ -41,6 +42,8 @@ public class SavingsService {
 	private static final String TYPE_DEPOSIT = APIData.TYPE_DEPOSIT;
 	private static final String TYPE_WITHDRAWAL = APIData.TYPE_WITHDRAWAL;
 	private static final String TYPE_TRANSFER = APIData.TYPE_TRANSFER;
+	private static final String TYPE_FEE = APIData.TYPE_FEE;
+
 	private static final String TYPE_APPROVAL = APIData.TYPE_APPROVAL;
 	private static final String TYPE_UNDO_APPROVAL = APIData.TYPE_UNDO_APPROVAL;
 
@@ -155,7 +158,8 @@ public class SavingsService {
 		String urlString = new String(mambuAPIService.createUrl(CLIENTS + "/" + clientId + "/" + SAVINGS));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		Type collectionType = new TypeToken<List<SavingsAccount>>() {}.getType();
+		Type collectionType = new TypeToken<List<SavingsAccount>>() {
+		}.getType();
 
 		List<SavingsAccount> accounts = (List<SavingsAccount>) GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);
@@ -224,6 +228,7 @@ public class SavingsService {
 
 		return savingsAccount;
 	}
+
 	/***
 	 * Get Savings Account Transactions by an account id and offset and limit
 	 * 
@@ -257,7 +262,8 @@ public class SavingsService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
 
-		Type collectionType = new TypeToken<List<SavingsTransaction>>() {}.getType();
+		Type collectionType = new TypeToken<List<SavingsTransaction>>() {
+		}.getType();
 
 		List<SavingsTransaction> transactions = (List<SavingsTransaction>) GsonUtils.createGson().fromJson(
 				jsonResponse, collectionType);
@@ -377,6 +383,7 @@ public class SavingsService {
 
 		return transaction;
 	}
+
 	/****
 	 * Make a Transfer from an account.
 	 * 
@@ -427,6 +434,45 @@ public class SavingsService {
 		return transaction;
 	}
 
+	/****
+	 * Apply Arbitrary FEE to a savings account
+	 * 
+	 * @param accountId
+	 *            the id of the account
+	 * @param amount
+	 *            fee amount
+	 * @param notes
+	 *            transaction notes
+	 * 
+	 * @return Savings Transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public SavingsTransaction applyFeeToSavingsAccount(String accountId, String amount, String notes)
+			throws MambuApiException {
+
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not  be null or empty");
+		}
+
+		if (amount == null || amount.trim().isEmpty()) {
+			throw new IllegalArgumentException("Amount must not  be null or empty");
+		}
+
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, TYPE_FEE);
+		paramsMap.addParam(AMOUNT, amount);
+		paramsMap.addParam(NOTES, notes);
+
+		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/" + accountId + "/" + TRANSACTIONS));
+
+		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
+
+		SavingsTransaction transaction = GsonUtils.createGson().fromJson(jsonResponse, SavingsTransaction.class);
+
+		return transaction;
+	}
+
 	/***
 	 * Delete Savings Account by its Id
 	 * 
@@ -460,6 +506,7 @@ public class SavingsService {
 
 		return deletionStatus;
 	}
+
 	/****
 	 * Close Savings account specifying the type of closer (withdraw or reject)
 	 * 
@@ -498,6 +545,7 @@ public class SavingsService {
 
 		return account;
 	}
+
 	/***
 	 * Get all the savings accounts for a given group
 	 * 
@@ -514,7 +562,8 @@ public class SavingsService {
 		String urlString = new String(mambuAPIService.createUrl(GROUPS + "/" + groupId + "/" + SAVINGS));
 		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
 
-		Type collectionType = new TypeToken<List<SavingsAccount>>() {}.getType();
+		Type collectionType = new TypeToken<List<SavingsAccount>>() {
+		}.getType();
 
 		List<SavingsAccount> accounts = (List<SavingsAccount>) GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);
@@ -553,7 +602,8 @@ public class SavingsService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<SavingsAccount>>() {}.getType();
+		Type collectionType = new TypeToken<List<SavingsAccount>>() {
+		}.getType();
 
 		List<SavingsAccount> accounts = (List<SavingsAccount>) GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);
@@ -578,7 +628,8 @@ public class SavingsService {
 
 		String jsonResposne = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<SavingsProduct>>() {}.getType();
+		Type collectionType = new TypeToken<List<SavingsProduct>>() {
+		}.getType();
 
 		List<SavingsProduct> products = GsonUtils.createGson().fromJson(jsonResposne, collectionType);
 
@@ -663,8 +714,6 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: update this API to add accountId to the URL when MBU-5278 is implemented (MBU-5278: Change the endpoint for
-	// Update API calls to be individually mapped per each component.)
 	public JSONSavingsAccount updateSavingsAccount(JSONSavingsAccount account) throws MambuApiException {
 
 		if (account == null || account.getSavingsAccount() == null) {
@@ -681,14 +730,12 @@ public class SavingsService {
 		final String dateTimeFormat = APIData.yyyyMmddFormat;
 		final String jsonData = GsonUtils.createGson(dateTimeFormat).toJson(account, JSONSavingsAccount.class);
 
-		// System.out.println("Input Savings Account In json format=" + jsonData);
-
 		ParamsMap params = new ParamsMap();
 		// Add json string as JSON_OBJECT
 		params.put(APIData.JSON_OBJECT, jsonData);
 
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/"));
+		// create the api call. Since Mambu 3.6 the account id or encoded key should be used in update API calls
+		String urlString = new String(mambuAPIService.createUrl(SAVINGS + "/" + encodedKey));
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.POST, ContentType.JSON);
 
@@ -697,4 +744,22 @@ public class SavingsService {
 		return savingsAccount;
 	}
 
+	/***
+	 * Get all documents for a specific Savings Account
+	 * 
+	 * @param accountId
+	 *            the encoded key or id of the savings account for which attached documents are to be retrieved
+	 * 
+	 * @return documents documents attached to the entity
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<Document> getSavingsAccountDocuments(String accountId) throws MambuApiException {
+
+		if (accountId == null || accountId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Account ID must not be null or empty");
+		}
+
+		return new DocumentsService(mambuAPIService).getDocuments(SAVINGS, accountId);
+	}
 }

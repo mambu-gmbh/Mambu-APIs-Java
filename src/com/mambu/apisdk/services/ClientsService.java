@@ -19,6 +19,7 @@ import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.GroupExpanded;
+import com.mambu.docs.shared.model.Document;
 
 /**
  * Service class which handles API operations like getting and creating clients and groups of clients
@@ -102,7 +103,8 @@ public class ClientsService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<Client>>() {}.getType();
+		Type collectionType = new TypeToken<List<Client>>() {
+		}.getType();
 		List<Client> clients = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return clients;
@@ -131,7 +133,8 @@ public class ClientsService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<Client>>() {}.getType();
+		Type collectionType = new TypeToken<List<Client>>() {
+		}.getType();
 		List<Client> clients = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return clients;
@@ -159,7 +162,8 @@ public class ClientsService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<Client>>() {}.getType();
+		Type collectionType = new TypeToken<List<Client>>() {
+		}.getType();
 		List<Client> clients = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return clients;
@@ -195,7 +199,8 @@ public class ClientsService {
 
 			String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-			Type collectionType = new TypeToken<List<Client>>() {}.getType();
+			Type collectionType = new TypeToken<List<Client>>() {
+			}.getType();
 			List<Client> clients = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 			return clients;
@@ -224,7 +229,8 @@ public class ClientsService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<Client>>() {}.getType();
+		Type collectionType = new TypeToken<List<Client>>() {
+		}.getType();
 		List<Client> clients = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 
 		return clients;
@@ -358,8 +364,6 @@ public class ClientsService {
 	 * @throws MambuApiException
 	 * @throws IllegalArgumentException
 	 */
-	// TODO: update this API to add clientId to the URL when MBU-5278 is implemented (MBU-5278: Change the endpoint for
-	// Update API calls to be individually mapped per each component.)
 	public ClientExpanded updateClient(ClientExpanded clientDetails) throws MambuApiException {
 
 		// Verify that the encodedKey for this object is not NULL
@@ -377,7 +381,7 @@ public class ClientsService {
 		params.put(APIData.JSON_OBJECT, jsonClient);
 
 		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(CLIENTS + "/"));
+		String urlString = new String(mambuAPIService.createUrl(CLIENTS + "/" + encodedKey));
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.POST, ContentType.JSON);
 
@@ -385,6 +389,7 @@ public class ClientsService {
 
 		return clientResult;
 	}
+
 	/***
 	 * Create a new client with only it's first name and last name
 	 * 
@@ -479,7 +484,8 @@ public class ClientsService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<Client>>() {}.getType();
+		Type collectionType = new TypeToken<List<Client>>() {
+		}.getType();
 
 		List<Client> clients = (List<Client>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 		return clients;
@@ -513,9 +519,49 @@ public class ClientsService {
 
 		jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<Group>>() {}.getType();
+		Type collectionType = new TypeToken<List<Group>>() {
+		}.getType();
 
 		List<Group> groups = (List<Group>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 		return groups;
+	}
+
+	/***
+	 * Get all documents for a specific Client.
+	 * 
+	 * @param clientId
+	 *            the encoded key or id of the Mambu client for which attached documents are to be retrieved
+	 * 
+	 * @return documents attached to the entity
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<Document> getClientDocuments(String clientId) throws MambuApiException {
+
+		if (clientId == null || clientId.trim().isEmpty()) {
+			throw new IllegalArgumentException("ClientId ID must not be null or empty");
+		}
+
+		return new DocumentsService(mambuAPIService).getDocuments(CLIENTS, clientId);
+	}
+
+	/***
+	 * Get all documents for a specific Group. This is a convenience method for invoking DocumentsService.getDocuments()
+	 * service for getting documents for a Group
+	 * 
+	 * @param groupId
+	 *            the encoded key or id of the Mambu group for which attached documents are to be retrieved
+	 * 
+	 * @return documents attached to the entity
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<Document> getGroupDocuments(String groupId) throws MambuApiException {
+
+		if (groupId == null || groupId.trim().isEmpty()) {
+			throw new IllegalArgumentException("Group ID must not be null or empty");
+		}
+
+		return new DocumentsService(mambuAPIService).getDocuments(GROUPS, groupId);
 	}
 }

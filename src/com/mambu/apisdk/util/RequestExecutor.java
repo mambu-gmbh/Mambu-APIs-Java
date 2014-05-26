@@ -74,9 +74,6 @@ public interface RequestExecutor {
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: Currently json content type is set to :"application/json". The
-	// charset=UTF-8 part will be add when MBU-4137
-	// is fixed
 	public String executeRequest(String urlString, ParamsMap params, Method method, ContentType contentTypeFormat)
 			throws MambuApiException;
 
@@ -95,9 +92,6 @@ public interface RequestExecutor {
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: Currently json content type is set to :"application/json". The
-	// charset=UTF-8 part will be add when MBU-4137
-	// is fixed
 	public String executeRequest(String urlString, Method method, ContentType contentTypeFormat)
 			throws MambuApiException;
 

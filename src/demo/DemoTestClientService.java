@@ -16,6 +16,7 @@ import com.mambu.core.shared.model.Address;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.Gender;
 import com.mambu.core.shared.model.User;
+import com.mambu.docs.shared.model.Document;
 
 /**
  * 
@@ -63,12 +64,15 @@ public class DemoTestClientService {
 			testGetClientsByBranchOfficerState();
 			testGetGroupsByBranchOfficer();
 
+			testGetDocuments();
+
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Clients");
 			System.out.println("Error code=" + e.getErrorCode());
 			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
 		}
 	}
+
 	public static void testGetClient() throws MambuApiException {
 		System.out.println("\nIn testGetClient");
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -277,6 +281,7 @@ public class DemoTestClientService {
 		System.out.println("\nClient address, total=" + addressOut.size());
 
 	}
+
 	public static void testUpdateClient() throws MambuApiException {
 		System.out.println("\nIn testUpdateClient");
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -294,6 +299,7 @@ public class DemoTestClientService {
 				+ clientExpandedResult.getClient().getFirstName());
 
 	}
+
 	public static void testCreateBasicClient() throws MambuApiException {
 		System.out.println("\nIn testCreateBasicClient");
 
@@ -306,6 +312,7 @@ public class DemoTestClientService {
 		System.out.println("Client created, OK, full name= " + client.getFullName());
 
 	}
+
 	public static void testCreateFullDetailsClient() throws MambuApiException {
 		System.out.println("\nIn test Create Full Details Client");
 
@@ -349,6 +356,7 @@ public class DemoTestClientService {
 					+ "   Credit Officer id=" + client.getAssignedUserKey());
 		}
 	}
+
 	public static void testGetGroupsByBranchOfficer() throws MambuApiException {
 		System.out.println("\nIn testGetGroupsByBranchOfficer");
 
@@ -366,6 +374,26 @@ public class DemoTestClientService {
 			System.out.println("Group Name=" + group.getGroupName() + "  BranchId=" + group.getAssignedBranchKey()
 					+ "   Credit Officer id=" + group.getAssignedUserKey());
 		}
+	}
+
+	public static void testGetDocuments() throws MambuApiException {
+		System.out.println("\nIn testGetDocuments");
+
+		// Getting Documents for a Client
+		ClientsService clientService = MambuAPIFactory.getClientService();
+		List<Document> documents = clientService.getClientDocuments(demoClient.getId());
+
+		// Log returned documents using DemoTestDocumentsService helper
+		System.out.println("Documents returned for a Client with ID=" + demoClient.getId());
+		DemoTestDocumentsService.logDocuments(documents);
+
+		// Getting Documents for a Group
+		documents = clientService.getGroupDocuments(demoGroup.getId());
+
+		// Log returned documents using DemoTestDocumentsService helper
+		System.out.println("Documents returned for a Group with ID=" + demoGroup.getId());
+		DemoTestDocumentsService.logDocuments(documents);
+
 	}
 
 }

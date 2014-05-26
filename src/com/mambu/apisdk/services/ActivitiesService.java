@@ -121,7 +121,8 @@ public class ActivitiesService {
 
 		String activitiesResposne = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<JSONActivity>>() {}.getType();
+		Type collectionType = new TypeToken<List<JSONActivity>>() {
+		}.getType();
 		List<JSONActivity> activities = GsonUtils.createGson().fromJson(activitiesResposne, collectionType);
 
 		return activities;

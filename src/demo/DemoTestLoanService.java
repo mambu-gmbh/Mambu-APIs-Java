@@ -14,6 +14,7 @@ import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.Money;
+import com.mambu.docs.shared.model.Document;
 import com.mambu.loans.shared.model.Guaranty;
 import com.mambu.loans.shared.model.Guaranty.GuarantyType;
 import com.mambu.loans.shared.model.LoanAccount;
@@ -89,7 +90,14 @@ public class DemoTestLoanService {
 			// Available since 3.5
 			testUndoApproveLoanAccount();
 
+			// Available since 3.6
+			testLockLoanAccount();
+			testUnlockLoanAccount();
+
 			testDeleteLoanAccount();
+
+			// Available since Mambu 3.6
+			testGetDocuments();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Loan Service");
@@ -98,6 +106,7 @@ public class DemoTestLoanService {
 		}
 
 	}
+
 	public static void testGetLoanAccount() throws MambuApiException {
 		System.out.println("\nIn testGetLoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
@@ -212,6 +221,7 @@ public class DemoTestLoanService {
 			}
 		}
 	}
+
 	// Update Loan account
 	public static void testUpdateLoanAccount() throws MambuApiException {
 		System.out.println("\nIn testUpdateLoanAccount");
@@ -254,8 +264,8 @@ public class DemoTestLoanService {
 		}
 
 	}
-	// / Transactions testing
 
+	// / Transactions testing
 	public static void testDisburseLoanAccountWithDetails() throws MambuApiException {
 		System.out.println("\nIn test Disburse LoanAccount with Deatils");
 
@@ -296,6 +306,7 @@ public class DemoTestLoanService {
 					+ transaction.getEntryDate().toString());
 		}
 	}
+
 	public static void testRepayLoanAccount() throws MambuApiException {
 		System.out.println("\nIn test Repay LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
@@ -354,6 +365,7 @@ public class DemoTestLoanService {
 					+ account.getAssignedBranchKey() + "   Credit Officer=" + account.getAssignedUserKey());
 		}
 	}
+
 	public static void testGetLoanAccountsForClient() throws MambuApiException {
 		System.out.println("\nIn testGetLoan Accounts ForClient");
 		LoansService loanService = MambuAPIFactory.getLoanService();
@@ -418,6 +430,28 @@ public class DemoTestLoanService {
 				+ "  Account State=" + account.getState().toString());
 	}
 
+	public static void testLockLoanAccount() throws MambuApiException {
+		System.out.println("\nIn test Lock LoanAccount");
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		String accountId = NEW_LOAN_ACCOUNT_ID;
+		LoanTransaction transaction = loanService.lockLoanAccount(accountId, "some lock demo notes");
+
+		System.out.println("Locked account with ID " + accountId + " Transaction  " + transaction.getTransactionId()
+				+ " Type=" + transaction.getType() + "  Balance=" + transaction.getBalance());
+	}
+
+	public static void testUnlockLoanAccount() throws MambuApiException {
+		System.out.println("\nIn test Unlock LoanAccount");
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		String accountId = NEW_LOAN_ACCOUNT_ID;
+		LoanTransaction transaction = loanService.unlockLoanAccount(accountId, "some unlock demo notes");
+
+		System.out.println("UnLocked account with ID " + accountId + " Transaction  " + transaction.getTransactionId()
+				+ " Type=" + transaction.getType() + "  Balance=" + transaction.getBalance());
+	}
+
 	public static void testDeleteLoanAccount() throws MambuApiException {
 		System.out.println("\nIn testDeleteLoanAccount");
 
@@ -460,6 +494,22 @@ public class DemoTestLoanService {
 
 		System.out.println("Product=" + product.getName() + "  Id=" + product.getId() + " Loan Type="
 				+ product.getLoanType().name());
+
+	}
+
+	public static void testGetDocuments() throws MambuApiException {
+		System.out.println("\nIn testGetDocuments");
+
+		LoanAccount account = DemoUtil.getDemoLoanAccount();
+		String accountId = account.getId();
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		List<Document> documents = loanService.getLoanAccountDocuments(accountId);
+
+		// Log returned documents using DemoTestDocumentsService helper
+		System.out.println("Documents returned for a Loan Account with ID=" + accountId);
+		DemoTestDocumentsService.logDocuments(documents);
 
 	}
 }

@@ -19,6 +19,7 @@ import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.User;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
+import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
 
 /**
@@ -119,6 +120,7 @@ public class DemoUtil {
 		}
 		return client;
 	}
+
 	public static Group getDemoGroup() throws MambuApiException {
 		System.out.println("\nIn getDemoGroup");
 
@@ -154,6 +156,7 @@ public class DemoUtil {
 		return null;
 
 	}
+
 	public static SavingsProduct getDemoSavingsProduct() throws MambuApiException {
 		System.out.println("\nIn getDemoSavingsProduct");
 
@@ -170,6 +173,7 @@ public class DemoUtil {
 
 		return null;
 	}
+
 	public static LoanAccount getDemoLoanAccount() throws MambuApiException {
 		System.out.println("\nIn getDemoLoanAccount");
 
@@ -180,6 +184,24 @@ public class DemoUtil {
 		if (loans != null) {
 			int randomIndex = (int) (Math.random() * (loans.size() - 1));
 			return loans.get(randomIndex);
+		}
+
+		System.out.println("getDemoLoanAccount: no Loan Accounts the Demo User exist");
+
+		return null;
+	}
+
+	public static SavingsAccount getDemoSavingsAccount() throws MambuApiException {
+		System.out.println("\nIn getDemoSavingsAccount");
+
+		SavingsService service = MambuAPIFactory.getSavingsService();
+		// all savings for our demo user
+		List<SavingsAccount> savings = service.getSavingsAccountsByBranchOfficerState(null, demoUsername, null, "0",
+				"5");
+
+		if (savings != null) {
+			int randomIndex = (int) (Math.random() * (savings.size() - 1));
+			return savings.get(randomIndex);
 		}
 
 		System.out.println("getDemoLoanAccount: no Loan Accounts the Demo User exist");
