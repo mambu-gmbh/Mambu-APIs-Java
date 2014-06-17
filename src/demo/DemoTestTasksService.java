@@ -24,6 +24,7 @@ public class DemoTestTasksService {
 
 	private static User demoUser;
 	private static Client demoClient;
+	private static Task taskToUpdate;
 
 	public static void main(String[] args) {
 
@@ -42,6 +43,9 @@ public class DemoTestTasksService {
 
 			// available since Mambu 3.3
 			testGetTasks();
+
+			// Available since Mambu 3.6
+			testupdateTask();
 
 			testDeleteTask();
 
@@ -113,13 +117,11 @@ public class DemoTestTasksService {
 		// Get Input params
 		String clientId = demoClient.getId(); // or null;
 		String username = demoUser.getUsername(); // or null;
-		// TODO: Need to raise Mambu issue: GET requests (including getTasks()) do not work with params (names or ids)
-		// with UTF-8 chars. Mambu returns invalid name/id error.
+
 		clientId = demoClient.getId();
 		username = demoUser.getId();
-		username = null;
 
-		TaskStatus taskStatus = TaskStatus.OPEN; // or TaskStatus.COMPLETED;
+		TaskStatus taskStatus = TaskStatus.OPEN; // TaskStatus.OPEN or TaskStatus.COMPLETED;
 		// Pagination params
 		String offset = "0"; // or null;
 		String limit = "50"; // or null;
@@ -128,17 +130,60 @@ public class DemoTestTasksService {
 
 		List<Task> tasks = tasksService.getTasks(username, clientId, taskStatus, offset, limit);
 
+		if (tasks == null) {
+			System.out.println("No tasks returned, null object");
+			return null;
+		}
+
 		System.out.println("Total tasks returned=" + tasks.size() + "\tFor User=" + username + "\tFor client ID= "
 				+ clientId + "\tfor Status=" + taskStatus);
 
+		if (tasks.size() > 0) {
+			taskToUpdate = tasks.get(0);
+		}
 		for (Task task : tasks) {
 			System.out.println("Username=" + task.getAssignedUserName() + "\tClient Name=" + task.getTaskLinkName()
-					+ "\tClient Key=" + task.getTaskLinkKey() + "\tID=" + task.getId() + "\tTitle" + task.getTitle()
+					+ "\tClient Key=" + task.getTaskLinkKey() + "\tID=" + task.getId() + "\tTitle=" + task.getTitle()
 					+ "\tStatus=" + task.getStatus().name());
 		}
 		System.out.println();
 
 		return tasks;
+	}
+
+	public static void testupdateTask() throws MambuApiException {
+		System.out.println("\nIn testupdateTask");
+
+		if (taskToUpdate == null) {
+			System.out.println("No task to update");
+			return;
+		}
+
+		final String changeNote = " updated by API";
+		String description = taskToUpdate.getDescription();
+		taskToUpdate.setDescription(description + changeNote);
+
+		taskToUpdate.setTitle(taskToUpdate.getTitle() + changeNote);
+
+		// Reverse completion status for testing
+		TaskStatus status = taskToUpdate.getStatus();
+		if (status == TaskStatus.OPEN) {
+			taskToUpdate.setToCompleted(new Date());
+		} else {
+			taskToUpdate.setToOpen();
+		}
+
+		// Update Task
+		TasksService tasksService = MambuAPIFactory.getTasksService();
+		Task modifiedTask = tasksService.updateTask(taskToUpdate);
+
+		if (!modifiedTask.getEncodedKey().equalsIgnoreCase(taskToUpdate.getEncodedKey())) {
+			System.out.println("Error! The Existent Task =" + taskToUpdate.getEncodedKey() + " was not updated");
+			return;
+		}
+		System.out
+				.println("New Description=" + modifiedTask.getDescription() + " New Title=" + modifiedTask.getTitle());
+
 	}
 
 	public static void testDeleteTask() throws MambuApiException {

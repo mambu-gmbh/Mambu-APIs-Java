@@ -35,7 +35,6 @@ public class SearchService {
 	private String QUERY = APIData.QUERY;
 	private String SEARCH_TYPES = APIData.SEARCH_TYPES;
 
-	private static final String OFFSET = APIData.OFFSET;
 	private static final String LIMIT = APIData.LIMIT;
 
 	/***
@@ -95,8 +94,8 @@ public class SearchService {
 
 		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
 
-		java.lang.reflect.Type collectionType = new TypeToken<Map<SearchResult.Type, List<SearchResult>>>() {}
-				.getType();
+		java.lang.reflect.Type collectionType = new TypeToken<Map<SearchResult.Type, List<SearchResult>>>() {
+		}.getType();
 
 		Map<SearchResult.Type, List<SearchResult>> results = GsonUtils.createGson().fromJson(jsonResponse,
 				collectionType);

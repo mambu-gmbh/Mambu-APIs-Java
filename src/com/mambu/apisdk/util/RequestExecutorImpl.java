@@ -558,11 +558,12 @@ public class RequestExecutorImpl implements RequestExecutor {
 		if (!LOGGER.isLoggable(Level.INFO) || jsonString == null) {
 			return;
 		}
+
 		// handle some special cases to have user friendly output
 		// Handle jsons with encoded documents. Encoded data is of no use for logging. Strip it out
 
 		// Documents API case - remove base64 encoding
-		// Find the documentContent tag (containng base64 string) and remove extra conetnt
+		// Find the documentContent tag (containing base64 string) and remove extra content
 		final String documentRoot = "{\"document\":";
 		if (jsonString.startsWith(documentRoot)) {
 			final String documentContentParam = "\"documentContent\":";
@@ -602,12 +603,12 @@ public class RequestExecutorImpl implements RequestExecutor {
 		} else {
 			// Log success Response.
 			// Handle special cases where response contains encoded strings which we don't need to see in the logger
-			// (for example, base64 encoded data when getting imagges and files)
+			// (for example, base64 encoded data when getting images and files)
 			// Find ";base64,";
 			final String encodedDataIndicator = APIData.BASE64_ENCODING_INDICATOR;
 			final int encodedDataStart = response.indexOf(encodedDataIndicator);
 			if (encodedDataStart != -1) {
-				// This is a reponse containing base64 encoded data. Strip the bulk of it out
+				// This is a response containing base64 encoded data. Strip the bulk of it out
 				final int howManyEncodedToShow = 20;
 				int totalCharsToShow = encodedDataStart + encodedDataIndicator.length() + howManyEncodedToShow;
 				// Get the needed part of this response and add "..." indicator
@@ -621,7 +622,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	}
 
 	/**
-	 * Log Application Key details. This is a helper method for logging partial applicaton key details to indicate the
+	 * Log Application Key details. This is a helper method for logging partial application key details to indicate the
 	 * that application key is used when building the API request
 	 * 
 	 * @param applicationKey

@@ -83,6 +83,7 @@ public class DemoTestSearchService {
 		logSearchResults(results);
 
 	}
+
 	public static void testSearchLoansSavings() throws MambuApiException {
 		System.out.println("\nIn testSearchLoansSavings");
 
