@@ -14,7 +14,6 @@ import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.IdentificationDocument;
 import com.mambu.core.shared.model.Address;
 import com.mambu.core.shared.model.CustomFieldValue;
-import com.mambu.core.shared.model.Gender;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
 
@@ -45,8 +44,6 @@ public class DemoTestClientService {
 			demoGroup = DemoUtil.getDemoGroup();
 
 			testCreateJsonClient();
-			testCreateBasicClient();
-			testCreateFullDetailsClient();
 
 			testGetClient();
 			testUpdateClient();
@@ -297,42 +294,6 @@ public class DemoTestClientService {
 		System.out.println("Client Update OK, ID=" + clientExpandedResult.getClient().getId() + "\tLastName="
 				+ clientExpandedResult.getClient().getLastName() + "\tFirst Name ="
 				+ clientExpandedResult.getClient().getFirstName());
-
-	}
-
-	public static void testCreateBasicClient() throws MambuApiException {
-		System.out.println("\nIn testCreateBasicClient");
-
-		ClientsService clientService = MambuAPIFactory.getClientService();
-
-		Client client = clientService.createClient("\u00c1\u00c9", "Client"); // Spanish accented A \u00c1 and \u00c9
-																				// accented E
-		// Client client = clientService.createClient("XYZ", "MD"); // Spanish accented A \u00c1 \u00c9 E
-
-		System.out.println("Client created, OK, full name= " + client.getFullName());
-
-	}
-
-	public static void testCreateFullDetailsClient() throws MambuApiException {
-		System.out.println("\nIn test Create Full Details Client");
-
-		ClientsService clientService = MambuAPIFactory.getClientService();
-		// String firstName = new String("\u0416" + "\u041A"); // Russian Unicode letetrs
-		String firstName = new String("AFirst" + Integer.toString((int) Math.random()));
-		// String lastName = "Асин"; // "\u00c1\u00c9" - Spanish Unicode letters
-		String lastName = "Acin"; // "\u00c1\u00c9" - Spanish Unicode letters
-
-		String homephone = "1-778-980-234";
-		String mobilephone = "980-456-789";
-		String gender = Gender.MALE.toString();
-		String birthdate = "1982-01-12"; // format: "yyyy-MM-dd"
-		String email = "abc@next.com";
-		String notes = "created by API Demo program";
-
-		Client client = clientService.createClient(firstName, lastName, homephone, mobilephone, gender, birthdate,
-				email, notes);
-
-		System.out.println("Client created, id=" + client.getId() + "  Full name=" + client.getFullName());
 
 	}
 

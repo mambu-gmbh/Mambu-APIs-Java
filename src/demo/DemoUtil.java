@@ -112,12 +112,18 @@ public class DemoUtil {
 
 		ClientsService clientsService = MambuAPIFactory.getClientService();
 		List<Client> clients = clientsService.getClientByFullName(demoClientLastName, demoClientFirstName);
-		Client client;
+		Client client = null;
 		if (clients.isEmpty()) {
-			client = clientsService.createClient(demoClientFirstName, demoClientLastName);
-		} else {
-			client = clients.iterator().next();
+			// get some active clients then
+			clients = clientsService.getClients(true, 0, 5);
+
 		}
+
+		if (clients != null && clients.size() > 0) {
+			client = clients.get(0);
+
+		}
+
 		return client;
 	}
 

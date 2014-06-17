@@ -10,6 +10,7 @@ import org.junit.Test;
 import com.mambu.apisdk.MambuAPIServiceTest;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 
 /**
@@ -39,7 +40,8 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 		service.getClient("abc123");
 
 		// verify
-		verify(executor).executeRequest("https://demo.mambutest.com/api/clients/abc123", Method.GET);
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients/abc123", null, Method.GET,
+				ContentType.WWW_FORM);
 	}
 
 	/***
@@ -56,7 +58,8 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 		service.getClients(true);
 
 		// verify
-		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET);
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET,
+				ContentType.WWW_FORM);
 	}
 
 	/***
@@ -73,7 +76,8 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 		service.getClients(false);
 
 		// verify
-		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET);
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET,
+				ContentType.WWW_FORM);
 	}
 
 	/***
@@ -92,7 +96,8 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 		service.getClients(true, 0, 50);
 
 		// verify
-		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET);
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET,
+				ContentType.WWW_FORM);
 	}
 
 	/***
@@ -111,7 +116,8 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 		service.getClients(false, 0, 50);
 
 		// verify
-		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET);
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET,
+				ContentType.WWW_FORM);
 	}
 
 	/***
@@ -128,7 +134,8 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 		service.getClientDetails("abc123");
 
 		// verify
-		verify(executor).executeRequest("https://demo.mambutest.com/api/clients/abc123", params, Method.GET);
+		verify(executor).executeRequest("https://demo.mambutest.com/api/clients/abc123", params, Method.GET,
+				ContentType.WWW_FORM);
 
 	}
 }
