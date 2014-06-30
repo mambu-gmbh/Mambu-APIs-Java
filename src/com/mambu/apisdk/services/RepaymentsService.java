@@ -3,17 +3,17 @@
  */
 package com.mambu.apisdk.services;
 
-import java.lang.reflect.Type;
 import java.util.List;
 
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
-import com.mambu.apisdk.util.GsonUtils;
+import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
-import com.mambu.apisdk.util.RequestExecutor.Method;
+import com.mambu.apisdk.util.ServiceHelper;
+import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.Repayment;
 
 /**
@@ -24,16 +24,19 @@ import com.mambu.loans.shared.model.Repayment;
  */
 public class RepaymentsService {
 
-	private static final String REPAYMENTS = APIData.REPAYMENTS;
-	private static final String LOANS = APIData.LOANS;
-
 	private static final String DUE_FROM = APIData.DUE_FROM;
 	private static final String DUE_TO = APIData.DUE_TO;
 
 	private static final String OFFSET = APIData.OFFSET;
 	private static final String LIMIT = APIData.LIMIT;
 
-	private MambuAPIService mambuAPIService;
+	private ServiceHelper serviceHelper;
+
+	// Create API definitions for services provided by ClientService
+
+	private final static ApiDefinition getRepaymments = new ApiDefinition(ApiType.GET_LIST, Repayment.class);
+	private final static ApiDefinition getRepaymentsForLoan = new ApiDefinition(ApiType.GET_OWNED_ENTITIES,
+			LoanAccount.class, Repayment.class);
 
 	/***
 	 * Create a new repayments service
@@ -43,7 +46,7 @@ public class RepaymentsService {
 	 */
 	@Inject
 	public RepaymentsService(MambuAPIService mambuAPIService) {
-		this.mambuAPIService = mambuAPIService;
+		this.serviceHelper = new ServiceHelper(mambuAPIService);
 	}
 
 	/***
@@ -57,14 +60,7 @@ public class RepaymentsService {
 	 * @throws MambuApiException
 	 */
 	public List<Repayment> getLoanAccountRepayments(String accountId) throws MambuApiException {
-
-		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId) + "/" + REPAYMENTS);
-		String jsonResposne = mambuAPIService.executeRequest(urlString, Method.GET);
-
-		Type collectionType = new TypeToken<List<Repayment>>() {
-		}.getType();
-		List<Repayment> repayments = GsonUtils.createGson().fromJson(jsonResposne, collectionType);
-		return repayments;
+		return serviceHelper.execute(getRepaymentsForLoan, accountId);
 	}
 
 	/***
@@ -77,21 +73,13 @@ public class RepaymentsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public List<Repayment> getRapaymentsDueFromTo(String dueFomString, String dueToString) throws MambuApiException {
+	public List<Repayment> getRapaymentsDueFromTo(String dueFromString, String dueToString) throws MambuApiException {
 		// E.g. GET /api/repayments?dueFrom=2011-01-05&dueTo=2011-06-07
-
-		String urlString = new String(mambuAPIService.createUrl(REPAYMENTS + "/"));
 		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.put(DUE_FROM, dueFomString);
+		paramsMap.put(DUE_FROM, dueFromString);
 		paramsMap.put(DUE_TO, dueToString);
 
-		String jsonResposne = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
-		Type collectionType = new TypeToken<List<Repayment>>() {
-		}.getType();
-
-		List<Repayment> repayments = GsonUtils.createGson().fromJson(jsonResposne, collectionType);
-
-		return repayments;
+		return serviceHelper.execute(getRepaymments, paramsMap);
 	}
 
 	/***
@@ -109,18 +97,10 @@ public class RepaymentsService {
 	public List<Repayment> getLoanAccountRepayments(String accountId, String offset, String limit)
 			throws MambuApiException {
 
-		String urlString = new String(mambuAPIService.createUrl(LOANS + "/" + accountId) + "/" + REPAYMENTS);
-
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.put(OFFSET, offset);
 		paramsMap.put(LIMIT, limit);
-
-		String jsonResposne = mambuAPIService.executeRequest(urlString, paramsMap, Method.GET);
-
-		Type collectionType = new TypeToken<List<Repayment>>() {
-		}.getType();
-		List<Repayment> repayments = GsonUtils.createGson().fromJson(jsonResposne, collectionType);
-		return repayments;
+		return serviceHelper.execute(getRepaymentsForLoan, accountId, paramsMap);
 	}
 
 }

@@ -22,6 +22,10 @@ public class APIData {
 	// Users API
 
 	public static final String USERS = "users";
+	// Custom Views. Added in Mambu 3.7
+	public static final String VIEWS = "views";
+	public static final String FOR = "for";
+	public static final String VIEW_FILTER = "viewfilter";
 
 	// Loans and Savings API
 	public static final String LOANS = "loans";

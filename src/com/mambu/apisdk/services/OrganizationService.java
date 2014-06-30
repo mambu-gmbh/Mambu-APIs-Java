@@ -3,18 +3,16 @@
  */
 package com.mambu.apisdk.services;
 
-import java.lang.reflect.Type;
 import java.util.List;
 
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
-import com.mambu.apisdk.util.GsonUtils;
+import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
-import com.mambu.apisdk.util.RequestExecutor.ContentType;
-import com.mambu.apisdk.util.RequestExecutor.Method;
+import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
@@ -29,15 +27,23 @@ import com.mambu.organization.shared.model.Centre;
  */
 public class OrganizationService {
 
-	private static String BRANCHES = APIData.BRANCHES;
-	private static String CURRENCIES = APIData.CURRENCIES;
 	private static String OFFSET = APIData.OFFSET;
 	private static String LIMIT = APIData.LIMIT;
-	private static String FULL_DETAILS = APIData.FULL_DETAILS;
-	private static String CUSTOM_FIELDS = APIData.CUSTOM_FIELDS;
-	private static String CUSTOM_FIELD_SETS = APIData.CUSTOM_FIELD_SETS;
 
-	private MambuAPIService mambuAPIService;
+	private ServiceHelper serviceHelper;
+
+	// Create API definitions for services provided by ClientService
+
+	private final static ApiDefinition getBranchDetails = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, Branch.class);
+	private final static ApiDefinition getBranches = new ApiDefinition(ApiType.GET_LIST, Branch.class);
+
+	private final static ApiDefinition getCentreDetails = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, Centre.class);
+	private final static ApiDefinition getCentres = new ApiDefinition(ApiType.GET_LIST, Centre.class);
+
+	private final static ApiDefinition getCustomField = new ApiDefinition(ApiType.GET_ENTITY, CustomField.class);
+	private final static ApiDefinition getCustomFieldSets = new ApiDefinition(ApiType.GET_LIST, CustomFieldSet.class);
+
+	private final static ApiDefinition getCurrencies = new ApiDefinition(ApiType.GET_LIST, Currency.class);
 
 	/***
 	 * Create a new organization service
@@ -47,28 +53,21 @@ public class OrganizationService {
 	 */
 	@Inject
 	public OrganizationService(MambuAPIService mambuAPIService) {
-		this.mambuAPIService = mambuAPIService;
+		this.serviceHelper = new ServiceHelper(mambuAPIService);
 	}
 
 	/**
 	 * Requests the organization currency
 	 * 
-	 * @return the Mambu gl account
+	 * @return the Mambu base currency
 	 * 
 	 * @throws MambuApiException
 	 */
 	public Currency getCurrency() throws MambuApiException {
 
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(CURRENCIES));
-
-		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
-
-		// convert to collection
-		Currency[] currencies = GsonUtils.createGson().fromJson(jsonResponse, Currency[].class);
-
-		if (currencies != null && currencies.length > 0) {
-			return currencies[0];
+		List<Currency> currencies = serviceHelper.execute(getCurrencies);
+		if (currencies != null && currencies.size() > 0) {
+			return currencies.get(0);
 		} else {
 			return null;
 		}
@@ -88,21 +87,11 @@ public class OrganizationService {
 	 */
 	public List<Branch> getBranches(String offset, String limit) throws MambuApiException {
 
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(BRANCHES));
-
 		ParamsMap params = new ParamsMap();
 
 		params.put(OFFSET, offset);
 		params.put(LIMIT, limit);
-
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
-
-		Type collectionType = new TypeToken<List<Branch>>() {
-		}.getType();
-		List<Branch> branches = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
-
-		return branches;
+		return serviceHelper.execute(getBranches, params);
 	}
 
 	/**
@@ -115,22 +104,9 @@ public class OrganizationService {
 	 * @throws MambuApiException
 	 */
 	public Branch getBranch(String branchId) throws MambuApiException {
-
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(BRANCHES + "/" + branchId));
-
-		ParamsMap params = new ParamsMap();
-		params.put(FULL_DETAILS, "true");
-
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
-
-		Branch branch = (Branch) GsonUtils.createGson().fromJson(jsonResponse, Branch.class);
-
-		return branch;
-
+		return serviceHelper.execute(getBranchDetails, branchId);
 	}
 
-	/** Centres **/
 	/**
 	 * Requests a centre details by their Mambu ID
 	 * 
@@ -141,19 +117,7 @@ public class OrganizationService {
 	 * @throws MambuApiException
 	 */
 	public Centre getCentre(String centreId) throws MambuApiException {
-
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(APIData.CENTRES + "/" + centreId));
-
-		ParamsMap params = new ParamsMap();
-
-		params.put(FULL_DETAILS, "true");
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
-
-		Centre centre = (Centre) GsonUtils.createGson().fromJson(jsonResponse, Centre.class);
-
-		return centre;
-
+		return serviceHelper.execute(getCentreDetails, centreId);
 	}
 
 	/**
@@ -172,26 +136,14 @@ public class OrganizationService {
 	 */
 	public List<Centre> getCentres(String branchId, String offset, String limit) throws MambuApiException {
 
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(APIData.CENTRES));
-
 		ParamsMap params = new ParamsMap();
-
-		params.addParam(APIData.BRANCH_ID, branchId); // if null, all centres
-														// are searched
+		params.addParam(APIData.BRANCH_ID, branchId); // if branchId is null then all centres are searched
 		params.put(OFFSET, offset);
 		params.put(LIMIT, limit);
 
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
-
-		Type collectionType = new TypeToken<List<Centre>>() {
-		}.getType();
-		List<Centre> centres = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
-
-		return centres;
+		return serviceHelper.execute(getCentres, params);
 	}
 
-	// Custom Fields and Custom Field Sets
 	/**
 	 * Get CustomField object details by Custom Field ID
 	 * 
@@ -203,15 +155,7 @@ public class OrganizationService {
 	 * @throws MambuApiException
 	 */
 	public CustomField getCustomField(String fieldId) throws MambuApiException {
-
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(CUSTOM_FIELDS + "/" + fieldId));
-
-		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET, ContentType.JSON);
-
-		CustomField caustomFiled = (CustomField) GsonUtils.createGson().fromJson(jsonResponse, CustomField.class);
-
-		return caustomFiled;
+		return serviceHelper.execute(getCustomField, fieldId);
 	}
 
 	/**
@@ -227,22 +171,14 @@ public class OrganizationService {
 	 */
 	public List<CustomFieldSet> getCustomFieldSets(CustomField.Type customFieldType) throws MambuApiException {
 
-		// create the api call
+		ParamsMap params = null;
+		// if CUSTOM_FIELD_SETS_TYPE is null then all types are requested
+		if (customFieldType != null) {
+			// Add Custom Filed Type Param
+			params = new ParamsMap();
+			params.addParam(APIData.CUSTOM_FIELD_SETS_TYPE, customFieldType.name());
+		}
 
-		String urlString = new String(mambuAPIService.createUrl(CUSTOM_FIELD_SETS));
-		// Add Custom Filed Type Param
-		ParamsMap params = new ParamsMap();
-		String customFieldTypeString = (customFieldType == null) ? null : customFieldType.name();
-
-		// if CUSTOM_FIELD_SETS_TYPE is null all types are requested
-		params.addParam(APIData.CUSTOM_FIELD_SETS_TYPE, customFieldTypeString);
-
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
-
-		Type collectionType = new TypeToken<List<CustomFieldSet>>() {
-		}.getType();
-		List<CustomFieldSet> sustomFieldSets = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
-
-		return sustomFieldSets;
+		return serviceHelper.execute(getCustomFieldSets, params);
 	}
 }

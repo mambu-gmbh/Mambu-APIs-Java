@@ -5,6 +5,7 @@ import java.util.List;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.RepaymentsService;
+import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.Repayment;
 
 /**
@@ -15,20 +16,24 @@ import com.mambu.loans.shared.model.Repayment;
  */
 public class DemoTestRepaymentService {
 
-	private static String LOAN_ACCOUNT_ID = "ZKII792"; //
+	private static String LOAN_ACCOUNT_ID; //
 
-	private static String dueFromString = "2013-02-01";
-	private static String dueToString = "2013-07-05";
+	private static String dueFromString = "2014-02-01";
+	private static String dueToString = "2014-07-05";
+
+	private static LoanAccount demoLoanAccount;
 
 	public static void main(String[] args) {
 
 		DemoUtil.setUp();
 
 		try {
+			demoLoanAccount = DemoUtil.getDemoLoanAccount();
+			LOAN_ACCOUNT_ID = demoLoanAccount.getId();
 
 			testGetLoanAccountRepayments();
 
-			// TODO: the API Repayment with Limit -doesn't work now: returns all
+			// TODO: the API Repayment with Limit -doesn't work: returns all
 			testGetLoanAccountRepaymentsWithLimit();
 
 			testGetRepaymentsDueFromTo();
@@ -56,6 +61,7 @@ public class DemoTestRepaymentService {
 		}
 
 	}
+
 	public static void testGetLoanAccountRepaymentsWithLimit() throws MambuApiException {
 		System.out.println("\nIn testGetLoanAccountRepaymentsWithLimit");
 
@@ -73,6 +79,7 @@ public class DemoTestRepaymentService {
 		}
 
 	}
+
 	public static void testGetRepaymentsDueFromTo() throws MambuApiException {
 		System.out.println("\nIn testGetRepaymentsDueFromTo");
 
@@ -82,8 +89,8 @@ public class DemoTestRepaymentService {
 
 		System.out.println("Total Repayments=" + repayemnts.size());
 		if (repayemnts.size() > 0) {
-			System.out.println("First Repayment Due date" + repayemnts.get(0).getDueDate().toString());
-			System.out.println("Last  Repayment Due date"
+			System.out.println("First Repayment Due date=" + repayemnts.get(0).getDueDate().toString());
+			System.out.println("Last  Repayment Due date="
 					+ repayemnts.get(repayemnts.size() - 1).getDueDate().toString());
 		}
 	}

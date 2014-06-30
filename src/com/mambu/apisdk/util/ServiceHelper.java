@@ -1,15 +1,19 @@
 package com.mambu.apisdk.util;
 
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.reflect.TypeToken;
+import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.exception.MambuApiResponseMessage;
 import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
+import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.clients.shared.model.Client;
@@ -17,11 +21,17 @@ import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.GroupExpanded;
 import com.mambu.core.shared.model.Currency;
+import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
+import com.mambu.core.shared.model.CustomView;
+import com.mambu.core.shared.model.SearchResult;
 import com.mambu.core.shared.model.User;
+import com.mambu.docs.shared.model.Document;
+import com.mambu.intelligence.shared.model.Intelligence.Indicator;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
 import com.mambu.loans.shared.model.LoanTransaction;
+import com.mambu.loans.shared.model.Repayment;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 import com.mambu.savings.shared.model.SavingsAccount;
@@ -31,30 +41,30 @@ import com.mambu.tasks.shared.model.Task;
 
 /**
  * Services Helper class provides common services to all other API Service classes. It uses supplied ApiDefintion for a
- * particular request to build required url, execute https request, with the specified methods and and content type, and
- * then parse Mambu response into the requested type and return the result to the caller.
+ * particular request to build required URL, execute https request (with the specified method and and content type), to
+ * parse Mambu response into the requested type and return the result to the caller.
  * 
- * Other services can user ServiceHelpewr method to execute their API requests. A typical pattern for using
- * ServiceHelper could be: a) define the ApiDefintion for an API request b) call serviceHelper.execute(apiDefintion,
- * parameters...)
+ * Other services can use ServiceHelper methods to execute their API requests. A typical pattern for using ServiceHelper
+ * could be: a) define the ApiDefintion for an API request b) call serviceHelper.execute(apiDefintion, parameters...)
  * 
  * Usage Example:
  * 
- * . If LoanService needs to execute get Loan Account details request, then:
+ * 1. If LoanService needs to execute GET Loan Account details request then:
  * 
- * 1.a Create serviceHelper = new ServiceHelper(mambuAPIService)
+ * serviceHelper = new ServiceHelper(mambuAPIService)
  * 
- * 1.b Create new ApiDefinition(ApiType.GetEntityDetails, LoanAccount.class);
+ * ApiDefinition getAccount = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LoanAccount.class);
  * 
- * 1.c serviceHelper.execute(ApiDefinition, accountId);
+ * serviceHelper.execute(getAccount, accountId);
  * 
- * 2. If Client Service needs to execute get Client Details request, then:
  * 
- * 2.a Create serviceHelper = new ServiceHelper(mambuAPIService)
+ * 2. If Client Service needs to execute GET a list of Clients request then:
  * 
- * 2.b Create new ApiDefinition(ApiType.GetEntityDetails, Client.class);
+ * serviceHelper = new ServiceHelper(mambuAPIService)
  * 
- * 2.c serviceHelper.execute(ApiDefinition, clientId);
+ * ApiDefinition getClientsList = new ApiDefinition(ApiType.GET_LIST, Client.class);
+ * 
+ * serviceHelper.execute(getClientsList, params);
  * 
  * 
  * @author mdanilkis
@@ -75,31 +85,32 @@ public class ServiceHelper {
 	}
 
 	/****
-	 * Execute API Json Post Request using its ApiDefinition and supplied input data. Used for Json create and update
+	 * Execute API JSON Post Request using its ApiDefinition and supplied input data. Used for JSON create and update
 	 * requests.
 	 * 
 	 * @param apiDefinition
-	 *            api definition for the request
+	 *            API definition for the request
 	 * @param object
-	 *            object to be created
+	 *            the Mambu object to be created. Currently (as of Mambu 3.7) only Client, LoanAccount, SavingsAccount
+	 *            and Document objects can be created using JSON API requests
 	 * @param objectId
-	 *            object's id (optional, could be null if not used, for example for json create requests)
+	 *            object's id (optional, could be null if not used, for example for JSON create requests)
 	 * 
-	 * @return object a result object, which will be an api specific object or a list of objects
+	 * @return object a result object, which will be an API specific object
 	 * 
 	 * @throws MambuApiException
 	 */
-	public Object executeJson(ApiDefinition apiDefinition, Object object, String objectId) throws MambuApiException {
+	public <R, T> R executeJson(ApiDefinition apiDefinition, T object, String objectId) throws MambuApiException {
 
 		if (object == null) {
-			throw new IllegalArgumentException("Json object must not be NULL");
+			throw new IllegalArgumentException("JSON object must not be NULL");
 		}
 
-		// Parse input object into a Josn string
+		// Parse input object into a JSON string
 		final String dateTimeFormat = APIData.yyyyMmddFormat;
 		final String jsonData = GsonUtils.createGson(dateTimeFormat).toJson(object, object.getClass());
 
-		// Add json string as JSON_OBJECT to the ParamsMap
+		// Add JSON string as JSON_OBJECT to the ParamsMap
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.put(APIData.JSON_OBJECT, jsonData);
 
@@ -109,29 +120,46 @@ public class ServiceHelper {
 	}
 
 	/****
-	 * Execute API Request using its ApiDefinition and supplied input data.
+	 * Convenience method to execute API JSON Post Request using its ApiDefinition and supplied input data for Create
+	 * requests which do not require objectId parameter
 	 * 
 	 * @param apiDefinition
-	 *            api definition for the request
-	 * @param objectId
-	 *            api's object id (optional, must be null if not used)
-	 * @param paramsMap
-	 *            map with api parameters
-	 * 
-	 * @return object result object, which will be an api specific object or a list of objects
+	 *            API definition for the request
+	 * @param object
+	 *            the Mambu object to be created.
+	 * @return object a result object, which will be an API specific object
 	 * 
 	 * @throws MambuApiException
 	 */
-	public Object execute(ApiDefinition apiDefinition, String objectId, ParamsMap paramsMap) throws MambuApiException {
+	public <R, T> R executeJson(ApiDefinition apiDefinition, T object) throws MambuApiException {
+		String objectId = null;
+		return executeJson(apiDefinition, object, objectId);
+	}
+
+	/****
+	 * Execute API Request using its ApiDefinition and supplied input data.
+	 * 
+	 * @param apiDefinition
+	 *            API definition for the request
+	 * @param objectId
+	 *            api's object id (optional, must be null if not used)
+	 * @param paramsMap
+	 *            map with API parameters
+	 * 
+	 * @return object result object, which will be an API specific object or a list of objects
+	 * 
+	 * @throws MambuApiException
+	 */
+	@SuppressWarnings("unchecked")
+	public <R> R execute(ApiDefinition apiDefinition, String objectId, ParamsMap paramsMap) throws MambuApiException {
 
 		if (apiDefinition == null) {
 			throw new IllegalArgumentException("ApiDefinition cannot be NULL");
 
 		}
-		// System.out.println("executeRequest: API type" + apiDefinition.getApiType());
 
 		// Create URL for this API request using specification in its apiDefintion
-		String urlString = makeUrl(apiDefinition, objectId);
+		String apiUrlPath = getApiPath(apiDefinition, objectId);
 
 		// Add full details parameter if required by apiDefintion specification
 		if (apiDefinition.getWithFullDetails()) {
@@ -146,13 +174,13 @@ public class ServiceHelper {
 		ContentType contentType = apiDefinition.getContentType();
 
 		// Use mambuAPIService to execute request
-		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, method, contentType);
+		String jsonResponse = mambuAPIService.executeRequest(apiUrlPath, paramsMap, method, contentType);
 
 		// Process API Response. Get the return format and returnClass from the apiDefintion
 		Class<?> returnClass = apiDefinition.getReturnClass();
 		ApiReturnFormat returnFormat = apiDefinition.getApiReturnFormat();
 
-		Object result = null;
+		R result = null;
 		switch (returnFormat) {
 		case OBJECT:
 			// Get Single Object from the response
@@ -161,66 +189,140 @@ public class ServiceHelper {
 		case COLLECTION:
 			// Get a list of Objects from the response
 			Type collectionType = getCollectionType(returnClass);
-			// System.out.println("executeRequest: collection type=" + collectionType);
 			// Get result as a collection
 			result = getCollection(jsonResponse, collectionType);
 			break;
 		case BOOLEAN:
-			// Get result as boolean
-			result = getBoolean(jsonResponse);
+			// Get result as a boolean
+			result = (R) getBoolean(jsonResponse);
 			break;
 		case RESPONSE_STRING:
 			// Return the response string as is, with no additional processing.
-			// This can be used for the service to perform any subsequent processing or for such APIs as getDocument()
-			result = jsonResponse;
+			// This can be used for the services to perform any subsequent processing or for such APIs as getDocument()
+			result = (R) jsonResponse;
 			break;
 		}
 
 		return result;
 	}
 
-	// Convenience method for api requests without Params map parameter
+	// Convenience method for API requests without Params map parameter
 	/****
 	 * Execute API Request using its ApiDefinition and supplied input data. This version of the execute method can be
-	 * used when the API request doesn't use ParamsMap, for example get entity details api request
+	 * used when the API request doesn't use ParamsMap, for example get entity details API request
 	 * 
 	 * @param apiDefinition
-	 *            api definition for the request
+	 *            API definition for the request
 	 * @param objectId
 	 *            api's object id (optional, must be null if not used)
 	 * 
-	 * @return object result object, which will be an api specific object or a list of objects
+	 * @return object result object, which will be an API specific object or a list of objects
 	 * 
 	 * @throws MambuApiException
 	 */
-	public Object execute(ApiDefinition apiDefinition, String objectId) throws MambuApiException {
+	public <R> R execute(ApiDefinition apiDefinition, String objectId) throws MambuApiException {
 		ParamsMap paramsMap = null;
 		return execute(apiDefinition, objectId, paramsMap);
 	}
 
-	// Convenience method for api requests without object ID parameter
+	// Convenience method for API requests without object ID parameter
 	/****
 	 * Execute API Request using its ApiDefinition and supplied input data. This version of the execute method can be
 	 * used when the API request doesn't use object ID (for example in get list requests)
 	 * 
 	 * @param api
-	 *            api definition for the request
+	 *            API definition for the request
 	 * @param paramsMap
-	 *            map with api parameters
+	 *            map with API parameters
 	 * 
-	 * @return object result object, which will be an api specific object or a list of objects
+	 * @return object result object, which will be an API specific object or a list of objects
 	 * 
 	 * @throws MambuApiException
 	 */
-	public Object execute(ApiDefinition apiDefinition, ParamsMap paramsMap) throws MambuApiException {
+	public <R> R execute(ApiDefinition apiDefinition, ParamsMap paramsMap) throws MambuApiException {
 		String objectId = null;
 		return execute(apiDefinition, objectId, paramsMap);
 	}
 
+	// Convenience method for API requests not requiring Object ID and Params map parameters
+	/****
+	 * Execute API Request using its ApiDefinition and supplied input data. This version of the execute method can be
+	 * used when the API request doesn't use ParamsMap and doesn't need an object Id, for example GET list of currencies
+	 * 
+	 * @param apiDefinition
+	 *            API definition for the request
+	 * @param objectId
+	 *            api's object id (optional, must be null if not used)
+	 * 
+	 * @return object result object, which will be an API specific object or a list of objects
+	 * 
+	 * @throws MambuApiException
+	 */
+	public <R> R execute(ApiDefinition apiDefinition) throws MambuApiException {
+		ParamsMap paramsMap = null;
+		String objectId = null;
+		return execute(apiDefinition, objectId, paramsMap);
+	}
+
+	// Helpers for specific APIs which are used across multiple services. E.g. GET clients|groups|loans|savings by the
+	// same filter criteria
+	/**
+	 * Requests a list of Mambu entities for a custom view, limited by offset/limit. Can be used for retrieving Clients,
+	 * Groups, LoanAccounts and SavingsAccounts
+	 * 
+	 * @param apiDefinition
+	 *            API definition for the request
+	 * @param customViewKey
+	 *            the encoded key of the Custom View to filter entities
+	 * @param offset
+	 *            pagination offset. If not null the must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null the must be an integer greater than zero
+	 * 
+	 * @return the list of Mambu groups
+	 * 
+	 * @throws MambuApiException
+	 */
+	// TODO: to be tested with Mambu 3.7
+	public <T> List<T> getEntitiesByCustomView(ApiDefinition apiDefinition, String customViewKey, String offset,
+			String limit) throws MambuApiException {
+
+		// See MBU-4607. Available since Mambu 3.7. Allow retrieving objects using a view as a filter for any given list
+		// api. This should apply for: clients, groups, loans and deposits (ex: GET /api/clients?viewfilter=<VIEWKEY>)
+
+		if (apiDefinition == null || apiDefinition.getApiType() != ApiType.GET_LIST) {
+			throw new IllegalArgumentException("API definition must be of the ApiType.GET_LIST type");
+		}
+
+		// Get entity class for this API definition
+		// Only Client, Group, LoanAccount or SavingsAccount entities can be retrieved by the Custom View
+		Class<?> entityClass = apiDefinition.getEntityClass();
+		if (!(entityClass.equals(Client.class) || entityClass.equals(Group.class)
+				|| entityClass.equals(LoanAccount.class) || entityClass.equals(SavingsAccount.class))) {
+			throw new IllegalArgumentException(
+					"Only Client, Group, LoanAccount and SavingsAccount classes are supported");
+		}
+		// Verify that the customViewKey is not null or empty
+		if (customViewKey == null || customViewKey.trim().isEmpty()) {
+			throw new IllegalArgumentException("customViewKey must not be null or empty");
+		}
+		// Validate pagination parameters
+		if ((offset != null && Integer.parseInt(offset) < 0) || ((limit != null && Integer.parseInt(limit) < 1))) {
+			throw new IllegalArgumentException("Invalid pagination parameters");
+		}
+
+		ParamsMap params = new ParamsMap();
+		params.addParam(APIData.VIEW_FILTER, customViewKey);
+		params.addParam(APIData.OFFSET, offset);
+		params.addParam(APIData.LIMIT, limit);
+
+		return execute(apiDefinition, params);
+	}
+
 	// // Private Helper methods ////
 	/****
-	 * Make url string for the api request based on the request's ApiDefinition. The Url is made to comply with the
-	 * following url pattern: endPoint/objectId/operation. ApiDefinition for the request determined which URL parts are
+	 * Make URL string for the API request based on the request's ApiDefinition. The URL is made to comply with the
+	 * following URL pattern: endPoint/objectId/action. ApiDefinition for the request determined which URL parts are
 	 * required for this request.
 	 * 
 	 * @param apiDefinition
@@ -229,67 +331,59 @@ public class ServiceHelper {
 	 *            object ID for the API request. It's optional and can be null, if allowed by request's apiDefinition
 	 * 
 	 */
-	private String makeUrl(ApiDefinition apiDefinition, String objectId) {
+	private String getApiPath(ApiDefinition apiDefinition, String objectId) {
 		if (apiDefinition == null) {
 			throw new IllegalArgumentException("Api definition cannot be null");
 		}
 		// Get the API's end point
-		String url = apiDefinition.getEndPoint();
+		String urlPath = apiDefinition.getEndPoint();
 
-		// Build URL as per definition pattern
-		// System.out.println("makeUrl: end point=" + url + " Object Id=" + objectId + " (need ObjectId="
-		// + apiDefinition.getNeedObjectId() + ") Operation=" + apiDefinition.getOperation());
-
-		// For API requiring object ID add object id's value after the api's end point
-		if (apiDefinition.getNeedObjectId()) {
+		// Build URL path as per definition pattern
+		// For APIs requiring an object ID, add object id's value after the api's end point
+		if (apiDefinition.isObjectIdNeeded()) {
 			if (objectId == null || objectId.trim().isEmpty()) {
 				throw new IllegalArgumentException("Object ID cannot be null or empty");
 			}
 			// Add object id
-			url = url + "/" + objectId;
+			urlPath = urlPath + "/" + objectId;
 		}
-		// If an 'operation' part of the request was provided - add it too.
-		// For example, adding "transaction to make "loans/12233/transaction"
-		String operation = apiDefinition.getOperation();
-		if (operation != null && operation.length() > 0) {
-			url = url + "/" + operation;
+		// If an 'action' part of the request was provided - add it too.
+		// For example, adding 'transaction' to make "/loans/12233/transaction"
+		String action = apiDefinition.getAction();
+		if (action != null && action.length() > 0) {
+			urlPath = urlPath + "/" + action;
 		}
 
-		// User URL helper to build final URL string
-		String urlString = new String(mambuAPIService.createUrl(url));
-
-		return urlString;
+		// Use URL helper to return the final URL path string
+		return mambuAPIService.createUrl(urlPath);
 
 	}
 
 	/****
-	 * Get Object represented by Mambu's json response string
+	 * Get Object represented by Mambu's JSON response string
 	 * 
 	 * @param jsonResponse
-	 *            Json response string
+	 *            JSON response string
 	 * @param objectClass
 	 *            class representing this object
-	 * @return object the returned object can be cast to the objectClass by the calling methiods
+	 * @return object the returned object can be cast to the objectClass by the calling methods
 	 */
-	private Object getObject(String jsonResponse, Class<?> objectClass) {
-
-		// return GsonUtils.createGson().fromJson(jsonResponse, objectClass);
-		return GsonUtils.createGson().fromJson(jsonResponse, objectClass);
-
+	@SuppressWarnings("unchecked")
+	private <R> R getObject(String jsonResponse, Class<?> objectClass) {
+		return (R) GsonUtils.createGson().fromJson(jsonResponse, objectClass);
 	}
 
 	/****
-	 * Get a list of Objects represented by Mambu's json response string
+	 * Get a list of Objects represented by Mambu's JSON response string
 	 * 
 	 * @param jsonResponse
-	 *            Json response string
+	 *            JSON response string
 	 * @param collectionType
 	 *            collection type representing the list of objects
 	 * 
 	 * @return object this object represents a list of entities and must be case to the object's list type
 	 */
-	private Object getCollection(String jsonResponse, Type collectionType) {
-
+	private <R> R getCollection(String jsonResponse, Type collectionType) {
 		return GsonUtils.createGson().fromJson(jsonResponse, collectionType);
 	}
 
@@ -297,7 +391,7 @@ public class ServiceHelper {
 	 * Get a boolean value represented by Mambu's response string
 	 * 
 	 * @param jsonResponse
-	 *            Json response string
+	 *            JSON response string
 	 * 
 	 */
 	private Boolean getBoolean(String jsonResponse) {
@@ -309,16 +403,95 @@ public class ServiceHelper {
 		return false;
 	}
 
-	//
+	// Collection Types Map: it maps Mambu class T to its List<T> type (TypeToken<List<T>>(){}.getType())
+	// New entries shall be added to this map when creating wrappers returning lists for classes not present in this map
+	private final static Map<Class<?>, Type> collectionTypesMap;
+	static {
+		collectionTypesMap = new HashMap<Class<?>, Type>();
+		// Client
+		collectionTypesMap.put(Client.class, new TypeToken<List<Client>>() {
+		}.getType());
+		// ClientExpanded
+		collectionTypesMap.put(ClientExpanded.class, new TypeToken<List<ClientExpanded>>() {
+		}.getType());
+		// Group
+		collectionTypesMap.put(Group.class, new TypeToken<List<Group>>() {
+		}.getType());
+		// GroupExpanded
+		collectionTypesMap.put(GroupExpanded.class, new TypeToken<List<GroupExpanded>>() {
+		}.getType());
+		// LoanAccount
+		collectionTypesMap.put(LoanAccount.class, new TypeToken<List<LoanAccount>>() {
+		}.getType());
+		// LoanAccountExpanded
+		collectionTypesMap.put(LoanAccountExpanded.class, new TypeToken<List<LoanAccountExpanded>>() {
+		}.getType());
+		// LoanTransaction
+		collectionTypesMap.put(LoanTransaction.class, new TypeToken<List<LoanTransaction>>() {
+		}.getType());
+		// SavingsAccount
+		collectionTypesMap.put(SavingsAccount.class, new TypeToken<List<SavingsAccount>>() {
+		}.getType());
+		// JSONSavingsAccount
+		collectionTypesMap.put(JSONSavingsAccount.class, new TypeToken<List<JSONSavingsAccount>>() {
+		}.getType());
+		// SavingsTransaction
+		collectionTypesMap.put(SavingsTransaction.class, new TypeToken<List<SavingsTransaction>>() {
+		}.getType());
+		// Repayment
+		collectionTypesMap.put(Repayment.class, new TypeToken<List<Repayment>>() {
+		}.getType());
+		// LoanProduct
+		collectionTypesMap.put(LoanProduct.class, new TypeToken<List<LoanProduct>>() {
+		}.getType());
+		// SavingsProduct
+		collectionTypesMap.put(SavingsProduct.class, new TypeToken<List<SavingsProduct>>() {
+		}.getType());
+		// Branch
+		collectionTypesMap.put(Branch.class, new TypeToken<List<Branch>>() {
+		}.getType());
+		// Centre
+		collectionTypesMap.put(Centre.class, new TypeToken<List<Centre>>() {
+		}.getType());
+		// User
+		collectionTypesMap.put(User.class, new TypeToken<List<User>>() {
+		}.getType());
+		// Currency
+		collectionTypesMap.put(Currency.class, new TypeToken<List<Currency>>() {
+		}.getType());
+		// CustomFieldSet
+		collectionTypesMap.put(CustomFieldSet.class, new TypeToken<List<CustomFieldSet>>() {
+		}.getType());
+		// CustomField
+		collectionTypesMap.put(CustomField.class, new TypeToken<List<CustomField>>() {
+		}.getType());
+		// Task
+		collectionTypesMap.put(Task.class, new TypeToken<List<Task>>() {
+		}.getType());
+		// CustomView
+		collectionTypesMap.put(CustomView.class, new TypeToken<List<CustomView>>() {
+		}.getType());
+		// JSONActivity
+		collectionTypesMap.put(JSONActivity.class, new TypeToken<List<JSONActivity>>() {
+		}.getType());
+		// Document
+		collectionTypesMap.put(Document.class, new TypeToken<List<Document>>() {
+		}.getType());
+		// SearchResult. Note Search API returns Map<SearchResult.Type, List<SearchResult>>
+		collectionTypesMap.put(SearchResult.class, new TypeToken<Map<SearchResult.Type, List<SearchResult>>>() {
+		}.getType());
+		// Indicator. Note Indicator API returns HashMap<String, String>
+		collectionTypesMap.put(Indicator.class, new TypeToken<HashMap<String, String>>() {
+		}.getType());
+
+	}
+
 	//
 	/****
-	 * Get Type for the List collection of objects of the specified class (i.e. List<className> )
-	 * 
-	 * Note: As the list of handled class names is predefined here, this method may need to be updated if any new
-	 * entities are to be stored as collections in Mambu APIs
+	 * Get Type for the collection of objects returned by API for the specified class (e.g. List<Class<?>> )
 	 * 
 	 * @param clazz
-	 *            class name for the object on the list collection
+	 *            class name for the object associated with the collection
 	 * 
 	 */
 	private Type getCollectionType(Class<?> clazz) {
@@ -327,125 +500,10 @@ public class ServiceHelper {
 			throw new IllegalArgumentException("Class Name cannot be null");
 		}
 
-		Type collectionType = null;
-
-		// Accounts
-		// LoanAccount
-		if (clazz.equals(LoanAccount.class)) {
-			collectionType = new TypeToken<List<LoanAccount>>() {
-			}.getType();
-			return collectionType;
+		if (!collectionTypesMap.containsKey(clazz)) {
+			throw new IllegalArgumentException("Class Name " + clazz + " is not handled by getCollectionType");
 		}
-		if (clazz.equals(LoanAccountExpanded.class)) {
-			collectionType = new TypeToken<List<LoanAccountExpanded>>() {
-			}.getType();
-			return collectionType;
-		}
-		if (clazz.equals(LoanTransaction.class)) {
-			collectionType = new TypeToken<List<LoanTransaction>>() {
-			}.getType();
-			return collectionType;
-		}
-		// SavingsAccount
-		if (clazz.equals(SavingsAccount.class)) {
-			collectionType = new TypeToken<List<SavingsAccount>>() {
-			}.getType();
-			return collectionType;
-		}
-
-		// SavingsAccount
-		if (clazz.equals(JSONSavingsAccount.class)) {
-			collectionType = new TypeToken<List<JSONSavingsAccount>>() {
-			}.getType();
-			return collectionType;
-		}
-		if (clazz.equals(SavingsTransaction.class)) {
-			collectionType = new TypeToken<List<SavingsTransaction>>() {
-			}.getType();
-			return collectionType;
-		}
-		// Client
-		if (clazz.equals(Client.class)) {
-			collectionType = new TypeToken<List<Client>>() {
-			}.getType();
-			return collectionType;
-		}
-
-		// ClientExpanded
-		if (clazz.equals(ClientExpanded.class)) {
-			collectionType = new TypeToken<List<ClientExpanded>>() {
-			}.getType();
-			return collectionType;
-		}
-
-		// Group
-		if (clazz.equals(Group.class)) {
-			collectionType = new TypeToken<List<Group>>() {
-			}.getType();
-			return collectionType;
-		}
-		// GroupExpanded
-		if (clazz.equals(GroupExpanded.class)) {
-			collectionType = new TypeToken<List<GroupExpanded>>() {
-			}.getType();
-			return collectionType;
-		}
-
-		// Organizational entities
-		// Branch
-		if (clazz.equals(Branch.class)) {
-			collectionType = new TypeToken<List<Branch>>() {
-			}.getType();
-			return collectionType;
-		}
-		// Centre
-		if (clazz.equals(Centre.class)) {
-			collectionType = new TypeToken<List<Centre>>() {
-			}.getType();
-			return collectionType;
-		}
-		// User
-		if (clazz.equals(User.class)) {
-			collectionType = new TypeToken<List<User>>() {
-			}.getType();
-			return collectionType;
-		}
-		// Currency
-		if (clazz.equals(Currency.class)) {
-			collectionType = new TypeToken<List<Currency>>() {
-			}.getType();
-			return collectionType;
-		}
-
-		// Custom Field Sets
-		if (clazz.equals(CustomFieldSet.class)) {
-			collectionType = new TypeToken<List<CustomFieldSet>>() {
-			}.getType();
-			return collectionType;
-		}
-
-		// Products
-		// LoanProduct
-		if (clazz.equals(LoanProduct.class)) {
-			collectionType = new TypeToken<List<LoanProduct>>() {
-			}.getType();
-			return collectionType;
-		}
-		// SavingsProduct
-		if (clazz.equals(SavingsProduct.class)) {
-			collectionType = new TypeToken<List<SavingsProduct>>() {
-			}.getType();
-			return collectionType;
-		}
-
-		// Task
-		if (clazz.equals(Task.class)) {
-			collectionType = new TypeToken<List<Task>>() {
-			}.getType();
-			return collectionType;
-		}
-
-		throw new IllegalArgumentException("Class Name " + clazz + " is not handled by getCollectionType");
+		return collectionTypesMap.get(clazz);
 
 	}
 }

@@ -58,7 +58,7 @@ public class DemoTestSearchService {
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
-		System.out.println("Search All types with a query=" + query + "  Returned=" + results.size() + " Total time="
+		System.out.println("Search All types with a query=" + query + "\tReturned=" + results.size() + "\tTotal time="
 				+ diff);
 
 		logSearchResults(results);
@@ -78,7 +78,8 @@ public class DemoTestSearchService {
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
-		System.out.println("Search Clients for query=" + query + "Returned=" + results.size() + " Total time=" + diff);
+		System.out.println("Search Clients for query=" + query + "\tReturned=" + results.size() + "\tTotal time="
+				+ diff);
 
 		logSearchResults(results);
 
@@ -96,7 +97,7 @@ public class DemoTestSearchService {
 
 		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
 
-		System.out.println("Search Loans/Savings for query=" + query + "Returned=" + results.size());
+		System.out.println("Search Loans/Savings for query=" + query + "\tReturned=" + results.size());
 
 		logSearchResults(results);
 
@@ -119,8 +120,8 @@ public class DemoTestSearchService {
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
-		System.out.println("Search Users/Branches for query=" + query + "Returned=" + results.size() + " Total time="
-				+ diff);
+		System.out.println("Search Users/Branches for query=" + query + "\tReturned=" + results.size()
+				+ "\tTotal time=" + diff);
 
 		logSearchResults(results);
 
@@ -141,7 +142,7 @@ public class DemoTestSearchService {
 		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
 
 		if (results != null)
-			System.out.println("Searching for query=" + query + " Types Returned=" + results.size());
+			System.out.println("Searching for query=" + query + "\tTypes Returned=" + results.size());
 
 		logSearchResults(results);
 
@@ -160,8 +161,10 @@ public class DemoTestSearchService {
 			System.out.println("Returned Search Type=" + type.toString() + "  with " + items.size() + "  items:");
 
 			for (SearchResult result : items) {
-				System.out.println("   Type=" + result.getResultType().toString() + "  Id=" + result.getResultID()
-						+ " Display String=" + result.getDisplayString() + "  Display Text=" + result.getDisplayText());
+				System.out
+						.println("   Type=" + result.getResultType().toString() + " \tId=" + result.getResultID()
+								+ "\tDisplay String=" + result.getDisplayString() + "\tDisplay Text="
+								+ result.getDisplayText());
 			}
 
 		}

@@ -134,7 +134,7 @@ public class DemoUtil {
 		// all groups for our demo user
 		List<Group> groups = clientsService.getGroupsByBranchOfficer(null, demoUsername, "0", "5");
 
-		if (groups != null) {
+		if (groups != null && groups.size() > 0) {
 			int randomIndex = (int) Math.random() * (groups.size() - 1);
 			return groups.get(randomIndex);
 		}

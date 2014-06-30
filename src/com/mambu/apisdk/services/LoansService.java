@@ -32,8 +32,6 @@ import com.mambu.loans.shared.model.LoanTransaction;
 @Singleton
 public class LoansService {
 
-	private static final String LOANS = APIData.LOANS;
-
 	private static final String FIRST_REPAYMENT_DATE = APIData.FIRST_REPAYMENT_DATE;
 
 	private static final String TYPE = APIData.TYPE;
@@ -60,45 +58,49 @@ public class LoansService {
 	private static final String REPAYMENT_NUMBER = APIData.REPAYMENT_NUMBER;
 	// Loan filters
 	private static final String BRANCH_ID = APIData.BRANCH_ID;
+	public static final String CENTRE_ID = APIData.CENTRE_ID;
 	private static final String CREDIT_OFFICER_USER_NAME = APIData.CREDIT_OFFICER_USER_NAME;
 	private static final String ACCOUNT_STATE = APIData.ACCOUNT_STATE;
 
-	private MambuAPIService mambuAPIService;
+	// Service helper
+	private ServiceHelper serviceHelper;
 
 	// Create API definitions for services provided by LoanService
 	// Get Account Details
-	private final static ApiDefinition GetAccount = new ApiDefinition(ApiType.GetEntityDetails, LoanAccount.class);
+	private final static ApiDefinition getAccount = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LoanAccount.class);
 	// Get Lists of Accounts
-	private final static ApiDefinition GetList = new ApiDefinition(ApiType.GetList, LoanAccount.class);
+	private final static ApiDefinition getAccountsList = new ApiDefinition(ApiType.GET_LIST, LoanAccount.class);
 	// Get Accounts for a Client
-	private final static ApiDefinition AccountsForClient = new ApiDefinition(ApiType.GetOwnedEntities, Client.class,
-			LoanAccount.class);
+	private final static ApiDefinition getAccountsForClient = new ApiDefinition(ApiType.GET_OWNED_ENTITIES,
+			Client.class, LoanAccount.class);
 	// Get Accounts for a Group
-	private final static ApiDefinition AccountsForGroup = new ApiDefinition(ApiType.GetOwnedEntities, Group.class,
+	private final static ApiDefinition getAccountsForGroup = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, Group.class,
 			LoanAccount.class);
-	// Post Accounts Transactions. Params map defines the transaction type
-	private final static ApiDefinition PostAccountTransaction = new ApiDefinition(ApiType.PostAccountTransaction,
-			LoanAccount.class);
+	// Get Documents for an Account
+	private final static ApiDefinition getAccountDocuments = new ApiDefinition(ApiType.GET_OWNED_ENTITIES,
+			LoanAccount.class, Document.class);
 	// Get Accounts Transactions
-	private final static ApiDefinition GetAccountTransactions = new ApiDefinition(ApiType.GetAccountTransactions,
-			LoanAccount.class);
-	// Post Account state change. Params map defines the account change transaction
-	private final static ApiDefinition AccountChange = new ApiDefinition(ApiType.PostAccountStatusChange,
-			LoanAccount.class);
+	private final static ApiDefinition getAccountTransactions = new ApiDefinition(ApiType.GET_OWNED_ENTITIES,
+			LoanAccount.class, LoanTransaction.class);
+	// Post Account Transactions. Params map defines the transaction type. Return LoanTransaction
+	private final static ApiDefinition postAccountTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
+			LoanAccount.class, LoanTransaction.class);
+	// Post Account state change. Params map defines the account change transaction. Return LoanAccount
+	private final static ApiDefinition postAccountChange = new ApiDefinition(ApiType.POST_ENTITY_ACTION,
+			LoanAccount.class, LoanTransaction.class);
 	// Delete Account
-	private final static ApiDefinition DeleteAccount = new ApiDefinition(ApiType.Delete, LoanAccount.class);
+	private final static ApiDefinition deleteAccount = new ApiDefinition(ApiType.DELETE_ENTITY, LoanAccount.class);
 	// Create Account
-	private final static ApiDefinition CreateAccount = new ApiDefinition(ApiType.Create, LoanAccountExpanded.class);
+	private final static ApiDefinition createAccount = new ApiDefinition(ApiType.CREATE_JSON_ENTITY,
+			LoanAccountExpanded.class);
 	// Update Account
-	private final static ApiDefinition UpdateAccount = new ApiDefinition(ApiType.Update, LoanAccountExpanded.class);
+	private final static ApiDefinition updateAccount = new ApiDefinition(ApiType.UPDATE_JSON, LoanAccountExpanded.class);
 
 	// Loan Products API requests
-	// Get Lists of Loan Products
-	private final static ApiDefinition GetProductsList = new ApiDefinition(ApiType.GetList, LoanProduct.class);
 	// Get Loan Product Details
-	private final static ApiDefinition GetProduct = new ApiDefinition(ApiType.GetEntityDetails, LoanProduct.class);
-
-	private ServiceHelper serviceHelper;
+	private final static ApiDefinition getProduct = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LoanProduct.class);
+	// Get Lists of Loan Products
+	private final static ApiDefinition getProductsList = new ApiDefinition(ApiType.GET_LIST, LoanProduct.class);
 
 	/***
 	 * Create a new loan service
@@ -108,8 +110,6 @@ public class LoansService {
 	 */
 	@Inject
 	public LoansService(MambuAPIService mambuAPIService) {
-		this.mambuAPIService = mambuAPIService;
-
 		this.serviceHelper = new ServiceHelper(mambuAPIService);
 	}
 
@@ -124,8 +124,7 @@ public class LoansService {
 	 * @throws MambuApiException
 	 */
 	public LoanAccount getLoanAccount(String accountId) throws MambuApiException {
-
-		return (LoanAccount) serviceHelper.execute(GetAccount, accountId);
+		return serviceHelper.execute(getAccount, accountId);
 	}
 
 	/***
@@ -138,10 +137,8 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@SuppressWarnings("unchecked")
 	public List<LoanAccount> getLoanAccountsForClient(String clientId) throws MambuApiException {
-
-		return (List<LoanAccount>) serviceHelper.execute(AccountsForClient, clientId);
+		return serviceHelper.execute(getAccountsForClient, clientId);
 	}
 
 	/***
@@ -156,10 +153,8 @@ public class LoansService {
 	 */
 	// TODO: Solidarity Group Loans are NOT included into the returned list of Group Accounts. Only Pure Group Loans are
 	// Implemented in MBU-1045.
-	@SuppressWarnings("unchecked")
 	public List<LoanAccount> getLoanAccountsForGroup(String groupId) throws MambuApiException {
-
-		return (List<LoanAccount>) serviceHelper.execute(AccountsForGroup, groupId);
+		return serviceHelper.execute(getAccountsForGroup, groupId);
 	}
 
 	/****
@@ -182,7 +177,7 @@ public class LoansService {
 		paramsMap.addParam(TYPE, TYPE_APPROVAL);
 		paramsMap.addParam(NOTES, notes);
 
-		return (LoanAccount) serviceHelper.execute(AccountChange, accountId, paramsMap);
+		return serviceHelper.execute(postAccountChange, accountId, paramsMap);
 	}
 
 	/****
@@ -204,7 +199,7 @@ public class LoansService {
 		paramsMap.addParam(TYPE, TYPE_UNDO_APPROVAL);
 		paramsMap.addParam(NOTES, notes);
 
-		return (LoanAccount) serviceHelper.execute(AccountChange, accountId, paramsMap);
+		return serviceHelper.execute(postAccountChange, accountId, paramsMap);
 	}
 
 	/****
@@ -223,7 +218,7 @@ public class LoansService {
 		paramsMap.addParam(TYPE, TYPE_LOCK);
 		paramsMap.addParam(NOTES, notes);
 
-		return (LoanTransaction) serviceHelper.execute(PostAccountTransaction, accountId, paramsMap);
+		return serviceHelper.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
 	/****
@@ -242,21 +237,20 @@ public class LoansService {
 		paramsMap.addParam(TYPE, TYPE_UNLOCK);
 		paramsMap.addParam(NOTES, notes);
 
-		return (LoanTransaction) serviceHelper.execute(PostAccountTransaction, accountId, paramsMap);
+		return serviceHelper.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
 	/***
 	 * Delete Loan Account by its Id
 	 * 
-	 * @param loanAccountId
+	 * @param accountId
 	 * 
 	 * @return status
 	 * 
 	 * @throws MambuApiException
 	 */
-	public boolean deleteLoanAccount(String loanAccountId) throws MambuApiException {
-
-		return (Boolean) serviceHelper.execute(DeleteAccount, loanAccountId);
+	public boolean deleteLoanAccount(String accountId) throws MambuApiException {
+		return serviceHelper.execute(deleteAccount, accountId);
 	}
 
 	/****
@@ -278,10 +272,10 @@ public class LoansService {
 		paramsMap.addParam(TYPE, TYPE_REJECT);
 		paramsMap.addParam(NOTES, notes);
 
-		return (LoanAccount) serviceHelper.execute(AccountChange, accountId, paramsMap);
+		return serviceHelper.execute(postAccountChange, accountId, paramsMap);
 	}
 
-	// A disbursment transaction, returns Transaction object
+	// A disbursement transaction, returns Transaction object
 	/***
 	 * 
 	 * Disburse a loan account with a given disbursal date and some extra details
@@ -324,7 +318,7 @@ public class LoansService {
 		paramsMap.addParam(BANK_ROUTING_NUMBER, bankRoutingNumber);
 		paramsMap.addParam(NOTES, notes);
 
-		return (LoanTransaction) serviceHelper.execute(PostAccountTransaction, accountId, paramsMap);
+		return serviceHelper.execute(postAccountTransaction, accountId, paramsMap);
 
 	}
 
@@ -342,19 +336,16 @@ public class LoansService {
 	 */
 
 	public LoanAccount getLoanAccountDetails(String accountId) throws MambuApiException {
-
-		return (LoanAccount) serviceHelper.execute(GetAccount, accountId);
+		return serviceHelper.execute(getAccount, accountId);
 	}
 
 	/***
-	 * Create a new LoanAccount using LoanAccountExpanded object and sending it as a Json api. This API allows creating
+	 * Create a new LoanAccount using LoanAccountExpanded object and sending it as a JSON API. This API allows creating
 	 * LoanAccount with details, including creating custom fields.
-	 * 
 	 * 
 	 * @param loan
 	 *            LoanAccountExtended object containing LoanAccount. LoanAccount encodedKey must be null for account
 	 *            creation
-	 * 
 	 * @return newly created loan account with full details including custom fields
 	 * 
 	 * @throws MambuApiException
@@ -371,13 +362,12 @@ public class LoansService {
 		if (encodedKey != null) {
 			throw new IllegalArgumentException("Cannot create Account, the encoded key must be null");
 		}
-		return (LoanAccountExpanded) serviceHelper.executeJson(CreateAccount, loan, encodedKey);
+		return serviceHelper.executeJson(createAccount, loan);
 	}
 
 	/***
-	 * Update an existent LoanAccount using LoanAccountExpanded object and sending it as a Json api. This API allows
+	 * Update an existent LoanAccount using LoanAccountExpanded object and sending it as a JSON API. This API allows
 	 * updating LoanAccount with details. As of Mambu 3.4 only custom fields can be updated.
-	 * 
 	 * 
 	 * @param loan
 	 *            LoanAccountExtended object containing LoanAccount. LoanAccount encodedKey must be NOT null for account
@@ -399,8 +389,7 @@ public class LoansService {
 			throw new IllegalArgumentException("Cannot update Account, the encoded key must be NOT null");
 		}
 
-		return (LoanAccountExpanded) serviceHelper.executeJson(UpdateAccount, loan, encodedKey);
-
+		return serviceHelper.executeJson(updateAccount, loan, encodedKey);
 	}
 
 	/***
@@ -414,7 +403,6 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@SuppressWarnings("unchecked")
 	public List<LoanTransaction> getLoanAccountTransactions(String accountId, String offset, String limit)
 			throws MambuApiException {
 
@@ -422,8 +410,7 @@ public class LoansService {
 		paramsMap.put(APIData.OFFSET, offset);
 		paramsMap.put(APIData.LIMIT, limit);
 
-		return (List<LoanTransaction>) serviceHelper.execute(GetAccountTransactions, accountId, paramsMap);
-
+		return serviceHelper.execute(getAccountTransactions, accountId, paramsMap);
 	}
 
 	/****
@@ -462,8 +449,7 @@ public class LoansService {
 		paramsMap.addParam(BANK_ROUTING_NUMBER, bankRoutingNumber);
 		paramsMap.addParam(NOTES, notes);
 
-		return (LoanTransaction) serviceHelper.execute(PostAccountTransaction, accountId, paramsMap);
-
+		return serviceHelper.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
 	/****
@@ -488,11 +474,45 @@ public class LoansService {
 		paramsMap.addParam(REPAYMENT_NUMBER, repaymentNumber);
 		paramsMap.addParam(NOTES, notes);
 
-		return (LoanTransaction) serviceHelper.execute(PostAccountTransaction, accountId, paramsMap);
+		return serviceHelper.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
 	/***
-	 * Get the loan accounts by branch is, credit officer, accountState
+	 * Get the loan accounts by branch id, centreId, credit officer, accountState
+	 * 
+	 * @param branchId
+	 *            branchID The ID of the branch to which the loan accounts are assigned to
+	 * @param centreId
+	 *            The ID of the centre to which the loan accounts are assigned to. If both branchId and centreId are
+	 *            provided then this centre must be assigned to the branchId
+	 * @param creditOfficerUserName
+	 *            The username of the credit officer to whom the loans are assigned to
+	 * @param accountState
+	 *            The desired state of the accounts to filter on (eg: APPROVED)
+	 * @param limit
+	 * 
+	 * @return the list of loan accounts matching these parameters
+	 * 
+	 * @throws MambuApiException
+	 */
+	// TODO: test filtering by centreId with Mambu 3.7, See MBU-5946 @ https://mambucom.jira.com/browse/MBU-5946
+	public List<LoanAccount> getLoanAccountsByBranchCentreOfficerState(String branchId, String centreId,
+			String creditOfficerUserName, String accountState, String offset, String limit) throws MambuApiException {
+
+		ParamsMap params = new ParamsMap();
+		params.addParam(BRANCH_ID, branchId);
+		params.addParam(CENTRE_ID, centreId);
+		params.addParam(CREDIT_OFFICER_USER_NAME, creditOfficerUserName);
+		params.addParam(ACCOUNT_STATE, accountState);
+		params.put(APIData.OFFSET, offset);
+		params.put(APIData.LIMIT, limit);
+
+		return serviceHelper.execute(getAccountsList, params);
+	}
+
+	/***
+	 * Get loan accounts by branch id, credit officer, accountState. This is a convenience method to filter loan
+	 * accounts without specifying centre id (centre id filtering is available only since Mambu 3.7,see MBU-5946)
 	 * 
 	 * @param branchId
 	 *            branchID The ID of the branch to which the loan accounts are assigned to
@@ -506,18 +526,33 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@SuppressWarnings("unchecked")
+
 	public List<LoanAccount> getLoanAccountsByBranchOfficerState(String branchId, String creditOfficerUserName,
 			String accountState, String offset, String limit) throws MambuApiException {
+		final String centreId = null;
+		return getLoanAccountsByBranchCentreOfficerState(branchId, centreId, creditOfficerUserName, accountState,
+				offset, limit);
 
-		ParamsMap params = new ParamsMap();
-		params.addParam(BRANCH_ID, branchId);
-		params.addParam(CREDIT_OFFICER_USER_NAME, creditOfficerUserName);
-		params.addParam(ACCOUNT_STATE, accountState);
-		params.put(APIData.OFFSET, offset);
-		params.put(APIData.LIMIT, limit);
+	}
 
-		return (List<LoanAccount>) serviceHelper.execute(GetList, params);
+	/**
+	 * Requests a list of loan accounts for a custom view, limited by offset/limit
+	 * 
+	 * @param customViewKey
+	 *            the key of the Custom View to filter loan accounts
+	 * @param offset
+	 *            pagination offset. If not null the must be an integer greater or equal to zero
+	 * 
+	 * @param limit
+	 *            pagination limit. If not null the must be an integer greater than zero
+	 * 
+	 * @return the list of Mambu loan accounts
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<LoanAccount> getLoanAccountsByCustomView(String customViewKey, String offset, String limit)
+			throws MambuApiException {
+		return serviceHelper.getEntitiesByCustomView(getAccountsList, customViewKey, offset, limit);
 
 	}
 
@@ -529,14 +564,13 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@SuppressWarnings("unchecked")
 	public List<LoanProduct> getLoanProducts(String offset, String limit) throws MambuApiException {
 
 		ParamsMap params = new ParamsMap();
 		params.put(APIData.OFFSET, offset);
 		params.put(APIData.LIMIT, limit);
 
-		return (List<LoanProduct>) serviceHelper.execute(GetProductsList, params);
+		return serviceHelper.execute(getProductsList, params);
 	}
 
 	/***
@@ -550,8 +584,7 @@ public class LoansService {
 	 * @throws MambuApiException
 	 */
 	public LoanProduct getLoanProduct(String productId) throws MambuApiException {
-
-		return (LoanProduct) serviceHelper.execute(GetProduct, productId);
+		return serviceHelper.execute(getProduct, productId);
 	}
 
 	/***
@@ -565,12 +598,7 @@ public class LoansService {
 	 * @throws MambuApiException
 	 */
 	public List<Document> getLoanAccountDocuments(String accountId) throws MambuApiException {
-
-		if (accountId == null || accountId.trim().isEmpty()) {
-			throw new IllegalArgumentException("Account ID must not be null or empty");
-		}
-
-		return new DocumentsService(mambuAPIService).getDocuments(LOANS, accountId);
+		return serviceHelper.execute(getAccountDocuments, accountId);
 	}
 
 }

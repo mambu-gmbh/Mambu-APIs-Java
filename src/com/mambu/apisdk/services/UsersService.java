@@ -1,16 +1,18 @@
 package com.mambu.apisdk.services;
 
-import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.List;
 
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
-import com.mambu.apisdk.util.GsonUtils;
+import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
-import com.mambu.apisdk.util.RequestExecutor.Method;
+import com.mambu.apisdk.util.ServiceHelper;
+import com.mambu.core.shared.data.DataViewType;
+import com.mambu.core.shared.model.CustomView;
 import com.mambu.core.shared.model.User;
 
 /**
@@ -23,14 +25,17 @@ import com.mambu.core.shared.model.User;
  */
 public class UsersService {
 
-	private MambuAPIService mambuAPIService;
-
-	private static String USERS = APIData.USERS;
-
 	private static String OFFSET = APIData.OFFSET;
 	private static String LIMIT = APIData.LIMIT;
 	private static String BRANCH_ID = APIData.BRANCH_ID;
-	private static String FULL_DETAILS = APIData.FULL_DETAILS;
+
+	// Service helper
+	private ServiceHelper serviceHelper;
+	// API definitions
+	private final static ApiDefinition getUsers = new ApiDefinition(ApiType.GET_LIST, User.class);
+	private final static ApiDefinition getUser = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, User.class);
+	private final static ApiDefinition getCustomViews = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, User.class,
+			CustomView.class);
 
 	/***
 	 * Create a new users service
@@ -40,7 +45,7 @@ public class UsersService {
 	 */
 	@Inject
 	public UsersService(MambuAPIService mambuAPIService) {
-		this.mambuAPIService = mambuAPIService;
+		this.serviceHelper = new ServiceHelper(mambuAPIService);
 	}
 
 	/**
@@ -55,25 +60,13 @@ public class UsersService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@SuppressWarnings("unchecked")
 	public List<User> getUsers(String offset, String limit) throws MambuApiException {
 
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(USERS));
-
 		ParamsMap params = new ParamsMap();
-
 		params.put(OFFSET, offset);
 		params.put(LIMIT, limit);
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<User>>() {
-		}.getType();
-
-		List<User> users = (List<User>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
-
-		return users;
-
+		return serviceHelper.execute(getUsers, params);
 	}
 
 	/**
@@ -84,8 +77,7 @@ public class UsersService {
 	 * @throws MambuApiException
 	 */
 	public List<User> getUsers() throws MambuApiException {
-		List<User> users = getUsers(null, null);
-		return users;
+		return getUsers(null, null);
 	}
 
 	/**
@@ -102,29 +94,18 @@ public class UsersService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@SuppressWarnings("unchecked")
 	public List<User> getUsers(String branchId, String offset, String limit) throws MambuApiException {
-
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(USERS));
 
 		ParamsMap params = new ParamsMap();
 		params.put(BRANCH_ID, branchId);
 		params.put(OFFSET, offset);
 		params.put(LIMIT, limit);
 
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
-
-		Type collectionType = new TypeToken<List<User>>() {
-		}.getType();
-
-		List<User> users = (List<User>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
-
-		return users;
+		return serviceHelper.execute(getUsers, params);
 	}
 
 	/**
-	 * Get User by it's userID
+	 * Get User by its userID
 	 * 
 	 * @param userId
 	 *            the id of the user to filter.
@@ -135,17 +116,7 @@ public class UsersService {
 	 */
 
 	public User getUserById(String userId) throws MambuApiException {
-
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(USERS) + "/" + userId);
-		ParamsMap params = new ParamsMap();
-
-		params.put(FULL_DETAILS, "true");
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
-
-		User user = GsonUtils.createGson().fromJson(jsonResponse, User.class);
-
-		return user;
+		return serviceHelper.execute(getUser, userId);
 	}
 
 	/**
@@ -162,10 +133,61 @@ public class UsersService {
 	 */
 
 	public User getUserByUsername(String userName) throws MambuApiException {
-
-		User user = getUserById(userName);
-
-		return user;
+		return getUserById(userName);
 	}
 
+	/**
+	 * Get Custom Views for the user by user's userName.
+	 * 
+	 * @param userName
+	 *            the username of the user
+	 * @param dataType
+	 *            view filter type. Allowed values are DataViewType.CLIENT, DataViewType.GROUP, DataViewType.LOANS,
+	 *            DataViewType.SAVINGS. If dataType is null then all view types are returned
+	 * 
+	 * @return List of Custom Views for this user
+	 * 
+	 * @throws MambuApiException
+	 */
+	// TODO: to be tested with Mambu 3.7
+	public List<CustomView> getCustomViews(String userName, DataViewType dataType) throws MambuApiException {
+		// See MBU-4607 @ https://mambucom.jira.com/browse/MBU-4607
+		// GET /api/users/<USERNAME>/views)
+
+		// ## Allow for filtering for the CLIENT/GROUP/LOAN/DEPOSIT views (ex: GET
+		// /api/users/<USERNAME>/views?for=CLIENT)
+
+		ParamsMap params = null;
+
+		// If dataType is null then all types of CustomViews are retrieved
+		if (dataType != null) {
+			// CustomViews can be requested by type only for Clients, Groups, Loans and Saving, see MBU-4607
+			final List<DataViewType> allowedTypes = Arrays.asList(DataViewType.CLIENT, DataViewType.GROUP,
+					DataViewType.LOANS, DataViewType.SAVINGS);
+
+			if (!allowedTypes.contains(dataType)) {
+				throw new IllegalArgumentException("View Type " + dataType.name() + " is not supported");
+			}
+			params = new ParamsMap();
+			params.put(APIData.FOR, dataType.name());
+		}
+
+		return serviceHelper.execute(getCustomViews, userName, params);
+	}
+
+	/**
+	 * Convenience method to get all Custom Views for the user by user's userName.
+	 * 
+	 * @param userName
+	 *            the username of the user
+	 * 
+	 * @return List of Custom Views for this user
+	 * 
+	 * @throws MambuApiException
+	 */
+	// TODO: to be tested with Mambu 3.7
+	public List<CustomView> getCustomViews(String userName) throws MambuApiException {
+		DataViewType dataType = null;
+		return getCustomViews(userName, dataType);
+	}
 }

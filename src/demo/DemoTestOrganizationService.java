@@ -21,7 +21,9 @@ import com.mambu.organization.shared.model.Centre;
  */
 public class DemoTestOrganizationService {
 
-	private static String BRANCH_ID = "Richmond_001"; // Richmond01 TAK 001
+	private static String BRANCH_ID;
+	private static String CENTRE_ID;
+	private static String CUSTOM_FIELD_ID;
 
 	public static void main(String[] args) {
 
@@ -31,8 +33,8 @@ public class DemoTestOrganizationService {
 
 			testGetAllBranches();
 
-			testGetCustomField();
 			testGetCustomFieldSetsByType();
+			testGetCustomField();
 
 			testGetCentresByPage();
 			testGetCentre();
@@ -90,7 +92,11 @@ public class DemoTestOrganizationService {
 		long diff = d2.getTime() - d1.getTime();
 
 		System.out.println("Total Branches=" + branches.size() + " Total time=" + diff);
+		BRANCH_ID = null;
 		for (Branch branch : branches) {
+			if (BRANCH_ID == null) {
+				BRANCH_ID = branch.getId();
+			}
 			System.out.println(" Name=" + branch.getName() + "\tId=" + branch.getId());
 		}
 		System.out.println();
@@ -101,7 +107,7 @@ public class DemoTestOrganizationService {
 		System.out.println("\nIn testGetBranch");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
-		Branch branch = organizationService.getBranch(BRANCH_ID); // BRANCH_ID
+		Branch branch = organizationService.getBranch(BRANCH_ID);
 
 		if (branch != null)
 			System.out.println("Branch id=" + BRANCH_ID + " found. Returned:  ID=" + branch.getId() + "   Name="
@@ -114,7 +120,7 @@ public class DemoTestOrganizationService {
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
-		String centreId = "Richmond_Center 1"; // Richmond_Center_1 CanWest_001
+		String centreId = CENTRE_ID;
 		System.out.println("\nIn testGetCentre by ID." + "  Centre ID=" + centreId);
 
 		Date d1 = new Date();
@@ -142,7 +148,11 @@ public class DemoTestOrganizationService {
 		long diff = d2.getTime() - d1.getTime();
 
 		System.out.println("Total Centres=" + centres.size() + " Total time=" + diff);
+		CENTRE_ID = null;
 		for (Centre centre : centres) {
+			if (CENTRE_ID == null) {
+				CENTRE_ID = centre.getId();
+			}
 			System.out.println(" Name=" + centre.getName() + "\tId=" + centre.getId());
 		}
 		System.out.println();
@@ -153,7 +163,7 @@ public class DemoTestOrganizationService {
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
-		String branchId = BRANCH_ID; // "Richmond01"
+		String branchId = BRANCH_ID;
 		String offset = "0";
 		String limit = "500";
 		System.out.println("\nIn testGetCentresByBranch" + "  BranchID=" + branchId + "  Offset=" + offset + "  Limit="
@@ -190,7 +200,7 @@ public class DemoTestOrganizationService {
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
-		String fieldId = "Special_Installements_Loan_Accou";
+		String fieldId = CUSTOM_FIELD_ID;
 		System.out.println("\nIn testGetCustomField by ID." + "  Field ID=" + fieldId);
 
 		Date d1 = new Date();
@@ -230,6 +240,10 @@ public class DemoTestOrganizationService {
 				System.out.println("Field ID=" + field.getId() + "\tField Name=" + field.getName() + "\tDataType="
 						+ field.getDataType().toString() + "\tIsDefault=" + field.isDefault().toString() + "\tType="
 						+ field.getType().toString());
+				// Remember one of the CustomFields for testing testGetCustomField()
+				if (!field.isDeactivated()) {
+					CUSTOM_FIELD_ID = (CUSTOM_FIELD_ID == null) ? field.getId() : CUSTOM_FIELD_ID;
+				}
 			}
 		}
 		System.out.println();

@@ -8,6 +8,7 @@ import org.mockito.Mockito;
 
 import com.mambu.apisdk.MambuAPIServiceTest;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.intelligence.shared.model.Intelligence.Indicator;
 
@@ -32,7 +33,7 @@ public class IntelligenceServiceTest extends MambuAPIServiceTest {
 		service.getIndicator(Indicator.INTEREST_IN_SUSPENSE);
 
 		// verify
-		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/indicators/INTEREST_IN_SUSPENSE",
-				Method.GET);
+		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/indicators/INTEREST_IN_SUSPENSE", null,
+				Method.GET, ContentType.WWW_FORM);
 	}
 }

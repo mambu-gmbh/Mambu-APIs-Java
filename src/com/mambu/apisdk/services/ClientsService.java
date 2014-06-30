@@ -27,11 +27,6 @@ import com.mambu.docs.shared.model.Document;
  */
 public class ClientsService {
 
-	private MambuAPIService mambuAPIService;
-
-	private static String CLIENTS = APIData.CLIENTS;
-	private static String GROUPS = APIData.GROUPS;
-
 	// Client search and create fields
 	private static String FIRST_NAME = APIData.FIRST_NAME;
 	private static String LAST_NAME = APIData.LAST_NAME;
@@ -45,30 +40,38 @@ public class ClientsService {
 	private static String NOTES = APIData.NOTES;
 
 	private static final String BRANCH_ID = APIData.BRANCH_ID;
+	public static final String CENTRE_ID = APIData.CENTRE_ID;
 	private static final String CREDIT_OFFICER_USER_NAME = APIData.CREDIT_OFFICER_USER_NAME;
 	private static final String CLIENT_STATE = APIData.CLIENT_STATE;
 
-	// Create API definitions for services provided by ClientService
-	// Get Client Details
-	private final static ApiDefinition GetClient = new ApiDefinition(ApiType.GetEntity, Client.class);
-	private final static ApiDefinition GetClientDetails = new ApiDefinition(ApiType.GetEntityDetails,
-			ClientExpanded.class);
-	// Get Lists of Clients
-	private final static ApiDefinition GetClientsList = new ApiDefinition(ApiType.GetList, Client.class);
-	// Create Client
-	private final static ApiDefinition CreateClient = new ApiDefinition(ApiType.Create, ClientExpanded.class);
-	// Update Client
-	private final static ApiDefinition UpdateClient = new ApiDefinition(ApiType.Update, ClientExpanded.class);
-
-	// Groups
-	private final static ApiDefinition GetGroup = new ApiDefinition(ApiType.GetEntity, Group.class);
-	private final static ApiDefinition GetGroupDetails = new ApiDefinition(ApiType.GetEntityDetails,
-			GroupExpanded.class);
-	// Get Lists of Groups
-	private final static ApiDefinition GetGroupsList = new ApiDefinition(ApiType.GetList, Group.class);
-
 	// Our service helper
 	private ServiceHelper serviceHelper;
+
+	// Create API definitions for services provided by ClientService
+	// Get Client Details
+	private final static ApiDefinition getClient = new ApiDefinition(ApiType.GET_ENTITY, Client.class);
+	private final static ApiDefinition getClientDetails = new ApiDefinition(ApiType.GET_ENTITY_DETAILS,
+			ClientExpanded.class);
+	// Get Lists of Clients
+	private final static ApiDefinition getClientsList = new ApiDefinition(ApiType.GET_LIST, Client.class);
+	// Create Client
+	private final static ApiDefinition createClient = new ApiDefinition(ApiType.CREATE_JSON_ENTITY,
+			ClientExpanded.class);
+	// Update Client
+	private final static ApiDefinition updateClient = new ApiDefinition(ApiType.UPDATE_JSON, ClientExpanded.class);
+
+	// Groups
+	private final static ApiDefinition getGroup = new ApiDefinition(ApiType.GET_ENTITY, Group.class);
+	private final static ApiDefinition getGroupDetails = new ApiDefinition(ApiType.GET_ENTITY_DETAILS,
+			GroupExpanded.class);
+	// Get Lists of Groups
+	private final static ApiDefinition getGroupsList = new ApiDefinition(ApiType.GET_LIST, Group.class);
+	// Get Documents for a Client
+	private final static ApiDefinition getClientDocuments = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, Client.class,
+			Document.class);
+	// Get Documents for a group
+	private final static ApiDefinition getGroupDocuments = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, Group.class,
+			Document.class);
 
 	/***
 	 * Create a new client service
@@ -78,7 +81,6 @@ public class ClientsService {
 	 */
 	@Inject
 	public ClientsService(MambuAPIService mambuAPIService) {
-		this.mambuAPIService = mambuAPIService;
 		this.serviceHelper = new ServiceHelper(mambuAPIService);
 	}
 
@@ -92,9 +94,7 @@ public class ClientsService {
 	 * @throws MambuApiException
 	 */
 	public Client getClient(String clientId) throws MambuApiException {
-
-		return (Client) serviceHelper.execute(GetClient, clientId);
-
+		return serviceHelper.execute(getClient, clientId);
 	}
 
 	/**
@@ -107,14 +107,14 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@SuppressWarnings("unchecked")
+
 	public List<Client> getClientByFullName(String clientLastName, String clientFirstName) throws MambuApiException {
 
 		ParamsMap params = new ParamsMap();
 		params.put(LAST_NAME, clientLastName);
 		params.put(FIRST_NAME, clientFirstName);
 
-		return (List<Client>) serviceHelper.execute(GetClientsList, params);
+		return serviceHelper.execute(getClientsList, params);
 	}
 
 	/**
@@ -128,14 +128,13 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@SuppressWarnings("unchecked")
 	public List<Client> getClientByLastNameBirthday(String clientLastName, String birthDay) throws MambuApiException {
 
 		ParamsMap params = new ParamsMap();
 		params.put(LAST_NAME, clientLastName);
 		params.put(BIRTH_DATE, birthDay);
 
-		return (List<Client>) serviceHelper.execute(GetClientsList, params);
+		return serviceHelper.execute(getClientsList, params);
 
 	}
 
@@ -149,13 +148,12 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@SuppressWarnings("unchecked")
 	public List<Client> getClients(boolean active) throws MambuApiException {
 
 		ParamsMap params = new ParamsMap();
 		params.addParam(CLIENT_STATE, (active ? "ACTIVE" : "INACTIVE"));
 
-		return (List<Client>) serviceHelper.execute(GetClientsList, params);
+		return serviceHelper.execute(getClientsList, params);
 	}
 
 	/**
@@ -172,7 +170,6 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@SuppressWarnings("unchecked")
 	public List<Client> getClients(boolean active, int offset, int limit) throws MambuApiException {
 
 		if ((offset < 0) || (limit < 1)) {
@@ -183,7 +180,7 @@ public class ClientsService {
 		params.addParam(APIData.OFFSET, String.valueOf(offset));
 		params.addParam(APIData.LIMIT, String.valueOf(limit));
 
-		return (List<Client>) serviceHelper.execute(GetClientsList, params);
+		return serviceHelper.execute(getClientsList, params);
 
 	}
 
@@ -197,7 +194,7 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@SuppressWarnings("unchecked")
+
 	public List<Client> getClientByLastNameDocId(String clientLastName, String documentId) throws MambuApiException {
 
 		ParamsMap params = new ParamsMap();
@@ -205,7 +202,7 @@ public class ClientsService {
 		params.put(LAST_NAME, clientLastName);
 		params.put(ID_DOCUMENT, documentId);
 
-		return (List<Client>) serviceHelper.execute(GetClientsList, params);
+		return serviceHelper.execute(getClientsList, params);
 
 	}
 
@@ -219,9 +216,7 @@ public class ClientsService {
 	 * @throws MambuApiException
 	 */
 	public ClientExpanded getClientDetails(String clientId) throws MambuApiException {
-
-		return (ClientExpanded) serviceHelper.execute(GetClientDetails, clientId);
-
+		return serviceHelper.execute(getClientDetails, clientId);
 	}
 
 	/**
@@ -235,9 +230,7 @@ public class ClientsService {
 	 * @throws MambuApiException
 	 */
 	public Group getGroup(String groupId) throws MambuApiException {
-
-		return (Group) serviceHelper.execute(GetGroup, groupId);
-
+		return serviceHelper.execute(getGroup, groupId);
 	}
 
 	/**
@@ -251,8 +244,7 @@ public class ClientsService {
 	 * @throws MambuApiException
 	 */
 	public GroupExpanded getGroupDetails(String groupId) throws MambuApiException {
-
-		return (GroupExpanded) serviceHelper.execute(GetGroupDetails, groupId);
+		return serviceHelper.execute(getGroupDetails, groupId);
 	}
 
 	/***
@@ -278,7 +270,7 @@ public class ClientsService {
 			throw new IllegalArgumentException("Cannot create client, the encoded key must be null");
 		}
 
-		return (ClientExpanded) serviceHelper.executeJson(CreateClient, clientDetails, encodedKey);
+		return serviceHelper.executeJson(createClient, clientDetails);
 	}
 
 	/***
@@ -305,7 +297,39 @@ public class ClientsService {
 		if (encodedKey == null) {
 			throw new IllegalArgumentException("Cannot update client, encoded key for the object does not exist");
 		}
-		return (ClientExpanded) serviceHelper.executeJson(UpdateClient, clientDetails, encodedKey);
+		return serviceHelper.executeJson(updateClient, clientDetails, encodedKey);
+	}
+
+	/***
+	 * Get Clients by branch id, centre id, credit officer, clientState
+	 * 
+	 * @param branchId
+	 *            the ID of the Client's branch
+	 * @param centreId
+	 *            The ID of the centre to which the loan accounts are assigned to. If both branchId and centreId are
+	 *            provided then this centre must be assigned to the branchId
+	 * @param creditOfficerUserName
+	 *            the username of the credit officer to whom the CLients are assigned to
+	 * @param clientState
+	 *            the desired state of a Client to filter on (eg: ACTIVE)
+	 * 
+	 * @return the list of Clients matching these parameters
+	 * 
+	 * @throws MambuApiException
+	 */
+	// TODO: test filtering by centreId with Mambu 3.7, See MBU-5946 @ https://mambucom.jira.com/browse/MBU-5946
+	public List<Client> getClientsByBranchCentreOfficerState(String branchId, String centreId,
+			String creditOfficerUserName, String clientState, String offset, String limit) throws MambuApiException {
+
+		ParamsMap params = new ParamsMap();
+		params.addParam(BRANCH_ID, branchId);
+		params.addParam(CENTRE_ID, centreId);
+		params.addParam(CREDIT_OFFICER_USER_NAME, creditOfficerUserName);
+		params.addParam(CLIENT_STATE, clientState);
+		params.put(APIData.OFFSET, offset);
+		params.put(APIData.LIMIT, limit);
+
+		return serviceHelper.execute(getClientsList, params);
 	}
 
 	/***
@@ -322,18 +346,82 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@SuppressWarnings("unchecked")
 	public List<Client> getClientsByBranchOfficerState(String branchId, String creditOfficerUserName,
 			String clientState, String offset, String limit) throws MambuApiException {
+		String centreId = null;
+		return getClientsByBranchCentreOfficerState(branchId, centreId, creditOfficerUserName, clientState, offset,
+				limit);
+	}
+
+	/**
+	 * Requests a list of clients for a custom view, limited by offset/limit
+	 * 
+	 * @param customViewKey
+	 *            the id of the Custom View to filter clients
+	 * @param offset
+	 *            pagination offset. If not null the must be an integer greater or equal to zero
+	 * 
+	 * @param limit
+	 *            pagination limit. If not null the must be an integer greater than zero
+	 * 
+	 * @return the list of Mambu clients
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<Client> getClientsByCustomView(String customViewKey, String offset, String limit)
+			throws MambuApiException {
+		return serviceHelper.getEntitiesByCustomView(getClientsList, customViewKey, offset, limit);
+
+	}
+
+	/**
+	 * Requests a list of groups for a custom view, limited by offset/limit
+	 * 
+	 * @param customViewKey
+	 *            the key of the Custom View to filter groups
+	 * @param offset
+	 *            pagination offset. If not null the must be an integer greater or equal to zero
+	 * 
+	 * @param limit
+	 *            pagination limit. If not null the must be an integer greater than zero
+	 * 
+	 * @return the list of Mambu groups
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<Group> getGroupsByCustomView(String customViewKey, String offset, String limit)
+			throws MambuApiException {
+		return serviceHelper.getEntitiesByCustomView(getGroupsList, customViewKey, offset, limit);
+
+	}
+
+	/***
+	 * Get Groups by branch id, credit officer
+	 * 
+	 * @param branchId
+	 *            the ID of the Group's branch
+	 * @param centreId
+	 *            The ID of the centre to which the loan accounts are assigned to. If both branchId and centreId are
+	 *            provided then this centre must be assigned to the branchId
+	 * @param creditOfficerUserName
+	 *            the username of the credit officer to whom the Groups are assigned to
+	 * 
+	 * @return the list of Groups matching these parameters
+	 * 
+	 * @throws MambuApiException
+	 */
+	// TODO: test filtering by centreId with Mambu 3.7, See MBU-5946 @ https://mambucom.jira.com/browse/MBU-5946
+	public List<Group> getGroupsByBranchCentreOfficer(String branchId, String centreId, String creditOfficerUserName,
+			String offset, String limit) throws MambuApiException {
 
 		ParamsMap params = new ParamsMap();
 		params.addParam(BRANCH_ID, branchId);
+		params.addParam(CENTRE_ID, centreId);
 		params.addParam(CREDIT_OFFICER_USER_NAME, creditOfficerUserName);
-		params.addParam(CLIENT_STATE, clientState);
 		params.put(APIData.OFFSET, offset);
 		params.put(APIData.LIMIT, limit);
 
-		return (List<Client>) serviceHelper.execute(GetClientsList, params);
+		return serviceHelper.execute(getGroupsList, params);
 	}
 
 	/***
@@ -348,21 +436,15 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@SuppressWarnings("unchecked")
+
 	public List<Group> getGroupsByBranchOfficer(String branchId, String creditOfficerUserName, String offset,
 			String limit) throws MambuApiException {
-
-		ParamsMap params = new ParamsMap();
-		params.addParam(BRANCH_ID, branchId);
-		params.addParam(CREDIT_OFFICER_USER_NAME, creditOfficerUserName);
-		params.put(APIData.OFFSET, offset);
-		params.put(APIData.LIMIT, limit);
-
-		return (List<Group>) serviceHelper.execute(GetGroupsList, params);
+		String centreId = null;
+		return getGroupsByBranchCentreOfficer(branchId, centreId, creditOfficerUserName, offset, limit);
 	}
 
 	/***
-	 * Get all documents for a specific Client.
+	 * Get all documents for a specific Client
 	 * 
 	 * @param clientId
 	 *            the encoded key or id of the Mambu client for which attached documents are to be retrieved
@@ -372,17 +454,11 @@ public class ClientsService {
 	 * @throws MambuApiException
 	 */
 	public List<Document> getClientDocuments(String clientId) throws MambuApiException {
-
-		if (clientId == null || clientId.trim().isEmpty()) {
-			throw new IllegalArgumentException("ClientId ID must not be null or empty");
-		}
-
-		return new DocumentsService(mambuAPIService).getDocuments(CLIENTS, clientId);
+		return serviceHelper.execute(getClientDocuments, clientId);
 	}
 
 	/***
-	 * Get all documents for a specific Group. This is a convenience method for invoking DocumentsService.getDocuments()
-	 * service for getting documents for a Group
+	 * Get all documents for a specific Group
 	 * 
 	 * @param groupId
 	 *            the encoded key or id of the Mambu group for which attached documents are to be retrieved
@@ -392,11 +468,6 @@ public class ClientsService {
 	 * @throws MambuApiException
 	 */
 	public List<Document> getGroupDocuments(String groupId) throws MambuApiException {
-
-		if (groupId == null || groupId.trim().isEmpty()) {
-			throw new IllegalArgumentException("Group ID must not be null or empty");
-		}
-
-		return new DocumentsService(mambuAPIService).getDocuments(GROUPS, groupId);
+		return serviceHelper.execute(getGroupDocuments, groupId);
 	}
 }

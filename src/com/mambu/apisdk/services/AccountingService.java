@@ -3,19 +3,19 @@
  */
 package com.mambu.apisdk.services;
 
-import java.lang.reflect.Type;
 import java.util.Date;
 import java.util.List;
 
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.accounting.shared.model.GLJournalEntry;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
-import com.mambu.apisdk.util.GsonUtils;
-import com.mambu.apisdk.util.RequestExecutor.Method;
+import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiType;
+import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.ServiceHelper;
 
 /**
  * Service class which handles the API operations available for the accounting
@@ -25,7 +25,13 @@ import com.mambu.apisdk.util.RequestExecutor.Method;
  */
 public class AccountingService {
 
-	private MambuAPIService mambuAPIService;
+	// Our service helper
+	private ServiceHelper serviceHelper;
+	// Create API definitions for this service
+	// Get GLAccount
+	private final static ApiDefinition getGLAccount = new ApiDefinition(ApiType.GET_ENTITY, GLAccount.class);
+	// Get List of GLJournalEntry
+	private final static ApiDefinition getGLJournalEntries = new ApiDefinition(ApiType.GET_LIST, GLJournalEntry.class);
 
 	/***
 	 * Create a new accounting service
@@ -35,7 +41,7 @@ public class AccountingService {
 	 */
 	@Inject
 	public AccountingService(MambuAPIService mambuAPIService) {
-		this.mambuAPIService = mambuAPIService;
+		this.serviceHelper = new ServiceHelper(mambuAPIService);
 	}
 
 	/**
@@ -48,13 +54,7 @@ public class AccountingService {
 	 * @throws MambuApiException
 	 */
 	public GLAccount getGLAccount(String glCode) throws MambuApiException {
-
-		// create the api call
-		String url = APIData.GLACCOUNTS + "/" + glCode;
-		GLAccount glAccount = getGLAccountResponse(url);
-
-		return glAccount;
-
+		return serviceHelper.execute(getGLAccount, glCode);
 	}
 
 	/**
@@ -68,12 +68,11 @@ public class AccountingService {
 	 */
 	public GLAccount getGLAccount(String glCode, String fromDate, String toDate) throws MambuApiException {
 
-		// create the api call
-		String url = APIData.GLACCOUNTS + "/" + glCode + "?" + "from=" + fromDate + "&to=" + toDate;
+		ParamsMap params = new ParamsMap();
+		params.put(APIData.FROM, fromDate);
+		params.put(APIData.TO, toDate);
 
-		GLAccount glAccount = getGLAccountResponse(url);
-		return glAccount;
-
+		return serviceHelper.execute(getGLAccount, glCode, params);
 	}
 
 	/**
@@ -110,32 +109,19 @@ public class AccountingService {
 	 * @throws MambuApiException
 	 *             in case of an error
 	 */
-	@SuppressWarnings("unchecked")
 	public List<GLJournalEntry> getGLJournalEntries(Date fromDate, Date toDate, int offset, int limit)
 			throws MambuApiException {
-		String url = mambuAPIService.createUrl(String.format("%s?from=%s&to=%s", APIData.GLJOURNALENTRIES,
-				APIData.URLDATE_FORMATTER.format(fromDate), APIData.URLDATE_FORMATTER.format(toDate)), offset, limit);
-		String jsonResponse = mambuAPIService.executeRequest(url, Method.GET);
-		Type collectionType = new TypeToken<List<GLJournalEntry>>() {
-		}.getType();
 
-		return ((List<GLJournalEntry>) GsonUtils.createGson().fromJson(jsonResponse, collectionType));
-	}
+		if (fromDate == null || toDate == null) {
+			throw new IllegalArgumentException("fromDate and toDate must not be null");
+		}
 
-	/**
-	 * Returns the gl account response with given url & parameters
-	 * 
-	 * @param url
-	 * 
-	 * @return GLAccount from Mambu
-	 * 
-	 * @throws MambuApiException
-	 */
-	private GLAccount getGLAccountResponse(String url) throws MambuApiException {
-		String urlString = new String(mambuAPIService.createUrl(url));
-		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
-		GLAccount glAccount = GsonUtils.createGson().fromJson(jsonResponse, GLAccount.class);
+		ParamsMap params = new ParamsMap();
+		params.put(APIData.FROM, APIData.URLDATE_FORMATTER.format(fromDate));
+		params.put(APIData.TO, APIData.URLDATE_FORMATTER.format(toDate));
+		params.put(APIData.OFFSET, Integer.toString(offset));
+		params.put(APIData.LIMIT, Integer.toString(limit));
 
-		return glAccount;
+		return serviceHelper.execute(getGLJournalEntries, params);
 	}
 }
