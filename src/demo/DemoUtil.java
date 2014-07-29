@@ -98,7 +98,7 @@ public class DemoUtil {
 	}
 
 	/**
-	 * Get stateful service factory that has bound fixed Mambu credentials
+	 * Get service factory object that includes fixed Mambu credentials
 	 * 
 	 * @return
 	 */
