@@ -9,6 +9,7 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import com.mambu.apisdk.MambuAPIFactory;
+import com.mambu.apisdk.MambuAPIServiceFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.services.LoansService;
@@ -94,6 +95,15 @@ public class DemoUtil {
 		// set up App Key
 		MambuAPIFactory.setApplicationKey(appKeyValue);
 
+	}
+
+	/**
+	 * Get service factory object that includes fixed Mambu credentials
+	 * 
+	 * @return
+	 */
+	public static MambuAPIServiceFactory getAPIServiceFactory() {
+		return MambuAPIServiceFactory.getFactory(domain, user, password);
 	}
 
 	// Get Demo User
