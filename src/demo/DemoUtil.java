@@ -45,14 +45,20 @@ public class DemoUtil {
 
 	// "subdomain.sandbox.mambu.com"
 	private static String domain = "subdomain.sandbox.mambu.com"; // Domain name. Format example: demo.mambucloud.com
+	private static String domain2 = "subdomain.mambu.com"; // Domain name where demo client #1 does not exist. Format
+															// example: demo.mambucloud.com
 	// username
 	private static String user = "demo"; // demo Mambu Username
+	private static String user2 = "demo"; // demo Mambu Username for domain2
 	// password
 	private static String password = "demo"; // demo User password
+	private static String password2 = "demo"; // demo User password for domain2
 
 	// Demo Data
 	final static String demoClientLastName = "Doe"; // Doe Chernaya
+	final static String demoClientLastName2 = "Doe"; // Doe Chernaya
 	final static String demoClientFirstName = "John"; // John Irina
+	final static String demoClientFirstName2 = "Jane"; // John Irina
 	final static String demoUsername = "demo"; // demo MichaelD
 
 	public static void setUp() {
@@ -98,12 +104,28 @@ public class DemoUtil {
 	}
 
 	/**
-	 * Get service factory object that includes fixed Mambu credentials
+	 * Get service factory object that includes fixed Mambu credentials with domain
 	 * 
 	 * @return
 	 */
 	public static MambuAPIServiceFactory getAPIServiceFactory() {
-		return MambuAPIServiceFactory.getFactory(domain, user, password);
+		return getAPIServiceFactory(false);
+	}
+
+	/**
+	 * Get service factory object that includes fixed Mambu credentials with domain2
+	 * 
+	 * @param secondaryDomain
+	 *            true if service factory for secondary domain is required, false for primary domain
+	 * 
+	 * @return
+	 */
+	public static MambuAPIServiceFactory getAPIServiceFactory(boolean secondaryDomain) {
+		if (!secondaryDomain) {
+			return MambuAPIServiceFactory.getFactory(domain, user, password);
+		} else {
+			return MambuAPIServiceFactory.getFactory(domain2, user2, password2);
+		}
 	}
 
 	// Get Demo User
@@ -116,19 +138,47 @@ public class DemoUtil {
 		return user;
 	}
 
-	// Get or Create a Demo Client
+	/**
+	 * Get or Create a Demo Client of primary domain, delegate for {@link DemoUtil#getDemoClient(boolean)}
+	 * 
+	 * @return
+	 * @throws MambuApiException
+	 */
 	public static Client getDemoClient() throws MambuApiException {
+		return getDemoClient(false);
+	}
+
+	/**
+	 * Get or Create a Demo Client
+	 * 
+	 * @param secondaryDomain
+	 *            true if demo client of secondary domain is required, false for primary domain
+	 * @return
+	 * @throws MambuApiException
+	 */
+	public static Client getDemoClient(boolean secondaryDomain) throws MambuApiException {
 		System.out.println("\nIn getDemoClient");
 
-		ClientsService clientsService = MambuAPIFactory.getClientService();
+		ClientsService clientsService;
+		if (!secondaryDomain) {
+			clientsService = MambuAPIFactory.getClientService();
+		} else {
+			clientsService = getAPIServiceFactory(true).getClientService();
+		}
+
 		List<Client> clients = clientsService.getClientByFullName(demoClientLastName, demoClientFirstName);
 		Client client;
 		if (clients.isEmpty()) {
-			client = clientsService.createClient(demoClientFirstName, demoClientLastName);
+			if (!secondaryDomain) {
+				client = clientsService.createClient(demoClientFirstName, demoClientLastName);
+			} else {
+				client = clientsService.createClient(demoClientFirstName2, demoClientLastName2);
+			}
 		} else {
 			client = clients.iterator().next();
 		}
 		return client;
+
 	}
 
 	public static Group getDemoGroup() throws MambuApiException {
