@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.accounting.shared.model.GLJournalEntry;
+import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
@@ -43,7 +44,7 @@ import com.mambu.tasks.shared.model.Task;
  * URL path structure, the HTTP method and content type, and the specification for the expected Mambu response
  * 
  * For the URL path part of the specification, the API definition assumes the URL path to be build in the following
- * format: endpoint[/objectId][/action], with all parts , except the endpoint, being optional. Examples: /loans,
+ * format: endpoint[/objectId][/relatedEntity], with all parts , except the endpoint, being optional. Examples: /loans,
  * /savings/1234, clients/456/loans, /loans/4556/repayments, /groups/998878, /loans/9876/transactions
  * 
  * For the HTTP part, the ApiDefinition allows users to specify such HTTP parameters as method (GET, POST, DELETE) and
@@ -83,41 +84,48 @@ public class ApiDefinition {
 	// These symbolic names are used in ApiType enum constructors just for constrcutor's readability
 	private final static boolean withObjectId = true;
 	private final static boolean noObjectId = false;
-	private final static boolean hasActionPart = true;
-	private final static boolean noActionPart = false;
+	private final static boolean hasRelatedEntityPart = true;
+	private final static boolean noRelatedEntityPart = false;
 	private final static boolean fullDetails = true;
 	private final static boolean noFullDetails = false;
 
 	public enum ApiType {
 
 		// Get Entity without Details. Example GET clients/3444
-		GET_ENTITY(Method.GET, ContentType.WWW_FORM, withObjectId, noFullDetails, noActionPart, ApiReturnFormat.OBJECT),
+		GET_ENTITY(Method.GET, ContentType.WWW_FORM, withObjectId, noFullDetails, noRelatedEntityPart,
+				ApiReturnFormat.OBJECT),
 		// Get Entity wit full Details. Example: GET loan/5566?fullDetails=true
-		GET_ENTITY_DETAILS(Method.GET, ContentType.WWW_FORM, withObjectId, fullDetails, noActionPart,
+		GET_ENTITY_DETAILS(Method.GET, ContentType.WWW_FORM, withObjectId, fullDetails, noRelatedEntityPart,
 				ApiReturnFormat.OBJECT),
 		// Get a List of Entities. Example: GET savings/
-		GET_LIST(Method.GET, ContentType.WWW_FORM, noObjectId, noFullDetails, noActionPart, ApiReturnFormat.COLLECTION),
+		GET_LIST(Method.GET, ContentType.WWW_FORM, noObjectId, noFullDetails, noRelatedEntityPart,
+				ApiReturnFormat.COLLECTION),
 		// Get Entities owned by another entity, Example: GET clients/1233/loans or GET loans/233/transactions
-		GET_OWNED_ENTITIES(Method.GET, ContentType.WWW_FORM, withObjectId, noFullDetails, hasActionPart,
+		GET_OWNED_ENTITIES(Method.GET, ContentType.WWW_FORM, withObjectId, noFullDetails, hasRelatedEntityPart,
+				ApiReturnFormat.COLLECTION),
+		// Get Entities related to another entity, For example get transactions of loan type. Example: GET
+		// loans/transactions or GET savings/transactions
+		GET_RELATED_ENTITIES(Method.GET, ContentType.WWW_FORM, noObjectId, noFullDetails, hasRelatedEntityPart,
 				ApiReturnFormat.COLLECTION),
 		// Create Entity JSON request. Example: POST client/ (contentType=JSON)
-		CREATE_JSON_ENTITY(Method.POST, ContentType.JSON, noObjectId, noFullDetails, noActionPart,
+		CREATE_JSON_ENTITY(Method.POST, ContentType.JSON, noObjectId, noFullDetails, noRelatedEntityPart,
 				ApiReturnFormat.OBJECT),
 		// POST Entity using ContentType.WWW_FORM with params map. Used for older APIs versions not using JSON
-		CREATE_FORM_ENTITY(Method.POST, ContentType.WWW_FORM, noObjectId, noFullDetails, noActionPart,
+		CREATE_FORM_ENTITY(Method.POST, ContentType.WWW_FORM, noObjectId, noFullDetails, noRelatedEntityPart,
 				ApiReturnFormat.OBJECT),
 		// Update Entity JSON request. Example: POST loans/88666 (contentType=JSON)
-		UPDATE_JSON(Method.POST, ContentType.JSON, withObjectId, noFullDetails, noActionPart, ApiReturnFormat.OBJECT),
+		UPDATE_JSON(Method.POST, ContentType.JSON, withObjectId, noFullDetails, noRelatedEntityPart,
+				ApiReturnFormat.OBJECT),
 		// Delete Entity Example: DELETE client/976
-		DELETE_ENTITY(Method.DELETE, ContentType.WWW_FORM, withObjectId, noFullDetails, noActionPart,
+		DELETE_ENTITY(Method.DELETE, ContentType.WWW_FORM, withObjectId, noFullDetails, noRelatedEntityPart,
 				ApiReturnFormat.BOOLEAN),
 		// Post Owned Entity. Example: POST loans/822/transactions?type=REPAYMENT; returns Owned Entity (e.g returns
 		// LoanTransaction)
-		POST_OWNED_ENTITY(Method.POST, ContentType.WWW_FORM, withObjectId, noFullDetails, hasActionPart,
+		POST_OWNED_ENTITY(Method.POST, ContentType.WWW_FORM, withObjectId, noFullDetails, hasRelatedEntityPart,
 				ApiReturnFormat.OBJECT),
 		// Post Entity Change. Example: POST loans/822/transactions?type=APPROVE. Returns Entity object (e.g.
 		// LoanAccount)
-		POST_ENTITY_ACTION(Method.POST, ContentType.WWW_FORM, withObjectId, noFullDetails, hasActionPart,
+		POST_ENTITY_ACTION(Method.POST, ContentType.WWW_FORM, withObjectId, noFullDetails, hasRelatedEntityPart,
 				ApiReturnFormat.OBJECT);
 		/**
 		 * Initialise ApiType enum specifying API parameters to be used by this enum value
@@ -131,10 +139,10 @@ public class ApiDefinition {
 		 * @param withFullDetails
 		 *            a boolean specifying if the request must specify fullDetails parameter
 		 * @param requiresActionComponent
-		 *            a boolean specifying if the request must add the 'action' component in the URL path, formatted as
-		 *            /endpoint[/objectId][/action]
-		 * @param action
-		 *            a string to be used as an 'action' part in the URL path
+		 *            a boolean specifying if the request must add the 'relatedEntity' component in the URL path,
+		 *            formatted as /endpoint[/objectId][/relatedEntity]
+		 * @param relatedEntity
+		 *            a string to be used as a 'relatedEntity' part in the URL path
 		 * @param returnFormat
 		 *            the return type expected for the API request
 		 */
@@ -191,10 +199,10 @@ public class ApiDefinition {
 
 	private ApiType apiType;
 
-	// URL path details in the format: endPoint/objectID/action
+	// URL path details in the format: endPoint/objectID/relatedEntity
 	private String endPoint;
-	// The 'action' part of the URL path
-	private String action;
+	// The 'relatedEntity' part of the URL path
+	private String relatedEntity;
 	// API return format. Specified in the ApiType but can be modified
 	private ApiReturnFormat returnFormat;
 
@@ -251,7 +259,7 @@ public class ApiDefinition {
 		}
 		this.apiType = apiType;
 		this.entityClass = entityClass;
-		action = null;
+		relatedEntity = null;
 		// Get defaults from the ApiType
 		returnFormat = apiType.getApiReturnFormat();
 
@@ -274,13 +282,14 @@ public class ApiDefinition {
 			returnClass = (resultClass != null) ? resultClass : entityClass;
 			break;
 		case GET_OWNED_ENTITIES:
+		case GET_RELATED_ENTITIES:
 		case POST_OWNED_ENTITY:
-			// For these API types the resultClass defines the 'action' part. E.g. LOANS part in /clients/1233/LOANS or
-			// transactions part: /loans/123/transactions. These types return the result class
+			// For these API types the resultClass defines the 'relatedEntity' part. E.g. LOANS part in
+			// /clients/1233/LOANS or transactions part: /loans/123/transactions. These types return the result class
 			if (resultClass == null) {
 				throw new IllegalArgumentException("resultClass must be not null for " + apiType.name());
 			}
-			action = getApiEndPoint(resultClass);
+			relatedEntity = getApiEndPoint(resultClass);
 			// This API type returns object of the resultClass
 			returnClass = resultClass;
 			break;
@@ -294,7 +303,7 @@ public class ApiDefinition {
 			if (resultClass == null) {
 				throw new IllegalArgumentException("resultClass must be not null for " + apiType.name());
 			}
-			action = getApiEndPoint(resultClass);
+			relatedEntity = getApiEndPoint(resultClass);
 			returnClass = entityClass;
 			break;
 		}
@@ -323,6 +332,7 @@ public class ApiDefinition {
 		apiEndPointsMap.put(User.class, APIData.USERS);
 		apiEndPointsMap.put(Centre.class, APIData.CENTRES);
 		apiEndPointsMap.put(Currency.class, APIData.CURRENCIES);
+		apiEndPointsMap.put(TransactionChannel.class, APIData.TRANSACTION_CHANNELS);
 
 		apiEndPointsMap.put(Task.class, APIData.TASKS);
 		apiEndPointsMap.put(JSONTask.class, APIData.TASKS);
@@ -383,8 +393,8 @@ public class ApiDefinition {
 		return apiType.getContentType();
 	}
 
-	public String getAction() {
-		return action;
+	public String getRelatedEntity() {
+		return relatedEntity;
 	}
 
 	public ApiReturnFormat getApiReturnFormat() {

@@ -32,7 +32,7 @@ public class DemoTestIntelligenceService {
 	}
 
 	public static void testGetIndicators() throws MambuApiException {
-		System.out.println("\nIn testGetIndicator");
+		System.out.println("\nIn testGetIndicators");
 
 		IntelligenceService intelligenceService = MambuAPIFactory.getIntelligenceService();
 
@@ -41,18 +41,22 @@ public class DemoTestIntelligenceService {
 				continue;
 			}
 
-			// TODO: Mambu issue? The following indicators return {"returnCode":203,"returnStatus":"INVALID_INDICATORS"}
-			// TOTAL_LOANS_DISBURSED and SEPERATOR (not deprecated), UNIQUE_ACCOUNTS (deprecated).
-			// Skip indicators returning "INVALID_INDICATORS"
+			// Note that the some indicators are not supported by API and return
+			// {"returnCode":203,"returnStatus":"INVALID_INDICATORS"}
+			// See http://developer.mambu.com/customer/portal/articles/1162281-indicators-api
+			// Skip indicators not supported by API
 			switch (indicator) {
 			case TOTAL_LOANS_DISBURSED:
 			case UNIQUE_ACCOUNTS:
 			case SEPERATOR:
 				continue;
 
+			default:
+				// Get indicator
+				BigDecimal value = intelligenceService.getIndicator(indicator);
+				System.out.println("Indicator=" + indicator.name() + "\tValue=" + value);
+				break;
 			}
-			BigDecimal value = intelligenceService.getIndicator(indicator);
-			System.out.println("Indicator=" + indicator.name() + "\tValue=" + value);
 		}
 
 	}

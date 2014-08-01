@@ -37,6 +37,9 @@ public class APIData {
 	public static final String DATE = "date";
 	public static final String FIRST_REPAYMENT_DATE = "firstRepaymentDate";
 
+	// Transaction Channels endpoint
+	public static final String TRANSACTION_CHANNELS = "transactionchannels";
+
 	public static final String TYPE = "type";
 	public static final String BANK_NUMBER = "bankNumber";
 	public static final String RECEIPT_NUMBER = "receiptNumber";
@@ -66,10 +69,7 @@ public class APIData {
 	public static final String AMOUNT = "amount";
 
 	public static final String PAYMENT_METHOD = "method";
-	public static final String CASH_METHOD = "CASH";
-	public static final String RECEIPT_METHOD = "RECEIPT";
-	public static final String CHECK_METHOD = "CHECK";
-	public static final String BANK_TRANSFER_METHOD = "BANK_TRANSFER";
+
 	public static final String REPAYMENT_NUMBER = "repayment";
 
 	public static final String TO_SAVINGS = "toSavingsAccount";

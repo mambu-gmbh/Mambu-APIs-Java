@@ -79,8 +79,12 @@ public class LoansService {
 	// Get Documents for an Account
 	private final static ApiDefinition getAccountDocuments = new ApiDefinition(ApiType.GET_OWNED_ENTITIES,
 			LoanAccount.class, Document.class);
-	// Get Accounts Transactions
+	// Get Account Transactions
 	private final static ApiDefinition getAccountTransactions = new ApiDefinition(ApiType.GET_OWNED_ENTITIES,
+			LoanAccount.class, LoanTransaction.class);
+
+	// Get Loan Transactions
+	private final static ApiDefinition getLoanTransactions = new ApiDefinition(ApiType.GET_RELATED_ENTITIES,
 			LoanAccount.class, LoanTransaction.class);
 	// Post Account Transactions. Params map defines the transaction type. Return LoanTransaction
 	private final static ApiDefinition postAccountTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
@@ -413,6 +417,28 @@ public class LoansService {
 		return serviceHelper.execute(getAccountTransactions, accountId, paramsMap);
 	}
 
+	/**
+	 * Requests a list of loan transactions for a custom view, limited by offset/limit
+	 * 
+	 * @param customViewKey
+	 *            the key of the Custom View to filter loan transaction
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * 
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * 
+	 * @return the list of Mambu loan transactions
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<LoanTransaction> getLoanTransactionsByCustomView(String customViewKey, String offset, String limit)
+			throws MambuApiException {
+		// Example GET loan/transactions?viewfilter=123&offset=0&limit=100
+		return serviceHelper.getEntitiesByCustomView(getLoanTransactions, customViewKey, offset, limit);
+
+	}
+
 	/****
 	 * Repayments on a loan account if the user has permission to repay loans, the maximum exposure is not exceeded for
 	 * the client, the account was in Approved state
@@ -495,7 +521,6 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: test filtering by centreId with Mambu 3.7, See MBU-5946 @ https://mambucom.jira.com/browse/MBU-5946
 	public List<LoanAccount> getLoanAccountsByBranchCentreOfficerState(String branchId, String centreId,
 			String creditOfficerUserName, String accountState, String offset, String limit) throws MambuApiException {
 
@@ -541,10 +566,10 @@ public class LoansService {
 	 * @param customViewKey
 	 *            the key of the Custom View to filter loan accounts
 	 * @param offset
-	 *            pagination offset. If not null the must be an integer greater or equal to zero
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
 	 * 
 	 * @param limit
-	 *            pagination limit. If not null the must be an integer greater than zero
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
 	 * @return the list of Mambu loan accounts
 	 * 

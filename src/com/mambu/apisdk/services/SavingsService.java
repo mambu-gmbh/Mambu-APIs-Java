@@ -92,6 +92,8 @@ public class SavingsService {
 	// Get Accounts Transactions
 	private final static ApiDefinition getAccountTransactions = new ApiDefinition(ApiType.GET_OWNED_ENTITIES,
 			SavingsAccount.class, SavingsTransaction.class);
+	private final static ApiDefinition getSavingsTransactions = new ApiDefinition(ApiType.GET_RELATED_ENTITIES,
+			SavingsAccount.class, SavingsTransaction.class);
 	// Delete Account
 	private final static ApiDefinition deleteAccount = new ApiDefinition(ApiType.DELETE_ENTITY, SavingsAccount.class);
 	// Create Account
@@ -229,6 +231,27 @@ public class SavingsService {
 		paramsMap.put(LIMIT, limit);
 
 		return serviceHelper.execute(getAccountTransactions, accountId, paramsMap);
+	}
+
+	/**
+	 * Requests a list of savings transactions for a custom view, limited by offset/limit
+	 * 
+	 * @param customViewKey
+	 *            the key of the Custom View to filter savings transactions
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * 
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * 
+	 * @return the list of Mambu savings transactions
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<SavingsTransaction> getSavingsTransactionsByCustomView(String customViewKey, String offset, String limit)
+			throws MambuApiException {
+		// Example GET savings/transactions?viewfilter=567&offset=0&limit=100
+		return serviceHelper.getEntitiesByCustomView(getSavingsTransactions, customViewKey, offset, limit);
 	}
 
 	// helper method
@@ -473,7 +496,6 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: test filtering by centreId with Mambu 3.7, See MBU-5946 @ https://mambucom.jira.com/browse/MBU-5946
 	public List<SavingsAccount> getSavingsAccountsByBranchCentreOfficerState(String branchId, String centreId,
 			String creditOfficerUserName, String accountState, String offset, String limit) throws MambuApiException {
 
@@ -518,10 +540,10 @@ public class SavingsService {
 	 * @param customViewKey
 	 *            the key of the Custom View to filter savings accounts
 	 * @param offset
-	 *            pagination offset. If not null the must be an integer greater or equal to zero
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
 	 * 
 	 * @param limit
-	 *            pagination limit. If not null the must be an integer greater than zero
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
 	 * @return the list of Mambu savings accounts
 	 * 

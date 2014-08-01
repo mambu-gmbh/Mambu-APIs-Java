@@ -3,6 +3,8 @@ package demo;
 import java.util.Date;
 import java.util.List;
 
+import com.mambu.accounts.shared.model.TransactionChannel;
+import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.OrganizationService;
@@ -30,6 +32,9 @@ public class DemoTestOrganizationService {
 		DemoUtil.setUp();
 
 		try {
+
+			// Available since 3.7
+			testGetTransactionChannels();
 
 			testGetAllBranches();
 
@@ -249,4 +254,25 @@ public class DemoTestOrganizationService {
 		System.out.println();
 
 	}
+
+	public static void testGetTransactionChannels() throws MambuApiException {
+		System.out.println("\nIn testGetTransactionChannels");
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+
+		List<TransactionChannel> transactionChannels = organizationService.getTransactionChannels();
+
+		System.out.println("Total Channels=" + transactionChannels.size());
+		for (TransactionChannel channel : transactionChannels) {
+			List<ChannelField> fields = channel.getChannelFields();
+			int channelFieldsCount = (fields == null) ? 0 : fields.size();
+			System.out.println("Channel Name=" + channel.getName() + "\tId=" + channel.getId() + "\tTotal Fields="
+					+ channelFieldsCount);
+			System.out.println();
+			for (ChannelField field : fields) {
+				System.out.println("Field Name=" + field.name() + " ");
+			}
+			System.out.println();
+		}
+	}
+
 }

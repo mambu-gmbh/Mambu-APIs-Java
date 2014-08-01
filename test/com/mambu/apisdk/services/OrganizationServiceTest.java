@@ -33,8 +33,18 @@ public class OrganizationServiceTest extends MambuAPIServiceTest {
 	public void testGetCurrency() throws MambuApiException {
 
 		// execute
-		service.getCurrency();
-
+		try {
+			service.getCurrency();
+		} catch (MambuApiException e) {
+			// Check if we received an expected exception and, if so, ignore it
+			// The getCurrency() service may throw an exception even after a successful request if no entries are
+			// returned, which is always the case in this test environment
+			if (!(e.getErrorCode() == -1 && e.getMessage().equalsIgnoreCase(
+					OrganizationService.baseCurrencyMustBeDefined))) {
+				// re-throw
+				throw e;
+			}
+		}
 		// verify
 		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/currencies", null, Method.GET,
 				ContentType.WWW_FORM);
@@ -93,6 +103,7 @@ public class OrganizationServiceTest extends MambuAPIServiceTest {
 		final String limit = "100";
 
 		// execute
+
 		service.getCentres(branchId, offset, limit);
 
 		// verify

@@ -139,6 +139,26 @@ public class ActivitiesService {
 		return getActivities(fromDate, toDate, null, null);
 	}
 
+	/**
+	 * Requests a list of activities for a custom view, limited by offset/limit
+	 * 
+	 * @param customViewKey
+	 *            the key of the Custom View to filter system activities
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * 
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * 
+	 * @return the list of Mambu activities
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<JSONActivity> getActivitiesByCustomView(String customViewKey, String offset, String limit)
+			throws MambuApiException {
+		return serviceHelper.getEntitiesByCustomView(getJSONActivityList, customViewKey, offset, limit);
+	}
+
 	// Private helper
 	/***
 	 * Get the name of the ID parameter for the entity ID value. The ID Name in the GET request must be one of the

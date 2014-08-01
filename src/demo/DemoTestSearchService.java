@@ -31,7 +31,7 @@ public class DemoTestSearchService {
 
 			testSearchLoansSavings();
 
-			testSearchUsersBranches();
+			testSearchUsersBranchesCentres();
 
 			testTypesCombinations();
 
@@ -103,15 +103,15 @@ public class DemoTestSearchService {
 
 	}
 
-	public static void testSearchUsersBranches() throws MambuApiException {
-		System.out.println("\nIn testSearchUsersBranches");
+	public static void testSearchUsersBranchesCentres() throws MambuApiException {
+		System.out.println("\nIn testSearchUsersBranchesCentres");
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
 		String query = "Map";
 		String limit = "100";
 
-		List<Type> searchTypes = Arrays.asList(Type.USER, Type.BRANCH); // or null
+		List<Type> searchTypes = Arrays.asList(Type.USER, Type.BRANCH, Type.CENTRE); // or null
 
 		Date d1 = new Date();
 
@@ -137,7 +137,7 @@ public class DemoTestSearchService {
 
 		// Use different Search Types combinations as needed
 		// List<Type> searchTypes = Arrays.asList(Type.CLIENT, Type.GROUP, Type.LOAN_ACCOUNT, Type.SAVINGS_ACCOUNT,
-		// Type.USER); // or null
+		// Type.USER, Type.CENTRE); // or null
 		List<Type> searchTypes = Arrays.asList(Type.CLIENT);
 		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
 

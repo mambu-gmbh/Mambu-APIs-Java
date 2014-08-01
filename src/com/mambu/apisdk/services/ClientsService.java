@@ -30,14 +30,9 @@ public class ClientsService {
 	// Client search and create fields
 	private static String FIRST_NAME = APIData.FIRST_NAME;
 	private static String LAST_NAME = APIData.LAST_NAME;
-	private static String HOME_PHONE = APIData.HOME_PHONE;
-	private static String MOBILE_PHONE = APIData.MOBILE_PHONE;
-	private static String GENDER = APIData.GENDER;
-	private static String BIRTH_DATE = APIData.BIRTH_DATE;
-	private static String EMAIL_ADDRESS = APIData.EMAIL_ADDRESS;
-	private static String ID_DOCUMENT = APIData.ID_DOCUMENT;
 
-	private static String NOTES = APIData.NOTES;
+	private static String BIRTH_DATE = APIData.BIRTH_DATE;
+	private static String ID_DOCUMENT = APIData.ID_DOCUMENT;
 
 	private static final String BRANCH_ID = APIData.BRANCH_ID;
 	public static final String CENTRE_ID = APIData.CENTRE_ID;
@@ -317,7 +312,6 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: test filtering by centreId with Mambu 3.7, See MBU-5946 @ https://mambucom.jira.com/browse/MBU-5946
 	public List<Client> getClientsByBranchCentreOfficerState(String branchId, String centreId,
 			String creditOfficerUserName, String clientState, String offset, String limit) throws MambuApiException {
 
@@ -359,10 +353,10 @@ public class ClientsService {
 	 * @param customViewKey
 	 *            the id of the Custom View to filter clients
 	 * @param offset
-	 *            pagination offset. If not null the must be an integer greater or equal to zero
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
 	 * 
 	 * @param limit
-	 *            pagination limit. If not null the must be an integer greater than zero
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
 	 * @return the list of Mambu clients
 	 * 
@@ -380,10 +374,10 @@ public class ClientsService {
 	 * @param customViewKey
 	 *            the key of the Custom View to filter groups
 	 * @param offset
-	 *            pagination offset. If not null the must be an integer greater or equal to zero
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
 	 * 
 	 * @param limit
-	 *            pagination limit. If not null the must be an integer greater than zero
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
 	 * @return the list of Mambu groups
 	 * 
@@ -410,7 +404,6 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: test filtering by centreId with Mambu 3.7, See MBU-5946 @ https://mambucom.jira.com/browse/MBU-5946
 	public List<Group> getGroupsByBranchCentreOfficer(String branchId, String centreId, String creditOfficerUserName,
 			String offset, String limit) throws MambuApiException {
 

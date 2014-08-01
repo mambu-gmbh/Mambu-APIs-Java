@@ -33,7 +33,6 @@ public class DemoTestRepaymentService {
 
 			testGetLoanAccountRepayments();
 
-			// TODO: the API Repayment with Limit -doesn't work: returns all
 			testGetLoanAccountRepaymentsWithLimit();
 
 			testGetRepaymentsDueFromTo();
@@ -84,10 +83,11 @@ public class DemoTestRepaymentService {
 		System.out.println("\nIn testGetRepaymentsDueFromTo");
 
 		RepaymentsService repaymentService = MambuAPIFactory.getRepaymentsService();
+		String offset = "0";
+		String limit = "100";
+		List<Repayment> repayemnts = repaymentService.getRapaymentsDueFromTo(dueFromString, dueToString, offset, limit);
 
-		List<Repayment> repayemnts = repaymentService.getRapaymentsDueFromTo(dueFromString, dueToString);
-
-		System.out.println("Total Repayments=" + repayemnts.size());
+		System.out.println("Total Repayments=" + repayemnts.size() + " Offset=" + offset + "  Limit=" + limit);
 		if (repayemnts.size() > 0) {
 			System.out.println("First Repayment Due date=" + repayemnts.get(0).getDueDate().toString());
 			System.out.println("Last  Repayment Due date="

@@ -50,21 +50,33 @@ public class RepaymentsService {
 	}
 
 	/***
-	 * Get a all Repayments by Loan account id
+	 * Get a loan account Repayments between FromDate and ToDate
 	 * 
-	 * @param accountId
-	 *            the id of the loan account
+	 * @param dueFomString
+	 * @param dueToString
+	 * @param offset
+	 *            pagination offset
+	 * @param limit
+	 *            pagination limit
 	 * 
 	 * @return the List of Repayments
 	 * 
 	 * @throws MambuApiException
 	 */
-	public List<Repayment> getLoanAccountRepayments(String accountId) throws MambuApiException {
-		return serviceHelper.execute(getRepaymentsForLoan, accountId);
+	public List<Repayment> getRapaymentsDueFromTo(String dueFromString, String dueToString, String offset, String limit)
+			throws MambuApiException {
+		// E.g. GET /api/repayments?dueFrom=2011-01-05&dueTo=2011-06-07&offset=0&limit100
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.put(DUE_FROM, dueFromString);
+		paramsMap.put(DUE_TO, dueToString);
+		paramsMap.put(OFFSET, offset);
+		paramsMap.put(LIMIT, limit);
+
+		return serviceHelper.execute(getRepaymments, paramsMap);
 	}
 
 	/***
-	 * Get a loan account Repayments between FromDate and ToDate
+	 * Get a loan account Repayments between FromDate and ToDate with default pagination parameters
 	 * 
 	 * @param dueFomString
 	 * @param dueToString
@@ -74,26 +86,25 @@ public class RepaymentsService {
 	 * @throws MambuApiException
 	 */
 	public List<Repayment> getRapaymentsDueFromTo(String dueFromString, String dueToString) throws MambuApiException {
-		// E.g. GET /api/repayments?dueFrom=2011-01-05&dueTo=2011-06-07
-		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.put(DUE_FROM, dueFromString);
-		paramsMap.put(DUE_TO, dueToString);
-
-		return serviceHelper.execute(getRepaymments, paramsMap);
+		String offset = null;
+		String limit = null;
+		return getRapaymentsDueFromTo(dueFromString, dueToString, offset, limit);
 	}
 
 	/***
-	 * Get a all Repayments by Loan account id with an offset and limit params
+	 * Get a all Repayments by Loan account id with an offset and limit parameters
 	 * 
 	 * @param accountId
 	 *            the id of the loan account limit - last transaction number Note: if offset and limit both equal null,
 	 *            all transactions are returned
-	 * 
+	 * @param offset
+	 *            pagination offset
+	 * @param limit
+	 *            pagination limit
 	 * @return the List of Repayments
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: The offset and limit params are not supported by repayments. API returns all. To be investigated further
 	public List<Repayment> getLoanAccountRepayments(String accountId, String offset, String limit)
 			throws MambuApiException {
 
@@ -103,4 +114,19 @@ public class RepaymentsService {
 		return serviceHelper.execute(getRepaymentsForLoan, accountId, paramsMap);
 	}
 
+	/***
+	 * Get Repayments by Loan account id with default pagination parameters
+	 * 
+	 * @param accountId
+	 *            the id of the loan account
+	 * 
+	 * @return the List of Repayments
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<Repayment> getLoanAccountRepayments(String accountId) throws MambuApiException {
+		String offset = null;
+		String limit = null;
+		return getLoanAccountRepayments(accountId, offset, limit);
+	}
 }

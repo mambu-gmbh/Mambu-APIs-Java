@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gson.reflect.TypeToken;
+import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIService;
@@ -13,7 +14,6 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.exception.MambuApiResponseMessage;
 import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
-import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.clients.shared.model.Client;
@@ -47,6 +47,16 @@ import com.mambu.tasks.shared.model.Task;
  * Other services can use ServiceHelper methods to execute their API requests. A typical pattern for using ServiceHelper
  * could be: a) define the ApiDefintion for an API request b) call serviceHelper.execute(apiDefintion, parameters...)
  * 
+ * Note that all ServiceHelper execute...(...) methods are generic methods returning a generic type R. Invoking these
+ * methods can be done using either a parameterised type or using Java's target typing to infer the return type
+ * parameter of a generic method invocation. Examples below are using target typing, which infer the return R type from
+ * the statement. For example, in getLoanAccount() wrapper method specifies LoanAccount as a returned type then when
+ * using a statement: return serviceHelper.execute(getAccount, params) within the getLoanAccount() Java infers type R to
+ * be LoanAccount and is equivalent to the following invocation: return serviceHelper.<LoanAccount> execute(getAccount,
+ * accountId);. Similarly, from the assignment statement Client client = serviceHelper.execute(...) Java infers the
+ * return type R for this execute() statement to be a Client class and is equivalent to Client client=
+ * serviceHelper.<Client>execute(...)
+ * 
  * Usage Example:
  * 
  * 1. If LoanService needs to execute GET Loan Account details request then:
@@ -55,7 +65,7 @@ import com.mambu.tasks.shared.model.Task;
  * 
  * ApiDefinition getAccount = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LoanAccount.class);
  * 
- * serviceHelper.execute(getAccount, accountId);
+ * return serviceHelper.execute(getAccount, accountId);
  * 
  * 
  * 2. If Client Service needs to execute GET a list of Clients request then:
@@ -64,7 +74,7 @@ import com.mambu.tasks.shared.model.Task;
  * 
  * ApiDefinition getClientsList = new ApiDefinition(ApiType.GET_LIST, Client.class);
  * 
- * serviceHelper.execute(getClientsList, params);
+ * return serviceHelper.execute(getClientsList, params);
  * 
  * 
  * @author mdanilkis
@@ -137,7 +147,7 @@ public class ServiceHelper {
 	}
 
 	/****
-	 * Execute API Request using its ApiDefinition and supplied input data.
+	 * Execute API Request using its ApiDefinition and supplied input data
 	 * 
 	 * @param apiDefinition
 	 *            API definition for the request
@@ -275,7 +285,7 @@ public class ServiceHelper {
 	 * @param customViewKey
 	 *            the encoded key of the Custom View to filter entities
 	 * @param offset
-	 *            pagination offset. If not null the must be an integer greater or equal to zero
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
 	 * @param limit
 	 *            pagination limit. If not null the must be an integer greater than zero
 	 * 
@@ -283,22 +293,21 @@ public class ServiceHelper {
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: to be tested with Mambu 3.7
 	public <T> List<T> getEntitiesByCustomView(ApiDefinition apiDefinition, String customViewKey, String offset,
 			String limit) throws MambuApiException {
 
 		// See MBU-4607. Available since Mambu 3.7. Allow retrieving objects using a view as a filter for any given list
 		// api. This should apply for: clients, groups, loans and deposits (ex: GET /api/clients?viewfilter=<VIEWKEY>)
 
-		if (apiDefinition == null || apiDefinition.getApiType() != ApiType.GET_LIST) {
-			throw new IllegalArgumentException("API definition must be of the ApiType.GET_LIST type");
-		}
+		// See also MBU-6113 for getting loan transactions, savings transactions and system activity
 
 		// Get entity class for this API definition
-		// Only Client, Group, LoanAccount or SavingsAccount entities can be retrieved by the Custom View
+		// Only Client, Group, LoanAccount (for LoanAccounts and LoanTransactions), SavingsAccount (for SavingsAccounts
+		// and SavingsTransactions) , and JSONActivity entities can be retrieved by the Custom View
 		Class<?> entityClass = apiDefinition.getEntityClass();
 		if (!(entityClass.equals(Client.class) || entityClass.equals(Group.class)
-				|| entityClass.equals(LoanAccount.class) || entityClass.equals(SavingsAccount.class))) {
+				|| entityClass.equals(LoanAccount.class) || entityClass.equals(SavingsAccount.class) || entityClass
+					.equals(JSONActivity.class))) {
 			throw new IllegalArgumentException(
 					"Only Client, Group, LoanAccount and SavingsAccount classes are supported");
 		}
@@ -321,9 +330,9 @@ public class ServiceHelper {
 
 	// // Private Helper methods ////
 	/****
-	 * Make URL string for the API request based on the request's ApiDefinition. The URL is made to comply with the
-	 * following URL pattern: endPoint/objectId/action. ApiDefinition for the request determined which URL parts are
-	 * required for this request.
+	 * Get URL path for the API request based on the request's ApiDefinition. The URL path is created to comply with the
+	 * following URL path pattern: endPoint/objectId/relatedEntity. ApiDefinition for the request determines which URL
+	 * path parts are required for this request.
 	 * 
 	 * @param apiDefinition
 	 *            Api Definition for the API request
@@ -347,11 +356,11 @@ public class ServiceHelper {
 			// Add object id
 			urlPath = urlPath + "/" + objectId;
 		}
-		// If an 'action' part of the request was provided - add it too.
+		// If a 'relatedEntity' part of the request was provided - add it too.
 		// For example, adding 'transaction' to make "/loans/12233/transaction"
-		String action = apiDefinition.getAction();
-		if (action != null && action.length() > 0) {
-			urlPath = urlPath + "/" + action;
+		String relatedEntity = apiDefinition.getRelatedEntity();
+		if (relatedEntity != null && relatedEntity.length() > 0) {
+			urlPath = urlPath + "/" + relatedEntity;
 		}
 
 		// Use URL helper to return the final URL path string
@@ -477,6 +486,9 @@ public class ServiceHelper {
 		// Document
 		collectionTypesMap.put(Document.class, new TypeToken<List<Document>>() {
 		}.getType());
+		// TransactionChannel
+		collectionTypesMap.put(TransactionChannel.class, new TypeToken<List<TransactionChannel>>() {
+		}.getType());
 		// SearchResult. Note Search API returns Map<SearchResult.Type, List<SearchResult>>
 		collectionTypesMap.put(SearchResult.class, new TypeToken<Map<SearchResult.Type, List<SearchResult>>>() {
 		}.getType());
@@ -494,7 +506,7 @@ public class ServiceHelper {
 	 *            class name for the object associated with the collection
 	 * 
 	 */
-	private Type getCollectionType(Class<?> clazz) {
+	public static Type getCollectionType(Class<?> clazz) {
 
 		if (clazz == null) {
 			throw new IllegalArgumentException("Class Name cannot be null");

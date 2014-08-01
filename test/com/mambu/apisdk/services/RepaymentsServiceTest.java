@@ -37,9 +37,11 @@ public class RepaymentsServiceTest extends MambuAPIServiceTest {
 		service.getLoanAccountRepayments(accountId);
 
 		// verify
-
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.put(APIData.OFFSET, null);
+		paramsMap.put(APIData.LIMIT, null);
 		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/loans/" + accountId + "/repayments",
-				null, Method.GET, ContentType.WWW_FORM);
+				paramsMap, Method.GET, ContentType.WWW_FORM);
 	}
 
 	@Test
@@ -54,6 +56,8 @@ public class RepaymentsServiceTest extends MambuAPIServiceTest {
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.put(APIData.DUE_FROM, dueFromString);
 		paramsMap.put(APIData.DUE_TO, dueToString);
+		paramsMap.put(APIData.OFFSET, null);
+		paramsMap.put(APIData.LIMIT, null);
 		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/repayments", paramsMap, Method.GET,
 				ContentType.WWW_FORM);
 	}

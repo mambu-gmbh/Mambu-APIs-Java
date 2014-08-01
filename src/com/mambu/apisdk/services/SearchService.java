@@ -18,7 +18,7 @@ import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.core.shared.model.SearchResult;
 
 /**
- * Service class which handles the API operations available for the Seacrh
+ * Service class which handles the API operations available for the Search
  * 
  * @author mdanilkis
  * 

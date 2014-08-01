@@ -6,6 +6,7 @@ package com.mambu.apisdk.services;
 import java.util.List;
 
 import com.google.inject.Inject;
+import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
@@ -45,6 +46,9 @@ public class OrganizationService {
 
 	private final static ApiDefinition getCurrencies = new ApiDefinition(ApiType.GET_LIST, Currency.class);
 
+	private final static ApiDefinition getTransactionChannels = new ApiDefinition(ApiType.GET_LIST,
+			TransactionChannel.class);
+
 	/***
 	 * Create a new organization service
 	 * 
@@ -63,13 +67,16 @@ public class OrganizationService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	public final static String baseCurrencyMustBeDefined = "Base Currency must be defined";
+
 	public Currency getCurrency() throws MambuApiException {
 
 		List<Currency> currencies = serviceHelper.execute(getCurrencies);
 		if (currencies != null && currencies.size() > 0) {
 			return currencies.get(0);
 		} else {
-			return null;
+			// At least base currency must be defined for an organization
+			throw new MambuApiException(-1, baseCurrencyMustBeDefined);
 		}
 	}
 
@@ -172,7 +179,7 @@ public class OrganizationService {
 	public List<CustomFieldSet> getCustomFieldSets(CustomField.Type customFieldType) throws MambuApiException {
 
 		ParamsMap params = null;
-		// if CUSTOM_FIELD_SETS_TYPE is null then all types are requested
+		// if customFieldType is null then all types are requested
 		if (customFieldType != null) {
 			// Add Custom Filed Type Param
 			params = new ParamsMap();
@@ -180,5 +187,17 @@ public class OrganizationService {
 		}
 
 		return serviceHelper.execute(getCustomFieldSets, params);
+	}
+
+	/**
+	 * Get Transaction Channels
+	 * 
+	 * @return List of all Transaction Channels for the organization
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<TransactionChannel> getTransactionChannels() throws MambuApiException {
+		ParamsMap params = null;
+		return serviceHelper.execute(getTransactionChannels, params);
 	}
 }
