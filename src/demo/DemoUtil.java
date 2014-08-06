@@ -59,7 +59,7 @@ public class DemoUtil {
 	final static String demoClientLastName = "Doe"; // Doe Chernaya
 	final static String demoClientLastName2 = "Doe"; // Doe Chernaya
 	final static String demoClientFirstName = "John"; // John Irina
-	final static String demoClientFirstName2 = "Jane"; // John Irina
+	final static String demoClientFirstName2 = "Jane"; // Jane Irina
 	final static String demoUsername = "demo"; // demo MichaelD
 
 	public static void setUp() {
@@ -158,21 +158,14 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static Client getDemoClient(boolean secondaryDomain) throws MambuApiException {
-		System.out.println("\nIn getDemoClient");
+		System.out.println("\nIn getDemoClient with secondaryDomain flag=" + secondaryDomain);
 
-		ClientsService clientsService;
-		String clientFirstName = demoClientFirstName;
-		String clientLastname = demoClientLastName;
+		ClientsService clientsService = (secondaryDomain) ? getAPIServiceFactory(true).getClientService()
+				: MambuAPIFactory.getClientService();
+		String clientFirstName = (secondaryDomain) ? demoClientFirstName2 : demoClientFirstName;
+		String clientLastname = (secondaryDomain) ? demoClientLastName2 : demoClientLastName;
 
-		if (!secondaryDomain) {
-			clientsService = MambuAPIFactory.getClientService();
-		} else {
-			clientsService = getAPIServiceFactory(true).getClientService();
-			clientFirstName = demoClientFirstName2;
-			clientLastname = demoClientLastName2;
-		}
-
-		List<Client> clients = clientsService.getClientByFullName(clientFirstName, clientLastname);
+		List<Client> clients = clientsService.getClientByFullName(clientLastname, clientFirstName);
 		Client client = null;
 		if (clients == null || clients.isEmpty()) {
 			// Create new client
