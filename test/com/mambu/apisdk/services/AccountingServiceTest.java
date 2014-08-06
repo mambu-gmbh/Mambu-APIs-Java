@@ -8,6 +8,9 @@ import org.mockito.Mockito;
 
 import com.mambu.apisdk.MambuAPIServiceTest;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.APIData;
+import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 
 /**
@@ -32,7 +35,8 @@ public class AccountingServiceTest extends MambuAPIServiceTest {
 		service.getGLAccount("1000");
 
 		// verify
-		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/glaccounts/1000", Method.GET);
+		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/glaccounts/1000", null, Method.GET,
+				ContentType.WWW_FORM);
 
 	}
 
@@ -43,8 +47,12 @@ public class AccountingServiceTest extends MambuAPIServiceTest {
 		service.getGLAccount("100", "2001-01-01", "2005-01-01");
 
 		// verify
-		Mockito.verify(executor).executeRequest(
-				"https://demo.mambutest.com/api/glaccounts/100?from=2001-01-01&to=2005-01-01", Method.GET);
+		ParamsMap params = new ParamsMap();
+		params.put(APIData.FROM, "2001-01-01");
+		params.put(APIData.TO, "2005-01-01");
+
+		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/glaccounts/100", params, Method.GET,
+				ContentType.WWW_FORM);
 	}
 
 }

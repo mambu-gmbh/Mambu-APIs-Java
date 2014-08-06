@@ -88,7 +88,7 @@ public class SavingsServiceTest extends MambuAPIServiceTest {
 						+ "]" + "}");
 
 		// verify
-		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/savings/", params, Method.POST,
+		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/savings", params, Method.POST,
 				ContentType.JSON);
 	}
 }

@@ -7,6 +7,7 @@ import org.junit.Test;
 import com.mambu.apisdk.MambuAPIServiceTest;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 
 /**
@@ -38,7 +39,8 @@ public class UsersServiceTest extends MambuAPIServiceTest {
 		service.getUsers("1", "10");
 
 		// verify
-		verify(executor).executeRequest("https://demo.mambutest.com/api/users", params, Method.GET);
+		verify(executor).executeRequest("https://demo.mambutest.com/api/users", params, Method.GET,
+				ContentType.WWW_FORM);
 	}
 
 	/***
@@ -57,6 +59,7 @@ public class UsersServiceTest extends MambuAPIServiceTest {
 		service.getUsers("branch_id", "50", "100");
 
 		// verify
-		verify(executor).executeRequest("https://demo.mambutest.com/api/users", params, Method.GET);
+		verify(executor).executeRequest("https://demo.mambutest.com/api/users", params, Method.GET,
+				ContentType.WWW_FORM);
 	}
 }

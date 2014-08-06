@@ -28,6 +28,7 @@ public class TasksServiceTest extends MambuAPIServiceTest {
 
 		service = new TasksService(super.mambuApiService);
 	}
+
 	// TODO: Comment out the createTaskJson() test for now. The actual method works but the test crashes when extracting
 	// Task from JsonTask after successfully completing the download from Mambu
 	/**
@@ -68,7 +69,7 @@ public class TasksServiceTest extends MambuAPIServiceTest {
 		params.addParam("groupid", null);
 
 		// verify
-		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/tasks/", params, Method.POST,
+		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/tasks", params, Method.POST,
 				ContentType.WWW_FORM);
 	}
 

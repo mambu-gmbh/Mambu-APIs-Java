@@ -16,6 +16,7 @@ import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.services.UsersService;
 import com.mambu.clients.shared.model.Client;
+import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.User;
 import com.mambu.loans.shared.model.LoanAccount;
@@ -58,7 +59,7 @@ public class DemoUtil {
 	final static String demoClientLastName = "Doe"; // Doe Chernaya
 	final static String demoClientLastName2 = "Doe"; // Doe Chernaya
 	final static String demoClientFirstName = "John"; // John Irina
-	final static String demoClientFirstName2 = "Jane"; // John Irina
+	final static String demoClientFirstName2 = "Jane"; // Jane Irina
 	final static String demoUsername = "demo"; // demo MichaelD
 
 	public static void setUp() {
@@ -157,26 +158,27 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static Client getDemoClient(boolean secondaryDomain) throws MambuApiException {
-		System.out.println("\nIn getDemoClient");
+		System.out.println("\nIn getDemoClient with secondaryDomain flag=" + secondaryDomain);
 
-		ClientsService clientsService;
-		if (!secondaryDomain) {
-			clientsService = MambuAPIFactory.getClientService();
-		} else {
-			clientsService = getAPIServiceFactory(true).getClientService();
-		}
+		ClientsService clientsService = (secondaryDomain) ? getAPIServiceFactory(true).getClientService()
+				: MambuAPIFactory.getClientService();
+		String clientFirstName = (secondaryDomain) ? demoClientFirstName2 : demoClientFirstName;
+		String clientLastname = (secondaryDomain) ? demoClientLastName2 : demoClientLastName;
 
-		List<Client> clients = clientsService.getClientByFullName(demoClientLastName, demoClientFirstName);
-		Client client;
-		if (clients.isEmpty()) {
-			if (!secondaryDomain) {
-				client = clientsService.createClient(demoClientFirstName, demoClientLastName);
-			} else {
-				client = clientsService.createClient(demoClientFirstName2, demoClientLastName2);
-			}
+		List<Client> clients = clientsService.getClientByFullName(clientLastname, clientFirstName);
+		Client client = null;
+		if (clients == null || clients.isEmpty()) {
+			// Create new client
+			client = new Client(clientFirstName, clientLastname);
+			ClientExpanded clientDetails = new ClientExpanded(client);
+
+			clientDetails = clientsService.createClient(clientDetails);
+			client = clientDetails.getClient();
 		} else {
+			// Return first client
 			client = clients.iterator().next();
 		}
+
 		return client;
 
 	}
@@ -188,7 +190,7 @@ public class DemoUtil {
 		// all groups for our demo user
 		List<Group> groups = clientsService.getGroupsByBranchOfficer(null, demoUsername, "0", "5");
 
-		if (groups != null) {
+		if (groups != null && groups.size() > 0) {
 			int randomIndex = (int) Math.random() * (groups.size() - 1);
 			return groups.get(randomIndex);
 		}

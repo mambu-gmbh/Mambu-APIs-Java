@@ -1,19 +1,18 @@
 package com.mambu.apisdk.services;
 
-import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
-import com.mambu.apisdk.util.GsonUtils;
+import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
-import com.mambu.apisdk.util.RequestExecutor.Method;
+import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.loans.shared.model.LoanAccount;
@@ -32,11 +31,14 @@ import com.mambu.savings.shared.model.SavingsProduct;
  */
 public class ActivitiesService {
 
-	private MambuAPIService mambuAPIService;
-
-	private static String ACTIVITIES = APIData.ACTIVITIES;
 	private static String FROM = APIData.FROM;
 	private static String TO = APIData.TO;
+	// Our service helper
+	private ServiceHelper serviceHelper;
+
+	// Create API definitions for services provided by ActivitiesService
+	// Get Lists of Activities
+	private final static ApiDefinition getJSONActivityList = new ApiDefinition(ApiType.GET_LIST, JSONActivity.class);
 
 	/***
 	 * Create a new activities service
@@ -46,7 +48,7 @@ public class ActivitiesService {
 	 */
 	@Inject
 	public ActivitiesService(MambuAPIService mambuAPIService) {
-		this.mambuAPIService = mambuAPIService;
+		this.serviceHelper = new ServiceHelper(mambuAPIService);
 	}
 
 	/***
@@ -116,16 +118,7 @@ public class ActivitiesService {
 			params.put(getIdParameterName(mambuEntity), entityId);
 		}
 
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(ACTIVITIES + "/"));
-
-		String activitiesResposne = mambuAPIService.executeRequest(urlString, params, Method.GET);
-
-		Type collectionType = new TypeToken<List<JSONActivity>>() {
-		}.getType();
-		List<JSONActivity> activities = GsonUtils.createGson().fromJson(activitiesResposne, collectionType);
-
-		return activities;
+		return serviceHelper.execute(getJSONActivityList, params);
 	}
 
 	/***
@@ -143,8 +136,27 @@ public class ActivitiesService {
 	 * @throws MambuApiException
 	 */
 	public List<JSONActivity> getActivities(Date fromDate, Date toDate) throws MambuApiException {
-
 		return getActivities(fromDate, toDate, null, null);
+	}
+
+	/**
+	 * Requests a list of activities for a custom view, limited by offset/limit
+	 * 
+	 * @param customViewKey
+	 *            the key of the Custom View to filter system activities
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * 
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * 
+	 * @return the list of Mambu activities
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<JSONActivity> getActivitiesByCustomView(String customViewKey, String offset, String limit)
+			throws MambuApiException {
+		return serviceHelper.getEntitiesByCustomView(getJSONActivityList, customViewKey, offset, limit);
 	}
 
 	// Private helper

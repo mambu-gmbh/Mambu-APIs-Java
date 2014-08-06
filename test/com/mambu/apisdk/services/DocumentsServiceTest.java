@@ -62,9 +62,8 @@ public class DocumentsServiceTest extends MambuAPIServiceTest {
 						+ "}");
 
 		// verify
-		Mockito.verify(executor).executeRequest(
-				"https://demo.mambutest.com/api/documents/", params,
-				Method.POST, ContentType.JSON);
+		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/documents", params, Method.POST,
+				ContentType.JSON);
 	}
 
 }

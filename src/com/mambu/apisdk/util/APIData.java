@@ -22,6 +22,10 @@ public class APIData {
 	// Users API
 
 	public static final String USERS = "users";
+	// Custom Views. Added in Mambu 3.7
+	public static final String VIEWS = "views";
+	public static final String FOR = "for";
+	public static final String VIEW_FILTER = "viewfilter";
 
 	// Loans and Savings API
 	public static final String LOANS = "loans";
@@ -32,6 +36,9 @@ public class APIData {
 
 	public static final String DATE = "date";
 	public static final String FIRST_REPAYMENT_DATE = "firstRepaymentDate";
+
+	// Transaction Channels endpoint
+	public static final String TRANSACTION_CHANNELS = "transactionchannels";
 
 	public static final String TYPE = "type";
 	public static final String BANK_NUMBER = "bankNumber";
@@ -62,10 +69,7 @@ public class APIData {
 	public static final String AMOUNT = "amount";
 
 	public static final String PAYMENT_METHOD = "method";
-	public static final String CASH_METHOD = "CASH";
-	public static final String RECEIPT_METHOD = "RECEIPT";
-	public static final String CHECK_METHOD = "CHECK";
-	public static final String BANK_TRANSFER_METHOD = "BANK_TRANSFER";
+
 	public static final String REPAYMENT_NUMBER = "repayment";
 
 	public static final String TO_SAVINGS = "toSavingsAccount";

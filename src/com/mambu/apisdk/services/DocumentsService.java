@@ -3,20 +3,18 @@
  */
 package com.mambu.apisdk.services;
 
-import java.lang.reflect.Type;
-import java.util.List;
-
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.APIData.IMAGE_SIZE_TYPE;
-import com.mambu.apisdk.util.GsonUtils;
+import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
+import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
-import com.mambu.apisdk.util.RequestExecutor.ContentType;
-import com.mambu.apisdk.util.RequestExecutor.Method;
+import com.mambu.apisdk.util.ServiceHelper;
+import com.mambu.core.shared.model.Image;
 import com.mambu.docs.shared.model.Document;
 
 /**
@@ -27,11 +25,17 @@ import com.mambu.docs.shared.model.Document;
  */
 public class DocumentsService {
 
-	private MambuAPIService mambuAPIService;
-
-	private static String DOCUMENTS = APIData.DOCUMENTS;
-	private static String IMAGES = APIData.IMAGES;
 	private static String SIZE = APIData.SIZE;
+
+	// Our service helper
+	private ServiceHelper serviceHelper;
+	// Get Document
+	private final static ApiDefinition getDocument = new ApiDefinition(ApiType.GET_ENTITY, Document.class);
+	// Create Document. The input entity is a JSONDocument and Mambu returns a Document class
+	private final static ApiDefinition createDocument = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, JSONDocument.class,
+			Document.class);
+	// Get Image
+	private final static ApiDefinition getImage = new ApiDefinition(ApiType.GET_ENTITY, Image.class);
 
 	/***
 	 * Create a new documents service
@@ -41,7 +45,7 @@ public class DocumentsService {
 	 */
 	@Inject
 	public DocumentsService(MambuAPIService mambuAPIService) {
-		this.mambuAPIService = mambuAPIService;
+		this.serviceHelper = new ServiceHelper(mambuAPIService);
 	}
 
 	/***
@@ -55,70 +59,7 @@ public class DocumentsService {
 	 * @throws MambuApiException
 	 */
 	public Document uploadDocument(JSONDocument document) throws MambuApiException {
-
-		// Convert object to json
-		String jsonDocument = GsonUtils.createGson().toJson(document, JSONDocument.class);
-
-		ParamsMap params = new ParamsMap();
-		params.put(APIData.JSON_OBJECT, jsonDocument);
-
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(DOCUMENTS + "/"));
-
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.POST, ContentType.JSON);
-
-		Document documentResult = GsonUtils.createGson().fromJson(jsonResponse, Document.class);
-
-		return documentResult;
-	}
-
-	/***
-	 * Get all documents for a specific Mambu service by providing the API end point and entity ID. Note, this is a
-	 * Helper method intended to be used primarily by other Mambu services. Services supporting GET Document attachments
-	 * can implement their own wrapper for getDocuments() service by calling this helper method. For example,
-	 * ClientService implements getDocuments() by calling DocumentsService.getDocumnts(mambuAPIService, APIData.CLIENTS,
-	 * clientId). As of Mambu 3.6, the following services can request GET Documents: ClientService, LoanService and
-	 * SavingsService (this list could, potentially, be extended in a future to support other services, for example,
-	 * UserService, OrganizationService (for getting Branch and Centre attachments), etc.)
-	 * 
-	 * See {@link https://mambucom.jira.com/browse/MBU-5084} for more details
-	 * 
-	 * @param mambuAPIService
-	 *            Mambu Api service to use for executing API request
-	 * 
-	 * @param serviceEndPoint
-	 *            the API endpoint string for this service. E.g. APIData.CLIENT, APIData.LOANS, etc.
-	 * 
-	 * @param entityId
-	 *            the encoded key or id of the Mambu entity for which the attached documents are to be retrieved
-	 * 
-	 * @return documents attached to the entity
-	 * 
-	 * @throws MambuApiException
-	 */
-	protected List<Document> getDocuments(String serviceEndPoint, String entityId) throws MambuApiException {
-
-		if (mambuAPIService == null) {
-			throw new IllegalArgumentException("Mambu API Service must not be null");
-		}
-
-		if (serviceEndPoint == null || serviceEndPoint.trim().isEmpty()) {
-			throw new IllegalArgumentException("Service EndPoint must not be null or empty");
-		}
-		if (entityId == null || entityId.trim().isEmpty()) {
-			throw new IllegalArgumentException("Entity ID must not be null or empty");
-		}
-
-		String urlString = new String(mambuAPIService.createUrl(serviceEndPoint + "/" + entityId + "/" + DOCUMENTS));
-
-		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
-
-		// Parse the Json and get a list of returned documents
-		Type collectionType = new TypeToken<List<Document>>() {
-		}.getType();
-		List<Document> documents = GsonUtils.createGson().fromJson(jsonResponse, collectionType);
-
-		return documents;
+		return serviceHelper.executeJson(createDocument, document);
 	}
 
 	/***
@@ -134,16 +75,9 @@ public class DocumentsService {
 	 * @throws MambuApiException
 	 */
 	public String getDocument(String documentId) throws MambuApiException {
-
-		if (documentId == null || documentId.trim().isEmpty()) {
-			throw new IllegalArgumentException("Docuemnt ID must not be null or empty");
-		}
-
-		String urlString = new String(mambuAPIService.createUrl(DOCUMENTS + "/" + documentId));
-
-		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
-
-		return jsonResponse;
+		// The getDocument API must just return the response as is
+		getDocument.setApiReturnFormat(ApiReturnFormat.RESPONSE_STRING);
+		return serviceHelper.execute(getDocument, documentId);
 	}
 
 	/***
@@ -161,20 +95,16 @@ public class DocumentsService {
 	 */
 	public String getImage(String imageKey, IMAGE_SIZE_TYPE sizeType) throws MambuApiException {
 
-		if (imageKey == null || imageKey.trim().isEmpty()) {
-			throw new IllegalArgumentException("Image key cannot be null or empty");
-		}
-
 		// Add size type as a parameter
-		ParamsMap params = new ParamsMap();
+		ParamsMap params = null;
 		if (sizeType != null) {
+			params = new ParamsMap();
 			params.put(SIZE, sizeType.name());
 		}
 
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(IMAGES + "/" + imageKey));
-
-		String apiResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
+		// For this API we just need the response string as is to extract the encoded image
+		getImage.setApiReturnFormat(ApiReturnFormat.RESPONSE_STRING);
+		String apiResponse = serviceHelper.execute(getImage, imageKey, params);
 
 		// Get only the encoded part. Mambu returns the following format: "data:image/jpg;base64,/9j...."
 		// The encoded string is base64 encoded with CRLFs, E.g. 9j/4AAQSkZJR...\r\nnHBwgJC4nICIsIxwcKDcpL...
