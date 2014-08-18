@@ -13,8 +13,8 @@ Usage
 
 To use the Mambu Java API Wrapper, please include the following jars in your build path
 
-* build/Mambu-APIs-Java-3.5-bin.jar
-* lib/mambu-models-v3.5.jar
+* build/Mambu-APIs-Java-3.7-bin.jar
+* lib/mambu-models-v3.7.jar
 * further dependencies to run and test (see pom.xml for versions)
  * httpclient
  * gson
@@ -41,12 +41,11 @@ The list will be updated constantly and currently contains:
 - UsersService
 
 To use the factory, some date must be provided in order to set it up:
+	MambuAPIServiceFactory serviceFactory = MambuAPIServiceFactory.getFactory("mydomain.mambu.com", "username", "password");
 
-	MambuAPIFactory.setUp("mydomain.mambu.com", "username", "password");
-	 
 After this step, each service can be taken through a simple call like:
 
-		ClientService clientService = MambuAPIFactory.getClientService();
+		ClientService clientService = serviceFactory.getClientService();
 
 See the classes from demo package for a few more examples of using the library
 
