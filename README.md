@@ -41,11 +41,13 @@ The list will be updated constantly and currently contains:
 - UsersService
 
 To use the factory, some date must be provided in order to set it up:
-	MambuAPIServiceFactory serviceFactory = MambuAPIServiceFactory.getFactory("mydomain.mambu.com", "username", "password");
+
+	MambuAPIServiceFactory serviceFactory = MambuAPIServiceFactory.getFactory(
+		"mydomain.mambu.com", "username", "password");
 
 After this step, each service can be taken through a simple call like:
 
-		ClientService clientService = serviceFactory.getClientService();
+	ClientService clientService = serviceFactory.getClientService();
 
 See the classes from demo package for a few more examples of using the library
 
