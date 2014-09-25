@@ -89,10 +89,11 @@ public class SavingsService {
 	// Post Account state change. Params map defines the account change transaction
 	private final static ApiDefinition postAccountChange = new ApiDefinition(ApiType.POST_ENTITY_ACTION,
 			SavingsAccount.class, SavingsTransaction.class);
-	// Get Accounts Transactions
+	// Get Accounts Transactions (transactions for a specific savings account)
 	private final static ApiDefinition getAccountTransactions = new ApiDefinition(ApiType.GET_OWNED_ENTITIES,
 			SavingsAccount.class, SavingsTransaction.class);
-	private final static ApiDefinition getSavingsTransactions = new ApiDefinition(ApiType.GET_RELATED_ENTITIES,
+	// Get All Savings Transactions (transactions for all savings accounts)
+	private final static ApiDefinition getAllSavingsTransactions = new ApiDefinition(ApiType.GET_RELATED_ENTITIES,
 			SavingsAccount.class, SavingsTransaction.class);
 	// Delete Account
 	private final static ApiDefinition deleteAccount = new ApiDefinition(ApiType.DELETE_ENTITY, SavingsAccount.class);
@@ -251,7 +252,7 @@ public class SavingsService {
 	public List<SavingsTransaction> getSavingsTransactionsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		// Example GET savings/transactions?viewfilter=567&offset=0&limit=100
-		return serviceHelper.getEntitiesByCustomView(getSavingsTransactions, customViewKey, offset, limit);
+		return serviceHelper.getEntitiesByCustomView(getAllSavingsTransactions, customViewKey, offset, limit);
 	}
 
 	// helper method

@@ -185,43 +185,6 @@ public class UsersService {
 	}
 
 	/**
-	 * Convenience method to Get Custom Views by user's userName and the view's DataViewType. Each custom view specifies
-	 * its DataViewType. This method allows user to retrieve all his custom views of a specific DataViewType.
-	 * 
-	 * Only some DataViewTypes are currently supported by the API. As of the Mambu 3.7 the following DataViewTypes are
-	 * supported: DataViewType.CLIENT, DataViewType.GROUP, DataViewType.LOANS and DataViewType.SAVINGS,
-	 * DataViewType.SAVINGS_TRANSACTIONS_LOOKUP, DataViewType.LOAN_TRANSACTIONS_LOOKUP,DataViewType.ACTIVITIES_LOOKUP
-	 * 
-	 * See more in MBU-6306 {@link https://mambucom.jira.com/browse/MBU-6306} and
-	 * 
-	 * MBU-6113 {@link https://mambucom.jira.com/browse/MBU-6113}
-	 * 
-	 * @param userName
-	 *            the username of the user. Mandatory field.
-	 * @param dataViewType
-	 *            view filter type. If null, all custom views are returned
-	 * 
-	 * @return List of Custom Views for this user
-	 * 
-	 * @throws MambuApiException
-	 */
-
-	public List<CustomView> getCustomViews(String userName, DataViewType dataType) throws MambuApiException {
-		// See MBU-4607 @ https://mambucom.jira.com/browse/MBU-4607
-
-		// Convert DataViewType to CustomViewApiType
-		CustomViewApiType apiViewType = (dataType == null) ? null : supportedDataViewTypes.get(dataType);
-
-		// Throw exception if unsupported DataViewType input
-		if (apiViewType == null && dataType != null) {
-			throw new IllegalArgumentException("DataViewType " + dataType.name() + " is not supported by API");
-		}
-
-		return getCustomViews(userName, apiViewType);
-
-	}
-
-	/**
 	 * Map to convert custom view's DataViewType to the CustomViewApiType (required by Custom View API)
 	 */
 	public static HashMap<DataViewType, CustomViewApiType> supportedDataViewTypes;

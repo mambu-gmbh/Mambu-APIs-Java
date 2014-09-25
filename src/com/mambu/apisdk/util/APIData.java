@@ -68,6 +68,7 @@ public class APIData {
 
 	public static final String AMOUNT = "amount";
 
+	// The PAYMENT_METHOD indicates the ID of the Transaction Channel used for payment
 	public static final String PAYMENT_METHOD = "method";
 
 	public static final String REPAYMENT_NUMBER = "repayment";
