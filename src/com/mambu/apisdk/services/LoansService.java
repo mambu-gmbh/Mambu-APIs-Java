@@ -79,12 +79,11 @@ public class LoansService {
 	// Get Documents for an Account
 	private final static ApiDefinition getAccountDocuments = new ApiDefinition(ApiType.GET_OWNED_ENTITIES,
 			LoanAccount.class, Document.class);
-	// Get Account Transactions
+	// Get Account Transactions (transactions for a specific loan account)
 	private final static ApiDefinition getAccountTransactions = new ApiDefinition(ApiType.GET_OWNED_ENTITIES,
 			LoanAccount.class, LoanTransaction.class);
-
-	// Get Loan Transactions
-	private final static ApiDefinition getLoanTransactions = new ApiDefinition(ApiType.GET_RELATED_ENTITIES,
+	// Get All Loan Transactions (transactions for all loan accounts)
+	private final static ApiDefinition getAllLoanTransactions = new ApiDefinition(ApiType.GET_RELATED_ENTITIES,
 			LoanAccount.class, LoanTransaction.class);
 	// Post Account Transactions. Params map defines the transaction type. Return LoanTransaction
 	private final static ApiDefinition postAccountTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
@@ -435,7 +434,7 @@ public class LoansService {
 	public List<LoanTransaction> getLoanTransactionsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		// Example GET loan/transactions?viewfilter=123&offset=0&limit=100
-		return serviceHelper.getEntitiesByCustomView(getLoanTransactions, customViewKey, offset, limit);
+		return serviceHelper.getEntitiesByCustomView(getAllLoanTransactions, customViewKey, offset, limit);
 
 	}
 

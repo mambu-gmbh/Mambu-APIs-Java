@@ -12,6 +12,7 @@ import com.mambu.apisdk.util.APIData.IMAGE_SIZE_TYPE;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
+import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.core.shared.model.Image;
@@ -32,8 +33,8 @@ public class DocumentsService {
 	// Get Document
 	private final static ApiDefinition getDocument = new ApiDefinition(ApiType.GET_ENTITY, Document.class);
 	// Create Document. The input entity is a JSONDocument and Mambu returns a Document class
-	private final static ApiDefinition createDocument = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, JSONDocument.class,
-			Document.class);
+	private final static ApiDefinition createDocument = new ApiDefinition(ApiType.CREATE_JSON_ENTITY,
+			JSONDocument.class, Document.class);
 	// Get Image
 	private final static ApiDefinition getImage = new ApiDefinition(ApiType.GET_ENTITY, Image.class);
 
@@ -59,7 +60,26 @@ public class DocumentsService {
 	 * @throws MambuApiException
 	 */
 	public Document uploadDocument(JSONDocument document) throws MambuApiException {
-		return serviceHelper.executeJson(createDocument, document);
+
+		if (document == null) {
+			throw new IllegalArgumentException("Document cannot be null");
+		}
+		// Use custom parsing for the potentially very large document object. JSONDocument object
+		// contains a Document object and also the encoded documentContent part, which can be a very large string. For
+		// memory management efficiency reasons it is better no to be asking Gson to parse the whole JSONDocument
+		// object (with this potentially very large string included) but to parse only the Document object with
+		// the blank content part and then insert the actual document content value into the resulting JSON ourselves
+		// (there were reports of out of memory errors during Gson parsing JSONDocument objects with a large document
+		// content)
+
+		// Make the JSON string
+		String documentJson = makeDocumentJson(document);
+
+		// Add generated JSON string to the ParamsMap
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.put(APIData.JSON_OBJECT, documentJson);
+
+		return serviceHelper.execute(createDocument, paramsMap);
 	}
 
 	/***
@@ -124,4 +144,43 @@ public class DocumentsService {
 
 		return base64EncodedString;
 	}
+
+	/***
+	 * Create JSON string for JSONDocument object
+	 * 
+	 * @param document
+	 *            JSONDocument document containing Document object and documentContent string
+	 * 
+	 * @return JSON string
+	 */
+	private String makeDocumentJson(JSONDocument document) {
+
+		// Create JSON string in two steps: a) parse document object with the blank document content value and b) insert
+		// document content value into the JSON string. This approach requires less memory than just using
+		// Gson.toJson(document) parser
+
+		// Save document content
+		String documentContent = document.getDocumentContent();
+
+		// Set the content in the JSONDocument to blank for parsing
+		document.setDocumentContent("");
+
+		// Parse modified JSONDocument with the blank content value
+		final String dateTimeFormat = APIData.yyyyMmddFormat;
+		final String jsonData = GsonUtils.createGson(dateTimeFormat).toJson(document, JSONDocument.class);
+
+		// Now insert back document content value into the generated JSON string
+		StringBuffer finalJson = new StringBuffer(jsonData.length() + documentContent.length());
+		finalJson.append(jsonData);
+
+		// Find the position to insert document content (into the "" part of the "documentContent":"")
+		final String contentPair = "\"documentContent\":\"\"";
+		int insertPosition = finalJson.indexOf(contentPair) + contentPair.length() - 1;
+
+		// Insert document content
+		finalJson.insert(insertPosition, documentContent);
+
+		return finalJson.toString();
+	}
+
 }
