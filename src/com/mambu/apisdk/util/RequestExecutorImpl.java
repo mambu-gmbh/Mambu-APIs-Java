@@ -458,7 +458,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		// We need input json string without the first '{'
 		String jsonStringToAdd = jsonString.substring(1);
-		// jsonString = null;
 
 		// Create initial String Buffer large enough to hold the resulting two strings
 		StringBuffer jsonWithAppKey = new StringBuffer(jsonStringToAdd.length() + appKeyString.length());
