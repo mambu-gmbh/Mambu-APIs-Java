@@ -40,110 +40,59 @@ import com.mambu.savings.shared.model.SavingsTransaction;
 import com.mambu.tasks.shared.model.Task;
 
 /**
- * Services Helper class provides common services to all other API Service classes. It uses supplied ApiDefintion for a
- * particular request to build required URL, execute https request (with the specified method and and content type), to
- * parse Mambu response into the requested type and return the result to the caller.
+ * ServiceExecutor class provides services to build and execute API requests for other API Service classes. It uses
+ * supplied ApiDefintion for a particular request to build required URL, execute https request (with the specified
+ * method and the content type), to parse Mambu response into the requested type and to return the result to the caller.
  * 
- * Other services can use ServiceHelper methods to execute their API requests. A typical pattern for using ServiceHelper
- * could be: a) define the ApiDefintion for an API request b) call serviceHelper.execute(apiDefintion, parameters...)
+ * Other services can use ServiceExecutor methods to execute their API requests. A typical pattern for using
+ * ServiceExecutor could be: a) define the ApiDefintion for an API request b) call serviceExecutor.execute(apiDefintion,
+ * parameters...)
  * 
- * Note that all ServiceHelper execute...(...) methods are generic methods returning a generic type R. Invoking these
+ * Note that all ServiceExecutor execute...(...) methods are generic methods returning a generic type R. Invoking these
  * methods can be done using either a parameterised type or using Java's target typing to infer the return type
  * parameter of a generic method invocation. Examples below are using target typing, which infer the return R type from
  * the statement. For example, in getLoanAccount() wrapper method specifies LoanAccount as a returned type then when
- * using a statement: return serviceHelper.execute(getAccount, params) within the getLoanAccount() Java infers type R to
- * be LoanAccount and is equivalent to the following invocation: return serviceHelper.<LoanAccount> execute(getAccount,
- * accountId);. Similarly, from the assignment statement Client client = serviceHelper.execute(...) Java infers the
- * return type R for this execute() statement to be a Client class and is equivalent to Client client=
- * serviceHelper.<Client>execute(...)
+ * using a statement: return serviceExecutor.execute(getAccount, params) within the getLoanAccount() Java infers type R
+ * to be LoanAccount and is equivalent to the following invocation: return serviceExecutor.<LoanAccount>
+ * execute(getAccount, accountId);. Similarly, from the assignment statement Client client =
+ * serviceExecutor.execute(...) Java infers the return type R for this execute() statement to be a Client class and is
+ * equivalent to Client client= serviceExecutor.<Client>execute(...)
  * 
  * Usage Example:
  * 
  * 1. If LoanService needs to execute GET Loan Account details request then:
  * 
- * serviceHelper = new ServiceHelper(mambuAPIService)
+ * serviceExecutor = new ServiceExecutor(mambuAPIService)
  * 
  * ApiDefinition getAccount = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LoanAccount.class);
  * 
- * return serviceHelper.execute(getAccount, accountId);
+ * return serviceExecutor.execute(getAccount, accountId);
  * 
  * 
  * 2. If Client Service needs to execute GET a list of Clients request then:
  * 
- * serviceHelper = new ServiceHelper(mambuAPIService)
+ * serviceExecutor = new ServiceExecutor(mambuAPIService)
  * 
  * ApiDefinition getClientsList = new ApiDefinition(ApiType.GET_LIST, Client.class);
  * 
- * return serviceHelper.execute(getClientsList, params);
+ * return serviceExecutor.execute(getClientsList, params);
  * 
  * 
  * @author mdanilkis
  * 
  */
-public class ServiceHelper {
+public class ServiceExecutor {
 
 	private MambuAPIService mambuAPIService;
 
 	/***
-	 * Create a new ServiceHelper
+	 * Create a new ServiceExecutor
 	 * 
 	 * @param mambuAPIService
 	 *            the service responsible with the connection to the server
 	 */
-	public ServiceHelper(MambuAPIService mambuAPIService) {
+	public ServiceExecutor(MambuAPIService mambuAPIService) {
 		this.mambuAPIService = mambuAPIService;
-	}
-
-	/****
-	 * Execute API JSON Post Request using its ApiDefinition and supplied input data. Used for JSON create and update
-	 * requests.
-	 * 
-	 * @param apiDefinition
-	 *            API definition for the request
-	 * @param object
-	 *            the Mambu object to be created. Currently (as of Mambu 3.7) only Client, LoanAccount, SavingsAccount
-	 *            and Document objects can be created using JSON API requests
-	 * @param objectId
-	 *            object's id (optional, could be null if not used, for example for JSON create requests)
-	 * 
-	 * @return object a result object, which will be an API specific object
-	 * 
-	 * @throws MambuApiException
-	 */
-	public <R, T> R executeJson(ApiDefinition apiDefinition, T object, String objectId) throws MambuApiException {
-
-		if (object == null) {
-			throw new IllegalArgumentException("JSON object must not be NULL");
-		}
-
-		// Parse input object into a JSON string
-		final String dateTimeFormat = APIData.yyyyMmddFormat;
-		final String jsonData = GsonUtils.createGson(dateTimeFormat).toJson(object, object.getClass());
-
-		// Add JSON string as JSON_OBJECT to the ParamsMap
-		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.put(APIData.JSON_OBJECT, jsonData);
-
-		// Execute this request with apiDefintion, objectId and paramsMap
-		return execute(apiDefinition, objectId, paramsMap);
-
-	}
-
-	/****
-	 * Convenience method to execute API JSON Post Request using its ApiDefinition and supplied input data for Create
-	 * requests which do not require objectId parameter
-	 * 
-	 * @param apiDefinition
-	 *            API definition for the request
-	 * @param object
-	 *            the Mambu object to be created.
-	 * @return object a result object, which will be an API specific object
-	 * 
-	 * @throws MambuApiException
-	 */
-	public <R, T> R executeJson(ApiDefinition apiDefinition, T object) throws MambuApiException {
-		String objectId = null;
-		return executeJson(apiDefinition, object, objectId);
 	}
 
 	/****
@@ -216,10 +165,9 @@ public class ServiceHelper {
 		return result;
 	}
 
-	// Convenience method for API requests without Params map parameter
 	/****
-	 * Execute API Request using its ApiDefinition and supplied input data. This version of the execute method can be
-	 * used when the API request doesn't use ParamsMap, for example get entity details API request
+	 * Convenience method to execute API Request using its ApiDefinition and object ID. This version of the execute
+	 * method can be used when the API request doesn't use ParamsMap, for example get entity details API request
 	 * 
 	 * @param apiDefinition
 	 *            API definition for the request
@@ -235,10 +183,9 @@ public class ServiceHelper {
 		return execute(apiDefinition, objectId, paramsMap);
 	}
 
-	// Convenience method for API requests without object ID parameter
 	/****
-	 * Execute API Request using its ApiDefinition and supplied input data. This version of the execute method can be
-	 * used when the API request doesn't use object ID (for example in get list requests)
+	 * Convenience method to execute API Request using its ApiDefinition and params map. This version of the execute
+	 * method can be used when the API request doesn't use object ID (for example in get list requests)
 	 * 
 	 * @param api
 	 *            API definition for the request
@@ -254,10 +201,9 @@ public class ServiceHelper {
 		return execute(apiDefinition, objectId, paramsMap);
 	}
 
-	// Convenience method for API requests not requiring Object ID and Params map parameters
 	/****
-	 * Execute API Request using its ApiDefinition and supplied input data. This version of the execute method can be
-	 * used when the API request doesn't use ParamsMap and doesn't need an object Id, for example GET list of currencies
+	 * Convenience method to execute API request using its ApiDefinition. This version of the execute method can be used
+	 * when the API request doesn't use ParamsMap and doesn't need an object Id, for example GET list of currencies
 	 * 
 	 * @param apiDefinition
 	 *            API definition for the request
@@ -274,58 +220,56 @@ public class ServiceHelper {
 		return execute(apiDefinition, objectId, paramsMap);
 	}
 
-	// Helpers for specific APIs which are used across multiple services. E.g. GET clients|groups|loans|savings by the
-	// same filter criteria
-	/**
-	 * Requests a list of Mambu entities for a custom view, limited by offset/limit. Can be used for retrieving Clients,
-	 * Groups, LoanAccounts and SavingsAccounts
+	/****
+	 * Execute API JSON Post Request using its ApiDefinition and supplied input data. Used for JSON create and update
+	 * requests.
 	 * 
 	 * @param apiDefinition
 	 *            API definition for the request
-	 * @param customViewKey
-	 *            the encoded key of the Custom View to filter entities
-	 * @param offset
-	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * @param limit
-	 *            pagination limit. If not null the must be an integer greater than zero
+	 * @param object
+	 *            the Mambu object to be created. Currently (as of Mambu 3.7) only Client, LoanAccount, SavingsAccount
+	 *            and Document objects can be created using JSON API requests
+	 * @param objectId
+	 *            object's id (optional, could be null if not used, for example for JSON create requests)
 	 * 
-	 * @return the list of Mambu groups
+	 * @return object a result object, which will be an API specific object
 	 * 
 	 * @throws MambuApiException
 	 */
-	public <T> List<T> getEntitiesByCustomView(ApiDefinition apiDefinition, String customViewKey, String offset,
-			String limit) throws MambuApiException {
+	public <R, T> R executeJson(ApiDefinition apiDefinition, T object, String objectId) throws MambuApiException {
 
-		// See MBU-4607. Available since Mambu 3.7. Allow retrieving objects using a view as a filter for any given list
-		// api. This should apply for: clients, groups, loans and deposits (ex: GET /api/clients?viewfilter=<VIEWKEY>)
-
-		// See also MBU-6113 for getting loan transactions, savings transactions and system activity
-
-		// Get entity class for this API definition
-		// Only Client, Group, LoanAccount (for LoanAccounts and LoanTransactions), SavingsAccount (for SavingsAccounts
-		// and SavingsTransactions) , and JSONActivity entities can be retrieved by the Custom View
-		Class<?> entityClass = apiDefinition.getEntityClass();
-		if (!(entityClass.equals(Client.class) || entityClass.equals(Group.class)
-				|| entityClass.equals(LoanAccount.class) || entityClass.equals(SavingsAccount.class) || entityClass
-					.equals(JSONActivity.class))) {
-			throw new IllegalArgumentException(
-					"Only Client, Group, LoanAccount and SavingsAccount classes are supported");
-		}
-		// Verify that the customViewKey is not null or empty
-		if (customViewKey == null || customViewKey.trim().isEmpty()) {
-			throw new IllegalArgumentException("customViewKey must not be null or empty");
-		}
-		// Validate pagination parameters
-		if ((offset != null && Integer.parseInt(offset) < 0) || ((limit != null && Integer.parseInt(limit) < 1))) {
-			throw new IllegalArgumentException("Invalid pagination parameters");
+		if (object == null) {
+			throw new IllegalArgumentException("JSON object must not be NULL");
 		}
 
-		ParamsMap params = new ParamsMap();
-		params.addParam(APIData.VIEW_FILTER, customViewKey);
-		params.addParam(APIData.OFFSET, offset);
-		params.addParam(APIData.LIMIT, limit);
+		// Parse input object into a JSON string
+		final String dateTimeFormat = APIData.yyyyMmddFormat;
+		final String jsonData = GsonUtils.createGson(dateTimeFormat).toJson(object, object.getClass());
 
-		return execute(apiDefinition, params);
+		// Add JSON string as JSON_OBJECT to the ParamsMap
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.put(APIData.JSON_OBJECT, jsonData);
+
+		// Execute this request with apiDefintion, objectId and paramsMap
+		return execute(apiDefinition, objectId, paramsMap);
+
+	}
+
+	/****
+	 * Convenience method for executing API JSON Post Request using its ApiDefinition and supplied object. Can be used
+	 * for JSON requests which do not require objectId parameter
+	 * 
+	 * @param apiDefinition
+	 *            API definition for the request
+	 * @param object
+	 *            the Mambu object to be created.
+	 * @return object a result object, which will be an API specific object
+	 * 
+	 * @throws MambuApiException
+	 */
+	public <R, T> R executeJson(ApiDefinition apiDefinition, T object) throws MambuApiException {
+		String objectId = null;
+		return executeJson(apiDefinition, object, objectId);
 	}
 
 	// // Private Helper methods ////
@@ -518,4 +462,5 @@ public class ServiceHelper {
 		return collectionTypesMap.get(clazz);
 
 	}
+
 }

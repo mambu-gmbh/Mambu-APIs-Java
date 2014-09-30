@@ -12,7 +12,7 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
-import com.mambu.apisdk.util.ServiceHelper;
+import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.intelligence.shared.model.Intelligence.Indicator;
 
 /**
@@ -23,7 +23,7 @@ import com.mambu.intelligence.shared.model.Intelligence.Indicator;
  */
 public class IntelligenceService {
 
-	private ServiceHelper serviceHelper;
+	private ServiceExecutor serviceExecutor;
 
 	private final static ApiDefinition getIndicator = new ApiDefinition(ApiType.GET_ENTITY, Indicator.class);
 
@@ -35,7 +35,7 @@ public class IntelligenceService {
 	 */
 	@Inject
 	public IntelligenceService(MambuAPIService mambuAPIService) {
-		this.serviceHelper = new ServiceHelper(mambuAPIService);
+		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
 	/**
@@ -56,7 +56,7 @@ public class IntelligenceService {
 		// COLLECTION to a HashMap<String, String> type
 		getIndicator.setApiReturnFormat(ApiReturnFormat.COLLECTION);
 		// Execute
-		HashMap<String, String> result = serviceHelper.execute(getIndicator, indicator.name());
+		HashMap<String, String> result = serviceExecutor.execute(getIndicator, indicator.name());
 
 		if (result != null) {
 			String resultString = result.get(indicator.name());

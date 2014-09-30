@@ -14,7 +14,7 @@ import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
-import com.mambu.apisdk.util.ServiceHelper;
+import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.core.shared.model.Image;
 import com.mambu.docs.shared.model.Document;
 
@@ -28,8 +28,8 @@ public class DocumentsService {
 
 	private static String SIZE = APIData.SIZE;
 
-	// Our service helper
-	private ServiceHelper serviceHelper;
+	// Our serviceExecutor
+	private ServiceExecutor serviceExecutor;
 	// Get Document
 	private final static ApiDefinition getDocument = new ApiDefinition(ApiType.GET_ENTITY, Document.class);
 	// Create Document. The input entity is a JSONDocument and Mambu returns a Document class
@@ -46,7 +46,7 @@ public class DocumentsService {
 	 */
 	@Inject
 	public DocumentsService(MambuAPIService mambuAPIService) {
-		this.serviceHelper = new ServiceHelper(mambuAPIService);
+		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
 	/***
@@ -79,7 +79,7 @@ public class DocumentsService {
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.put(APIData.JSON_OBJECT, documentJson);
 
-		return serviceHelper.execute(createDocument, paramsMap);
+		return serviceExecutor.execute(createDocument, paramsMap);
 	}
 
 	/***
@@ -97,7 +97,7 @@ public class DocumentsService {
 	public String getDocument(String documentId) throws MambuApiException {
 		// The getDocument API must just return the response as is
 		getDocument.setApiReturnFormat(ApiReturnFormat.RESPONSE_STRING);
-		return serviceHelper.execute(getDocument, documentId);
+		return serviceExecutor.execute(getDocument, documentId);
 	}
 
 	/***
@@ -124,7 +124,7 @@ public class DocumentsService {
 
 		// For this API we just need the response string as is to extract the encoded image
 		getImage.setApiReturnFormat(ApiReturnFormat.RESPONSE_STRING);
-		String apiResponse = serviceHelper.execute(getImage, imageKey, params);
+		String apiResponse = serviceExecutor.execute(getImage, imageKey, params);
 
 		// Get only the encoded part. Mambu returns the following format: "data:image/jpg;base64,/9j...."
 		// The encoded string is base64 encoded with CRLFs, E.g. 9j/4AAQSkZJR...\r\nnHBwgJC4nICIsIxwcKDcpL...

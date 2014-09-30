@@ -159,11 +159,7 @@ public class APIData {
 	// Client fields
 	public static String FIRST_NAME = "firstName";
 	public static String LAST_NAME = "lastName";
-	public static String HOME_PHONE = "homephone";
-	public static String MOBILE_PHONE = "mobilephone";
-	public static String GENDER = "gender";
 	public static String BIRTH_DATE = "birthdate";
-	public static String EMAIL_ADDRESS = "email";
 	public static String ID_DOCUMENT = "idDocument";
 
 	// Added to support Json object creation API
