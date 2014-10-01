@@ -11,7 +11,7 @@ import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
-import com.mambu.apisdk.util.ServiceHelper;
+import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.core.shared.data.DataViewType;
 import com.mambu.core.shared.model.CustomView;
 import com.mambu.core.shared.model.User;
@@ -30,8 +30,8 @@ public class UsersService {
 	private static String LIMIT = APIData.LIMIT;
 	private static String BRANCH_ID = APIData.BRANCH_ID;
 
-	// Service helper
-	private ServiceHelper serviceHelper;
+	// Service Executor
+	private ServiceExecutor serviceExecutor;
 	// API definitions
 	private final static ApiDefinition getUsers = new ApiDefinition(ApiType.GET_LIST, User.class);
 	private final static ApiDefinition getUser = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, User.class);
@@ -46,7 +46,7 @@ public class UsersService {
 	 */
 	@Inject
 	public UsersService(MambuAPIService mambuAPIService) {
-		this.serviceHelper = new ServiceHelper(mambuAPIService);
+		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
 	/**
@@ -67,7 +67,7 @@ public class UsersService {
 		params.put(OFFSET, offset);
 		params.put(LIMIT, limit);
 
-		return serviceHelper.execute(getUsers, params);
+		return serviceExecutor.execute(getUsers, params);
 	}
 
 	/**
@@ -102,7 +102,7 @@ public class UsersService {
 		params.put(OFFSET, offset);
 		params.put(LIMIT, limit);
 
-		return serviceHelper.execute(getUsers, params);
+		return serviceExecutor.execute(getUsers, params);
 	}
 
 	/**
@@ -117,7 +117,7 @@ public class UsersService {
 	 */
 
 	public User getUserById(String userId) throws MambuApiException {
-		return serviceHelper.execute(getUser, userId);
+		return serviceExecutor.execute(getUser, userId);
 	}
 
 	/**
@@ -166,7 +166,7 @@ public class UsersService {
 			params.put(APIData.FOR, apiViewType.name());
 		}
 
-		return serviceHelper.execute(getCustomViews, username, params);
+		return serviceExecutor.execute(getCustomViews, username, params);
 	}
 
 	/**

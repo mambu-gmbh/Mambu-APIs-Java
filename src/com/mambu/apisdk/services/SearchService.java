@@ -14,7 +14,7 @@ import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
-import com.mambu.apisdk.util.ServiceHelper;
+import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.core.shared.model.SearchResult;
 
 /**
@@ -32,7 +32,7 @@ public class SearchService {
 
 	private static final String LIMIT = APIData.LIMIT;
 
-	private ServiceHelper serviceHelper;
+	private ServiceExecutor serviceExecutor;
 	private final static ApiDefinition searchEntitiies = new ApiDefinition(ApiType.GET_LIST, SearchResult.class);
 
 	/***
@@ -43,7 +43,7 @@ public class SearchService {
 	 */
 	@Inject
 	public SearchService(MambuAPIService mambuAPIService) {
-		this.serviceHelper = new ServiceHelper(mambuAPIService);
+		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
 	/***
@@ -90,7 +90,7 @@ public class SearchService {
 			paramsMap.addParam(SEARCH_TYPES, typeParamsString);
 		}
 
-		return serviceHelper.execute(searchEntitiies, paramsMap);
+		return serviceExecutor.execute(searchEntitiies, paramsMap);
 
 	}
 }

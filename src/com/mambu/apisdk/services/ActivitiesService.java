@@ -12,6 +12,7 @@ import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
@@ -33,8 +34,8 @@ public class ActivitiesService {
 
 	private static String FROM = APIData.FROM;
 	private static String TO = APIData.TO;
-	// Our service helper
-	private ServiceHelper serviceHelper;
+	// Our serviceExecutor
+	private ServiceExecutor serviceExecutor;
 
 	// Create API definitions for services provided by ActivitiesService
 	// Get Lists of Activities
@@ -48,7 +49,7 @@ public class ActivitiesService {
 	 */
 	@Inject
 	public ActivitiesService(MambuAPIService mambuAPIService) {
-		this.serviceHelper = new ServiceHelper(mambuAPIService);
+		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
 	/***
@@ -118,7 +119,7 @@ public class ActivitiesService {
 			params.put(getIdParameterName(mambuEntity), entityId);
 		}
 
-		return serviceHelper.execute(getJSONActivityList, params);
+		return serviceExecutor.execute(getJSONActivityList, params);
 	}
 
 	/***
@@ -156,7 +157,8 @@ public class ActivitiesService {
 	 */
 	public List<JSONActivity> getActivitiesByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
-		return serviceHelper.getEntitiesByCustomView(getJSONActivityList, customViewKey, offset, limit);
+		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+		return serviceExecutor.execute(getJSONActivityList, params);
 	}
 
 	// Private helper

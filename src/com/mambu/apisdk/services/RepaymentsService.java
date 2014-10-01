@@ -12,7 +12,7 @@ import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
-import com.mambu.apisdk.util.ServiceHelper;
+import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.Repayment;
 
@@ -30,7 +30,7 @@ public class RepaymentsService {
 	private static final String OFFSET = APIData.OFFSET;
 	private static final String LIMIT = APIData.LIMIT;
 
-	private ServiceHelper serviceHelper;
+	private ServiceExecutor serviceExecutor;
 
 	// Create API definitions for services provided by ClientService
 
@@ -46,7 +46,7 @@ public class RepaymentsService {
 	 */
 	@Inject
 	public RepaymentsService(MambuAPIService mambuAPIService) {
-		this.serviceHelper = new ServiceHelper(mambuAPIService);
+		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
 	/***
@@ -72,7 +72,7 @@ public class RepaymentsService {
 		paramsMap.put(OFFSET, offset);
 		paramsMap.put(LIMIT, limit);
 
-		return serviceHelper.execute(getRepaymments, paramsMap);
+		return serviceExecutor.execute(getRepaymments, paramsMap);
 	}
 
 	/***
@@ -111,7 +111,7 @@ public class RepaymentsService {
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.put(OFFSET, offset);
 		paramsMap.put(LIMIT, limit);
-		return serviceHelper.execute(getRepaymentsForLoan, accountId, paramsMap);
+		return serviceExecutor.execute(getRepaymentsForLoan, accountId, paramsMap);
 	}
 
 	/***

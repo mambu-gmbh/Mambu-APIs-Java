@@ -15,7 +15,7 @@ import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
-import com.mambu.apisdk.util.ServiceHelper;
+import com.mambu.apisdk.util.ServiceExecutor;
 
 /**
  * Service class which handles the API operations available for the accounting
@@ -25,8 +25,8 @@ import com.mambu.apisdk.util.ServiceHelper;
  */
 public class AccountingService {
 
-	// Our service helper
-	private ServiceHelper serviceHelper;
+	// Our ServiceExecutor
+	private ServiceExecutor serviceExecutor;
 	// Create API definitions for this service
 	// Get GLAccount
 	private final static ApiDefinition getGLAccount = new ApiDefinition(ApiType.GET_ENTITY, GLAccount.class);
@@ -41,7 +41,7 @@ public class AccountingService {
 	 */
 	@Inject
 	public AccountingService(MambuAPIService mambuAPIService) {
-		this.serviceHelper = new ServiceHelper(mambuAPIService);
+		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
 	/**
@@ -54,7 +54,7 @@ public class AccountingService {
 	 * @throws MambuApiException
 	 */
 	public GLAccount getGLAccount(String glCode) throws MambuApiException {
-		return serviceHelper.execute(getGLAccount, glCode);
+		return serviceExecutor.execute(getGLAccount, glCode);
 	}
 
 	/**
@@ -72,7 +72,7 @@ public class AccountingService {
 		params.put(APIData.FROM, fromDate);
 		params.put(APIData.TO, toDate);
 
-		return serviceHelper.execute(getGLAccount, glCode, params);
+		return serviceExecutor.execute(getGLAccount, glCode, params);
 	}
 
 	/**
@@ -122,6 +122,6 @@ public class AccountingService {
 		params.put(APIData.OFFSET, Integer.toString(offset));
 		params.put(APIData.LIMIT, Integer.toString(limit));
 
-		return serviceHelper.execute(getGLJournalEntries, params);
+		return serviceExecutor.execute(getGLJournalEntries, params);
 	}
 }

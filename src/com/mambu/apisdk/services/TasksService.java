@@ -15,7 +15,7 @@ import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
-import com.mambu.apisdk.util.ServiceHelper;
+import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.tasks.shared.model.Task;
 import com.mambu.tasks.shared.model.TaskStatus;
 
@@ -35,8 +35,8 @@ public class TasksService {
 	private static String CLIENT_ID = APIData.CLIENT_ID;
 	private static String GROUP_ID = APIData.GROUP_ID;
 
-	// Service helper
-	private ServiceHelper serviceHelper;
+	// Service Executor
+	private ServiceExecutor serviceExecutor;
 	// API definitions
 	private final static ApiDefinition getTasks = new ApiDefinition(ApiType.GET_LIST, Task.class);
 	// Create and Update Task API expects JSONTask
@@ -53,7 +53,7 @@ public class TasksService {
 	 */
 	@Inject
 	public TasksService(MambuAPIService mambuAPIService) {
-		this.serviceHelper = new ServiceHelper(mambuAPIService);
+		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
 	/***
@@ -77,7 +77,7 @@ public class TasksService {
 
 		// Tasks API expects JSONTask as input
 		JSONTask jsonTask = new JSONTask(task);
-		JSONTask jsonResult = serviceHelper.executeJson(createTask, jsonTask);
+		JSONTask jsonResult = serviceExecutor.executeJson(createTask, jsonTask);
 		return (jsonResult == null) ? null : jsonResult.getTask();
 
 	}
@@ -102,7 +102,7 @@ public class TasksService {
 		}
 		// Tasks API expects JSONTask as input
 		JSONTask jsonTask = new JSONTask(task);
-		JSONTask jsonResult = serviceHelper.executeJson(updateTask, jsonTask, encodedKey);
+		JSONTask jsonResult = serviceExecutor.executeJson(updateTask, jsonTask, encodedKey);
 		return (jsonResult == null) ? null : jsonResult.getTask();
 	}
 
@@ -137,7 +137,7 @@ public class TasksService {
 		params.put(CLIENT_ID, clientId);
 		params.put(GROUP_ID, groupId);
 
-		return serviceHelper.execute(createFormTask, params);
+		return serviceExecutor.execute(createFormTask, params);
 	}
 
 	/***
@@ -170,7 +170,7 @@ public class TasksService {
 		paramsMap.put(APIData.OFFSET, offset);
 		paramsMap.put(APIData.LIMIT, limit);
 
-		return serviceHelper.execute(getTasks, paramsMap);
+		return serviceExecutor.execute(getTasks, paramsMap);
 	}
 
 	/***
@@ -183,7 +183,7 @@ public class TasksService {
 	 * @throws MambuApiException
 	 */
 	public boolean deleteTasks(String taskId) throws MambuApiException {
-		return serviceHelper.execute(deleteTask, taskId);
+		return serviceExecutor.execute(deleteTask, taskId);
 	}
 
 }

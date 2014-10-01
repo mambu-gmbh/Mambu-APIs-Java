@@ -13,7 +13,7 @@ import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
-import com.mambu.apisdk.util.ServiceHelper;
+import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
@@ -31,7 +31,7 @@ public class OrganizationService {
 	private static String OFFSET = APIData.OFFSET;
 	private static String LIMIT = APIData.LIMIT;
 
-	private ServiceHelper serviceHelper;
+	private ServiceExecutor serviceExecutor;
 
 	// Create API definitions for services provided by ClientService
 
@@ -57,7 +57,7 @@ public class OrganizationService {
 	 */
 	@Inject
 	public OrganizationService(MambuAPIService mambuAPIService) {
-		this.serviceHelper = new ServiceHelper(mambuAPIService);
+		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
 	/**
@@ -71,7 +71,7 @@ public class OrganizationService {
 
 	public Currency getCurrency() throws MambuApiException {
 
-		List<Currency> currencies = serviceHelper.execute(getCurrencies);
+		List<Currency> currencies = serviceExecutor.execute(getCurrencies);
 		if (currencies != null && currencies.size() > 0) {
 			return currencies.get(0);
 		} else {
@@ -98,7 +98,7 @@ public class OrganizationService {
 
 		params.put(OFFSET, offset);
 		params.put(LIMIT, limit);
-		return serviceHelper.execute(getBranches, params);
+		return serviceExecutor.execute(getBranches, params);
 	}
 
 	/**
@@ -111,7 +111,7 @@ public class OrganizationService {
 	 * @throws MambuApiException
 	 */
 	public Branch getBranch(String branchId) throws MambuApiException {
-		return serviceHelper.execute(getBranchDetails, branchId);
+		return serviceExecutor.execute(getBranchDetails, branchId);
 	}
 
 	/**
@@ -124,7 +124,7 @@ public class OrganizationService {
 	 * @throws MambuApiException
 	 */
 	public Centre getCentre(String centreId) throws MambuApiException {
-		return serviceHelper.execute(getCentreDetails, centreId);
+		return serviceExecutor.execute(getCentreDetails, centreId);
 	}
 
 	/**
@@ -148,7 +148,7 @@ public class OrganizationService {
 		params.put(OFFSET, offset);
 		params.put(LIMIT, limit);
 
-		return serviceHelper.execute(getCentres, params);
+		return serviceExecutor.execute(getCentres, params);
 	}
 
 	/**
@@ -162,7 +162,7 @@ public class OrganizationService {
 	 * @throws MambuApiException
 	 */
 	public CustomField getCustomField(String fieldId) throws MambuApiException {
-		return serviceHelper.execute(getCustomField, fieldId);
+		return serviceExecutor.execute(getCustomField, fieldId);
 	}
 
 	/**
@@ -186,7 +186,7 @@ public class OrganizationService {
 			params.addParam(APIData.CUSTOM_FIELD_SETS_TYPE, customFieldType.name());
 		}
 
-		return serviceHelper.execute(getCustomFieldSets, params);
+		return serviceExecutor.execute(getCustomFieldSets, params);
 	}
 
 	/**
@@ -198,6 +198,6 @@ public class OrganizationService {
 	 */
 	public List<TransactionChannel> getTransactionChannels() throws MambuApiException {
 		ParamsMap params = null;
-		return serviceHelper.execute(getTransactionChannels, params);
+		return serviceExecutor.execute(getTransactionChannels, params);
 	}
 }

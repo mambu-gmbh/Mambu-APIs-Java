@@ -12,6 +12,7 @@ import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
@@ -39,8 +40,8 @@ public class ClientsService {
 	private static final String CREDIT_OFFICER_USER_NAME = APIData.CREDIT_OFFICER_USER_NAME;
 	private static final String CLIENT_STATE = APIData.CLIENT_STATE;
 
-	// Our service helper
-	private ServiceHelper serviceHelper;
+	// Our serviceExecutor
+	private ServiceExecutor serviceExecutor;
 
 	// Create API definitions for services provided by ClientService
 	// Get Client Details
@@ -76,7 +77,7 @@ public class ClientsService {
 	 */
 	@Inject
 	public ClientsService(MambuAPIService mambuAPIService) {
-		this.serviceHelper = new ServiceHelper(mambuAPIService);
+		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
 	/**
@@ -89,7 +90,7 @@ public class ClientsService {
 	 * @throws MambuApiException
 	 */
 	public Client getClient(String clientId) throws MambuApiException {
-		return serviceHelper.execute(getClient, clientId);
+		return serviceExecutor.execute(getClient, clientId);
 	}
 
 	/**
@@ -109,7 +110,7 @@ public class ClientsService {
 		params.put(LAST_NAME, clientLastName);
 		params.put(FIRST_NAME, clientFirstName);
 
-		return serviceHelper.execute(getClientsList, params);
+		return serviceExecutor.execute(getClientsList, params);
 	}
 
 	/**
@@ -129,7 +130,7 @@ public class ClientsService {
 		params.put(LAST_NAME, clientLastName);
 		params.put(BIRTH_DATE, birthDay);
 
-		return serviceHelper.execute(getClientsList, params);
+		return serviceExecutor.execute(getClientsList, params);
 
 	}
 
@@ -148,7 +149,7 @@ public class ClientsService {
 		ParamsMap params = new ParamsMap();
 		params.addParam(CLIENT_STATE, (active ? "ACTIVE" : "INACTIVE"));
 
-		return serviceHelper.execute(getClientsList, params);
+		return serviceExecutor.execute(getClientsList, params);
 	}
 
 	/**
@@ -175,7 +176,7 @@ public class ClientsService {
 		params.addParam(APIData.OFFSET, String.valueOf(offset));
 		params.addParam(APIData.LIMIT, String.valueOf(limit));
 
-		return serviceHelper.execute(getClientsList, params);
+		return serviceExecutor.execute(getClientsList, params);
 
 	}
 
@@ -197,7 +198,7 @@ public class ClientsService {
 		params.put(LAST_NAME, clientLastName);
 		params.put(ID_DOCUMENT, documentId);
 
-		return serviceHelper.execute(getClientsList, params);
+		return serviceExecutor.execute(getClientsList, params);
 
 	}
 
@@ -211,7 +212,7 @@ public class ClientsService {
 	 * @throws MambuApiException
 	 */
 	public ClientExpanded getClientDetails(String clientId) throws MambuApiException {
-		return serviceHelper.execute(getClientDetails, clientId);
+		return serviceExecutor.execute(getClientDetails, clientId);
 	}
 
 	/**
@@ -225,7 +226,7 @@ public class ClientsService {
 	 * @throws MambuApiException
 	 */
 	public Group getGroup(String groupId) throws MambuApiException {
-		return serviceHelper.execute(getGroup, groupId);
+		return serviceExecutor.execute(getGroup, groupId);
 	}
 
 	/**
@@ -239,7 +240,7 @@ public class ClientsService {
 	 * @throws MambuApiException
 	 */
 	public GroupExpanded getGroupDetails(String groupId) throws MambuApiException {
-		return serviceHelper.execute(getGroupDetails, groupId);
+		return serviceExecutor.execute(getGroupDetails, groupId);
 	}
 
 	/***
@@ -265,7 +266,7 @@ public class ClientsService {
 			throw new IllegalArgumentException("Cannot create client, the encoded key must be null");
 		}
 
-		return serviceHelper.executeJson(createClient, clientDetails);
+		return serviceExecutor.executeJson(createClient, clientDetails);
 	}
 
 	/***
@@ -292,7 +293,7 @@ public class ClientsService {
 		if (encodedKey == null) {
 			throw new IllegalArgumentException("Cannot update client, encoded key for the object does not exist");
 		}
-		return serviceHelper.executeJson(updateClient, clientDetails, encodedKey);
+		return serviceExecutor.executeJson(updateClient, clientDetails, encodedKey);
 	}
 
 	/***
@@ -323,7 +324,7 @@ public class ClientsService {
 		params.put(APIData.OFFSET, offset);
 		params.put(APIData.LIMIT, limit);
 
-		return serviceHelper.execute(getClientsList, params);
+		return serviceExecutor.execute(getClientsList, params);
 	}
 
 	/***
@@ -364,7 +365,8 @@ public class ClientsService {
 	 */
 	public List<Client> getClientsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
-		return serviceHelper.getEntitiesByCustomView(getClientsList, customViewKey, offset, limit);
+		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+		return serviceExecutor.execute(getClientsList, params);
 
 	}
 
@@ -385,7 +387,8 @@ public class ClientsService {
 	 */
 	public List<Group> getGroupsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
-		return serviceHelper.getEntitiesByCustomView(getGroupsList, customViewKey, offset, limit);
+		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+		return serviceExecutor.execute(getGroupsList, params);
 
 	}
 
@@ -414,7 +417,7 @@ public class ClientsService {
 		params.put(APIData.OFFSET, offset);
 		params.put(APIData.LIMIT, limit);
 
-		return serviceHelper.execute(getGroupsList, params);
+		return serviceExecutor.execute(getGroupsList, params);
 	}
 
 	/***
@@ -447,7 +450,7 @@ public class ClientsService {
 	 * @throws MambuApiException
 	 */
 	public List<Document> getClientDocuments(String clientId) throws MambuApiException {
-		return serviceHelper.execute(getClientDocuments, clientId);
+		return serviceExecutor.execute(getClientDocuments, clientId);
 	}
 
 	/***
@@ -461,6 +464,6 @@ public class ClientsService {
 	 * @throws MambuApiException
 	 */
 	public List<Document> getGroupDocuments(String groupId) throws MambuApiException {
-		return serviceHelper.execute(getGroupDocuments, groupId);
+		return serviceExecutor.execute(getGroupDocuments, groupId);
 	}
 }

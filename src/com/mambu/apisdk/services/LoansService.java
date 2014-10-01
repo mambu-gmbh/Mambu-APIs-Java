@@ -14,6 +14,7 @@ import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
@@ -62,8 +63,8 @@ public class LoansService {
 	private static final String CREDIT_OFFICER_USER_NAME = APIData.CREDIT_OFFICER_USER_NAME;
 	private static final String ACCOUNT_STATE = APIData.ACCOUNT_STATE;
 
-	// Service helper
-	private ServiceHelper serviceHelper;
+	// Our serviceExecutor
+	private ServiceExecutor serviceExecutor;
 
 	// Create API definitions for services provided by LoanService
 	// Get Account Details
@@ -113,7 +114,7 @@ public class LoansService {
 	 */
 	@Inject
 	public LoansService(MambuAPIService mambuAPIService) {
-		this.serviceHelper = new ServiceHelper(mambuAPIService);
+		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
 	/***
@@ -127,7 +128,7 @@ public class LoansService {
 	 * @throws MambuApiException
 	 */
 	public LoanAccount getLoanAccount(String accountId) throws MambuApiException {
-		return serviceHelper.execute(getAccount, accountId);
+		return serviceExecutor.execute(getAccount, accountId);
 	}
 
 	/***
@@ -141,7 +142,7 @@ public class LoansService {
 	 * @throws MambuApiException
 	 */
 	public List<LoanAccount> getLoanAccountsForClient(String clientId) throws MambuApiException {
-		return serviceHelper.execute(getAccountsForClient, clientId);
+		return serviceExecutor.execute(getAccountsForClient, clientId);
 	}
 
 	/***
@@ -157,7 +158,7 @@ public class LoansService {
 	// TODO: Solidarity Group Loans are NOT included into the returned list of Group Accounts. Only Pure Group Loans are
 	// Implemented in MBU-1045.
 	public List<LoanAccount> getLoanAccountsForGroup(String groupId) throws MambuApiException {
-		return serviceHelper.execute(getAccountsForGroup, groupId);
+		return serviceExecutor.execute(getAccountsForGroup, groupId);
 	}
 
 	/****
@@ -180,7 +181,7 @@ public class LoansService {
 		paramsMap.addParam(TYPE, TYPE_APPROVAL);
 		paramsMap.addParam(NOTES, notes);
 
-		return serviceHelper.execute(postAccountChange, accountId, paramsMap);
+		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
 	}
 
 	/****
@@ -202,7 +203,7 @@ public class LoansService {
 		paramsMap.addParam(TYPE, TYPE_UNDO_APPROVAL);
 		paramsMap.addParam(NOTES, notes);
 
-		return serviceHelper.execute(postAccountChange, accountId, paramsMap);
+		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
 	}
 
 	/****
@@ -221,7 +222,7 @@ public class LoansService {
 		paramsMap.addParam(TYPE, TYPE_LOCK);
 		paramsMap.addParam(NOTES, notes);
 
-		return serviceHelper.execute(postAccountTransaction, accountId, paramsMap);
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
 	/****
@@ -240,7 +241,7 @@ public class LoansService {
 		paramsMap.addParam(TYPE, TYPE_UNLOCK);
 		paramsMap.addParam(NOTES, notes);
 
-		return serviceHelper.execute(postAccountTransaction, accountId, paramsMap);
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
 	/***
@@ -253,7 +254,7 @@ public class LoansService {
 	 * @throws MambuApiException
 	 */
 	public boolean deleteLoanAccount(String accountId) throws MambuApiException {
-		return serviceHelper.execute(deleteAccount, accountId);
+		return serviceExecutor.execute(deleteAccount, accountId);
 	}
 
 	/****
@@ -275,7 +276,7 @@ public class LoansService {
 		paramsMap.addParam(TYPE, TYPE_REJECT);
 		paramsMap.addParam(NOTES, notes);
 
-		return serviceHelper.execute(postAccountChange, accountId, paramsMap);
+		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
 	}
 
 	// A disbursement transaction, returns Transaction object
@@ -321,7 +322,7 @@ public class LoansService {
 		paramsMap.addParam(BANK_ROUTING_NUMBER, bankRoutingNumber);
 		paramsMap.addParam(NOTES, notes);
 
-		return serviceHelper.execute(postAccountTransaction, accountId, paramsMap);
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 
 	}
 
@@ -339,7 +340,7 @@ public class LoansService {
 	 */
 
 	public LoanAccount getLoanAccountDetails(String accountId) throws MambuApiException {
-		return serviceHelper.execute(getAccount, accountId);
+		return serviceExecutor.execute(getAccount, accountId);
 	}
 
 	/***
@@ -365,7 +366,7 @@ public class LoansService {
 		if (encodedKey != null) {
 			throw new IllegalArgumentException("Cannot create Account, the encoded key must be null");
 		}
-		return serviceHelper.executeJson(createAccount, loan);
+		return serviceExecutor.executeJson(createAccount, loan);
 	}
 
 	/***
@@ -392,7 +393,7 @@ public class LoansService {
 			throw new IllegalArgumentException("Cannot update Account, the encoded key must be NOT null");
 		}
 
-		return serviceHelper.executeJson(updateAccount, loan, encodedKey);
+		return serviceExecutor.executeJson(updateAccount, loan, encodedKey);
 	}
 
 	/***
@@ -413,7 +414,7 @@ public class LoansService {
 		paramsMap.put(APIData.OFFSET, offset);
 		paramsMap.put(APIData.LIMIT, limit);
 
-		return serviceHelper.execute(getAccountTransactions, accountId, paramsMap);
+		return serviceExecutor.execute(getAccountTransactions, accountId, paramsMap);
 	}
 
 	/**
@@ -434,7 +435,8 @@ public class LoansService {
 	public List<LoanTransaction> getLoanTransactionsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		// Example GET loan/transactions?viewfilter=123&offset=0&limit=100
-		return serviceHelper.getEntitiesByCustomView(getAllLoanTransactions, customViewKey, offset, limit);
+		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+		return serviceExecutor.execute(getAllLoanTransactions, params);
 
 	}
 
@@ -474,7 +476,7 @@ public class LoansService {
 		paramsMap.addParam(BANK_ROUTING_NUMBER, bankRoutingNumber);
 		paramsMap.addParam(NOTES, notes);
 
-		return serviceHelper.execute(postAccountTransaction, accountId, paramsMap);
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
 	/****
@@ -499,7 +501,7 @@ public class LoansService {
 		paramsMap.addParam(REPAYMENT_NUMBER, repaymentNumber);
 		paramsMap.addParam(NOTES, notes);
 
-		return serviceHelper.execute(postAccountTransaction, accountId, paramsMap);
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
 	/***
@@ -531,7 +533,7 @@ public class LoansService {
 		params.put(APIData.OFFSET, offset);
 		params.put(APIData.LIMIT, limit);
 
-		return serviceHelper.execute(getAccountsList, params);
+		return serviceExecutor.execute(getAccountsList, params);
 	}
 
 	/***
@@ -576,7 +578,8 @@ public class LoansService {
 	 */
 	public List<LoanAccount> getLoanAccountsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
-		return serviceHelper.getEntitiesByCustomView(getAccountsList, customViewKey, offset, limit);
+		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+		return serviceExecutor.execute(getAccountsList, params);
 
 	}
 
@@ -594,7 +597,7 @@ public class LoansService {
 		params.put(APIData.OFFSET, offset);
 		params.put(APIData.LIMIT, limit);
 
-		return serviceHelper.execute(getProductsList, params);
+		return serviceExecutor.execute(getProductsList, params);
 	}
 
 	/***
@@ -608,7 +611,7 @@ public class LoansService {
 	 * @throws MambuApiException
 	 */
 	public LoanProduct getLoanProduct(String productId) throws MambuApiException {
-		return serviceHelper.execute(getProduct, productId);
+		return serviceExecutor.execute(getProduct, productId);
 	}
 
 	/***
@@ -622,7 +625,7 @@ public class LoansService {
 	 * @throws MambuApiException
 	 */
 	public List<Document> getLoanAccountDocuments(String accountId) throws MambuApiException {
-		return serviceHelper.execute(getAccountDocuments, accountId);
+		return serviceExecutor.execute(getAccountDocuments, accountId);
 	}
 
 }

@@ -14,6 +14,7 @@ import com.mambu.apisdk.util.APIData.ACCOUNT_TYPE;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
@@ -65,7 +66,7 @@ public class SavingsService {
 	private static final String TO_LOAN = APIData.TO_LOAN;
 
 	// Service helper
-	private ServiceHelper serviceHelper;
+	private ServiceExecutor serviceExecutor;
 
 	// Create API definitions for services provided by LoanService
 	private final static ApiDefinition getAccount = new ApiDefinition(ApiType.GET_ENTITY, SavingsAccount.class);
@@ -117,7 +118,7 @@ public class SavingsService {
 	 */
 	@Inject
 	public SavingsService(MambuAPIService mambuAPIService) {
-		this.serviceHelper = new ServiceHelper(mambuAPIService);
+		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
 	/***
@@ -132,7 +133,7 @@ public class SavingsService {
 	 * 
 	 */
 	public SavingsAccount getSavingsAccount(String accountId) throws MambuApiException {
-		return serviceHelper.execute(getAccount, accountId);
+		return serviceExecutor.execute(getAccount, accountId);
 	}
 
 	/***
@@ -147,7 +148,7 @@ public class SavingsService {
 	 * 
 	 */
 	public SavingsAccount getSavingsAccountDetails(String accountId) throws MambuApiException {
-		return serviceHelper.execute(getAccountDetails, accountId);
+		return serviceExecutor.execute(getAccountDetails, accountId);
 	}
 
 	/***
@@ -161,7 +162,7 @@ public class SavingsService {
 	 * @throws MambuApiException
 	 */
 	public List<SavingsAccount> getSavingsAccountsForClient(String clientId) throws MambuApiException {
-		return serviceHelper.execute(getAccountsForClient, clientId);
+		return serviceExecutor.execute(getAccountsForClient, clientId);
 	}
 
 	/****
@@ -183,7 +184,7 @@ public class SavingsService {
 		paramsMap.addParam(TYPE, TYPE_APPROVAL);
 		paramsMap.addParam(NOTES, notes);
 
-		return serviceHelper.execute(postAccountChange, accountId, paramsMap);
+		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
 	}
 
 	/****
@@ -205,7 +206,7 @@ public class SavingsService {
 		paramsMap.addParam(TYPE, TYPE_UNDO_APPROVAL);
 		paramsMap.addParam(NOTES, notes);
 
-		return serviceHelper.execute(postAccountChange, accountId, paramsMap);
+		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
 	}
 
 	/***
@@ -231,7 +232,7 @@ public class SavingsService {
 		paramsMap.put(OFFSET, offset);
 		paramsMap.put(LIMIT, limit);
 
-		return serviceHelper.execute(getAccountTransactions, accountId, paramsMap);
+		return serviceExecutor.execute(getAccountTransactions, accountId, paramsMap);
 	}
 
 	/**
@@ -252,7 +253,8 @@ public class SavingsService {
 	public List<SavingsTransaction> getSavingsTransactionsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		// Example GET savings/transactions?viewfilter=567&offset=0&limit=100
-		return serviceHelper.getEntitiesByCustomView(getAllSavingsTransactions, customViewKey, offset, limit);
+		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+		return serviceExecutor.execute(getAllSavingsTransactions, params);
 	}
 
 	// helper method
@@ -312,7 +314,7 @@ public class SavingsService {
 		addPaymentMethodAccountDetails(paramsMap, amount, date, notes, paymentMethod, receiptNumber, bankNumber,
 				checkNumber, bankAccountNumber, bankRoutingNumber);
 
-		return serviceHelper.execute(postAccountTransaction, accountId, paramsMap);
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 
 	}
 
@@ -346,7 +348,7 @@ public class SavingsService {
 		addPaymentMethodAccountDetails(paramsMap, amount, date, notes, paymentMethod, receiptNumber, bankNumber,
 				checkNumber, bankAccountNumber, bankRoutingNumber);
 
-		return serviceHelper.execute(postAccountTransaction, accountId, paramsMap);
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
 	/****
@@ -389,7 +391,7 @@ public class SavingsService {
 		paramsMap.addParam(AMOUNT, amount);
 		paramsMap.addParam(NOTES, notes);
 
-		return serviceHelper.execute(postAccountTransaction, fromAccountId, paramsMap);
+		return serviceExecutor.execute(postAccountTransaction, fromAccountId, paramsMap);
 	}
 
 	/****
@@ -418,7 +420,7 @@ public class SavingsService {
 		paramsMap.addParam(AMOUNT, amount);
 		paramsMap.addParam(NOTES, notes);
 
-		return serviceHelper.execute(postAccountTransaction, accountId, paramsMap);
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
 	/***
@@ -433,7 +435,7 @@ public class SavingsService {
 	 * @throws MambuApiException
 	 */
 	public boolean deleteSavingsAccount(String accountId) throws MambuApiException {
-		return serviceHelper.execute(deleteAccount, accountId);
+		return serviceExecutor.execute(deleteAccount, accountId);
 	}
 
 	/****
@@ -463,7 +465,7 @@ public class SavingsService {
 		paramsMap.addParam(TYPE, closerType.name());
 		paramsMap.addParam(NOTES, notes);
 
-		return serviceHelper.execute(postAccountChange, accountId, paramsMap);
+		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
 	}
 
 	/***
@@ -477,7 +479,7 @@ public class SavingsService {
 	 * @throws MambuApiException
 	 */
 	public List<SavingsAccount> getSavingsAccountsForGroup(String groupId) throws MambuApiException {
-		return serviceHelper.execute(getAccountsForGroup, groupId);
+		return serviceExecutor.execute(getAccountsForGroup, groupId);
 	}
 
 	/***
@@ -509,7 +511,7 @@ public class SavingsService {
 		params.put(APIData.OFFSET, offset);
 		params.put(APIData.LIMIT, limit);
 
-		return serviceHelper.execute(getAccountsList, params);
+		return serviceExecutor.execute(getAccountsList, params);
 	}
 
 	/***
@@ -552,7 +554,8 @@ public class SavingsService {
 	 */
 	public List<SavingsAccount> getSavingsAccountsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
-		return serviceHelper.getEntitiesByCustomView(getAccountsList, customViewKey, offset, limit);
+		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+		return serviceExecutor.execute(getAccountsList, params);
 
 	}
 
@@ -570,7 +573,7 @@ public class SavingsService {
 		params.put(APIData.OFFSET, offset);
 		params.put(APIData.LIMIT, limit);
 
-		return serviceHelper.execute(getProducts, params);
+		return serviceExecutor.execute(getProducts, params);
 	}
 
 	/***
@@ -583,7 +586,7 @@ public class SavingsService {
 	 * @throws MambuApiException
 	 */
 	public SavingsProduct getSavingsProduct(String productId) throws MambuApiException {
-		return serviceHelper.execute(getProduct, productId);
+		return serviceExecutor.execute(getProduct, productId);
 	}
 
 	/***
@@ -610,7 +613,7 @@ public class SavingsService {
 		if (encodedKey != null) {
 			throw new IllegalArgumentException("Cannot create  Account, the encoded key must be null");
 		}
-		return serviceHelper.executeJson(createAccount, account);
+		return serviceExecutor.executeJson(createAccount, account);
 	}
 
 	/***
@@ -639,7 +642,7 @@ public class SavingsService {
 			throw new IllegalArgumentException("Cannot update  Account, the encoded key must be NOT null");
 		}
 
-		return serviceHelper.executeJson(updateAccount, account, encodedKey);
+		return serviceExecutor.executeJson(updateAccount, account, encodedKey);
 	}
 
 	/***
@@ -653,6 +656,6 @@ public class SavingsService {
 	 * @throws MambuApiException
 	 */
 	public List<Document> getSavingsAccountDocuments(String accountId) throws MambuApiException {
-		return serviceHelper.execute(getAccountDocuments, accountId);
+		return serviceExecutor.execute(getAccountDocuments, accountId);
 	}
 }
