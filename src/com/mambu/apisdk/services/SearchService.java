@@ -7,18 +7,18 @@ package com.mambu.apisdk.services;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
-import com.mambu.apisdk.util.GsonUtils;
+import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
-import com.mambu.apisdk.util.RequestExecutor.Method;
+import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.core.shared.model.SearchResult;
 
 /**
- * Service class which handles the API operations available for the Seacrh
+ * Service class which handles the API operations available for the Search
  * 
  * @author mdanilkis
  * 
@@ -26,26 +26,24 @@ import com.mambu.core.shared.model.SearchResult;
 
 public class SearchService {
 
-	private MambuAPIService mambuAPIService;
-
-	// API's endpoint
-	private String SEARCH = APIData.SEARCH;
-
 	// Param names for QUERY and TYPE
 	private String QUERY = APIData.QUERY;
 	private String SEARCH_TYPES = APIData.SEARCH_TYPES;
 
 	private static final String LIMIT = APIData.LIMIT;
 
+	private ServiceExecutor serviceExecutor;
+	private final static ApiDefinition searchEntitiies = new ApiDefinition(ApiType.GET_LIST, SearchResult.class);
+
 	/***
-	 * Create a new accounting service
+	 * Create a new search service
 	 * 
 	 * @param mambuAPIService
 	 *            the service responsible with the connection to the server
 	 */
 	@Inject
 	public SearchService(MambuAPIService mambuAPIService) {
-		this.mambuAPIService = mambuAPIService;
+		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
 	/***
@@ -69,13 +67,13 @@ public class SearchService {
 	public Map<SearchResult.Type, List<SearchResult>> search(String query, List<SearchResult.Type> searchTypes,
 			String limit) throws MambuApiException {
 
-		String urlString = new String(mambuAPIService.createUrl(SEARCH));
-
+		if (query == null) {
+			throw new IllegalArgumentException("Query must not be null");
+		}
 		// strip possible blank chars
 		query = query.trim();
 
 		ParamsMap paramsMap = new ParamsMap();
-
 		paramsMap.addParam(QUERY, query);
 		paramsMap.addParam(LIMIT, limit);
 
@@ -92,15 +90,7 @@ public class SearchService {
 			paramsMap.addParam(SEARCH_TYPES, typeParamsString);
 		}
 
-		String jsonResponse = mambuAPIService.executeRequest(urlString, paramsMap, Method.POST);
-
-		java.lang.reflect.Type collectionType = new TypeToken<Map<SearchResult.Type, List<SearchResult>>>() {
-		}.getType();
-
-		Map<SearchResult.Type, List<SearchResult>> results = GsonUtils.createGson().fromJson(jsonResponse,
-				collectionType);
-
-		return results;
+		return serviceExecutor.execute(searchEntitiies, paramsMap);
 
 	}
 }

@@ -86,9 +86,8 @@ public class DemoTestDocumentsService {
 		document.setDescription("Sample text file");
 		document.setDocumentHolderKey(demoClient.getEncodedKey());
 		document.setDocumentHolderType(OwnerType.CLIENT);
-		// TODO: If name contains file with extension - upload in 3.6 version doesn't work.
-		// See https://mambucom.jira.com/browse/MBU-5816
-		document.setName("sample123");
+
+		document.setName("sample 123");
 		document.setOriginalFilename("sample-original.txt");
 		document.setType("txt");
 
@@ -136,9 +135,8 @@ public class DemoTestDocumentsService {
 		document.setDocumentHolderType(OwnerType.LOAN_ACCOUNT);
 
 		// document.setName("Loan Sample JPEG file");
-		// TODO: If name has spaces - upload in 3.6 version doesn't work.
-		// See https://mambucom.jira.com/browse/MBU-5816
-		document.setName("test");
+
+		document.setName("test.jpg");
 		document.setOriginalFilename("abc d.txt");
 		document.setType("jpg");
 
@@ -185,8 +183,6 @@ public class DemoTestDocumentsService {
 
 	}
 
-	// This method tests the DocumentService helper method getDocuments(). DemoTestClientService, DemoTestLoansService
-	// and DemoTestSavingsService provide their own, service specific, demo test methods
 	public static void testGetDocuments() throws MambuApiException {
 		System.out.println("\nIn testGetDocuments");
 
@@ -242,7 +238,7 @@ public class DemoTestDocumentsService {
 			document = documentsService.getDocument(CLIENT_DOCUMENT_ID);
 			System.out.println("\nContent:" + document);
 		} else {
-			System.out.println("\nNo Documents attached to a client with ID" + CLIENT_DOCUMENT_ID);
+			System.out.println("\nNo Documents attached to a demo client");
 		}
 
 		// Get document details for a Loan Account
@@ -251,16 +247,16 @@ public class DemoTestDocumentsService {
 			document = documentsService.getDocument(LOAN_DOCUMENT_ID);
 			System.out.println("\nContent:" + document);
 		} else {
-			System.out.println("\nNo Documents attached to a loan with ID" + LOAN_DOCUMENT_ID);
+			System.out.println("\nNo Documents attached to a demo loan account");
 		}
 
 		// Get document details for a Savings Account
 		if (SAVAINGS_DOCUMENT_ID != null) {
-			System.out.println("\nDocument Details for a Savings document with ID=" + LOAN_DOCUMENT_ID);
+			System.out.println("\nDocument Details for a Savings document with ID=" + SAVAINGS_DOCUMENT_ID);
 			document = documentsService.getDocument(SAVAINGS_DOCUMENT_ID);
 			System.out.println("\nContent:" + document);
 		} else {
-			System.out.println("\nNo Documents attached to a savings with ID" + SAVAINGS_DOCUMENT_ID);
+			System.out.println("\nNo Documents attached to a demo savings account");
 		}
 
 	}

@@ -1,16 +1,19 @@
 package com.mambu.apisdk.services;
 
-import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.List;
 
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
+import com.mambu.api.server.handler.customviews.model.CustomViewApiType;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
-import com.mambu.apisdk.util.GsonUtils;
+import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
-import com.mambu.apisdk.util.RequestExecutor.Method;
+import com.mambu.apisdk.util.ServiceExecutor;
+import com.mambu.core.shared.data.DataViewType;
+import com.mambu.core.shared.model.CustomView;
 import com.mambu.core.shared.model.User;
 
 /**
@@ -23,14 +26,17 @@ import com.mambu.core.shared.model.User;
  */
 public class UsersService {
 
-	private MambuAPIService mambuAPIService;
-
-	private static String USERS = APIData.USERS;
-
 	private static String OFFSET = APIData.OFFSET;
 	private static String LIMIT = APIData.LIMIT;
 	private static String BRANCH_ID = APIData.BRANCH_ID;
-	private static String FULL_DETAILS = APIData.FULL_DETAILS;
+
+	// Service Executor
+	private ServiceExecutor serviceExecutor;
+	// API definitions
+	private final static ApiDefinition getUsers = new ApiDefinition(ApiType.GET_LIST, User.class);
+	private final static ApiDefinition getUser = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, User.class);
+	private final static ApiDefinition getCustomViews = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, User.class,
+			CustomView.class);
 
 	/***
 	 * Create a new users service
@@ -40,7 +46,7 @@ public class UsersService {
 	 */
 	@Inject
 	public UsersService(MambuAPIService mambuAPIService) {
-		this.mambuAPIService = mambuAPIService;
+		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
 	/**
@@ -55,25 +61,13 @@ public class UsersService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@SuppressWarnings("unchecked")
 	public List<User> getUsers(String offset, String limit) throws MambuApiException {
 
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(USERS));
-
 		ParamsMap params = new ParamsMap();
-
 		params.put(OFFSET, offset);
 		params.put(LIMIT, limit);
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
 
-		Type collectionType = new TypeToken<List<User>>() {
-		}.getType();
-
-		List<User> users = (List<User>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
-
-		return users;
-
+		return serviceExecutor.execute(getUsers, params);
 	}
 
 	/**
@@ -84,8 +78,7 @@ public class UsersService {
 	 * @throws MambuApiException
 	 */
 	public List<User> getUsers() throws MambuApiException {
-		List<User> users = getUsers(null, null);
-		return users;
+		return getUsers(null, null);
 	}
 
 	/**
@@ -102,29 +95,18 @@ public class UsersService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@SuppressWarnings("unchecked")
 	public List<User> getUsers(String branchId, String offset, String limit) throws MambuApiException {
-
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(USERS));
 
 		ParamsMap params = new ParamsMap();
 		params.put(BRANCH_ID, branchId);
 		params.put(OFFSET, offset);
 		params.put(LIMIT, limit);
 
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
-
-		Type collectionType = new TypeToken<List<User>>() {
-		}.getType();
-
-		List<User> users = (List<User>) GsonUtils.createGson().fromJson(jsonResponse, collectionType);
-
-		return users;
+		return serviceExecutor.execute(getUsers, params);
 	}
 
 	/**
-	 * Get User by it's userID
+	 * Get User by its userID
 	 * 
 	 * @param userId
 	 *            the id of the user to filter.
@@ -135,17 +117,7 @@ public class UsersService {
 	 */
 
 	public User getUserById(String userId) throws MambuApiException {
-
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(USERS) + "/" + userId);
-		ParamsMap params = new ParamsMap();
-
-		params.put(FULL_DETAILS, "true");
-		String jsonResponse = mambuAPIService.executeRequest(urlString, params, Method.GET);
-
-		User user = GsonUtils.createGson().fromJson(jsonResponse, User.class);
-
-		return user;
+		return serviceExecutor.execute(getUser, userId);
 	}
 
 	/**
@@ -162,10 +134,74 @@ public class UsersService {
 	 */
 
 	public User getUserByUsername(String userName) throws MambuApiException {
+		return getUserById(userName);
+	}
 
-		User user = getUserById(userName);
+	/**
+	 * Get Custom Views for the user by user's userName and apiViewType.
+	 * 
+	 * See more in {@link MBU-4607 @ https://mambucom.jira.com/browse/MBU-4607 } and in MBU-6306 {@link https
+	 * ://mambucom.jira.com/browse/MBU-6306}
+	 * 
+	 * @param username
+	 *            the username of the user. Mandatory field
+	 * @param apiViewType
+	 *            view filter type. If null, all custom views are returned
+	 * 
+	 * @return List of Custom Views for this user
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<CustomView> getCustomViews(String username, CustomViewApiType apiViewType) throws MambuApiException {
+		// GET /api/users/<USERNAME>/views
+		// Allow also for filtering for the CLIENTS/GROUPS/LOANS/DEPOSITS views (ex: GET
+		// /api/users/<USERNAME>/views?for=CLIENTS)
 
-		return user;
+		if (username == null) {
+			throw new IllegalArgumentException("Username must not be NULL");
+		}
+
+		ParamsMap params = new ParamsMap();
+		if (apiViewType != null) {
+			params.put(APIData.FOR, apiViewType.name());
+		}
+
+		return serviceExecutor.execute(getCustomViews, username, params);
+	}
+
+	/**
+	 * Convenience method to get all Custom Views for the user by user's userName.
+	 * 
+	 * @param userName
+	 *            the username of the user
+	 * 
+	 * @return List of Custom Views for this user
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<CustomView> getCustomViews(String userName) throws MambuApiException {
+		CustomViewApiType apiViewType = null;
+		return getCustomViews(userName, apiViewType);
+	}
+
+	/**
+	 * Map to convert custom view's DataViewType to the CustomViewApiType (required by Custom View API)
+	 */
+	public static HashMap<DataViewType, CustomViewApiType> supportedDataViewTypes;
+	static {
+		supportedDataViewTypes = new HashMap<DataViewType, CustomViewApiType>();
+
+		supportedDataViewTypes.put(DataViewType.CLIENT, CustomViewApiType.CLIENTS);
+		supportedDataViewTypes.put(DataViewType.GROUP, CustomViewApiType.GROUPS);
+
+		supportedDataViewTypes.put(DataViewType.LOANS, CustomViewApiType.LOANS);
+		supportedDataViewTypes.put(DataViewType.SAVINGS, CustomViewApiType.DEPOSITS);
+
+		supportedDataViewTypes.put(DataViewType.LOAN_TRANSACTIONS_LOOKUP, CustomViewApiType.LOAN_TRANSACTIONS);
+		supportedDataViewTypes.put(DataViewType.SAVINGS_TRANSACTIONS_LOOKUP, CustomViewApiType.DEPOSIT_TRANSACTIONS);
+
+		supportedDataViewTypes.put(DataViewType.ACTIVITIES_LOOKUP, CustomViewApiType.SYSTEM_ACTIVITIES);
+
 	}
 
 }

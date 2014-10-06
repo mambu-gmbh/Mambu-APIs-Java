@@ -22,6 +22,10 @@ public class APIData {
 	// Users API
 
 	public static final String USERS = "users";
+	// Custom Views. Added in Mambu 3.7
+	public static final String VIEWS = "views";
+	public static final String FOR = "for";
+	public static final String VIEW_FILTER = "viewfilter";
 
 	// Loans and Savings API
 	public static final String LOANS = "loans";
@@ -32,6 +36,9 @@ public class APIData {
 
 	public static final String DATE = "date";
 	public static final String FIRST_REPAYMENT_DATE = "firstRepaymentDate";
+
+	// Transaction Channels endpoint
+	public static final String TRANSACTION_CHANNELS = "transactionchannels";
 
 	public static final String TYPE = "type";
 	public static final String BANK_NUMBER = "bankNumber";
@@ -61,11 +68,9 @@ public class APIData {
 
 	public static final String AMOUNT = "amount";
 
+	// The PAYMENT_METHOD indicates the ID of the Transaction Channel used for the account transaction
 	public static final String PAYMENT_METHOD = "method";
-	public static final String CASH_METHOD = "CASH";
-	public static final String RECEIPT_METHOD = "RECEIPT";
-	public static final String CHECK_METHOD = "CHECK";
-	public static final String BANK_TRANSFER_METHOD = "BANK_TRANSFER";
+
 	public static final String REPAYMENT_NUMBER = "repayment";
 
 	public static final String TO_SAVINGS = "toSavingsAccount";
@@ -154,11 +159,7 @@ public class APIData {
 	// Client fields
 	public static String FIRST_NAME = "firstName";
 	public static String LAST_NAME = "lastName";
-	public static String HOME_PHONE = "homephone";
-	public static String MOBILE_PHONE = "mobilephone";
-	public static String GENDER = "gender";
 	public static String BIRTH_DATE = "birthdate";
-	public static String EMAIL_ADDRESS = "email";
 	public static String ID_DOCUMENT = "idDocument";
 
 	// Added to support Json object creation API

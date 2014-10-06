@@ -13,6 +13,7 @@ import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
@@ -32,6 +33,7 @@ public class DemoTestSavingsService {
 
 	private static Client demoClient;
 	private static Group demoGroup;
+	private static User demoUser;
 	private static SavingsProduct demoSavingsProduct;
 	private static SavingsAccount demoSavingsAccount;
 
@@ -45,8 +47,10 @@ public class DemoTestSavingsService {
 			// Get Demo data
 			demoClient = DemoUtil.getDemoClient();
 			demoGroup = DemoUtil.getDemoGroup();
+			demoUser = DemoUtil.getDemoUser();
 			demoSavingsProduct = DemoUtil.getDemoSavingsProduct();
 			demoSavingsAccount = DemoUtil.getDemoSavingsAccount();
+			SAVINGS_ACCOUNT_ID = demoSavingsAccount.getId();
 
 			testCreateSavingsAccount();
 
@@ -65,7 +69,7 @@ public class DemoTestSavingsService {
 			testCloseSavingsAccount();
 			testDeleteSavingsAccount();
 
-			testGetSavingsAccountsByBranchOfficerState();
+			testGetSavingsAccountsByBranchCentreOfficerState();
 
 			testGetSavingsAccountsForClient();
 
@@ -194,7 +198,7 @@ public class DemoTestSavingsService {
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 		String amount = "150.00";
 		String date = null;
-		String notes = "Withdrawal notes - API";
+		String notes = "Deposit notes - API";
 
 		String paymentMethod = "CASH";// CHECK,
 		String receiptNumber = null; // "REC_NUMBER_1123";
@@ -216,8 +220,7 @@ public class DemoTestSavingsService {
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
-		// String destinationAccountKey = "8ad661123b36cfaf013b43b1ab5f3e77"; // Loan OAMT736 Irina Chernaya;
-		String destinationAccountKey = "abcdaccount";
+		String destinationAccountKey = DemoUtil.getDemoLoanAccount().getId();
 
 		String amount = "20.50";
 		String notes = "Transfer notes from API";
@@ -250,26 +253,32 @@ public class DemoTestSavingsService {
 
 	}
 
-	public static void testGetSavingsAccountsByBranchOfficerState() throws MambuApiException {
-		System.out.println("\nIn testGetSavingsAccountsByBranchOfficerState");
+	public static void testGetSavingsAccountsByBranchCentreOfficerState() throws MambuApiException {
+		System.out.println("\nIn testGetSavingsAccountsByBranchCentreOfficerState");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
-		String branchId = "2"; // "RICHMOND_001"; // Berlin_001 RICHMOND_001 GBK 001
-		String creditOfficerUserName = null;// "demo";
-		String accountState = null; // "ACTIVE"; // CLOSED_WITHDRAWN ACTIVE APPROVED
-		String offset = "1";
+		String branchId = demoClient.getAssignedBranchKey();
+		String centreId = demoClient.getAssignedCentreKey(); // Centre ID filter is available since 3.7
+		String creditOfficerUserName = demoUser.getUsername();
+		String accountState = AccountState.ACTIVE.name(); // CLOSED_WITHDRAWN ACTIVE APPROVED
+		String offset = "0";
 		String limit = "2";
 
-		List<SavingsAccount> accounts = savingsService.getSavingsAccountsByBranchOfficerState(branchId,
+		List<SavingsAccount> accounts = savingsService.getSavingsAccountsByBranchCentreOfficerState(branchId, centreId,
 				creditOfficerUserName, accountState, offset, limit);
 
-		System.out.println("Got Savings accounts for the branch, officer, state, total Deposits=" + accounts.size());
+		System.out.println("Got Savings accounts for the branch, centre, officer, state, total Deposits="
+				+ accounts.size());
 		for (SavingsAccount account : accounts) {
-			System.out.println("AccountsID=" + account.getId() + " " + account.getName() + "  BranchId="
-					+ account.getAssignedBranchKey() + "   Credit Officer=" + account.getAssignedUserKey());
+			System.out.println("AccountsID=" + account.getId() + " " + account.getName() + "\tBranchId="
+					+ account.getAssignedBranchKey() + "\tCentreId=" + account.getAssignedCentreKey()
+					+ "\tCredit Officer=" + account.getAssignedUserKey());
+			// Save one of the accounts for subsequent transaction testing
+			SAVINGS_ACCOUNT_ID = (SAVINGS_ACCOUNT_ID == null && account.isActive()) ? account.getId()
+					: SAVINGS_ACCOUNT_ID;
 		}
-		System.out.println();
+		System.out.println("Saved savings Account ID=" + SAVINGS_ACCOUNT_ID);
 	}
 
 	// Savings Products
@@ -299,7 +308,7 @@ public class DemoTestSavingsService {
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
-		String productId = "DSP"; // DSP FDS SP highInterest_001
+		String productId = demoSavingsProduct.getId(); // DSP FDS SP highInterest_001
 
 		SavingsProduct product = savingsService.getSavingsProduct(productId);
 
@@ -330,9 +339,15 @@ public class DemoTestSavingsService {
 		clientCustomInformation.add(custField1);
 
 		CustomFieldValue custField2 = new CustomFieldValue();
-		custField2.setCustomFieldId("Type_Deposit_Accounts");
-		custField2.setValue("Type Deposit Accounts Value");
+		custField2.setCustomFieldId("Required_Deposit_Accounts_2");
+		custField2.setValue("Required_Deposit_Accounts_2 Value");
 		clientCustomInformation.add(custField2);
+
+		CustomFieldValue custField3 = new CustomFieldValue();
+		custField3.setCustomFieldId("Required_Deposit_Accounts");
+		custField3.setValue("Required_Deposit_Accounts Value");
+		clientCustomInformation.add(custField3);
+		//
 
 		JSONSavingsAccount jsonSavingsAccount = new JSONSavingsAccount(savingsAccount);
 		jsonSavingsAccount.setCustomInformation(clientCustomInformation);
@@ -449,6 +464,7 @@ public class DemoTestSavingsService {
 		String accountId = SAVINGS_ACCOUNT_ID;
 		boolean accountDeleted = service.deleteSavingsAccount(accountId);
 
+		SAVINGS_ACCOUNT_ID = null;
 		System.out.println("Deleted Savings account with id=" + accountId + "\tDeletion status=" + accountDeleted);
 	}
 

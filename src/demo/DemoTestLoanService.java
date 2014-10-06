@@ -14,6 +14,7 @@ import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.Money;
+import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
 import com.mambu.loans.shared.model.Guaranty;
 import com.mambu.loans.shared.model.Guaranty.GuarantyType;
@@ -30,13 +31,14 @@ import com.mambu.loans.shared.model.LoanTransaction;
  */
 public class DemoTestLoanService {
 
-	private static String LOAN_ACCOUNT_ID = "RNTV156"; // DTQK377 WETZ340 RRSF961 PRTO161 DLWY699
-	private static String BRANCH_ID = "NE008"; // GBK 001
+	private static String LOAN_ACCOUNT_ID;
 	private static String NEW_LOAN_ACCOUNT_ID; // will be assigned after creation in testCreateJsonAccount()
 
 	private static Client demoClient;
 	private static Group demoGroup;
+	private static User demoUser;
 	private static LoanProduct demoProduct;
+	private static LoanAccount demoLoanAccount;
 
 	private static LoanAccountExpanded newAccount;
 
@@ -50,10 +52,14 @@ public class DemoTestLoanService {
 			demoClient = DemoUtil.getDemoClient();
 			demoGroup = DemoUtil.getDemoGroup();
 			demoProduct = DemoUtil.getDemoLoanProduct();
+			demoUser = DemoUtil.getDemoUser();
+			demoLoanAccount = DemoUtil.getDemoLoanAccount();
+			LOAN_ACCOUNT_ID = demoLoanAccount.getId();
 
 			testCreateJsonAccount();
 
 			testApproveLoanAccount();
+			testUndoApproveLoanAccount();
 			testGetLoanAccountDetails();
 			testUpdateLoanAccount();
 
@@ -65,7 +71,7 @@ public class DemoTestLoanService {
 			testGetLoanAccountsForClient();
 			testGetLoanAccountsForGroup();
 
-			testGetLoanAccountsByBranchOfficerState();
+			testGetLoanAccountsByBranchCentreOfficerState();
 			// transactions
 			testGetLoanAccountTransactions();
 
@@ -121,7 +127,7 @@ public class DemoTestLoanService {
 		System.out.println("\nIn testGetLoanAccountDetails");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
-		String accountId = NEW_LOAN_ACCOUNT_ID; // LOAN_ACCOUNT_ID NEW_LOAN_ACCOUNT_ID
+		String accountId = LOAN_ACCOUNT_ID; // LOAN_ACCOUNT_ID NEW_LOAN_ACCOUNT_ID
 		System.out.println("Got loan account by ID with details: "
 				+ loanService.getLoanAccountDetails(accountId).getName());
 
@@ -294,7 +300,7 @@ public class DemoTestLoanService {
 	public static void testGetLoanAccountTransactions() throws MambuApiException {
 		System.out.println("\nIn testGetLoanAccount Transactions");
 		LoansService loanService = MambuAPIFactory.getLoanService();
-		String offest = "4";
+		String offest = "0";
 		String limit = "8";
 
 		List<LoanTransaction> transactions = loanService.getLoanAccountTransactions(LOAN_ACCOUNT_ID, offest, limit);
@@ -320,11 +326,12 @@ public class DemoTestLoanService {
 		String bankAccountNumber = "BANK_ACCT4567";
 		String bankRoutingNumber = "BNK_ROUT_2344";
 
-		LoanTransaction transaction = loanService.makeLoanRepayment(NEW_LOAN_ACCOUNT_ID, amount, date, notes,
-				paymentMethod, receiptNumber, bankNumber, checkNumber, bankAccountNumber, bankRoutingNumber);
+		String accountId = LOAN_ACCOUNT_ID;
+		LoanTransaction transaction = loanService.makeLoanRepayment(accountId, amount, date, notes, paymentMethod,
+				receiptNumber, bankNumber, checkNumber, bankAccountNumber, bankRoutingNumber);
 
-		System.out.println("repayed loan account with the " + NEW_LOAN_ACCOUNT_ID + " id response=" + "   for amount="
-				+ transaction.getAmount());
+		System.out.println("repayed loan account with the " + accountId + " id response="
+				+ transaction.getTransactionId() + "   for amount=" + transaction.getAmount());
 	}
 
 	public static void testApplyFeeToLoanAccount() throws MambuApiException {
@@ -344,25 +351,28 @@ public class DemoTestLoanService {
 
 	}
 
-	public static void testGetLoanAccountsByBranchOfficerState() throws MambuApiException {
-		System.out.println("\nIn testGetLoanAccounts ByBranch Officer State");
+	public static void testGetLoanAccountsByBranchCentreOfficerState() throws MambuApiException {
+		System.out.println("\nIn testGetLoanAccountsByBranchCentreOfficerState");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		String branchId = BRANCH_ID; // BRANCH_ID Berlin_001 RICHMOND_001 GBK 001
-		String creditOfficerUserName = null; // "demo"; // MichaelD
-		String accountState = "ACTIVE"; // CLOSED_WITHDRAWN ACTIVE_IN_ARREARS
+		String branchId = demoClient.getAssignedBranchKey();
+		String centreId = demoClient.getAssignedCentreKey(); // Centre ID filter is available since 3.7
+		String creditOfficerUserName = demoUser.getUsername();
+		String accountState = null; // AccountState.ACTIVE.name(); // CLOSED_WITHDRAWN ACTIVE_IN_ARREARS
 		String offset = null;
 		String limit = null;
 
-		List<LoanAccount> loanAccounts = loanService.getLoanAccountsByBranchOfficerState(branchId,
+		List<LoanAccount> loanAccounts = loanService.getLoanAccountsByBranchCentreOfficerState(branchId, centreId,
 				creditOfficerUserName, accountState, offset, limit);
 
 		if (loanAccounts != null)
-			System.out.println("Got loan accounts for the branch, officer, state, total loans=" + loanAccounts.size());
+			System.out.println("Got loan accounts for the branch, centre, officer, state, total loans="
+					+ loanAccounts.size());
 		for (LoanAccount account : loanAccounts) {
-			System.out.println("Account Name=" + account.getId() + "-" + account.getLoanName() + "  BranchId="
-					+ account.getAssignedBranchKey() + "   Credit Officer=" + account.getAssignedUserKey());
+			System.out.println("Account Name=" + account.getId() + "-" + account.getLoanName() + "\tBranchId="
+					+ account.getAssignedBranchKey() + "\tCentreId=" + account.getAssignedCentreKey()
+					+ "\tCredit Officer=" + account.getAssignedUserKey());
 		}
 	}
 
@@ -403,9 +413,9 @@ public class DemoTestLoanService {
 		System.out.println("\nIn test Approve LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		LoanAccount account = loanService.approveLoanAccount(NEW_LOAN_ACCOUNT_ID, "some demo notes");
+		LoanAccount account = loanService.approveLoanAccount(LOAN_ACCOUNT_ID, "some demo notes");
 
-		System.out.println("Approving loan account with the " + NEW_LOAN_ACCOUNT_ID + " Loan name"
+		System.out.println("Approving loan account with the " + NEW_LOAN_ACCOUNT_ID + " Loan name="
 				+ account.getLoanName() + "  Account State=" + account.getState().toString());
 	}
 
@@ -423,7 +433,7 @@ public class DemoTestLoanService {
 		System.out.println("\nIn test Undo Approve LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		final String accountId = NEW_LOAN_ACCOUNT_ID;
+		final String accountId = LOAN_ACCOUNT_ID;
 		LoanAccount account = loanService.undoApproveLoanAccount(accountId, "some undo approve demo notes");
 
 		System.out.println("Undo Approving loan account with the " + accountId + " Loan name " + account.getLoanName()
@@ -434,7 +444,7 @@ public class DemoTestLoanService {
 		System.out.println("\nIn test Lock LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		String accountId = NEW_LOAN_ACCOUNT_ID;
+		String accountId = LOAN_ACCOUNT_ID;
 		LoanTransaction transaction = loanService.lockLoanAccount(accountId, "some lock demo notes");
 
 		System.out.println("Locked account with ID " + accountId + " Transaction  " + transaction.getTransactionId()
@@ -445,7 +455,7 @@ public class DemoTestLoanService {
 		System.out.println("\nIn test Unlock LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		String accountId = NEW_LOAN_ACCOUNT_ID;
+		String accountId = LOAN_ACCOUNT_ID;
 		LoanTransaction transaction = loanService.unlockLoanAccount(accountId, "some unlock demo notes");
 
 		System.out.println("UnLocked account with ID " + accountId + " Transaction  " + transaction.getTransactionId()

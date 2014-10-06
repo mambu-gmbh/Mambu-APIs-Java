@@ -127,7 +127,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 						+ "]" + "}");
 
 		// verify
-		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/loans/", params, Method.POST,
+		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/loans", params, Method.POST,
 				ContentType.JSON);
 	}
 
@@ -144,6 +144,6 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 		// verify
 		Mockito.verify(executor).executeRequest(
 				"https://demo.mambutest.com/api/loans/8ad661123b36cfaf013b42c2e0f46dca/transactions", params,
-				Method.POST);
+				Method.POST, ContentType.WWW_FORM);
 	}
 }

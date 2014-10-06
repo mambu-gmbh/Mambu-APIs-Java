@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Built-By: miked
-Build-Jdk: 1.6.0_65
+Build-Jdk: 1.7.0_55
 Class-Path: /lib/httpclient-4.1.2.jar /lib/httpcore-4.1.2.jar /lib/com
  mons-logging-1.1.1.jar /lib/commons-codec-1.4.jar /lib/gson-1.7.1.jar
   /lib/commons-io-1.3.2.jar /lib/jdo-api-3.0.jar /lib/transaction-api-

@@ -224,6 +224,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		return response;
 
 	}
+
 	/***
 	 * Execute a GET request as per the interface specification
 	 * 
@@ -294,6 +295,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		return response;
 	}
+
 	/***
 	 * Execute a DELETE request as per the interface specification
 	 * 
@@ -353,6 +355,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		return response;
 	}
+
 	/**
 	 * Reads a stream into a String
 	 * 
@@ -442,29 +445,29 @@ public class RequestExecutorImpl implements RequestExecutor {
 			return jsonString;
 		}
 
-		// First compile the following string: "appKey":"appKeyValue",
-		// This formatted appKey string will be inserted after the very first "{" into the original json string
+		// First compile the following string: "{appKey":"appKeyValue",
+		// This formatted appKey string will be appended with the original json string (without the first '{')
 
-		final String appKeyString = "\"" + APPLICATION_KEY + "\":\"" + appKey + "\", ";
+		String appKeyString = "{\"" + APPLICATION_KEY + "\":\"" + appKey + "\",";
 
 		// Check if we have the string to insert into
 		if (jsonString == null || jsonString.length() == 0) {
 			// Nothing to insert into. Return just the appKey param (surrounded by the square brackets)
-			return "{" + appKeyString.replace(',', '}');
+			return appKeyString.replace(',', '}');
 		}
 
+		// We need input json string without the first '{'
+		String jsonStringToAdd = jsonString.substring(1);
+
 		// Create initial String Buffer large enough to hold the resulting two strings
-		int jsonLength = jsonString.length();
-		int appKeyLength = appKeyString.length();
+		StringBuffer jsonWithAppKey = new StringBuffer(jsonStringToAdd.length() + appKeyString.length());
 
-		StringBuffer jsonWithAppKey = new StringBuffer(jsonLength + appKeyLength + 16);
-		// Append the json string and then insert into it the appKey string after the first "{"
-		jsonWithAppKey.append(jsonString);
-
-		final int position = jsonWithAppKey.indexOf("{");
-		jsonWithAppKey.insert(position + 1, appKeyString);
+		// Append the appkey and the the json string
+		jsonWithAppKey.append(appKeyString);
+		jsonWithAppKey.append(jsonStringToAdd);
 
 		return jsonWithAppKey.toString();
+
 	}
 
 	/**
@@ -545,6 +548,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 
 	}
+
 	/**
 	 * Log Json string details. This is a helper method for modifying the original Json string to remove details that
 	 * are needed for logging (for example, encoded data when sending documents via Json)

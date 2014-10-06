@@ -6,13 +6,13 @@ package com.mambu.apisdk.services;
 import java.math.BigDecimal;
 import java.util.HashMap;
 
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.util.APIData;
-import com.mambu.apisdk.util.GsonUtils;
-import com.mambu.apisdk.util.RequestExecutor.Method;
+import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
+import com.mambu.apisdk.util.ApiDefinition.ApiType;
+import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.intelligence.shared.model.Intelligence.Indicator;
 
 /**
@@ -23,7 +23,9 @@ import com.mambu.intelligence.shared.model.Intelligence.Indicator;
  */
 public class IntelligenceService {
 
-	private MambuAPIService mambuAPIService;
+	private ServiceExecutor serviceExecutor;
+
+	private final static ApiDefinition getIndicator = new ApiDefinition(ApiType.GET_ENTITY, Indicator.class);
 
 	/***
 	 * Create a new intelligence service
@@ -33,7 +35,7 @@ public class IntelligenceService {
 	 */
 	@Inject
 	public IntelligenceService(MambuAPIService mambuAPIService) {
-		this.mambuAPIService = mambuAPIService;
+		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
 	/**
@@ -47,15 +49,17 @@ public class IntelligenceService {
 	 */
 	public BigDecimal getIndicator(Indicator indicator) throws MambuApiException {
 
-		// create the api call
-		String urlString = new String(mambuAPIService.createUrl(APIData.INDICATORS + "/" + indicator.toString()));
-		String jsonResponse = mambuAPIService.executeRequest(urlString, Method.GET);
+		if (indicator == null) {
+			throw new IllegalArgumentException("Indicator must not be null");
+		}
+		// IntelligenceService returns a map. Use COLLECTION: for the Indicator class ServiceHelper is set to map
+		// COLLECTION to a HashMap<String, String> type
+		getIndicator.setApiReturnFormat(ApiReturnFormat.COLLECTION);
+		// Execute
+		HashMap<String, String> result = serviceExecutor.execute(getIndicator, indicator.name());
 
-		HashMap<String, String> result = GsonUtils.createGson().fromJson(jsonResponse,
-				new TypeToken<HashMap<String, String>>() {
-				}.getType());
 		if (result != null) {
-			String resultString = result.get(indicator.toString());
+			String resultString = result.get(indicator.name());
 			return new BigDecimal(resultString);
 		} else {
 			return null;
