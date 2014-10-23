@@ -11,7 +11,7 @@ import com.mambu.apisdk.exception.MambuApiException;
 public interface RequestExecutor {
 
 	public enum Method {
-		GET, POST, PUT, DELETE
+		GET, POST, PATCH, DELETE
 	}
 
 	// Content Type. Currently supported either "x-www-form-urlencoded"

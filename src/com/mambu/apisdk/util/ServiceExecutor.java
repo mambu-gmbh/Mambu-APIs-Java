@@ -102,6 +102,8 @@ public class ServiceExecutor {
 	 *            API definition for the request
 	 * @param objectId
 	 *            api's object id (optional, must be null if not used)
+	 * @param relatedEntityId
+	 *            an id of the relatedEntity (optional, must be null if not used)
 	 * @param paramsMap
 	 *            map with API parameters
 	 * 
@@ -110,15 +112,16 @@ public class ServiceExecutor {
 	 * @throws MambuApiException
 	 */
 	@SuppressWarnings("unchecked")
-	public <R> R execute(ApiDefinition apiDefinition, String objectId, ParamsMap paramsMap) throws MambuApiException {
+	public <R> R execute(ApiDefinition apiDefinition, String objectId, String relatedEntityId, ParamsMap paramsMap)
+			throws MambuApiException {
 
 		if (apiDefinition == null) {
 			throw new IllegalArgumentException("ApiDefinition cannot be NULL");
 
 		}
 
-		// Create URL for this API request using specification in its apiDefintion
-		String apiUrlPath = getApiPath(apiDefinition, objectId);
+		// Create URL for this API request using specification in its apiDefintion and input IDs
+		String apiUrlPath = getApiPath(apiDefinition, objectId, relatedEntityId);
 
 		// Add full details parameter if required by apiDefintion specification
 		if (apiDefinition.getWithFullDetails()) {
@@ -163,6 +166,26 @@ public class ServiceExecutor {
 		}
 
 		return result;
+	}
+
+	/****
+	 * Convenience method to Execute API Request without relatedEntityId parameter
+	 * 
+	 * @param apiDefinition
+	 *            API definition for the request
+	 * @param objectId
+	 *            api's object id (optional, must be null if not used)
+	 * @param paramsMap
+	 *            map with API parameters
+	 * 
+	 * @return object result object, which will be an API specific object or a list of objects
+	 * 
+	 * @throws MambuApiException
+	 */
+
+	public <R> R execute(ApiDefinition apiDefinition, String objectId, ParamsMap paramsMap) throws MambuApiException {
+		String relatedEntityId = null;
+		return execute(apiDefinition, objectId, relatedEntityId, paramsMap);
 	}
 
 	/****
@@ -282,9 +305,10 @@ public class ServiceExecutor {
 	 *            Api Definition for the API request
 	 * @param objectId
 	 *            object ID for the API request. It's optional and can be null, if allowed by request's apiDefinition
-	 * 
+	 * @param relatedEntityId
+	 *            an id of the relatedEntity (optional, must be null if not used)
 	 */
-	private String getApiPath(ApiDefinition apiDefinition, String objectId) {
+	private String getApiPath(ApiDefinition apiDefinition, String objectId, String relatedEntityId) {
 		if (apiDefinition == null) {
 			throw new IllegalArgumentException("Api definition cannot be null");
 		}
@@ -305,6 +329,11 @@ public class ServiceExecutor {
 		String relatedEntity = apiDefinition.getRelatedEntity();
 		if (relatedEntity != null && relatedEntity.length() > 0) {
 			urlPath = urlPath + "/" + relatedEntity;
+			// Add related entity ID, if provided
+			if (relatedEntityId != null && relatedEntityId.length() > 0) {
+				// Add Related Entity Id
+				urlPath = urlPath + "/" + relatedEntityId;
+			}
 		}
 
 		// Use URL helper to return the final URL path string

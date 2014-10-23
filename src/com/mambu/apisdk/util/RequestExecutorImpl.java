@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -13,7 +14,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -21,6 +21,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -122,6 +123,9 @@ public class RequestExecutorImpl implements RequestExecutor {
 			case POST:
 				response = executePostRequest(urlString, params, contentTypeFormat);
 				break;
+			case PATCH:
+				response = executePatchRequest(urlString, params);
+				break;
 			case DELETE:
 				response = executeDeleteRequest(urlString, params);
 				break;
@@ -148,9 +152,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// Get properly formatted ContentType
 		final String contentType = getFormattedContentTypeString(contentTypeFormat);
 
-		String response = "";
-		Integer errorCode = null;
-
 		HttpParams httpParameters = new BasicHttpParams();
 		HttpClient httpClient = new DefaultHttpClient(httpParameters);
 		HttpPost httpPost = new HttpPost(urlString);
@@ -172,14 +173,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 				break;
 
 			case JSON:
-				// Parameter (json string) is expected as JSON_OBJECT parameter name
-				String jsonString = params.get(APIData.JSON_OBJECT);
-
-				// Add APPKEY to jsonString (see MBU-3892, implemented in 3.3 release)
-				jsonString = addAppKeyToJson(jsonString, params);
-
-				// Format jsonEntity
-				StringEntity jsonEntity = new StringEntity(jsonString, UTF8_charset);
+				// Make jsonEntity
+				StringEntity jsonEntity = makeJsonEntity(params);
 
 				httpPost.setEntity(jsonEntity);
 
@@ -190,36 +185,40 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// execute
 		HttpResponse httpResponse = httpClient.execute(httpPost);
 
-		// get status code
-		int status = httpResponse.getStatusLine().getStatusCode();
+		// Process response
+		String response = processResponse(httpResponse, urlString);
 
-		InputStream content = null;
-		HttpEntity entity = httpResponse.getEntity();
+		return response;
 
-		// if there is an entity - get content
-		if (entity != null) {
+	}
 
-			content = entity.getContent();
-			if (content != null) {
-				response = readStream(content);
-			}
-		}
+	/**
+	 * Executes a PATCH request as per the interface specification
+	 */
+	private String executePatchRequest(String urlString, ParamsMap params) throws MalformedURLException, IOException,
+			MambuApiException {
 
-		// Log Mambu response: success or error message
-		logApiResponse(status, response);
+		// PATCH request is using json ContentType
+		final String contentType = jsonContentType;
 
-		if (status != HttpURLConnection.HTTP_OK && status != HttpURLConnection.HTTP_CREATED) {
+		HttpParams httpParameters = new BasicHttpParams();
+		HttpClient httpClient = new DefaultHttpClient(httpParameters);
 
-			errorCode = status;
+		// HttpPatch is available since org.apache.httpcomponents v4.2
+		HttpPatch httpPatch = new HttpPatch(urlString);
+		httpPatch.setHeader("Content-Type", contentType);
+		httpPatch.setHeader("Authorization", "Basic " + encodedAuthorization);
 
-			// Log raising exception
-			if (LOGGER.isLoggable(Level.WARNING)) {
-				LOGGER.warning("Creating exception, error code=" + errorCode + " for url=" + urlString);
-			}
-			// pass to MambuApiException the content that goes with the error code
-			throw new MambuApiException(errorCode, response);
+		// Format jsonEntity
+		StringEntity jsonEntity = makeJsonEntity(params);
 
-		}
+		httpPatch.setEntity(jsonEntity);
+
+		// execute
+		HttpResponse httpResponse = httpClient.execute(httpPatch);
+
+		// Process response
+		String response = processResponse(httpResponse, urlString);
 
 		return response;
 
@@ -232,8 +231,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 */
 	private String executeGetRequest(String urlString, ParamsMap params) throws MalformedURLException, IOException,
 			MambuApiException {
-		String response = "";
-		Integer errorCode = null;
 
 		if (params != null && params.size() > 0) {
 			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
@@ -251,47 +248,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// execute
 		HttpResponse httpResponse = httpClient.execute(httpGet);
 
-		// get status
-		int status = httpResponse.getStatusLine().getStatusCode();
-		Header responseContentType = httpResponse.getFirstHeader("Content-Type");
-		String contentTypeStr = "";
-		if (responseContentType != null) {
-			contentTypeStr = responseContentType.getValue();
-			if (LOGGER.isLoggable(Level.INFO)) {
-				LOGGER.info("contentType in Response=" + contentTypeStr);
-			}
-		} else {
-			if (LOGGER.isLoggable(Level.INFO)) {
-				LOGGER.info("response is NULL, so no contentType");
-			}
-		}
-
-		InputStream content = null;
-		// Get the response Entity
-		HttpEntity entity = httpResponse.getEntity();
-
-		if (entity != null) {
-			content = entity.getContent();
-			if (content != null) {
-				response = readStream(content);
-			}
-		}
-
-		// Log Mambu response (we do not set content type for GET
-		logApiResponse(status, response);
-
-		// if status is not Ok - set error code
-		if (status != HttpURLConnection.HTTP_OK) {
-			errorCode = status;
-
-			// Log raising Mambu Exception
-			if (LOGGER.isLoggable(Level.WARNING)) {
-				LOGGER.warning("Creating Mambu exception for error code=" + errorCode + " for url=" + urlString);
-			}
-			// pass to MambuApiException the content that goes with the error code
-			throw new MambuApiException(errorCode, response);
-
-		}
+		// Process response
+		String response = processResponse(httpResponse, urlString);
 
 		return response;
 	}
@@ -306,8 +264,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 */
 	private String executeDeleteRequest(String urlString, ParamsMap params) throws MalformedURLException, IOException,
 			MambuApiException {
-		String response = "";
-		Integer errorCode = null;
 
 		if (params != null && params.size() > 0) {
 			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
@@ -323,10 +279,57 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// execute
 		HttpResponse httpResponse = httpClient.execute(httpDelete);
 
+		// Process response
+		String response = processResponse(httpResponse, urlString);
+
+		return response;
+	}
+
+	/**
+	 * Make StringEntity for HTTP requests from the JSON string supplied in the ParamsMap
+	 * 
+	 * @param params
+	 *            ParamsMap with JSON string
+	 */
+	private StringEntity makeJsonEntity(ParamsMap params) throws UnsupportedEncodingException {
+
+		if (params == null) {
+			throw new IllegalArgumentException("JSON requests require non NULL ParamsMap with JSON string");
+		}
+		// Parameter (json string) is expected as JSON_OBJECT parameter
+		String jsonString = params.get(APIData.JSON_OBJECT);
+
+		if (jsonString == null) {
+			throw new IllegalArgumentException("JSON string cannot be NULL");
+		}
+
+		// Add APPKEY to jsonString (see MBU-3892, implemented in 3.3 release)
+		jsonString = addAppKeyToJson(jsonString, params);
+
+		// Format jsonEntity
+		StringEntity jsonEntity = new StringEntity(jsonString, UTF8_charset);
+
+		return jsonEntity;
+
+	}
+
+	/**
+	 * Process and return the response to an HTTP request. Throw MambuApiException if request failed
+	 * 
+	 * @param httpResponse
+	 *            HTTP response
+	 * @param urlString
+	 *            URL string for the HTTP request
+	 * @return HTTP response string
+	 */
+	private String processResponse(HttpResponse httpResponse, String urlString) throws IOException, MambuApiException {
+
 		// get status
 		int status = httpResponse.getStatusLine().getStatusCode();
 
 		InputStream content = null;
+		String response = "";
+
 		// Get the response Entity
 		HttpEntity entity = httpResponse.getEntity();
 
@@ -340,20 +343,21 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// Log Mambu response
 		logApiResponse(status, response);
 
-		// if status is not Ok - set error code
-		if (status != HttpURLConnection.HTTP_OK) {
-			errorCode = status;
-
-			// Log raising exception
-			if (LOGGER.isLoggable(Level.WARNING)) {
-				LOGGER.warning("Creating exception, error code=" + errorCode + " for url=" + urlString);
-			}
-			// pass to MambuApiException the content that goes with the error code
-			throw new MambuApiException(errorCode, response);
-
+		// if status is Ok - return the response
+		if (status == HttpURLConnection.HTTP_OK || status == HttpURLConnection.HTTP_CREATED) {
+			return response;
 		}
 
-		return response;
+		// Set error code and throw Mambu Exception
+		Integer errorCode = status;
+
+		// Log raising exception
+		if (LOGGER.isLoggable(Level.WARNING)) {
+			LOGGER.warning("Creating exception, error code=" + errorCode + " for url=" + urlString);
+		}
+		// pass to MambuApiException the content that goes with the error code
+		throw new MambuApiException(errorCode, response);
+
 	}
 
 	/**

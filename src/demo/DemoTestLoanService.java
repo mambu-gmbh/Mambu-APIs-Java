@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mambu.accounts.shared.model.AccountHolderType;
+import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.LoanAccountExpanded;
@@ -105,6 +106,9 @@ public class DemoTestLoanService {
 			// Available since Mambu 3.6
 			testGetDocuments();
 
+			// Available since 3.8
+			testUpdateDeleteCustomFields();
+
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Loan Service");
 			System.out.println("Error code=" + e.getErrorCode());
@@ -185,7 +189,7 @@ public class DemoTestLoanService {
 		// GuarantyType.GUARANTOR
 		Guaranty guarantySecurity = new Guaranty(GuarantyType.GUARANTOR);
 		guarantySecurity.setAmount(new Money((double) 450.0));
-		guarantySecurity.setGuarantorKey("8ad661123b36cfaf013b42c9545abd23");
+		guarantySecurity.setGuarantorKey(demoClient.getEncodedKey());
 		guarantySecurity.setSavingsAccountKey("8ad661123b36cfaf013b42c954566dd1");
 		guarantees.add(guarantySecurity);
 
@@ -279,19 +283,15 @@ public class DemoTestLoanService {
 
 		String amount = "10000.00";
 		String accountId = NEW_LOAN_ACCOUNT_ID;
-		String disbursalDate = "2013-4-3";
+		String disbursalDate = "2014-10-3";
 		String firstRepaymentDate = null; // "2012-12-06";
-		String paymentMethod = "CASH";// CASH CHECK RECEIPT BANK_TRANSFER
-		String receiptNumber = "D_REC1123";
-		String bankNumber = "D_BAN_KNUMBER345";
-		String checkNumber = "D_CHECK9900";
-		String bankAccountNumber = "D_BANK_ACCT4567";
-		String bankRoutingNumber = "D_BNK_ROUT_2344";
 		String notes = "Disbursed loan for testing";
 
+		// Make demo transactionDetails with the valid channel fields
+		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
+
 		LoanTransaction transaction = loanService.disburseLoanAccount(accountId, amount, disbursalDate,
-				firstRepaymentDate, paymentMethod, bankNumber, receiptNumber, checkNumber, bankAccountNumber,
-				bankRoutingNumber, notes);
+				firstRepaymentDate, notes, transactionDetails);
 
 		System.out.println("\nLoan for Disbursement with Details: Transaction Id=" + transaction.getTransactionId()
 				+ " amount=" + transaction.getAmount().toString());
@@ -319,16 +319,13 @@ public class DemoTestLoanService {
 		String amount = "93.55";
 		String date = null; // "2012-11-23";
 		String notes = "repayment notes from API";
-		String paymentMethod = "CASH";// CHECK,
-		String receiptNumber = "REC1123";
-		String bankNumber = "BAN_KNUMBER345";
-		String checkNumber = "CHECK9900";
-		String bankAccountNumber = "BANK_ACCT4567";
-		String bankRoutingNumber = "BNK_ROUT_2344";
 
 		String accountId = LOAN_ACCOUNT_ID;
-		LoanTransaction transaction = loanService.makeLoanRepayment(accountId, amount, date, notes, paymentMethod,
-				receiptNumber, bankNumber, checkNumber, bankAccountNumber, bankRoutingNumber);
+
+		// Make demo transactionDetails with the valid channel fields
+		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
+
+		LoanTransaction transaction = loanService.makeLoanRepayment(accountId, amount, date, notes, transactionDetails);
 
 		System.out.println("repayed loan account with the " + accountId + " id response="
 				+ transaction.getTransactionId() + "   for amount=" + transaction.getAmount());
@@ -487,8 +484,8 @@ public class DemoTestLoanService {
 
 		if (products.size() > 0) {
 			for (LoanProduct product : products) {
-				System.out.println("Product=" + product.getName() + "  Id=" + product.getId() + " Loan Type="
-						+ product.getLoanType().name());
+				System.out.println("Product=" + product.getName() + "  Id=" + product.getId() + "  Key="
+						+ product.getEncodedKey() + " Loan Type=" + product.getLoanType().name());
 			}
 		}
 
@@ -521,5 +518,80 @@ public class DemoTestLoanService {
 		System.out.println("Documents returned for a Loan Account with ID=" + accountId);
 		DemoTestDocumentsService.logDocuments(documents);
 
+	}
+
+	// Update Custom Field values for the Loan Account and delete the first available custom field
+	public static void testUpdateDeleteCustomFields() throws MambuApiException {
+		System.out.println("\nIn testUpdateDeleteCustomFields");
+
+		List<CustomFieldValue> customFieldValues;
+		System.out.println("\nUpdating demo Loan Account custom fields...");
+		customFieldValues = updateCustomFields();
+
+		System.out.println("\nDeleting first custom field for a demo Loan Account ...");
+		deleteCustomField(customFieldValues);
+
+	}
+
+	// Private helper to Update all custom fields for a Loan Account
+	private static List<CustomFieldValue> updateCustomFields() throws MambuApiException {
+
+		Class<?> entityClass = LoanAccount.class;
+		String entityName = entityClass.getSimpleName();
+		String entityId = demoLoanAccount.getId();
+
+		// Get Current custom field values first for a Demo account
+		List<CustomFieldValue> customFieldValues = demoLoanAccount.getCustomFieldValues();
+
+		if (customFieldValues == null || customFieldValues.size() == 0) {
+			System.out.println("WARNING: No Custom fields defined for demo " + entityName + " with ID=" + entityId
+					+ ". Nothing to update");
+			return null;
+		}
+		// Update custom field values
+		LoansService loanService = MambuAPIFactory.getLoanService();
+		for (CustomFieldValue value : customFieldValues) {
+
+			String fieldId = value.getCustomFieldId(); // return null for Group, Branch, Centre?
+			// Create valid new value for a custom field
+			String newValue = DemoUtil.makeNewCustomFieldValue(value);
+
+			// Update Custom Field value
+			boolean updateStatus;
+			System.out.println("\nUpdating Custom Field with ID=" + fieldId + " for " + entityName + " with ID="
+					+ entityId);
+
+			updateStatus = loanService.updateLoanAccountCustomField(entityId, fieldId, newValue);
+
+			String statusMessage = (updateStatus) ? "Success" : "Failure";
+			System.out.println(statusMessage + " updating Custom Field, ID=" + fieldId + " for demo " + entityName
+					+ " with ID=" + entityId + " New value=" + newValue);
+
+		}
+
+		return customFieldValues;
+	}
+
+	// Private helper to Delete the first custom field for a Loan Account
+	private static void deleteCustomField(List<CustomFieldValue> customFieldValues) throws MambuApiException {
+
+		Class<?> entityClass = LoanAccount.class;
+		String entityName = entityClass.getSimpleName();
+		String entityId = demoLoanAccount.getId();
+
+		if (customFieldValues == null || customFieldValues.size() == 0) {
+			System.out.println("WARNING: No Custom fields defined for demo " + entityName + " with ID=" + entityId
+					+ ". Nothing to delete");
+			return;
+		}
+		// Delete the first field on the list
+		String customFieldId = customFieldValues.get(0).getCustomField().getId();
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+		boolean deleteStatus = loanService.deleteLoanAccountCustomField(entityId, customFieldId);
+
+		String statusMessage = (deleteStatus) ? "Success" : "Failure";
+		System.out.println(statusMessage + " deleting Custom Field, ID=" + customFieldId + " for demo " + entityName
+				+ " with ID=" + entityId);
 	}
 }

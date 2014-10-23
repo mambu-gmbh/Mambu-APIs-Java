@@ -14,9 +14,11 @@ import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.ServiceExecutor;
+import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
+import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 
@@ -48,6 +50,18 @@ public class OrganizationService {
 
 	private final static ApiDefinition getTransactionChannels = new ApiDefinition(ApiType.GET_LIST,
 			TransactionChannel.class);
+	// Update Custom Field value for a Branch
+	private final static ApiDefinition updateBranchCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
+			Branch.class, CustomFieldValue.class);
+	// Delete Custom Field for a Branch
+	private final static ApiDefinition deleteBranchCustomField = new ApiDefinition(ApiType.DELETE__OWNED_ENTITY,
+			Branch.class, CustomFieldValue.class);
+	// Update Custom Field value for a Centre
+	private final static ApiDefinition updateCentreCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
+			Centre.class, CustomFieldValue.class);
+	// Delete Custom Field for a Centre
+	private final static ApiDefinition deleteCentreCustomField = new ApiDefinition(ApiType.DELETE__OWNED_ENTITY,
+			Centre.class, CustomFieldValue.class);
 
 	/***
 	 * Create a new organization service
@@ -199,5 +213,85 @@ public class OrganizationService {
 	public List<TransactionChannel> getTransactionChannels() throws MambuApiException {
 		ParamsMap params = null;
 		return serviceExecutor.execute(getTransactionChannels, params);
+	}
+
+	/***
+	 * Update custom field value for a Branch. This method allows to set new value for a specific custom field
+	 * 
+	 * @param branchId
+	 *            the encoded key or id of the Mambu Branch
+	 * @param customFieldId
+	 *            the encoded key or id of the custom field to be updated
+	 * @param fieldValue
+	 *            the new value of the custom field
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean updateBranchCustomField(String branchId, String customFieldId, String fieldValue)
+			throws MambuApiException {
+		// Execute request for PATCH API to update custom field value for a Branch. See MBU-6661
+		// e.g. PATCH "{ "value": "10" }" /host/api/branches/branchId/custominformation/customFieldId
+
+		// Make ParamsMap with JSON request for Update API
+		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(branchId, customFieldId, fieldValue);
+		return serviceExecutor.execute(updateBranchCustomField, branchId, customFieldId, params);
+	}
+
+	/***
+	 * Delete custom field for a Branch
+	 * 
+	 * @param branchId
+	 *            the encoded key or id of the Mambu Branch
+	 * @param customFieldId
+	 *            the encoded key or id of the custom field to be deleted
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean deleteBranchCustomField(String branchId, String customFieldId) throws MambuApiException {
+		// Execute request for DELETE API to delete custom field value for a Branch. See MBU-6661
+		// e.g. DELETE /host/api/branches/branchId/custominformation/customFieldId
+
+		return serviceExecutor.execute(deleteBranchCustomField, branchId, customFieldId, null);
+
+	}
+
+	/***
+	 * Update custom field value for a Centre. This method allows to set new value for a specific custom field
+	 * 
+	 * @param centreId
+	 *            the encoded key or id of the Mambu Centre for which the custom field is updated
+	 * @param customFieldId
+	 *            the encoded key or id of the custom field to be updated
+	 * @param fieldValue
+	 *            the new value of the custom field
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean updateCentreCustomField(String centreId, String customFieldId, String fieldValue)
+			throws MambuApiException {
+		// Execute request for PATCH API to update custom field value for a Centre. See MBU-6661
+		// e.g. PATCH "{ "value": "10" }" /host/api/centres/centreId/custominformation/customFieldId
+
+		// Make ParamsMap with JSON request for Update API
+		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(centreId, customFieldId, fieldValue);
+		return serviceExecutor.execute(updateCentreCustomField, centreId, customFieldId, params);
+
+	}
+
+	/***
+	 * Delete custom field for a Centre
+	 * 
+	 * @param centreId
+	 *            the encoded key or id of the Mambu Centre
+	 * @param customFieldId
+	 *            the encoded key or id of the custom field to be deleted
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean deleteCentreCustomField(String centreId, String customFieldId) throws MambuApiException {
+		// Execute request for DELETE API to delete custom field for a Centre. See MBU-6661
+		// e.g. DELETE /host/api/centres/centreId/custominformation/customFieldId
+		return serviceExecutor.execute(deleteCentreCustomField, centreId, customFieldId, null);
+
 	}
 }

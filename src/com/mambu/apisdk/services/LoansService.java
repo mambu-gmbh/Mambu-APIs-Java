@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.LoanAccountExpanded;
@@ -18,6 +19,7 @@ import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
+import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.docs.shared.model.Document;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
@@ -105,6 +107,12 @@ public class LoansService {
 	private final static ApiDefinition getProduct = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LoanProduct.class);
 	// Get Lists of Loan Products
 	private final static ApiDefinition getProductsList = new ApiDefinition(ApiType.GET_LIST, LoanProduct.class);
+	// Update Custom Field value for a Loan Account
+	private final static ApiDefinition updateAccountCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
+			LoanAccount.class, CustomFieldValue.class);
+	// Delete Custom Field for a Loan Account
+	private final static ApiDefinition deleteAccountCustomField = new ApiDefinition(ApiType.DELETE__OWNED_ENTITY,
+			LoanAccount.class, CustomFieldValue.class);
 
 	/***
 	 * Create a new loan service
@@ -279,10 +287,12 @@ public class LoansService {
 		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
 	}
 
-	// A disbursement transaction, returns Transaction object
 	/***
 	 * 
-	 * Disburse a loan account with a given disbursal date and some extra details
+	 * @deprecated As of release 3.8, replaced by
+	 *             {@link #disburseLoanAccount(String, String, String, String, String, TransactionDetails)}
+	 * 
+	 *             Disburse a loan account with a given disbursal date and some extra details.
 	 * 
 	 * @param accountId
 	 * @param disbursalDate
@@ -300,6 +310,7 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public LoanTransaction disburseLoanAccount(String accountId, String amount, String disbursalDate,
 			String firstRepaymentDate, String paymentMethod, String bankNumber, String receiptNumber,
 			String checkNumber, String bankAccountNumber, String bankRoutingNumber, String notes)
@@ -321,6 +332,43 @@ public class LoansService {
 		paramsMap.addParam(BANK_ACCOUNT_NUMBER, bankAccountNumber);
 		paramsMap.addParam(BANK_ROUTING_NUMBER, bankRoutingNumber);
 		paramsMap.addParam(NOTES, notes);
+
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
+
+	}
+
+	/***
+	 * 
+	 * Disburse a loan account with a given disbursal date and some extra transaction details
+	 * 
+	 * @param accountId
+	 *            account ID
+	 * @param amount
+	 *            disbursement amount
+	 * @param disbursalDate
+	 *            disbursement date
+	 * @param firstRepaymentDate
+	 *            first repayment date
+	 * @param notes
+	 *            transaction notes
+	 * @param transactionDetails
+	 *            transaction details, including transaction channel and channel fields
+	 * 
+	 * @return Loan Transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public LoanTransaction disburseLoanAccount(String accountId, String amount, String disbursalDate,
+			String firstRepaymentDate, String notes, TransactionDetails transactionDetails) throws MambuApiException {
+
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, TYPE_DISBURSMENT);
+
+		// Add transactionDetails to the paramsMap
+		ServiceHelper.addAccountTransactionParams(paramsMap, amount, disbursalDate, notes, transactionDetails);
+
+		// Add also firstRepaymentDate
+		paramsMap.addParam(FIRST_REPAYMENT_DATE, firstRepaymentDate);
 
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 
@@ -441,8 +489,11 @@ public class LoansService {
 	}
 
 	/****
-	 * Repayments on a loan account if the user has permission to repay loans, the maximum exposure is not exceeded for
-	 * the client, the account was in Approved state
+	 * @deprecated As of release 3.8, replaced by
+	 *             {@link #makeLoanRepayment(String, String, String, String, TransactionDetails)}
+	 * 
+	 *             Repayments on a loan account if the user has permission to repay loans, the maximum exposure is not
+	 *             exceeded for the client, the account was in Approved state.
 	 * 
 	 * @param accountId
 	 * @param amount
@@ -459,6 +510,7 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public LoanTransaction makeLoanRepayment(String accountId, String amount, String date, String notes,
 			String paymentMethod, String receiptNumber, String bankNumber, String checkNumber,
 			String bankAccountNumber, String bankRoutingNumber) throws MambuApiException {
@@ -475,6 +527,36 @@ public class LoansService {
 		paramsMap.addParam(BANK_ACCOUNT_NUMBER, bankAccountNumber);
 		paramsMap.addParam(BANK_ROUTING_NUMBER, bankRoutingNumber);
 		paramsMap.addParam(NOTES, notes);
+
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
+	}
+
+	/****
+	 * Make Repayment for a loan account
+	 * 
+	 * @param accountId
+	 *            account ID
+	 * @param amount
+	 *            transaction amount
+	 * @param date
+	 *            transaction date
+	 * @param notes
+	 *            transaction notes
+	 * @param transactionDetails
+	 *            transaction details, including transaction channel and channel fields
+	 * 
+	 * @return LoanTransaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public LoanTransaction makeLoanRepayment(String accountId, String amount, String date, String notes,
+			TransactionDetails transactionDetails) throws MambuApiException {
+
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, TYPE_REPAYMENT);
+
+		// Add transactionDetails to the paramsMap
+		ServiceHelper.addAccountTransactionParams(paramsMap, amount, date, notes, transactionDetails);
 
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
@@ -626,6 +708,47 @@ public class LoansService {
 	 */
 	public List<Document> getLoanAccountDocuments(String accountId) throws MambuApiException {
 		return serviceExecutor.execute(getAccountDocuments, accountId);
+	}
+
+	/***
+	 * Update custom field value for a Loan Account. This method allows to set new value for a specific custom field
+	 * 
+	 * @param accountId
+	 *            the encoded key or id of the Mambu Loan Account for which the custom field is updated
+	 * @param customFieldId
+	 *            the encoded key or id of the custom field to be updated
+	 * @param fieldValue
+	 *            the new value of the custom field
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean updateLoanAccountCustomField(String accountId, String customFieldId, String fieldValue)
+			throws MambuApiException {
+		// Execute request for PATCH API to update custom field value for a Loan Account. See MBU-6661
+		// e.g. PATCH "{ "value": "10" }" /host/api/loans/accointId/custominformation/customFieldId
+
+		// Make ParamsMap with JSON request for Update API
+		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(accountId, customFieldId, fieldValue);
+		return serviceExecutor.execute(updateAccountCustomField, accountId, customFieldId, params);
+
+	}
+
+	/***
+	 * Delete custom field for a Loan Account
+	 * 
+	 * @param accountId
+	 *            the encoded key or id of the Mambu Loan Account
+	 * @param customFieldId
+	 *            the encoded key or id of the custom field to be deleted
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean deleteLoanAccountCustomField(String accountId, String customFieldId) throws MambuApiException {
+		// Execute request for DELETE API to delete custom field for a Loan Account. See MBU-6661
+		// e.g. DELETE /host/api/loans/accointId/custominformation/customFieldId
+
+		return serviceExecutor.execute(deleteAccountCustomField, accountId, customFieldId, null);
+
 	}
 
 }

@@ -6,6 +6,7 @@ package com.mambu.apisdk.services;
 import java.util.List;
 
 import com.google.inject.Inject;
+import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -18,6 +19,7 @@ import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
+import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.docs.shared.model.Document;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
@@ -109,6 +111,12 @@ public class SavingsService {
 	private final static ApiDefinition getProduct = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, SavingsProduct.class);
 	// Get Lists of Loan Products
 	private final static ApiDefinition getProducts = new ApiDefinition(ApiType.GET_LIST, SavingsProduct.class);
+	// Update Custom Field value for a Savings Account
+	private final static ApiDefinition updateAccountCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
+			SavingsAccount.class, CustomFieldValue.class);
+	// Delete Custom Field for a Savings Account
+	private final static ApiDefinition deleteAccountCustomField = new ApiDefinition(ApiType.DELETE__OWNED_ENTITY,
+			SavingsAccount.class, CustomFieldValue.class);
 
 	/***
 	 * Create a new savings service
@@ -257,35 +265,11 @@ public class SavingsService {
 		return serviceExecutor.execute(getAllSavingsTransactions, params);
 	}
 
-	// helper method
-	private void addPaymentMethodAccountDetails(ParamsMap paramsMap, String amount, String date, String notes,
-			String paymentMethod, String receiptNumber, String bankNumber, String checkNumber,
-			String bankAccountNumber, String bankRoutingNumber) {
-
-		paramsMap.addParam(AMOUNT, amount);
-		if (date != null)
-			paramsMap.addParam(DATE, date);
-		if (paymentMethod != null) {
-			paramsMap.addParam(PAYMENT_METHOD, paymentMethod);
-			if (receiptNumber != null)
-				paramsMap.addParam(RECEIPT_NUMBER, receiptNumber);
-			if (bankNumber != null)
-				paramsMap.addParam(BANK_NUMBER, bankNumber);
-			if (checkNumber != null)
-				paramsMap.addParam(CHECK_NUMBER, checkNumber);
-			if (bankAccountNumber != null)
-				paramsMap.addParam(BANK_ACCOUNT_NUMBER, bankAccountNumber);
-			if (bankRoutingNumber != null)
-				paramsMap.addParam(BANK_ROUTING_NUMBER, bankRoutingNumber);
-		}
-
-		paramsMap.addParam(NOTES, notes);
-
-		return;
-	}
-
 	/****
-	 * Make a withdrawal from an account.
+	 * @deprecated As of release 3.8, replaced by
+	 *             {@link #makeWithdrawal(String, String, String, String, TransactionDetails)}
+	 * 
+	 *             Make a withdrawal from an account.
 	 * 
 	 * @param accountId
 	 *            the id of the account the amount to withdraw notes
@@ -303,7 +287,7 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-
+	@Deprecated
 	public SavingsTransaction makeWithdrawal(String accountId, String amount, String date, String notes,
 			String paymentMethod, String receiptNumber, String bankNumber, String checkNumber,
 			String bankAccountNumber, String bankRoutingNumber) throws MambuApiException {
@@ -319,7 +303,42 @@ public class SavingsService {
 	}
 
 	/****
-	 * Make a deposit to an account.
+	 * Make a withdrawal from an account.
+	 * 
+	 * @param accountId
+	 *            account ID
+	 * @param amount
+	 *            transaction amount
+	 * @param date
+	 *            transaction date
+	 * @param notes
+	 *            transaction notes
+	 * @param transactionDetails
+	 *            transaction details, including transaction channel and channel fields
+	 * 
+	 * @return Savings Transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public SavingsTransaction makeWithdrawal(String accountId, String amount, String date, String notes,
+			TransactionDetails transactionDetails) throws MambuApiException {
+
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, TYPE_WITHDRAWAL);
+
+		// Add transactionDetails to the paramsMap
+		ServiceHelper.addAccountTransactionParams(paramsMap, amount, date, notes, transactionDetails);
+
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
+
+	}
+
+	/****
+	 * 
+	 * @deprecated As of release 3.8, replaced by
+	 *             {@link #makeDeposit(String, String, String, String, TransactionDetails)}
+	 * 
+	 *             Make a deposit to an account.
 	 * 
 	 * @param accountId
 	 *            the id of the account the amount to deposit notes
@@ -337,7 +356,7 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-
+	@Deprecated
 	public SavingsTransaction makeDeposit(String accountId, String amount, String date, String notes,
 			String paymentMethod, String receiptNumber, String bankNumber, String checkNumber,
 			String bankAccountNumber, String bankRoutingNumber) throws MambuApiException {
@@ -347,6 +366,36 @@ public class SavingsService {
 
 		addPaymentMethodAccountDetails(paramsMap, amount, date, notes, paymentMethod, receiptNumber, bankNumber,
 				checkNumber, bankAccountNumber, bankRoutingNumber);
+
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
+	}
+
+	/****
+	 * Make a deposit to an account.
+	 * 
+	 * @param accountId
+	 *            account ID
+	 * @param amount
+	 *            transaction amount
+	 * @param date
+	 *            transaction date
+	 * @param notes
+	 *            transaction notes
+	 * @param transactionDetails
+	 *            transaction details, including transaction channel and channel fields
+	 * 
+	 * @return Savings Transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public SavingsTransaction makeDeposit(String accountId, String amount, String date, String notes,
+			TransactionDetails transactionDetails) throws MambuApiException {
+
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, TYPE_DEPOSIT);
+
+		// Add transactionDetails to the paramsMap
+		ServiceHelper.addAccountTransactionParams(paramsMap, amount, date, notes, transactionDetails);
 
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
@@ -657,5 +706,74 @@ public class SavingsService {
 	 */
 	public List<Document> getSavingsAccountDocuments(String accountId) throws MambuApiException {
 		return serviceExecutor.execute(getAccountDocuments, accountId);
+	}
+
+	/***
+	 * Update custom field value for a Savings Account. This method allows to set new value for a specific custom field
+	 * 
+	 * @param accountId
+	 *            the encoded key or id of the Mambu Savings Account for which the custom field is updated
+	 * @param customFieldId
+	 *            the encoded key or id of the custom field to be updated
+	 * @param fieldValue
+	 *            the new value of the custom field
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean updateSavingsAccountCustomField(String accountId, String customFieldId, String fieldValue)
+			throws MambuApiException {
+		// Execute request for PATCH API to update custom field value for a Savings Account. See MBU-6661
+		// e.g. PATCH "{ "value": "10" }" /host/api/savings/accointId/custominformation/customFieldId
+
+		// Make ParamsMap with JSON request for Update API
+		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(accountId, customFieldId, fieldValue);
+		return serviceExecutor.execute(updateAccountCustomField, accountId, customFieldId, params);
+
+	}
+
+	/***
+	 * Delete custom field for a Savings Account
+	 * 
+	 * @param accountId
+	 *            the encoded key or id of the Mambu Savings Account
+	 * @param customFieldId
+	 *            the encoded key or id of the custom field to be deleted
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean deleteSavingsAccountCustomField(String accountId, String customFieldId) throws MambuApiException {
+		// Execute request for DELETE API to delete custom field for a Savings Account
+		// e.g. DELETE /host/api/savings/accointId/custominformation/customFieldId
+
+		return serviceExecutor.execute(deleteAccountCustomField, accountId, customFieldId, null);
+
+	}
+
+	// private helper method
+	@Deprecated
+	private void addPaymentMethodAccountDetails(ParamsMap paramsMap, String amount, String date, String notes,
+			String paymentMethod, String receiptNumber, String bankNumber, String checkNumber,
+			String bankAccountNumber, String bankRoutingNumber) {
+
+		paramsMap.addParam(AMOUNT, amount);
+		if (date != null)
+			paramsMap.addParam(DATE, date);
+		if (paymentMethod != null) {
+			paramsMap.addParam(PAYMENT_METHOD, paymentMethod);
+			if (receiptNumber != null)
+				paramsMap.addParam(RECEIPT_NUMBER, receiptNumber);
+			if (bankNumber != null)
+				paramsMap.addParam(BANK_NUMBER, bankNumber);
+			if (checkNumber != null)
+				paramsMap.addParam(CHECK_NUMBER, checkNumber);
+			if (bankAccountNumber != null)
+				paramsMap.addParam(BANK_ACCOUNT_NUMBER, bankAccountNumber);
+			if (bankRoutingNumber != null)
+				paramsMap.addParam(BANK_ROUTING_NUMBER, bankRoutingNumber);
+		}
+
+		paramsMap.addParam(NOTES, notes);
+
+		return;
 	}
 }

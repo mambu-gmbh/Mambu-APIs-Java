@@ -76,7 +76,11 @@ public class RepaymentsService {
 	}
 
 	/***
-	 * Get a loan account Repayments between FromDate and ToDate with default pagination parameters
+	 * 
+	 * @deprecated As of release 3.8, replaced by {@link #getRapaymentsDueFromTo(String, String, String, String)}
+	 * 
+	 *             Get a loan account Repayments between FromDate and ToDate with default pagination parameters
+	 * 
 	 * 
 	 * @param dueFomString
 	 * @param dueToString
@@ -85,6 +89,7 @@ public class RepaymentsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<Repayment> getRapaymentsDueFromTo(String dueFromString, String dueToString) throws MambuApiException {
 		String offset = null;
 		String limit = null;
@@ -115,7 +120,9 @@ public class RepaymentsService {
 	}
 
 	/***
-	 * Get Repayments by Loan account id with default pagination parameters
+	 * @deprecated As of release 3.8, replaced by {@link #getLoanAccountRepayments(String, String, String)}
+	 * 
+	 *             Get Repayments by Loan account id with default pagination parameters
 	 * 
 	 * @param accountId
 	 *            the id of the loan account
@@ -124,6 +131,7 @@ public class RepaymentsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<Repayment> getLoanAccountRepayments(String accountId) throws MambuApiException {
 		String offset = null;
 		String limit = null;
