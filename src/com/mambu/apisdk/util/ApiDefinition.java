@@ -45,9 +45,10 @@ import com.mambu.tasks.shared.model.Task;
  * URL path structure, the HTTP method and content type, and the specification for the expected Mambu response
  * 
  * For the URL path part of the specification, the API definition assumes the URL path to be build in the following
- * format: endpoint[/objectId][/relatedEntity][//[relatedEntityID]], with all parts , except the endpoint, being
+ * format: endpoint[/objectId][/relatedEntity][/[relatedEntityID]], with all parts , except the endpoint, being
  * optional. Examples: /loans, /savings/1234, clients/456/loans, /loans/4556/repayments, /groups/998878,
- * /loans/9876/transactions
+ * /loans/9876/transactions, /clients/645/custominformation/field_id_777
+ * 
  * 
  * For the HTTP part, the ApiDefinition allows users to specify such HTTP parameters as method (GET, POST, DELETE) and
  * the content type
@@ -115,7 +116,7 @@ public class ApiDefinition {
 				ApiReturnFormat.BOOLEAN),
 		// Delete and an entity owned by another entity. Example, delete custom field for a client:
 		// DELETE clients/client_id/custominformation/custom_field_id
-		DELETE__OWNED_ENTITY(Method.DELETE, ContentType.WWW_FORM, withObjectId, noFullDetails, hasRelatedEntityPart,
+		DELETE_OWNED_ENTITY(Method.DELETE, ContentType.WWW_FORM, withObjectId, noFullDetails, hasRelatedEntityPart,
 				ApiReturnFormat.BOOLEAN),
 		// Create Entity JSON request. Example: POST client/ (contentType=JSON)
 		CREATE_JSON_ENTITY(Method.POST, ContentType.JSON, noObjectId, noFullDetails, noRelatedEntityPart,
@@ -295,7 +296,7 @@ public class ApiDefinition {
 		case GET_RELATED_ENTITIES:
 		case POST_OWNED_ENTITY:
 		case PATCH_OWNED_ENTITY:
-		case DELETE__OWNED_ENTITY:
+		case DELETE_OWNED_ENTITY:
 			// For these API types the resultClass defines the 'relatedEntity' part. E.g. LOANS part in
 			// /clients/1233/LOANS or transactions part: /loans/123/transactions. These types return the result class
 			if (resultClass == null) {

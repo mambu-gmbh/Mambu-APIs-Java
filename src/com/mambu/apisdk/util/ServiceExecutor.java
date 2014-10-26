@@ -327,7 +327,7 @@ public class ServiceExecutor {
 		// If a 'relatedEntity' part of the request was provided - add it too.
 		// For example, adding 'transaction' to make "/loans/12233/transaction"
 		String relatedEntity = apiDefinition.getRelatedEntity();
-		if (relatedEntity != null && relatedEntity.length() > 0) {
+		if (relatedEntity != null && !relatedEntity.isEmpty()) {
 			urlPath = urlPath + "/" + relatedEntity;
 			// Add related entity ID, if provided
 			if (relatedEntityId != null && relatedEntityId.length() > 0) {

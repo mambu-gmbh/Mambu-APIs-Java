@@ -359,7 +359,6 @@ public class DemoUtil {
 			return null;
 		}
 		int randomIndex = (int) Math.round(Math.random() * (transactionChannels.size() - 1));
-		randomIndex = 1;
 		return transactionChannels.get(randomIndex);
 	}
 

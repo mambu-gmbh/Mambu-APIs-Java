@@ -510,13 +510,14 @@ public class RequestExecutorImpl implements RequestExecutor {
 			break;
 
 		case POST:
+		case PATCH:
 			switch (contentType) {
 			case WWW_FORM:
 				// Log URL and params as separate items
 				logDetails = logDetails + urlString;
 				if (params != null) {
 					String postParams = params.getURLString();
-					logDetails = logDetails + "\nPOST Params=" + postParams;
+					logDetails = logDetails + "\nParams=" + postParams;
 				}
 				break;
 			case JSON:

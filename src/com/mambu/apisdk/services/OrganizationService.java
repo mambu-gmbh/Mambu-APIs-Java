@@ -54,13 +54,13 @@ public class OrganizationService {
 	private final static ApiDefinition updateBranchCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
 			Branch.class, CustomFieldValue.class);
 	// Delete Custom Field for a Branch
-	private final static ApiDefinition deleteBranchCustomField = new ApiDefinition(ApiType.DELETE__OWNED_ENTITY,
+	private final static ApiDefinition deleteBranchCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
 			Branch.class, CustomFieldValue.class);
 	// Update Custom Field value for a Centre
 	private final static ApiDefinition updateCentreCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
 			Centre.class, CustomFieldValue.class);
 	// Delete Custom Field for a Centre
-	private final static ApiDefinition deleteCentreCustomField = new ApiDefinition(ApiType.DELETE__OWNED_ENTITY,
+	private final static ApiDefinition deleteCentreCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
 			Centre.class, CustomFieldValue.class);
 
 	/***
@@ -233,7 +233,7 @@ public class OrganizationService {
 		// e.g. PATCH "{ "value": "10" }" /host/api/branches/branchId/custominformation/customFieldId
 
 		// Make ParamsMap with JSON request for Update API
-		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(branchId, customFieldId, fieldValue);
+		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
 		return serviceExecutor.execute(updateBranchCustomField, branchId, customFieldId, params);
 	}
 
@@ -273,7 +273,7 @@ public class OrganizationService {
 		// e.g. PATCH "{ "value": "10" }" /host/api/centres/centreId/custominformation/customFieldId
 
 		// Make ParamsMap with JSON request for Update API
-		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(centreId, customFieldId, fieldValue);
+		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
 		return serviceExecutor.execute(updateCentreCustomField, centreId, customFieldId, params);
 
 	}

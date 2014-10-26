@@ -43,7 +43,7 @@ public class UsersService {
 	private final static ApiDefinition updateUserCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
 			User.class, CustomFieldValue.class);
 	// Delete Custom Field for a User
-	private final static ApiDefinition deleteUserCustomField = new ApiDefinition(ApiType.DELETE__OWNED_ENTITY,
+	private final static ApiDefinition deleteUserCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
 			User.class, CustomFieldValue.class);
 
 	/***
@@ -230,7 +230,7 @@ public class UsersService {
 		// e.g. PATCH "{ "value": "10" }" /host/api/users/userName/custominformation/customFieldId
 
 		// Make ParamsMap with JSON request for Update API
-		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(userName, customFieldId, fieldValue);
+		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
 		return serviceExecutor.execute(updateUserCustomField, userName, customFieldId, params);
 
 	}

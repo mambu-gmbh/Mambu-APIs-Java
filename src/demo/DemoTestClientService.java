@@ -385,8 +385,8 @@ public class DemoTestClientService {
 		System.out.println("\nUpdating demo Client custom fields...");
 		customFieldValues = updateCustomFields(Client.class);
 
-		// System.out.println("\nDeleting first custom field for a demo Client...");
-		// deleteCustomField(Client.class, customFieldValues);
+		System.out.println("\nDeleting first custom field for a demo Client...");
+		deleteCustomField(Client.class, customFieldValues);
 
 		System.out.println("\n\nUpdating demo Group custom fields...");
 		customFieldValues = updateCustomFields(Group.class);

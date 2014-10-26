@@ -111,7 +111,7 @@ public class LoansService {
 	private final static ApiDefinition updateAccountCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
 			LoanAccount.class, CustomFieldValue.class);
 	// Delete Custom Field for a Loan Account
-	private final static ApiDefinition deleteAccountCustomField = new ApiDefinition(ApiType.DELETE__OWNED_ENTITY,
+	private final static ApiDefinition deleteAccountCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
 			LoanAccount.class, CustomFieldValue.class);
 
 	/***
@@ -728,7 +728,7 @@ public class LoansService {
 		// e.g. PATCH "{ "value": "10" }" /host/api/loans/accointId/custominformation/customFieldId
 
 		// Make ParamsMap with JSON request for Update API
-		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(accountId, customFieldId, fieldValue);
+		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
 		return serviceExecutor.execute(updateAccountCustomField, accountId, customFieldId, params);
 
 	}

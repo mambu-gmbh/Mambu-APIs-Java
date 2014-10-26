@@ -73,13 +73,13 @@ public class ClientsService {
 	private final static ApiDefinition updateClientCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
 			Client.class, CustomFieldValue.class);
 	// Delete Custom Field for a Client
-	private final static ApiDefinition deleteClientCustomField = new ApiDefinition(ApiType.DELETE__OWNED_ENTITY,
+	private final static ApiDefinition deleteClientCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
 			Client.class, CustomFieldValue.class);
 	// Update Custom Field value for a Group
 	private final static ApiDefinition updateGroupCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
 			Group.class, CustomFieldValue.class);
 	// Delete Custom Field for a Group
-	private final static ApiDefinition deleteGroupCustomField = new ApiDefinition(ApiType.DELETE__OWNED_ENTITY,
+	private final static ApiDefinition deleteGroupCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
 			Group.class, CustomFieldValue.class);
 
 	/***
@@ -501,7 +501,7 @@ public class ClientsService {
 		// e.g. PATCH "{ "value": "10" }" /host/api/clients/clientId/custominformation/customFieldId
 
 		// Make ParamsMap with JSON request for Update API
-		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(clientId, customFieldId, fieldValue);
+		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
 		return serviceExecutor.execute(updateClientCustomField, clientId, customFieldId, params);
 
 	}
@@ -541,7 +541,7 @@ public class ClientsService {
 		// e.g. PATCH "{ "value": "10" }" /host/api/groups/groupId/custominformation/customFieldId
 
 		// Make ParamsMap with JSON request for Update API
-		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(groupId, customFieldId, fieldValue);
+		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
 		return serviceExecutor.execute(updateGroupCustomField, groupId, customFieldId, params);
 
 	}
