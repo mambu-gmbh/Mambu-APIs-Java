@@ -20,6 +20,7 @@ import com.mambu.clients.shared.model.GroupExpanded;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
+import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.CustomView;
 import com.mambu.core.shared.model.Image;
 import com.mambu.core.shared.model.SearchResult;
@@ -44,8 +45,10 @@ import com.mambu.tasks.shared.model.Task;
  * URL path structure, the HTTP method and content type, and the specification for the expected Mambu response
  * 
  * For the URL path part of the specification, the API definition assumes the URL path to be build in the following
- * format: endpoint[/objectId][/relatedEntity], with all parts , except the endpoint, being optional. Examples: /loans,
- * /savings/1234, clients/456/loans, /loans/4556/repayments, /groups/998878, /loans/9876/transactions
+ * format: endpoint[/objectId][/relatedEntity][/[relatedEntityID]], with all parts , except the endpoint, being
+ * optional. Examples: /loans, /savings/1234, clients/456/loans, /loans/4556/repayments, /groups/998878,
+ * /loans/9876/transactions, /clients/645/custominformation/field_id_777
+ * 
  * 
  * For the HTTP part, the ApiDefinition allows users to specify such HTTP parameters as method (GET, POST, DELETE) and
  * the content type
@@ -107,6 +110,14 @@ public class ApiDefinition {
 		// loans/transactions or GET savings/transactions
 		GET_RELATED_ENTITIES(Method.GET, ContentType.WWW_FORM, noObjectId, noFullDetails, hasRelatedEntityPart,
 				ApiReturnFormat.COLLECTION),
+		// Update an entity owned by another entity. Example, update custom field value for a client or group:
+		// PATCH clients/client_id/custominformation/custom_field_id
+		PATCH_OWNED_ENTITY(Method.PATCH, ContentType.JSON, withObjectId, noFullDetails, hasRelatedEntityPart,
+				ApiReturnFormat.BOOLEAN),
+		// Delete and an entity owned by another entity. Example, delete custom field for a client:
+		// DELETE clients/client_id/custominformation/custom_field_id
+		DELETE_OWNED_ENTITY(Method.DELETE, ContentType.WWW_FORM, withObjectId, noFullDetails, hasRelatedEntityPart,
+				ApiReturnFormat.BOOLEAN),
 		// Create Entity JSON request. Example: POST client/ (contentType=JSON)
 		CREATE_JSON_ENTITY(Method.POST, ContentType.JSON, noObjectId, noFullDetails, noRelatedEntityPart,
 				ApiReturnFormat.OBJECT),
@@ -138,21 +149,21 @@ public class ApiDefinition {
 		 *            a boolean specifying if the request must add object ID to the API request
 		 * @param withFullDetails
 		 *            a boolean specifying if the request must specify fullDetails parameter
-		 * @param requiresActionComponent
+		 * @param requiresRelatedEntity
 		 *            a boolean specifying if the request must add the 'relatedEntity' component in the URL path,
-		 *            formatted as /endpoint[/objectId][/relatedEntity]
+		 *            formatted as /endpoint[/objectId][/relatedEntity][/relatedEntityID]
 		 * @param relatedEntity
 		 *            a string to be used as a 'relatedEntity' part in the URL path
 		 * @param returnFormat
 		 *            the return type expected for the API request
 		 */
 		private ApiType(Method method, ContentType contentType, boolean requiresObjectId, boolean withFullDetails,
-				boolean requiresActionComponent, ApiReturnFormat returnFormat) {
+				boolean requiresRelatedEntity, ApiReturnFormat returnFormat) {
 			this.method = method;
 			this.contentType = contentType;
 			this.requiresObjectId = requiresObjectId;
 			this.withFullDetails = withFullDetails;
-			this.requiresActionComponent = requiresActionComponent;
+			this.requiresRelatedEntity = requiresRelatedEntity;
 			this.returnFormat = returnFormat;
 		}
 
@@ -160,7 +171,7 @@ public class ApiDefinition {
 		private ContentType contentType;
 		private boolean requiresObjectId;
 		private boolean withFullDetails;
-		private boolean requiresActionComponent;
+		private boolean requiresRelatedEntity;
 		private ApiReturnFormat returnFormat;
 
 		// Getters
@@ -180,8 +191,8 @@ public class ApiDefinition {
 			return withFullDetails;
 		}
 
-		public boolean isWithActionComponent() {
-			return requiresActionComponent;
+		public boolean isWithRelatedEntity() {
+			return requiresRelatedEntity;
 		}
 
 		public ApiReturnFormat getApiReturnFormat() {
@@ -284,14 +295,28 @@ public class ApiDefinition {
 		case GET_OWNED_ENTITIES:
 		case GET_RELATED_ENTITIES:
 		case POST_OWNED_ENTITY:
+		case PATCH_OWNED_ENTITY:
+		case DELETE_OWNED_ENTITY:
 			// For these API types the resultClass defines the 'relatedEntity' part. E.g. LOANS part in
 			// /clients/1233/LOANS or transactions part: /loans/123/transactions. These types return the result class
 			if (resultClass == null) {
 				throw new IllegalArgumentException("resultClass must be not null for " + apiType.name());
 			}
 			relatedEntity = getApiEndPoint(resultClass);
-			// This API type returns object of the resultClass
-			returnClass = resultClass;
+			// These API types return object (or collection) of the resultClass (for OBJECT and COLLECTION return
+			// formats)
+			switch (returnFormat) {
+			case OBJECT:
+			case COLLECTION:
+				returnClass = resultClass;
+				break;
+			case BOOLEAN:
+				returnClass = Boolean.class;
+				break;
+			case RESPONSE_STRING:
+				returnClass = String.class;
+				break;
+			}
 			break;
 		case DELETE_ENTITY:
 			returnClass = Boolean.class;
@@ -345,6 +370,7 @@ public class ApiDefinition {
 
 		apiEndPointsMap.put(CustomFieldSet.class, APIData.CUSTOM_FIELD_SETS);
 		apiEndPointsMap.put(CustomField.class, APIData.CUSTOM_FIELDS);
+		apiEndPointsMap.put(CustomFieldValue.class, APIData.CUSTOM_INFORMATION);
 
 		apiEndPointsMap.put(GLAccount.class, APIData.GLACCOUNTS);
 		apiEndPointsMap.put(GLJournalEntry.class, APIData.GLJOURNALENTRIES);

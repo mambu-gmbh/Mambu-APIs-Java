@@ -15,20 +15,20 @@ import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.services.UsersService;
-import com.mambu.clients.shared.data.ClientsDataField;
-import com.mambu.clients.shared.data.GroupsDataField;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
+import com.mambu.core.shared.data.DataItemType;
 import com.mambu.core.shared.data.DataViewType;
 import com.mambu.core.shared.model.ColumnConfiguration;
+import com.mambu.core.shared.model.CustomField;
+import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.CustomView;
+import com.mambu.core.shared.model.FieldColumn;
 import com.mambu.core.shared.model.Permissions;
 import com.mambu.core.shared.model.Permissions.Permission;
 import com.mambu.core.shared.model.User;
-import com.mambu.loans.shared.data.LoansDataField;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanTransaction;
-import com.mambu.savings.shared.data.SavingsDataField;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsTransaction;
 
@@ -68,6 +68,9 @@ public class DemoTestUsersService {
 			testGetCustomViewsByUsername();
 
 			testGetCustomViewsByUsernameType();
+
+			// Available since 3.8
+			testUpdateDeleteCustomFields();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Users Service");
@@ -216,6 +219,7 @@ public class DemoTestUsersService {
 		for (CustomViewApiType viewType : CustomViewApiType.values()) {
 			System.out.println("\n\nGetting Views for view type=" + viewType);
 			List<CustomView> views = usersService.getCustomViews(username, viewType);
+
 			int totalViws = (views == null) ? 0 : views.size();
 			System.out.println("Total " + totalViws + " views for view type=" + viewType);
 
@@ -246,6 +250,8 @@ public class DemoTestUsersService {
 		System.out.println("Getting entities for " + views.size() + " views");
 
 		for (CustomView view : views) {
+
+			logCustomView(view);
 
 			String viewName = view.getConfigurationName();
 			DataViewType viewType = view.getConfigurationDataViewType();
@@ -318,40 +324,105 @@ public class DemoTestUsersService {
 		String viewName = view.getConfigurationName();
 		DataViewType viewType = view.getConfigurationDataViewType();
 
-		ColumnConfiguration columnsConfig = view.getColumnConfiguration();
-		List<String> columns = columnsConfig.getColumns();
+		System.out.println("\nView name= " + viewName + "\tType=" + viewType + "\tViewKey=" + view.getEncodedKey());
 
-		System.out.println("\nView name= " + viewName + "\tType=" + viewType + "\tTotal columns=" + columns.size()
-				+ "\tViewKey=" + view.getEncodedKey());
-		// Print Columns for this view
-		switch (viewType) {
-		case CLIENT:
-			for (String column : columns) {
-				ClientsDataField clientDataField = ClientsDataField.valueOf(column);
-				System.out.println("Column=" + column + "\tEnum value=" + clientDataField);
-			}
-			break;
-		case GROUP:
-			for (String column : columns) {
-				GroupsDataField groupDataField = GroupsDataField.valueOf(column);
-				System.out.println("Column=" + column + "\tEnum value=" + groupDataField);
-			}
-			break;
-		case LOANS:
-			for (String column : columns) {
-				LoansDataField laonDataField = LoansDataField.valueOf(column);
-				System.out.println("Column=" + column + "\tEnum value=" + laonDataField);
-			}
-			break;
-		case SAVINGS:
-			for (String column : columns) {
-				SavingsDataField savingsDataField = SavingsDataField.valueOf(column);
-				System.out.println("Column=" + column + "\tEnum value=" + savingsDataField);
-			}
-			break;
-		default:
-			System.out.println("Unknown Custom View type=" + viewType);
-			break;
+		ColumnConfiguration columnsConfig = view.getColumnConfiguration();
+		// Since 3.8 ColumnConfiguration.getColumns(); is Deprecated. Use ColumnConfiguration.getFieldColumns() instead
+		List<FieldColumn> fieldColumns = columnsConfig.getFieldColumns();
+
+		if (fieldColumns == null) {
+			System.out.println("No Columns are defined  for View Name= " + viewName);
+			return;
 		}
+		System.out.println("Total Field Columns=" + fieldColumns.size());
+		for (FieldColumn filedColumn : fieldColumns) {
+			// Get the column name
+			String columnName = filedColumn.getDataField();
+			DataItemType dataItemType = filedColumn.getDataItemType();
+			// If Custom field - print custom fields details
+			CustomField customFild = filedColumn.getCustomField();
+			String customFieldId = (customFild == null) ? null : customFild.getId();
+			String customFieldName = (customFild == null) ? null : customFild.getName();
+			System.out.println("Column=" + columnName + "\tDataType=" + dataItemType + "\tCustomField ID="
+					+ customFieldId + "\tCustomField Name=" + customFieldName);
+		}
+		System.out.println();
+	}
+
+	// Update Custom Field values for the User and delete the first available custom field
+	public static void testUpdateDeleteCustomFields() throws MambuApiException {
+		System.out.println("\nIn testUpdateDeleteCustomFields");
+
+		List<CustomFieldValue> customFieldValues;
+		System.out.println("\nUpdating demo User custom fields...");
+		customFieldValues = updateCustomFields();
+
+		System.out.println("\nDeleting first custom field for a demo User...");
+		deleteCustomField(customFieldValues);
+
+	}
+
+	// Private helper to Update all custom fields for a demo User
+	private static List<CustomFieldValue> updateCustomFields() throws MambuApiException {
+
+		Class<?> entityClass = User.class;
+		String entityName = entityClass.getSimpleName();
+		// Note, for Users API we use username or encodedKey (not the userId)
+		String entityId = demoUser.getUsername();
+
+		// Get Current custom field values first for a Demo account
+		List<CustomFieldValue> customFieldValues = demoUser.getCustomFieldValues();
+
+		if (customFieldValues == null || customFieldValues.size() == 0) {
+			System.out.println("WARNING: No Custom fields defined for demo " + entityName + " with ID=" + entityId
+					+ ". Nothing to update");
+			return null;
+		}
+		// Update custom field values
+		UsersService usersService = MambuAPIFactory.getUsersService();
+		for (CustomFieldValue value : customFieldValues) {
+
+			String fieldId = value.getCustomField().getId(); // return null for Group, Branch, Centre, User?
+			// Create valid new value for a custom field
+			String newValue = DemoUtil.makeNewCustomFieldValue(value);
+
+			// Update Custom Field value
+			boolean updateStatus;
+			System.out.println("\nUpdating Custom Field with ID=" + fieldId + " for " + entityName + " with ID="
+					+ entityId);
+
+			updateStatus = usersService.updateUserCustomField(entityId, fieldId, newValue);
+
+			String statusMessage = (updateStatus) ? "Success" : "Failure";
+			System.out.println(statusMessage + " updating Custom Field, ID=" + fieldId + " for demo " + entityName
+					+ " with ID=" + entityId + " New value=" + newValue);
+
+		}
+
+		return customFieldValues;
+	}
+
+	// Private helper to Delete the first custom field for a demo User
+	private static void deleteCustomField(List<CustomFieldValue> customFieldValues) throws MambuApiException {
+
+		Class<?> entityClass = User.class;
+		String entityName = entityClass.getSimpleName();
+		// Note, for Users API we use username or encodedKey (not the userId)
+		String entityId = demoUser.getUsername();
+
+		if (customFieldValues == null || customFieldValues.size() == 0) {
+			System.out.println("WARNING: No Custom fields defined for demo " + entityName + " with ID=" + entityId
+					+ ". Nothing to delete");
+			return;
+		}
+		// Delete the first field on the list
+		String customFieldId = customFieldValues.get(0).getCustomField().getId();
+
+		UsersService usersService = MambuAPIFactory.getUsersService();
+		boolean deleteStatus = usersService.deleteUserCustomField(entityId, customFieldId);
+
+		String statusMessage = (deleteStatus) ? "Success" : "Failure";
+		System.out.println(statusMessage + " deleting Custom Field, ID=" + customFieldId + " for demo " + entityName
+				+ " with ID=" + entityId);
 	}
 }

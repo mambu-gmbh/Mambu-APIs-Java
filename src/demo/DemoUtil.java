@@ -3,24 +3,36 @@ package demo;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+import com.mambu.accounts.shared.model.TransactionChannel;
+import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
+import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.MambuAPIServiceFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.services.LoansService;
+import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.services.UsersService;
+import com.mambu.apisdk.util.APIData;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
+import com.mambu.core.shared.model.CustomField.DataType;
+import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.User;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
+import com.mambu.organization.shared.model.Branch;
+import com.mambu.organization.shared.model.Centre;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
 
@@ -137,6 +149,34 @@ public class DemoUtil {
 		User user = usersService.getUserByUsername(demoUsername);
 
 		return user;
+	}
+
+	// Get Demo Branch with full details
+	public static Branch getDemoBranch() throws MambuApiException {
+		System.out.println("\nIn getDemoBranch");
+
+		OrganizationService orgService = MambuAPIFactory.getOrganizationService();
+		List<Branch> branches = orgService.getBranches("0", "5");
+		if (branches == null || branches.size() == 0) {
+			return null;
+		}
+		// Get Full details for the demo Branch
+		String branchId = branches.get(0).getId();
+		return orgService.getBranch(branchId);
+	}
+
+	// Get Demo Centre with full details
+	public static Centre getDemoCentre() throws MambuApiException {
+		System.out.println("\nIn getDemoCentre");
+
+		OrganizationService orgService = MambuAPIFactory.getOrganizationService();
+		List<Centre> centres = orgService.getCentres(null, "0", "5");
+		if (centres == null || centres.size() == 0) {
+			return null;
+		}
+		// Get Full details for the demo Centre
+		String centreId = centres.get(0).getId();
+		return orgService.getCentre(centreId);
 	}
 
 	/**
@@ -269,5 +309,103 @@ public class DemoUtil {
 		System.out.println("getDemoLoanAccount: no Loan Accounts the Demo User exist");
 
 		return null;
+	}
+
+	// Helper to create a valid test value for a custom field based on its data type
+	public static String makeNewCustomFieldValue(CustomFieldValue value) {
+
+		String fieldId = value.getCustomField().getId();
+		DataType fieldType = value.getCustomField().getDataType();
+		String fieldValue = value.getValue();
+
+		String newValue = null;
+		switch (fieldType) {
+		case STRING:
+			// Set demo string with the current date
+			return newValue = "Updated by API on " + new Date().toString();
+		case NUMBER:
+			// Increase current numeric value by 10
+			return newValue = String.valueOf(Float.parseFloat(fieldValue) + 10);
+		case CHECKBOX:
+			// Change the check box's value to opposite
+			return newValue = (fieldValue.equals("TRUE")) ? "FALSE" : "TRUE";
+		case SELECTION:
+			// Change selection to any other allowed selection (if more than one is defined)
+			ArrayList<String> values = value.getCustomField().getValues();
+			for (String selectionValue : values) {
+				if (!fieldValue.equalsIgnoreCase(selectionValue)) {
+					return newValue = selectionValue;
+				}
+			}
+			System.out.println("WARNING: Cannot update selection value as only one value is defined, Field ID="
+					+ fieldId);
+			return fieldValue;
+		case DATE:
+			// return current date as new value
+			return newValue = new SimpleDateFormat(APIData.yyyyMmddFormat).format(new Date());
+		}
+
+		return newValue;
+	}
+
+	// Get valid Transaction channel for testing account transactions
+	public static TransactionChannel getDemoTransactionChannel() throws MambuApiException {
+
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+
+		List<TransactionChannel> transactionChannels = organizationService.getTransactionChannels();
+
+		if (transactionChannels == null) {
+			return null;
+		}
+		int randomIndex = (int) Math.round(Math.random() * (transactionChannels.size() - 1));
+		return transactionChannels.get(randomIndex);
+	}
+
+	// Helper to make valid TransactionDetails object for testing account transactions
+	public static TransactionDetails makeDemoTransactionDetails() throws MambuApiException {
+
+		TransactionChannel channel = getDemoTransactionChannel();
+
+		if (channel == null) {
+			return null;
+		}
+
+		// Create demo TransactionDetails
+		TransactionDetails transactionDetails = new TransactionDetails(channel);
+		List<ChannelField> channelFields = channel.getChannelFields();
+		if (channelFields == null || channelFields.size() == 0) {
+			return transactionDetails;
+		}
+		// Create random number for this transactionDetails values
+		String randomNumber = String.valueOf((int) (Math.random() * 100000));
+		for (ChannelField field : channelFields) {
+			switch (field) {
+			case ACCOUNT_NAME:
+				transactionDetails.setAccountName("Account Name demo " + randomNumber);
+				break;
+			case ACCOUNT_NUMBER:
+				transactionDetails.setAccountNumber("Account Number demo " + randomNumber);
+				break;
+			case BANK_NUMBER:
+				transactionDetails.setBankNumber("Bank Number demo " + randomNumber);
+				break;
+			case CHECK_NUMBER:
+				transactionDetails.setCheckNumber("Check Number demo " + randomNumber);
+				break;
+			case IDENTIFIER:
+				transactionDetails.setIdentifier("Identifier demo " + randomNumber);
+				break;
+			case RECEPIT_NUMBER:
+				transactionDetails.setReceiptNumber("Receipt Number demo " + randomNumber);
+				break;
+			case ROUTING_NUMBER:
+				transactionDetails.setRoutingNumber("Routing Number demo " + randomNumber);
+				break;
+
+			}
+
+		}
+		return transactionDetails;
 	}
 }

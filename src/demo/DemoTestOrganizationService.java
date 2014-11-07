@@ -8,10 +8,13 @@ import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.OrganizationService;
+import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.Address;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
+import com.mambu.core.shared.model.CustomFieldProductSettings;
 import com.mambu.core.shared.model.CustomFieldSet;
+import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 
@@ -27,11 +30,16 @@ public class DemoTestOrganizationService {
 	private static String CENTRE_ID;
 	private static String CUSTOM_FIELD_ID;
 
+	private static Branch demoBranch;
+	private static Centre demoCentre;
+
 	public static void main(String[] args) {
 
 		DemoUtil.setUp();
 
 		try {
+			demoBranch = DemoUtil.getDemoBranch();
+			demoCentre = DemoUtil.getDemoCentre();
 
 			// Available since 3.7
 			testGetTransactionChannels();
@@ -52,6 +60,9 @@ public class DemoTestOrganizationService {
 			testGetBranchesByPage();
 
 			testGetBranch();
+
+			// Available since 3.8
+			testUpdateDeleteCustomFields();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Organization Service");
@@ -125,7 +136,7 @@ public class DemoTestOrganizationService {
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
-		String centreId = CENTRE_ID;
+		String centreId = demoCentre.getId();
 		System.out.println("\nIn testGetCentre by ID." + "  Centre ID=" + centreId);
 
 		Date d1 = new Date();
@@ -238,16 +249,45 @@ public class DemoTestOrganizationService {
 		System.out.println("Total Sets returned=" + sustomFieldSets.size() + " Total time=" + diff);
 		for (CustomFieldSet set : sustomFieldSets) {
 			List<CustomField> customFields = set.getCustomFields();
+
 			System.out.println(" Name=" + set.getName() + "\tType=" + set.getType().toString() + "  Total Fields="
 					+ customFields.size());
 			System.out.println("List of fields:\n");
 			for (CustomField field : customFields) {
-				System.out.println("Field ID=" + field.getId() + "\tField Name=" + field.getName() + "\tDataType="
+				System.out.println("\nField ID=" + field.getId() + "\tField Name=" + field.getName() + "\tDataType="
 						+ field.getDataType().toString() + "\tIsDefault=" + field.isDefault().toString() + "\tType="
 						+ field.getType().toString());
+
 				// Remember one of the CustomFields for testing testGetCustomField()
 				if (!field.isDeactivated()) {
 					CUSTOM_FIELD_ID = (CUSTOM_FIELD_ID == null) ? field.getId() : CUSTOM_FIELD_ID;
+				}
+				// As of Mambu 3.8, settings for Loans and Savings custom fields are per product. See MBU-6280
+				List<CustomFieldProductSettings> customFieldProductSettings = field.getCustomFieldProductSettings();
+
+				if (customFieldProductSettings == null) {
+					System.out.println("Field has no CustomFieldProductSettings");
+					continue;
+				}
+
+				// Log product specific settings
+				for (CustomFieldProductSettings productSettings : customFieldProductSettings) {
+
+					String productKey = productSettings.getProductKey();
+					boolean isDefault = productSettings.isDefault();
+					boolean isRequired = productSettings.isRequired();
+					System.out.println("Field defined for productKey=" + productKey + " isDefault=" + isDefault
+							+ " isRequired=" + isRequired);
+
+					// Test availability methods for a specific product key. e.g isAvaliableForProduct(productKey)
+					boolean isForProduct = field.isAvaliableForProduct(productKey); // this must be always true
+					boolean isDefaultForProduct = field.isDefault(productKey); // must be the same as isDefault
+					boolean isRequiredForProduct = field.isRequired(productKey); // must be the same as isRequired
+
+					System.out.println("Product defaults by product. IsForThisProduct=" + isForProduct
+							+ " isDefaultForProduct=" + isDefaultForProduct + " isRequiredForProduct="
+							+ isRequiredForProduct);
+
 				}
 			}
 		}
@@ -275,4 +315,94 @@ public class DemoTestOrganizationService {
 		}
 	}
 
+	// Update Custom Field values for the demo Branch and for demo Centre and delete the first custom field
+	public static void testUpdateDeleteCustomFields() throws MambuApiException {
+		System.out.println("\nIn testUpdateDeleteCustomFields");
+
+		List<CustomFieldValue> customFieldValues;
+		System.out.println("\nUpdating demo Branch custom fields...");
+		customFieldValues = updateCustomFields(Branch.class);
+
+		System.out.println("\nDeleting first custom field for a demo Branch...");
+		deleteCustomField(Branch.class, customFieldValues);
+
+		System.out.println("\n\nUpdating demo Centre custom fields...");
+		customFieldValues = updateCustomFields(Centre.class);
+
+		System.out.println("\nDeleting first custom field for a demo Centre...");
+		deleteCustomField(Group.class, customFieldValues);
+
+	}
+
+	// Private helper to Update all custom fields a Branch and for a Centre
+	private static List<CustomFieldValue> updateCustomFields(Class<?> entityClass) throws MambuApiException {
+
+		String entityName = entityClass.getSimpleName();
+		boolean forBranch = (entityClass.equals(Branch.class)) ? true : false;
+		String entityId = (forBranch) ? demoBranch.getId() : demoCentre.getId();
+
+		// Get Current custom field values first
+		List<CustomFieldValue> customFieldValues = (forBranch) ? demoBranch.getCustomFieldValues() : demoCentre
+				.getCustomFieldValues();
+
+		if (customFieldValues == null || customFieldValues.size() == 0) {
+			System.out.println("WARNING: No Custom fields defined for demo " + entityName + " with ID=" + entityId
+					+ ". Nothing to update");
+			return null;
+		}
+		// Update custom field values
+		OrganizationService orgService = MambuAPIFactory.getOrganizationService();
+		for (CustomFieldValue value : customFieldValues) {
+			// TODO: re-test get fieldID via getCustomFieldId() when MBU-6923 is fixed: Null for Branch, Centre and User
+			String testFieldId = value.getCustomFieldId(); // returns null for Branch, Centre and User details
+
+			// Use customFieldId from the CustomField, this always works
+			CustomField field = value.getCustomField();
+			String fieldId = field.getId();
+
+			// Create valid new value for a custom field
+			String newValue = DemoUtil.makeNewCustomFieldValue(value);
+
+			// Update Custom Field value
+			boolean updateStatus;
+			System.out.println("\nUpdating Custom Field with ID=" + fieldId + " for " + entityName + " with ID="
+					+ entityId + "\tField's other ID=" + testFieldId);
+
+			updateStatus = (forBranch) ? orgService.updateBranchCustomField(entityId, fieldId, newValue) : orgService
+					.updateCentreCustomField(entityId, fieldId, newValue);
+
+			String statusMessage = (updateStatus) ? "Success" : "Failure";
+			System.out.println(statusMessage + " updating Custom Field, ID=" + fieldId + " for demo " + entityName
+					+ " with ID=" + entityId + " New value=" + newValue);
+
+		}
+
+		return customFieldValues;
+	}
+
+	// Private helper to Delete the first custom field for a client or group
+	private static void deleteCustomField(Class<?> entityClass, List<CustomFieldValue> customFieldValues)
+			throws MambuApiException {
+
+		String entityName = entityClass.getSimpleName();
+		boolean forBranch = (entityClass.equals(Branch.class)) ? true : false;
+		String entityId = (forBranch) ? demoBranch.getId() : demoCentre.getId();
+
+		if (customFieldValues == null || customFieldValues.size() == 0) {
+			System.out.println("WARNING: No Custom fields defined for demo " + entityName + " with ID=" + entityId
+					+ ". Nothing to delete");
+			return;
+		}
+
+		// Delete the first field on the list
+		String customFieldId = customFieldValues.get(0).getCustomField().getId();
+
+		OrganizationService orgService = MambuAPIFactory.getOrganizationService();
+		boolean deleteStatus = (forBranch) ? orgService.deleteBranchCustomField(entityId, customFieldId) : orgService
+				.deleteCentreCustomField(entityId, customFieldId);
+
+		String statusMessage = (deleteStatus) ? "Success" : "Failure";
+		System.out.println(statusMessage + " deleting Custom Field, ID=" + customFieldId + " for demo " + entityName
+				+ " with ID=" + entityId);
+	}
 }
