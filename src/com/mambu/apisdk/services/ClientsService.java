@@ -18,6 +18,7 @@ import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.GroupExpanded;
+import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.docs.shared.model.Document;
 
 /**
@@ -68,6 +69,18 @@ public class ClientsService {
 	// Get Documents for a group
 	private final static ApiDefinition getGroupDocuments = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, Group.class,
 			Document.class);
+	// Update Custom Field value for a Client
+	private final static ApiDefinition updateClientCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
+			Client.class, CustomFieldValue.class);
+	// Delete Custom Field for a Client
+	private final static ApiDefinition deleteClientCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
+			Client.class, CustomFieldValue.class);
+	// Update Custom Field value for a Group
+	private final static ApiDefinition updateGroupCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
+			Group.class, CustomFieldValue.class);
+	// Delete Custom Field for a Group
+	private final static ApiDefinition deleteGroupCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
+			Group.class, CustomFieldValue.class);
 
 	/***
 	 * Create a new client service
@@ -135,7 +148,9 @@ public class ClientsService {
 	}
 
 	/**
-	 * Requests a list of all matching clients
+	 * @deprecated As of release 3.8, replaced by {@link #getClients(boolean, int, int)}
+	 * 
+	 *             Requests a list of all matching clients.
 	 * 
 	 * @param active
 	 *            True if active Clients should retrieved, false for inactive Clients
@@ -144,6 +159,7 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<Client> getClients(boolean active) throws MambuApiException {
 
 		ParamsMap params = new ParamsMap();
@@ -465,5 +481,85 @@ public class ClientsService {
 	 */
 	public List<Document> getGroupDocuments(String groupId) throws MambuApiException {
 		return serviceExecutor.execute(getGroupDocuments, groupId);
+	}
+
+	/***
+	 * Update custom field value for a Client. This method allows to set new value for a specific custom field
+	 * 
+	 * @param clientId
+	 *            the encoded key or id of the Mambu Client
+	 * @param customFieldId
+	 *            the encoded key or id of the custom field to be updated
+	 * @param fieldValue
+	 *            the new value of the custom field
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean updateClientCustomField(String clientId, String customFieldId, String fieldValue)
+			throws MambuApiException {
+		// Execute request for PATCH API to update custom field value for a client. See MBU-6661
+		// e.g. PATCH "{ "value": "10" }" /host/api/clients/clientId/custominformation/customFieldId
+
+		// Make ParamsMap with JSON request for Update API
+		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
+		return serviceExecutor.execute(updateClientCustomField, clientId, customFieldId, params);
+
+	}
+
+	/***
+	 * Delete custom field for a Client
+	 * 
+	 * @param clientId
+	 *            the encoded key or id of the Mambu Client
+	 * @param customFieldId
+	 *            the encoded key or id of the custom field to be deleted
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean deleteClientCustomField(String clientId, String customFieldId) throws MambuApiException {
+		// Execute request for DELETE API to delete custom field value for a client
+		// e.g. DELETE /host/api/clients/clientId/custominformation/customFieldId
+		return serviceExecutor.execute(deleteClientCustomField, clientId, customFieldId, null);
+
+	}
+
+	/***
+	 * Update custom field value for a Group. This method allows to set new value for a specific custom field
+	 * 
+	 * @param groupId
+	 *            the encoded key or id of the Mambu Group
+	 * @param customFieldId
+	 *            the encoded key or id of the custom field to be updated
+	 * @param fieldValue
+	 *            the new value of the custom field
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean updateGroupCustomField(String groupId, String customFieldId, String fieldValue)
+			throws MambuApiException {
+		// Execute request for PATCH API to update custom field value for a group
+		// e.g. PATCH "{ "value": "10" }" /host/api/groups/groupId/custominformation/customFieldId
+
+		// Make ParamsMap with JSON request for Update API
+		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
+		return serviceExecutor.execute(updateGroupCustomField, groupId, customFieldId, params);
+
+	}
+
+	/***
+	 * Delete custom field for a Group
+	 * 
+	 * @param groupId
+	 *            the encoded key or id of the Mambu Group
+	 * @param customFieldId
+	 *            the encoded key or id of the custom field to be deleted
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean deleteGroupCustomField(String groupId, String customFieldId) throws MambuApiException {
+		// Execute request for DELETE API to delete custom field for an group
+		// e.g. DELETE /host/api/groups/groupId/custominformation/customFieldId
+		return serviceExecutor.execute(deleteGroupCustomField, groupId, customFieldId, null);
+
 	}
 }

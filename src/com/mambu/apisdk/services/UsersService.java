@@ -12,7 +12,9 @@ import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.ServiceExecutor;
+import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.core.shared.data.DataViewType;
+import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.CustomView;
 import com.mambu.core.shared.model.User;
 
@@ -37,6 +39,12 @@ public class UsersService {
 	private final static ApiDefinition getUser = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, User.class);
 	private final static ApiDefinition getCustomViews = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, User.class,
 			CustomView.class);
+	// Update Custom Field value for a User
+	private final static ApiDefinition updateUserCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
+			User.class, CustomFieldValue.class);
+	// Delete Custom Field for a User
+	private final static ApiDefinition deleteUserCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
+			User.class, CustomFieldValue.class);
 
 	/***
 	 * Create a new users service
@@ -204,4 +212,44 @@ public class UsersService {
 
 	}
 
+	/***
+	 * Update custom field value for a User. This method allows to set new value for a specific custom field
+	 * 
+	 * @param userName
+	 *            the userName or the encoded key of the Mambu User for which the custom field is updated.
+	 * @param customFieldId
+	 *            the encoded key or id of the custom field to be updated
+	 * @param fieldValue
+	 *            the new value of the custom field
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean updateUserCustomField(String userName, String customFieldId, String fieldValue)
+			throws MambuApiException {
+		// Execute request for PATCH API to update custom field value for a User. See MBU-6661
+		// e.g. PATCH "{ "value": "10" }" /host/api/users/userName/custominformation/customFieldId
+
+		// Make ParamsMap with JSON request for Update API
+		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
+		return serviceExecutor.execute(updateUserCustomField, userName, customFieldId, params);
+
+	}
+
+	/***
+	 * Delete custom field for a User
+	 * 
+	 * @param username
+	 *            the userName or the encoded key of the Mambu User for which the custom field is updated.
+	 * @param customFieldId
+	 *            the encoded key or id of the custom field to be deleted
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean deleteUserCustomField(String username, String customFieldId) throws MambuApiException {
+		// Execute request for DELETE API to delete custom field for a User. See MBU-6661
+		// e.g. DELETE /host/api/users/username/custominformation/customFieldId
+
+		return serviceExecutor.execute(deleteUserCustomField, username, customFieldId, null);
+
+	}
 }

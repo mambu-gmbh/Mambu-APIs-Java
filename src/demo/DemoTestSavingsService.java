@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mambu.accounts.shared.model.AccountState;
+import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -91,6 +92,9 @@ public class DemoTestSavingsService {
 			// Available since Mambu 3.6
 			testGetDocuments();
 
+			// Available since 3.8
+			testUpdateDeleteCustomFields();
+
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Savings Service");
 			System.out.println("Error code=" + e.getErrorCode());
@@ -174,15 +178,12 @@ public class DemoTestSavingsService {
 		String amount = "93.55";
 		String date = null;
 		String notes = "Withdrawal notes from API";
-		String paymentMethod = "CASH";// CHECK,
-		String receiptNumber = "REC_NUMBER_1123";
-		String bankNumber = "BANK_NUMBER_345";
-		String checkNumber = "CHECK_NUMBER_9900";
-		String bankAccountNumber = "BANK_ACCT_NUMB_4567";
-		String bankRoutingNumber = "BNK_ROUT_NUMBER_2344";
+
+		// Make demo transactionDetails with the valid channel fields
+		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
 
 		SavingsTransaction transaction = savingsService.makeWithdrawal(SAVINGS_ACCOUNT_ID, amount, date, notes,
-				paymentMethod, receiptNumber, bankNumber, checkNumber, bankAccountNumber, bankRoutingNumber);
+				transactionDetails);
 
 		System.out
 				.println("Made Withdrawal from Savings for account with the " + SAVINGS_ACCOUNT_ID + " id:"
@@ -200,15 +201,11 @@ public class DemoTestSavingsService {
 		String date = null;
 		String notes = "Deposit notes - API";
 
-		String paymentMethod = "CASH";// CHECK,
-		String receiptNumber = null; // "REC_NUMBER_1123";
-		String bankNumber = null; // "BANK_NUMBER_345";
-		String checkNumber = null; // CHECK_NUMBER_9900";
-		String bankAccountNumber = null;// "BANK_ACCT_NUMB_4567";
-		String bankRoutingNumber = null;// "BNK_ROUT_NUMBER_2344";
+		// Make demo transactionDetails with the valid channel fields
+		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
 
 		SavingsTransaction transaction = savingsService.makeDeposit(SAVINGS_ACCOUNT_ID, amount, date, notes,
-				paymentMethod, receiptNumber, bankNumber, checkNumber, bankAccountNumber, bankRoutingNumber);
+				transactionDetails);
 
 		System.out.println("Made Deposit To Savings for account with the " + SAVINGS_ACCOUNT_ID + " id:" + ". Amount="
 				+ transaction.getAmount().toString() + " Balance =" + transaction.getBalance().toString());
@@ -384,6 +381,7 @@ public class DemoTestSavingsService {
 		JSONSavingsAccount updatedAccount = newAccount;
 		List<CustomFieldValue> customFields = updatedAccount.getCustomInformation();
 		String customFieldIdToModifyValue = "Target_Deposit_Accounts";
+
 		if (customFields != null) {
 
 			for (CustomFieldValue value : customFields) {
@@ -409,8 +407,8 @@ public class DemoTestSavingsService {
 		if (updatedCustomFields != null) {
 			System.out.println("Custom Fields for Loan Account\n");
 			for (CustomFieldValue value : updatedCustomFields) {
-				System.out.println("CustomFieldKey" + value.getCustomFieldKey() + "\tValue" + value.getValue()
-						+ "\tName" + value.getCustomField().getName());
+				System.out.println("CustomField ID=" + value.getCustomFieldId() + "\tValue=" + value.getValue()
+						+ "\tName=" + value.getCustomField().getName());
 
 			}
 		}
@@ -495,5 +493,83 @@ public class DemoTestSavingsService {
 		System.out.println("Documents returned for a Savings Account with ID=" + demoSavingsAccount.getId());
 		DemoTestDocumentsService.logDocuments(documents);
 
+	}
+
+	// Update Custom Field values for the Savings Account and delete the first available custom field
+	public static void testUpdateDeleteCustomFields() throws MambuApiException {
+		System.out.println("\nIn testUpdateDeleteCustomFields");
+
+		List<CustomFieldValue> customFieldValues;
+		System.out.println("\nUpdating demo Savings Account custom fields...");
+		customFieldValues = updateCustomFields();
+
+		System.out.println("\nDeleting first custom field for a demo Savings Account ...");
+		deleteCustomField(customFieldValues);
+
+	}
+
+	// Private helper to Update all custom fields for a Savings Account
+	private static List<CustomFieldValue> updateCustomFields() throws MambuApiException {
+
+		Class<?> entityClass = SavingsAccount.class;
+		String entityName = entityClass.getSimpleName();
+		String entityId = demoSavingsAccount.getId();
+
+		SavingsService savingsService = MambuAPIFactory.getSavingsService();
+		demoSavingsAccount = savingsService.getSavingsAccountDetails(entityId);
+
+		// Get Current custom field values first for a Demo account
+		List<CustomFieldValue> customFieldValues = demoSavingsAccount.getCustomFieldValues();
+
+		if (customFieldValues == null || customFieldValues.size() == 0) {
+			System.out.println("WARNING: No Custom fields defined for demo " + entityName + " with ID=" + entityId
+					+ ". Nothing to update");
+			return null;
+		}
+
+		// Update custom field values
+		for (CustomFieldValue value : customFieldValues) {
+
+			String fieldId = value.getCustomFieldId();
+			// Create valid new value for a custom field
+			String newValue = DemoUtil.makeNewCustomFieldValue(value);
+
+			// Update Custom Field value
+			boolean updateStatus = false;
+			System.out.println("\nUpdating Custom Field with ID=" + fieldId + " for " + entityName + " with ID="
+					+ entityId);
+
+			updateStatus = savingsService.updateSavingsAccountCustomField(entityId, fieldId, newValue);
+
+			String statusMessage = (updateStatus) ? "Success" : "Failure";
+			System.out.println(statusMessage + " updating Custom Field, ID=" + fieldId + " for demo " + entityName
+					+ " with ID=" + entityId + " New value=" + newValue);
+
+		}
+
+		return customFieldValues;
+	}
+
+	// Private helper to Delete the first custom field for a Savings Account
+	private static void deleteCustomField(List<CustomFieldValue> customFieldValues) throws MambuApiException {
+
+		Class<?> entityClass = SavingsAccount.class;
+		String entityName = entityClass.getSimpleName();
+		String entityId = demoSavingsAccount.getId();
+
+		if (customFieldValues == null || customFieldValues.size() == 0) {
+			System.out.println("WARNING: No Custom fields defined for demo " + entityName + " with ID=" + entityId
+					+ ". Nothing to delete");
+			return;
+		}
+		// Delete the first field on the list
+		String customFieldId = customFieldValues.get(0).getCustomField().getId();
+
+		SavingsService savingsService = MambuAPIFactory.getSavingsService();
+		boolean deleteStatus = savingsService.deleteSavingsAccountCustomField(entityId, customFieldId);
+
+		String statusMessage = (deleteStatus) ? "Success" : "Failure";
+		System.out.println(statusMessage + " deleting Custom Field, ID=" + customFieldId + " for demo " + entityName
+				+ " with ID=" + entityId);
 	}
 }

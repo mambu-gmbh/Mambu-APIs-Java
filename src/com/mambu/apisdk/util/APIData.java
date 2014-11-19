@@ -41,11 +41,15 @@ public class APIData {
 	public static final String TRANSACTION_CHANNELS = "transactionchannels";
 
 	public static final String TYPE = "type";
+	// Transaction Channel Fields
 	public static final String BANK_NUMBER = "bankNumber";
 	public static final String RECEIPT_NUMBER = "receiptNumber";
 	public static final String CHECK_NUMBER = "checkNumber";
 	public static final String BANK_ACCOUNT_NUMBER = "bankAccountNumber";
 	public static final String BANK_ROUTING_NUMBER = "bankRoutingNumber";
+	public static final String ACCOUNT_NAME = "accountName";
+	public static final String IDENTIFIER = "identifier";
+
 	public static final String NOTES = "notes";
 	//
 	public static final String TRANSACTIONS = "transactions";
@@ -112,6 +116,7 @@ public class APIData {
 	// Custom fields and Custom Field Sets
 	public static String CUSTOM_FIELDS = "customfields";
 	public static String CUSTOM_FIELD_SETS = "customfieldsets";
+	public static String CUSTOM_INFORMATION = "custominformation";
 	public static String CUSTOM_FIELD_SETS_TYPE = "type";
 
 	// Repayments
