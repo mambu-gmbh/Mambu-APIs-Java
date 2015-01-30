@@ -92,6 +92,19 @@
 					</archive>
 				</configuration>
 			</plugin>
+                        <plugin>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-source-plugin</artifactId>
+                                <version>2.2.1</version>
+                                <executions>
+                                   <execution>
+                                        <id>attach-sources</id>
+                                        <goals>
+                                           <goal>jar-no-fork</goal>
+                                        </goals>
+                                     </execution>
+                                </executions>
+                        </plugin>
 		</plugins>
 
 		<resources>
@@ -116,7 +129,7 @@
 			<artifactId>mambumodels</artifactId>
 			<version>3.8</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/mambu-models-v3.8.jar
+			<systemPath>${project.basedir}/lib/mambu-models-V3.8.jar
 			</systemPath>
 			<optional>false</optional>
 		</dependency>
