@@ -6,6 +6,7 @@ package com.mambu.apisdk.services;
 import java.util.List;
 
 import com.google.inject.Inject;
+import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
@@ -36,6 +37,9 @@ public class RepaymentsService {
 
 	private final static ApiDefinition getRepaymments = new ApiDefinition(ApiType.GET_LIST, Repayment.class);
 	private final static ApiDefinition getRepaymentsForLoan = new ApiDefinition(ApiType.GET_OWNED_ENTITIES,
+			LoanAccount.class, Repayment.class);
+	// Update Loan Repayments. PATCH JSON /api/loans/loan_id/repayments
+	private static ApiDefinition updateRepaymentsForLoan = new ApiDefinition(ApiType.PATCH_OWNED_ENTITIES,
 			LoanAccount.class, Repayment.class);
 
 	/***
@@ -137,4 +141,29 @@ public class RepaymentsService {
 		String limit = null;
 		return getLoanAccountRepayments(accountId, offset, limit);
 	}
+
+	/***
+	 * Update unpaid repayment schedule for a Loan Account
+	 * 
+	 * @param accountId
+	 *            the encoded key or id of the Mambu Loan Account for which repayments are updated
+	 * @param repayments
+	 *            a list of still unpaid repayments to be updated. Paid installments can be posted, but no changes will
+	 *            be performed on them. The following repayment fields are considered for update: principal, interest,
+	 *            fees, penalties, due amounts and due date from the repayments that get posted
+	 * 
+	 *            See MBU-6813 for more details
+	 * 
+	 * @return updated repayments
+	 * @throws MambuApiException
+	 */
+	public List<Repayment> updateLoanRepaymentsSchedule(String accountId, JSONLoanRepayments repayments)
+			throws MambuApiException {
+		// Available since Mambu 3.9
+		// API example: PATCH -d JSONLoanRepayments_object /api/loans/loan_id/repayments. Returns list of Repayments
+
+		return serviceExecutor.executeJson(updateRepaymentsForLoan, repayments, accountId);
+
+	}
+
 }

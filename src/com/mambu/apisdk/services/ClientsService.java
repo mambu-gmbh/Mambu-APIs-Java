@@ -6,18 +6,23 @@ package com.mambu.apisdk.services;
 import java.util.List;
 
 import com.google.inject.Inject;
+import com.mambu.accounts.shared.model.AccountHolderType;
+import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.GroupExpanded;
+import com.mambu.clients.shared.model.GroupRoleName;
+import com.mambu.core.shared.model.ClientRole;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.docs.shared.model.Document;
 
@@ -40,6 +45,7 @@ public class ClientsService {
 	public static final String CENTRE_ID = APIData.CENTRE_ID;
 	private static final String CREDIT_OFFICER_USER_NAME = APIData.CREDIT_OFFICER_USER_NAME;
 	private static final String CLIENT_STATE = APIData.CLIENT_STATE;
+	private static final String FOR_TYPE = APIData.FOR;
 
 	// Our serviceExecutor
 	private ServiceExecutor serviceExecutor;
@@ -56,16 +62,38 @@ public class ClientsService {
 			ClientExpanded.class);
 	// Update Client
 	private final static ApiDefinition updateClient = new ApiDefinition(ApiType.UPDATE_JSON, ClientExpanded.class);
-
+	// Create Group. POST JSON /api/groups
+	private final static ApiDefinition createGroup = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, GroupExpanded.class);
+	// Update Group. PATCH JSON /api/groups/groupId
+	private final static ApiDefinition updateGroup = new ApiDefinition(ApiType.UPDATE_JSON, GroupExpanded.class);
+	// Get Group Role Names. GET /api/grouprolenames/
+	private final static ApiDefinition getGroupRoles = new ApiDefinition(ApiType.GET_LIST, GroupRoleName.class);
+	// Get Group Role Name details. GET /api/grouprolenames/groupRoleNameId
+	private final static ApiDefinition getGroupRole = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, GroupRoleName.class);
+	// Get Client Types. GET /host/api/clienttypes?for=CLIENTS
+	private final static ApiDefinition getClientTypes = new ApiDefinition(ApiType.GET_LIST, ClientRole.class);
 	// Groups
 	private final static ApiDefinition getGroup = new ApiDefinition(ApiType.GET_ENTITY, Group.class);
 	private final static ApiDefinition getGroupDetails = new ApiDefinition(ApiType.GET_ENTITY_DETAILS,
 			GroupExpanded.class);
 	// Get Lists of Groups
 	private final static ApiDefinition getGroupsList = new ApiDefinition(ApiType.GET_LIST, Group.class);
+
 	// Get Documents for a Client
 	private final static ApiDefinition getClientDocuments = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, Client.class,
 			Document.class);
+	// Post Client Profile Documents. POST clients/client_id/documents/PROFILE_PICTURE or
+	// clients/client_id/documents/SIGNATURE
+	private final static ApiDefinition postClientProfileFile = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
+			Client.class, Document.class, Boolean.class);
+	// Get profile picture or signature file for a Client. GET /api/clients/{ID}/documents/PROFILE_PICTURE or GET
+	// /api/clients/{ID}/documents/SIGNATURE
+	private final static ApiDefinition getClientProfileFile = new ApiDefinition(ApiType.GET_OWNED_ENTITY, Client.class,
+			Document.class, String.class);
+	// Delete profile picture or signature for a Client. DELETE api/clients/client_id/documents/PROFILE_PICTURE
+	// or DELETE api/clients/client_id/documents/SIGNATURE
+	private final static ApiDefinition deleteClientProfileFile = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
+			Client.class, Document.class);
 	// Get Documents for a group
 	private final static ApiDefinition getGroupDocuments = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, Group.class,
 			Document.class);
@@ -313,6 +341,62 @@ public class ClientsService {
 	}
 
 	/***
+	 * Create a new group using GroupExpanded object and sending it as a Json api. This API allows creating a new Group
+	 * with group details, group members, group roles, custom fields, and group address
+	 * 
+	 * Available since Mambu 3.8.10. See MBU-7336
+	 * 
+	 * @param groupDetails
+	 *            The encodedKey for the groupDetails must be null to create a new group
+	 * 
+	 * @return group details for the newly created group
+	 * 
+	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
+	 */
+	public GroupExpanded createGroup(GroupExpanded groupDetails) throws MambuApiException {
+
+		// Get encodedKey and ensure it's NULL for the new group request
+		String encodedKey = groupDetails.getEncodedKey();
+		if (encodedKey != null) {
+			throw new IllegalArgumentException("Cannot create group, the encoded key must be null");
+		}
+		return serviceExecutor.executeJson(createGroup, groupDetails);
+
+	}
+
+	/***
+	 * Update an existent group using GroupExpanded object and send it as a Json api. This API allows updating Group
+	 * with new details, including modifying group details, group members, group roles, custom fields and group address
+	 * 
+	 * NOTE: This API to be available in 3.10. See MBU-7337
+	 * 
+	 * @param groupDetails
+	 *            group details to be updated. The encodedKey for the groupDetails object must be NOT null to update an
+	 *            existent group.
+	 * 
+	 * @return updated group details
+	 * 
+	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
+	 */
+	// TODO: test this API when MBU-7337 is implemented in 3.10
+	public GroupExpanded updateGroup(GroupExpanded groupDetails) throws MambuApiException {
+		if (true) {
+			throw new IllegalAccessError("Update Group API is not Supported yet");
+		}
+
+		// Verify that the encodedKey for this object is not NULL
+		String encodedKey = groupDetails.getEncodedKey();
+		if (encodedKey == null) {
+			throw new IllegalArgumentException("Cannot update group, the encoded key for the object does not exist");
+		}
+
+		return serviceExecutor.executeJson(updateGroup, groupDetails, encodedKey);
+
+	}
+
+	/***
 	 * Get Clients by branch id, centre id, credit officer, clientState
 	 * 
 	 * @param branchId
@@ -371,7 +455,6 @@ public class ClientsService {
 	 *            the id of the Custom View to filter clients
 	 * @param offset
 	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * 
 	 * @param limit
 	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
@@ -393,7 +476,6 @@ public class ClientsService {
 	 *            the key of the Custom View to filter groups
 	 * @param offset
 	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * 
 	 * @param limit
 	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
@@ -405,6 +487,40 @@ public class ClientsService {
 			throws MambuApiException {
 		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
 		return serviceExecutor.execute(getGroupsList, params);
+
+	}
+
+	/**
+	 * Requests a list of group role names
+	 * 
+	 * This API doesn't accept pagination parameters (offset and limit ) and returns all group role names
+	 * 
+	 * @return the list of Mambu group role names
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<GroupRoleName> getGroupRoleNames() throws MambuApiException {
+		// Example GET /api/grouprolenames/
+		// Available since 3.9, see MBU-7351. The API returns a list of GroupRoleName
+
+		return serviceExecutor.execute(getGroupRoles);
+
+	}
+
+	/**
+	 * Requests details for the group role name by id
+	 * 
+	 * @param groupRoleNameId
+	 *            group role name id or encoded key. Must be not null
+	 * @return group role details
+	 * 
+	 * @throws MambuApiException
+	 */
+	public GroupRoleName getGroupRoleName(String groupRoleNameId) throws MambuApiException {
+		// Example GET /api/grouprolenames/groupRoleNameId
+		// Available since 3.9, see MBU-7351
+
+		return serviceExecutor.execute(getGroupRole, groupRoleNameId);
 
 	}
 
@@ -560,6 +676,162 @@ public class ClientsService {
 		// Execute request for DELETE API to delete custom field for an group
 		// e.g. DELETE /host/api/groups/groupId/custominformation/customFieldId
 		return serviceExecutor.execute(deleteGroupCustomField, groupId, customFieldId, null);
+
+	}
+
+	/***
+	 * Get client types
+	 * 
+	 * @param clientType
+	 *            the account holder type (CLIENT or GROUP). If null then both CLIENT and GROUP client types are
+	 *            returned
+	 * @return client types
+	 * @throws MambuApiException
+	 */
+	public List<ClientRole> getClientTypes(AccountHolderType clientType) throws MambuApiException {
+		// Example GET /host/api/clienttypes?for=CLIENTS GET /host/api/clienttypes?for=GROUPS
+		// See MBU-7061 for more details
+
+		// If clientType is null then both types are returned
+		ParamsMap params = null;
+		if (clientType != null) {
+			params = new ParamsMap();
+			String clientTypeParam = (clientType == AccountHolderType.CLIENT) ? APIData.CLIENTS : APIData.GROUPS;
+			params.addParam(FOR_TYPE, clientTypeParam);
+		}
+
+		return serviceExecutor.execute(getClientTypes, params);
+	}
+
+	/***
+	 * Get client profile picture file
+	 * 
+	 * @param clientId
+	 *            the encoded key or id of the Mambu Client
+	 * @return picture file as a Base64 string
+	 * @throws MambuApiException
+	 */
+	public String getClientProfilePicture(String clientId) throws MambuApiException {
+		// Example. GET /api/clients/{ID}/documents/PROFILE_PICTURE
+		// See MBU-7312 for details
+		final String documentType = APIData.PROFILE_PICTURE;
+		String apiResponse = serviceExecutor.execute(getClientProfileFile, clientId, documentType, null);
+
+		// return just the image content part (i.e. without the base64 indicator)
+		return ServiceHelper.getContentForBase64EncodedMessage(apiResponse);
+
+	}
+
+	/***
+	 * Get client signature file
+	 * 
+	 * @param clientId
+	 *            the encoded key or id of the Mambu Client
+	 * 
+	 * @return signature file as a Base64 string
+	 * @throws MambuApiException
+	 */
+	public String getClientSignatureFile(String clientId) throws MambuApiException {
+		// Example. GET /api/clients/{ID}/documents/SIGNATURE
+		// See MBU-7313 for details
+		final String documentType = APIData.SIGNATURE;
+		String apiResponse = serviceExecutor.execute(getClientProfileFile, clientId, documentType, null);
+
+		// return just the image content part (i.e. without the base64 indicator)
+		return ServiceHelper.getContentForBase64EncodedMessage(apiResponse);
+
+	}
+
+	/****
+	 * Upload client profile picture file
+	 * 
+	 * @param pictureDocument
+	 *            JSON document whose content is base64 encoded profile picture file
+	 * 
+	 * @return success or failure
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean uploadClientProfilePicture(String clientId, JSONDocument pictureDocument) throws MambuApiException {
+		// Upload client profile picture. See MBU-7312 for details
+		// Example: POST JSON "{"document":{"name":"Client
+		// Photo", "type":"jpeg"}, "documentContent":"base64encodedString"}" api/clients/{ID}/documents/PROFILE_PICTURE
+		// Returns {"returnCode":0,"returnStatus":"SUCCESS"}.
+
+		if (pictureDocument == null) {
+			throw new IllegalArgumentException("Document cannot be null");
+		}
+		// Make JSON document and add it to the ParamsMap
+		ParamsMap paramsMap = ServiceHelper.makeParamsForDocumentJson(pictureDocument);
+
+		// Update ApiDefintion (we need to use JSON content)
+		postClientProfileFile.setContentType(ContentType.JSON);
+
+		// Execute with PROFILE_PICTURE as an api endpoint
+		final String documentType = APIData.PROFILE_PICTURE;
+		return serviceExecutor.execute(postClientProfileFile, clientId, documentType, paramsMap);
+	}
+
+	/****
+	 * Upload client signature file
+	 * 
+	 * @param signatureDocument
+	 *            JSON document whose content is base64 encoded signature file
+	 * 
+	 * @return success or failure
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean uploadClientSignatureFile(String clientId, JSONDocument signatureDocument) throws MambuApiException {
+		// Upload client profile signature file.See MBU-7313 for details
+		// Example: POST JSON {"document":{"name":"Client Signature",
+		// "type":"png"}, "documentContent":"[base64encodedString]"} api/clients/\{ID\}/documents/SIGNATURE
+		// Returns {"returnCode":0,"returnStatus":"SUCCESS"}.
+
+		if (signatureDocument == null) {
+			throw new IllegalArgumentException("Document cannot be null");
+		}
+		// Make JSON document and add it to the ParamsMap
+		ParamsMap paramsMap = ServiceHelper.makeParamsForDocumentJson(signatureDocument);
+
+		// Update ApiDefintion (we need to use JSON content type and it's set to WWW_FORM)
+		postClientProfileFile.setContentType(ContentType.JSON);
+
+		// Execute with SIGNATURE as an api endpoint
+		final String documentType = APIData.SIGNATURE;
+		return serviceExecutor.execute(postClientProfileFile, clientId, documentType, paramsMap);
+	}
+
+	/***
+	 * Delete client profile picture file
+	 * 
+	 * @param clientId
+	 *            the encoded key or id of the Mambu Client
+	 * @return success or failure
+	 * @throws MambuApiException
+	 */
+	public boolean deleteClientProfilePicture(String clientId) throws MambuApiException {
+		// Example. DELETE /api/clients/{ID}/documents/PROFILE_PICTURE
+		// See MBU-7312 for details
+		final String documentType = APIData.PROFILE_PICTURE;
+		return serviceExecutor.execute(deleteClientProfileFile, clientId, documentType, null);
+
+	}
+
+	/***
+	 * Delete client signature file
+	 * 
+	 * @param clientId
+	 *            the encoded key or id of the Mambu Client
+	 * @return a boolean indicating if deletion was successful
+	 * @throws MambuApiException
+	 */
+	//
+	public boolean deleteClientSignatureFile(String clientId) throws MambuApiException {
+		// e.g. DELETE /api/clients/{ID}/documents/SIGNATURE
+		// See MBU-7313 for details
+		final String documentType = APIData.SIGNATURE;
+		return serviceExecutor.execute(deleteClientProfileFile, clientId, documentType, null);
 
 	}
 }

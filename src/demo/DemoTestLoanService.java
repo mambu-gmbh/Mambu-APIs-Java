@@ -2,9 +2,12 @@ package demo;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import com.mambu.accounts.shared.model.AccountHolderType;
+import com.mambu.accounts.shared.model.AccountState;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -14,15 +17,23 @@ import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.core.shared.model.LoanPenaltyCalculationMethod;
 import com.mambu.core.shared.model.Money;
+import com.mambu.core.shared.model.RepaymentAllocationElement;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
+import com.mambu.loans.shared.model.AmortizationMethod;
+import com.mambu.loans.shared.model.GracePeriodType;
 import com.mambu.loans.shared.model.Guaranty;
 import com.mambu.loans.shared.model.Guaranty.GuarantyType;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanAccount.RepaymentPeriodUnit;
 import com.mambu.loans.shared.model.LoanProduct;
+import com.mambu.loans.shared.model.LoanTranche;
 import com.mambu.loans.shared.model.LoanTransaction;
+import com.mambu.loans.shared.model.Repayment;
+import com.mambu.loans.shared.model.RepaymentScheduleMethod;
+import com.mambu.loans.shared.model.ScheduleDueDatesMethod;
 
 /**
  * Test class to show example usage of the api calls
@@ -49,65 +60,60 @@ public class DemoTestLoanService {
 
 		try {
 			// Get demo entities needed for testing
+			final String testProductId = null; // use specific test ID or null to get random product
+			final String testAccountId = null; // use specific test ID or null to get random loan account
 
 			demoClient = DemoUtil.getDemoClient();
 			demoGroup = DemoUtil.getDemoGroup();
-			demoProduct = DemoUtil.getDemoLoanProduct();
 			demoUser = DemoUtil.getDemoUser();
-			demoLoanAccount = DemoUtil.getDemoLoanAccount();
+
+			demoProduct = DemoUtil.getDemoLoanProduct(testProductId);
+			demoLoanAccount = DemoUtil.getDemoLoanAccount(testAccountId);
 			LOAN_ACCOUNT_ID = demoLoanAccount.getId();
+
+			testCreateJsonAccount();
+			// Test Reject transactions first
+			testPatchLoanAccountTerms(); // Available since 3.9.3
+			testRejectLoanAccount();
+			testDeleteLoanAccount();
 
 			testCreateJsonAccount();
 
 			testApproveLoanAccount();
 			testUndoApproveLoanAccount();
-			testGetLoanAccountDetails();
-			testUpdateLoanAccount();
+			testApproveLoanAccount();
+			// Test Disburse and Undo disburse
+			testDisburseLoanAccountWithDetails();
+			testUndoDisburseLoanAccount(); // Available since 3.9
+			testDisburseLoanAccountWithDetails();
 
-			testGetLoanProducts();
+			testGetLoanProductSchedule(); // Available since 3.9
+
+			testUpdateLoanAccount();
 
 			testGetLoanAccount();
 			testGetLoanAccountDetails();
+			testGetLoanAccountsByBranchCentreOfficerState();
 
 			testGetLoanAccountsForClient();
 			testGetLoanAccountsForGroup();
 
-			testGetLoanAccountsByBranchCentreOfficerState();
-			// transactions
-			testGetLoanAccountTransactions();
-
-			testApproveLoanAccount();
-
-			testDisburseLoanAccountWithDetails();
-
-			testRepayLoanAccount();
 			testApplyFeeToLoanAccount();
+			testRepayLoanAccount();
 
-			// Show latest transactions now
+			// transactions
 			testGetLoanAccountTransactions();
 
 			// Products
 			testGetLoanProducts();
 			testGetLoanProductById();
 
-			testCreateJsonAccount();
+			testLockLoanAccount(); // Available since 3.6
+			testUnlockLoanAccount(); // Available since 3.6
 
-			testRejectLoanAccount();
+			testGetDocuments(); // Available since Mambu 3.6
 
-			// Available since 3.5
-			testUndoApproveLoanAccount();
-
-			// Available since 3.6
-			testLockLoanAccount();
-			testUnlockLoanAccount();
-
-			testDeleteLoanAccount();
-
-			// Available since Mambu 3.6
-			testGetDocuments();
-
-			// Available since 3.8
-			testUpdateDeleteCustomFields();
+			testUpdateDeleteCustomFields(); // Available since 3.8
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Loan Service");
@@ -131,7 +137,7 @@ public class DemoTestLoanService {
 		System.out.println("\nIn testGetLoanAccountDetails");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
-		String accountId = LOAN_ACCOUNT_ID; // LOAN_ACCOUNT_ID NEW_LOAN_ACCOUNT_ID
+		String accountId = NEW_LOAN_ACCOUNT_ID; // LOAN_ACCOUNT_ID NEW_LOAN_ACCOUNT_ID
 		System.out.println("Got loan account by ID with details: "
 				+ loanService.getLoanAccountDetails(accountId).getName());
 
@@ -143,74 +149,23 @@ public class DemoTestLoanService {
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		LoanAccount account = new LoanAccount();
-		account.setId(null);
-		account.setAccountHolderKey(demoClient.getEncodedKey()); // CLIENT_ID
-		account.setAccountHolderType(AccountHolderType.CLIENT);
+		LoanAccount account = makeLoanAccountForDemoProduct();
 
-		account.setProductTypeKey(demoProduct.getEncodedKey()); //
-
-		// The required fields below depend on the selected product type
-		account.setLoanAmount(new Money(5500.00));
-		account.setInterestRate(new BigDecimal("3.2"));
-		account.setRepaymentInstallments(20);
-		account.setGracePeriod(1);
-		// From Product
-		account.setRepaymentPeriodUnit(RepaymentPeriodUnit.DAYS);
-		account.setRepaymentPeriodCount(1);
-
-		// Set Custom fields to null in the account
+		// Set Custom fields to null in the account (they are sent in customInformation field)
 		account.setCustomFieldValues(null);
-		// ADd Custom Fields
 
-		List<CustomFieldValue> clientCustomInformation = new ArrayList<CustomFieldValue>();
-
-		CustomFieldValue custField1 = new CustomFieldValue();
-		String customFieldId = "Loan_Purpose_Loan_Accounts";
-		String customFieldValue = "My Loan_Purpose";
-
-		custField1.setCustomFieldId(customFieldId);
-		custField1.setValue(customFieldValue);
-		// Add new field to the list
-		clientCustomInformation.add(custField1);
-		// Field #2
-		// Loan_Originator_Loan_Accounts
-		CustomFieldValue custField2 = new CustomFieldValue();
-		customFieldId = "Loan_Originator_Loan_Accounts";
-		customFieldValue = "Bank";
-
-		custField2.setCustomFieldId(customFieldId);
-		custField2.setValue(customFieldValue);
-		// Add new field to the list
-		clientCustomInformation.add(custField2);
-
-		// Set Guarantees
-		ArrayList<Guaranty> guarantees = new ArrayList<Guaranty>();
-		// GuarantyType.GUARANTOR
-		Guaranty guarantySecurity = new Guaranty(GuarantyType.GUARANTOR);
-		guarantySecurity.setAmount(new Money((double) 450.0));
-		guarantySecurity.setGuarantorKey(demoClient.getEncodedKey());
-		guarantySecurity.setSavingsAccountKey("8ad661123b36cfaf013b42c954566dd1");
-		guarantees.add(guarantySecurity);
-
-		// GuarantyType.ASSET
-		Guaranty guarantyAsset = new Guaranty(GuarantyType.ASSET);
-		guarantyAsset.setAssetName("Asset Name as a collateral");
-		guarantyAsset.setAmount(new Money((double) 180.0));
-		guarantees.add(guarantyAsset);
-
-		// Add all guarantees to Loan account
-		account.setGuarantees(guarantees);
+		// Use helper to make test custom fields valid for the account's product
+		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(
+				CustomField.Type.LOAN_ACCOUNT_INFO, demoProduct.getEncodedKey());
 
 		// Create Account Expanded
 		LoanAccountExpanded accountExpanded = new LoanAccountExpanded();
+
 		accountExpanded.setLoanAccount(account);
 		accountExpanded.setCustomInformation(clientCustomInformation);
 
 		// Create Account in Mambu
 		newAccount = loanService.createLoanAccount(accountExpanded);
-
-		// accented E
 
 		NEW_LOAN_ACCOUNT_ID = newAccount.getLoanAccount().getId();
 
@@ -225,8 +180,8 @@ public class DemoTestLoanService {
 		if (updatedCustomFields != null) {
 			System.out.println("Custom Fields for Account\n");
 			for (CustomFieldValue value : updatedCustomFields) {
-				System.out.println("CustomFieldKey" + value.getCustomFieldKey() + "\tValue" + value.getValue()
-						+ "\tName" + value.getCustomField().getName());
+				System.out.println("CustomFieldKey=" + value.getCustomFieldKey() + "\tValue=" + value.getValue()
+						+ "\tName=" + value.getCustomField().getName());
 
 			}
 		}
@@ -241,17 +196,9 @@ public class DemoTestLoanService {
 		// Use the newly created account and update some custom fields
 		LoanAccountExpanded updatedAccount = newAccount;
 		List<CustomFieldValue> customFields = updatedAccount.getCustomInformation();
-		String customFieldIdToModifyValue = "Loan_Purpose_Loan_Accounts";
 		if (customFields != null) {
-
 			for (CustomFieldValue value : customFields) {
-				CustomField field = value.getCustomField();
-				String fieldId = field.getId();
-
-				if (fieldId.equals(customFieldIdToModifyValue)) {
-					// Update the value for this field
-					value.setValue("Value updated by testUpdateLoanAccount");
-				}
+				value = DemoUtil.makeNewCustomFieldValue(value);
 			}
 		}
 
@@ -267,17 +214,49 @@ public class DemoTestLoanService {
 		if (updatedCustomFields != null) {
 			System.out.println("Custom Fields for Loan Account\n");
 			for (CustomFieldValue value : updatedCustomFields) {
-				System.out.println("CustomFieldKey" + value.getCustomFieldKey() + "\tValue" + value.getValue()
-						+ "\tName" + value.getCustomField().getName());
-
+				System.out.println("CustomFieldKey=" + value.getCustomFieldKey() + "\tValue=" + value.getValue()
+						+ "\tName=" + value.getCustomField().getName());
 			}
 		}
 
 	}
 
+	// Test Patch Loan account terms API.
+	public static void testPatchLoanAccountTerms() throws MambuApiException {
+		System.out.println("\nIn testPatchLoanAccountTerms");
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		// Use the newly created account and update some terms fields
+		LoanAccount theAccount = newAccount.getLoanAccount();
+		// Create new account with only the terms to be patched
+		LoanAccount account = new LoanAccount();
+		account.setId(theAccount.getId());
+		account.setEncodedKey(theAccount.getEncodedKey()); // encoded key is needed for patching
+		// Set fields to be updated. Update some account terms
+		account.setLoanAmount(theAccount.getLoanAmount()); // loanAmount
+		account.setInterestRate(theAccount.getInterestRate()); // interestRate
+		// Leave some other updatable terms unchanged
+		account.setInterestSpread(theAccount.getInterestSpread()); // interestSpread
+		account.setRepaymentInstallments(theAccount.getRepaymentInstallments()); // repaymentInstallments
+		account.setRepaymentPeriodCount(theAccount.getRepaymentPeriodCount()); // repaymentPeriodCount
+		account.setRepaymentPeriodUnit(theAccount.getRepaymentPeriodUnit()); // repaymentPeriodUnit
+		account.setExpectedDisbursementDate(theAccount.getExpectedDisbursementDate()); // expectedDisbursementDate
+		account.setFirstRepaymentDate(theAccount.getFirstRepaymentDate()); // firstRepaymentDate
+		account.setGracePeriod(theAccount.getGracePeriod()); // gracePeriod
+		account.setPrincipalRepaymentInterval(theAccount.getPrincipalRepaymentInterval()); // principalRepaymentInterval
+		account.setPenaltyRate(theAccount.getPenaltyRate()); // penaltyRate
+		account.setPeriodicPayment(theAccount.getPeriodicPayment()); // periodicPayment
+
+		// Patch loan account terms
+		boolean result = loanService.patchLoanAccount(account);
+		System.out.println("Loan Terms Update for account. Status=" + result);
+
+	}
+
 	// / Transactions testing
 	public static void testDisburseLoanAccountWithDetails() throws MambuApiException {
-		System.out.println("\nIn test Disburse LoanAccount with Deatils");
+		System.out.println("\nIn test Disburse LoanAccount with Details");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
@@ -297,16 +276,29 @@ public class DemoTestLoanService {
 				+ " amount=" + transaction.getAmount().toString());
 	}
 
+	// Test undo disbursement transaction
+	public static void testUndoDisburseLoanAccount() throws MambuApiException {
+		System.out.println("\nIn testUndoDisburseLoanAccount");
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+		String accountId = NEW_LOAN_ACCOUNT_ID;
+		LoanTransaction transaction = loanService.undoDisburseLoanAccount(accountId);
+		System.out.println("\nOK Undo Loan Disbursement for account=" + accountId + "\tTransaction Id="
+				+ transaction.getTransactionId());
+
+	}
+
 	public static void testGetLoanAccountTransactions() throws MambuApiException {
 		System.out.println("\nIn testGetLoanAccount Transactions");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		String offest = "0";
 		String limit = "8";
 
-		List<LoanTransaction> transactions = loanService.getLoanAccountTransactions(LOAN_ACCOUNT_ID, offest, limit);
+		final String accountId = NEW_LOAN_ACCOUNT_ID; // LOAN_ACCOUNT_ID or NEW_LOAN_ACCOUNT_ID
+		List<LoanTransaction> transactions = loanService.getLoanAccountTransactions(accountId, offest, limit);
 
 		System.out.println("Got loan accounts transactions, total=" + transactions.size()
-				+ " in a range for the Loan with the " + LOAN_ACCOUNT_ID + " id:" + " Range=" + offest + "  " + limit);
+				+ " in a range for the Loan with the " + accountId + " id:" + " Range=" + offest + "  " + limit);
 		for (LoanTransaction transaction : transactions) {
 			System.out.println("Trans ID=" + transaction.getTransactionId() + "  " + transaction.getType() + "  "
 					+ transaction.getEntryDate().toString());
@@ -316,11 +308,15 @@ public class DemoTestLoanService {
 	public static void testRepayLoanAccount() throws MambuApiException {
 		System.out.println("\nIn test Repay LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
-		String amount = "93.55";
+		Money repaymentAmount = demoLoanAccount.getDueAmount(RepaymentAllocationElement.PRINCIPAL);
+		if (repaymentAmount == null || repaymentAmount.isNegativeOrZero()) {
+			repaymentAmount = new Money(320);
+		}
+		String amount = repaymentAmount.toPlainString();
 		String date = null; // "2012-11-23";
 		String notes = "repayment notes from API";
 
-		String accountId = LOAN_ACCOUNT_ID;
+		String accountId = NEW_LOAN_ACCOUNT_ID;
 
 		// Make demo transactionDetails with the valid channel fields
 		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
@@ -334,9 +330,15 @@ public class DemoTestLoanService {
 	public static void testApplyFeeToLoanAccount() throws MambuApiException {
 		System.out.println("\nIn test Applying Fee to a Loan Account");
 
+		// API supports applying fee only for products with 'Allow Arbitrary Fees" setting
+		if (!demoProduct.getAllowArbitraryFees()) {
+			System.out.println("\nWARNING: demo product=" + demoProduct.getName()
+					+ " doesn't allow Arbitrary Fees. Use other product to test applyFee API");
+			return;
+		}
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		String amount = "10";
-		String repaymentNumber = "100";
+		String repaymentNumber = "10";
 		String accountId = NEW_LOAN_ACCOUNT_ID;
 		String notes = "Notes for applying fee to a loan";
 
@@ -410,7 +412,7 @@ public class DemoTestLoanService {
 		System.out.println("\nIn test Approve LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		LoanAccount account = loanService.approveLoanAccount(LOAN_ACCOUNT_ID, "some demo notes");
+		LoanAccount account = loanService.approveLoanAccount(NEW_LOAN_ACCOUNT_ID, "some demo notes");
 
 		System.out.println("Approving loan account with the " + NEW_LOAN_ACCOUNT_ID + " Loan name="
 				+ account.getLoanName() + "  Account State=" + account.getState().toString());
@@ -430,7 +432,7 @@ public class DemoTestLoanService {
 		System.out.println("\nIn test Undo Approve LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		final String accountId = LOAN_ACCOUNT_ID;
+		final String accountId = NEW_LOAN_ACCOUNT_ID;
 		LoanAccount account = loanService.undoApproveLoanAccount(accountId, "some undo approve demo notes");
 
 		System.out.println("Undo Approving loan account with the " + accountId + " Loan name " + account.getLoanName()
@@ -441,7 +443,7 @@ public class DemoTestLoanService {
 		System.out.println("\nIn test Lock LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		String accountId = LOAN_ACCOUNT_ID;
+		String accountId = NEW_LOAN_ACCOUNT_ID;
 		LoanTransaction transaction = loanService.lockLoanAccount(accountId, "some lock demo notes");
 
 		System.out.println("Locked account with ID " + accountId + " Transaction  " + transaction.getTransactionId()
@@ -452,7 +454,7 @@ public class DemoTestLoanService {
 		System.out.println("\nIn test Unlock LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		String accountId = LOAN_ACCOUNT_ID;
+		String accountId = NEW_LOAN_ACCOUNT_ID;
 		LoanTransaction transaction = loanService.unlockLoanAccount(accountId, "some unlock demo notes");
 
 		System.out.println("UnLocked account with ID " + accountId + " Transaction  " + transaction.getTransactionId()
@@ -495,12 +497,202 @@ public class DemoTestLoanService {
 		System.out.println("\nIn testGetLoanProductById");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		String productId = "AGL"; //
+		String productId = demoProduct.getId();
 
 		LoanProduct product = loanService.getLoanProduct(productId);
 
 		System.out.println("Product=" + product.getName() + "  Id=" + product.getId() + " Loan Type="
 				+ product.getLoanType().name());
+
+	}
+
+	public static void testGetLoanProductSchedule() throws MambuApiException {
+		System.out.println("\nIn testGetLoanProductSchedule");
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		String productId = demoProduct.getId();
+
+		LoanAccount loanAccount = makeLoanAccountForDemoProduct();
+
+		// Get the repayment schedule for these loan params
+		List<Repayment> repayments = loanService.getLoanProductSchedule(productId, loanAccount);
+
+		// Log the results
+		int totalRepayments = (repayments == null) ? 0 : repayments.size();
+		System.out.println("Total repayments=" + totalRepayments + "\tfor product ID=" + productId);
+		if (totalRepayments == 0) {
+			return;
+		}
+		Repayment firstRepayment = repayments.get(0);
+		Repayment lastRepayment = repayments.get(totalRepayments - 1);
+		System.out.println("First Repayment. Date Date=" + firstRepayment.getDueDate() + "\tTotal Due="
+				+ firstRepayment.getTotalDue());
+		System.out.println("Last Repayment. Date Date=" + lastRepayment.getDueDate() + "\tTotal Due="
+				+ lastRepayment.getTotalDue());
+	}
+
+	private static final String apiTestLoanNamePrefix = "API Test Loan ";
+
+	// Create demo loan account with parameters consistent with the demo product
+	private static LoanAccount makeLoanAccountForDemoProduct() {
+		System.out.println("\nIn makeLoanAccountForDemoProduct for product name=" + demoProduct.getName() + " id="
+				+ demoProduct.getId());
+
+		LoanAccount loanAccount = new LoanAccount();
+
+		// Set params to be consistent with the demo product (to be accepted by the GET product schedule API and create
+		// loan
+		loanAccount.setId(null);
+		loanAccount.setLoanName(apiTestLoanNamePrefix + new Date().getTime());
+		loanAccount.setProductTypeKey(demoProduct.getEncodedKey());
+
+		boolean isForClient = demoProduct.isForIndividuals();
+		String holderKey = (isForClient) ? demoClient.getEncodedKey() : demoGroup.getEncodedKey();
+		AccountHolderType holderType = (isForClient) ? AccountHolderType.CLIENT : AccountHolderType.GROUP;
+		loanAccount.setAccountHolderKey(holderKey);
+		loanAccount.setAccountHolderType(holderType);
+
+		// LoanAmount
+		Money amountDef = demoProduct.getDefaultLoanAmount();
+		Money amountMin = demoProduct.getMinLoanAmount();
+		Money amountMax = demoProduct.getMaxLoanAmount();
+		Money amount = (amountDef == null) ? null : amountDef;
+		amount = (amount == null && amountMin != null) ? amountMin : amount;
+		amount = (amount == null && amountMax != null) ? amountMax : amount;
+		if (amount == null) {
+			// Is still null, so no limits
+			amount = new Money(3000.00f);
+		}
+		loanAccount.setLoanAmount(amount); // Mandatory
+
+		// Add periodic payment: required and is mandatory for BALLOON_PAYMENTS products
+		if (demoProduct.getAmortizationMethod() == AmortizationMethod.BALLOON_PAYMENTS) {
+			loanAccount.setPeriodicPayment(amount.multiply(new BigDecimal(0.5)));
+		}
+
+		// InterestRate
+		loanAccount.setInterestRate(null);
+		loanAccount.setInterestRateSource(null);
+		if (demoProduct.getRepaymentScheduleMethod() != RepaymentScheduleMethod.NONE) {
+			BigDecimal interestRateDef = demoProduct.getDefaultInterestRate();
+			BigDecimal interestRateMin = demoProduct.getMinInterestRate();
+			BigDecimal interestRateMax = demoProduct.getMaxInterestRate();
+			BigDecimal interestRate = (interestRateDef == null) ? null : interestRateDef;
+			interestRate = (interestRate == null && interestRateMin != null) ? interestRateMin : interestRate;
+			interestRate = (interestRate == null && interestRateMax != null) ? interestRateMax : interestRate;
+			if (interestRate == null) {
+				// Is still null, so no limits
+				interestRate = new BigDecimal(6.5f);
+			}
+			loanAccount.setInterestRate(interestRate);
+			loanAccount.setInterestRateSource(demoProduct.getInterestRateSource());
+		}
+
+		// DisbursementDate
+		// Set dates 3-4 days into the future
+		long timeNow = new Date().getTime();
+		long aDay = 24 * 60 * 60 * 1000; // 1 day in msecs
+		loanAccount.setDisbursementDate(new Date(timeNow + 3 * aDay)); // 3 days from now
+		// FirstRepaymentDate
+
+		Date firstRepaymentDate = new Date(timeNow + 4 * aDay);// 4 days form now
+		// Check for fixed days product
+		ScheduleDueDatesMethod scheduleDueDatesMethod = demoProduct.getScheduleDueDatesMethod();
+		if (scheduleDueDatesMethod == ScheduleDueDatesMethod.FIXED_DAYS_OF_MONTH) {
+			List<Integer> fixedDays = demoProduct.getFixedDaysOfMonth();
+			if (fixedDays != null && fixedDays.size() > 0) {
+				Calendar date = Calendar.getInstance();
+				date.set(date.get(Calendar.YEAR), date.get(Calendar.MONTH) + 1, fixedDays.get(fixedDays.size() - 1));
+				firstRepaymentDate = date.getTime();
+			}
+		}
+		loanAccount.setFirstRepaymentDate(firstRepaymentDate);
+
+		// Tranches
+		Integer maxTranches = demoProduct.getMaxNumberOfDisbursementTranches();
+		if (maxTranches != null && maxTranches > 1) {
+			LoanTranche tranche = new LoanTranche(loanAccount.getLoanAmount(), loanAccount.getDisbursementDate());
+			loanAccount.setDisbursementDate(null);
+			ArrayList<LoanTranche> tanches = new ArrayList<LoanTranche>();
+			tanches.add(tranche);
+			loanAccount.setTranches(tanches);
+		}
+		// RepaymentPeriodCount
+		Integer defRepPeriodCount = demoProduct.getDefaultRepaymentPeriodCount();
+		if (defRepPeriodCount == null) {
+			defRepPeriodCount = 30;
+		}
+		loanAccount.setRepaymentPeriodCount(defRepPeriodCount);
+		// RepaymentPeriodUnit
+		RepaymentPeriodUnit units = demoProduct.getRepaymentPeriodUnit();
+		if (units == null) {
+			units = RepaymentPeriodUnit.DAYS;
+		}
+		loanAccount.setRepaymentPeriodUnit(units);
+		// RepaymentInstallments
+		Integer repaymentInsatllments = demoProduct.getDefaultNumInstallments();
+		if (repaymentInsatllments == null) {
+			repaymentInsatllments = 10;
+		}
+		loanAccount.setRepaymentInstallments(repaymentInsatllments);
+		// PrincipalRepaymentInterval
+		Integer principalRepaymentInterva = demoProduct.getDefaultPrincipalRepaymentInterval();
+		if (principalRepaymentInterva != null) {
+			loanAccount.setPrincipalRepaymentInterval(principalRepaymentInterva);
+		} else {
+			// TODO: remove this assignment when model changed to Integer
+			loanAccount.setPrincipalRepaymentInterval(1);
+		}
+		// Penalty Rate
+		if (demoProduct.getLoanPenaltyCalculationMethod() != LoanPenaltyCalculationMethod.NONE) {
+			BigDecimal defPenaltyRate = demoProduct.getDefaultPenaltyRate();
+			BigDecimal minPenaltyRate = demoProduct.getMinPenaltyRate();
+			BigDecimal maxPenaltyRate = demoProduct.getMaxPenaltyRate();
+			BigDecimal penaltyRate = (defPenaltyRate == null) ? null : defPenaltyRate;
+			penaltyRate = (penaltyRate == null && minPenaltyRate != null) ? minPenaltyRate : null;
+			penaltyRate = (penaltyRate == null && maxPenaltyRate != null) ? maxPenaltyRate : null;
+			loanAccount.setPenaltyRate(penaltyRate);
+		}
+
+		// GracePeriod
+		loanAccount.setGracePeriod(0);
+		if (demoProduct.getGracePeriodType() != GracePeriodType.NONE) {
+			Integer defGrace = demoProduct.getDefaultGracePeriod();
+			Integer minGrace = demoProduct.getMinGracePeriod();
+			Integer maxGrace = demoProduct.getMaxGracePeriod();
+			Integer gracePeriod = (defGrace == null) ? null : defGrace;
+			gracePeriod = (gracePeriod == null && minGrace != null) ? minGrace : gracePeriod;
+			gracePeriod = (gracePeriod == null && maxGrace != null) ? maxGrace : gracePeriod;
+			// TODO: set directly when the new model has gracePeriod as Integer
+			if (gracePeriod != null) {
+				loanAccount.setGracePeriod(gracePeriod);
+			}
+		}
+		// Set Guarantees. Available for API since 3.9. See MBU-6528
+		ArrayList<Guaranty> guarantees = new ArrayList<Guaranty>();
+		if (demoProduct.getAllowGuarantors()) {
+			// GuarantyType.GUARANTOR
+			Guaranty guarantySecurity = new Guaranty(GuarantyType.GUARANTOR);
+			guarantySecurity.setAmount(loanAccount.getLoanAmount());
+			guarantySecurity.setGuarantorKey(demoClient.getEncodedKey());
+			guarantees.add(guarantySecurity);
+		}
+		if (demoProduct.getAllowCollateral()) {
+			// GuarantyType.ASSET
+			Guaranty guarantyAsset = new Guaranty(GuarantyType.ASSET);
+			guarantyAsset.setAssetName("Asset Name as a collateral");
+			guarantyAsset.setAmount(loanAccount.getLoanAmount());
+			guarantees.add(guarantyAsset);
+
+		}
+		// Add all guarantees to Loan account
+		loanAccount.setGuarantees(guarantees);
+
+		loanAccount.setExpectedDisbursementDate(loanAccount.getDisbursementDate());
+		loanAccount.setDisbursementDate(null);
+
+		loanAccount.setNotes("Created by DemoTest on " + new Date());
+		return loanAccount;
 
 	}
 
@@ -554,7 +746,7 @@ public class DemoTestLoanService {
 
 			String fieldId = value.getCustomFieldId(); // return null for Group, Branch, Centre?
 			// Create valid new value for a custom field
-			String newValue = DemoUtil.makeNewCustomFieldValue(value);
+			String newValue = DemoUtil.makeNewCustomFieldValue(value).getValue();
 
 			// Update Custom Field value
 			boolean updateStatus;
@@ -593,5 +785,35 @@ public class DemoTestLoanService {
 		String statusMessage = (deleteStatus) ? "Success" : "Failure";
 		System.out.println(statusMessage + " deleting Custom Field, ID=" + customFieldId + " for demo " + entityName
 				+ " with ID=" + entityId);
+	}
+
+	// Internal clean up routine. Can be used to delete non-disbursed accounts created by these demo test runs
+	public static void deleteTestAPILoanAccounts() throws MambuApiException {
+		System.out.println("\nIn deleteTestAPILoanAccounts");
+		System.out.println("**  Deleting all Test Loan Accounts for Client =" + demoClient.getFullNameWithId() + " **");
+		LoansService loanService = MambuAPIFactory.getLoanService();
+		List<LoanAccount> accounts = loanService.getLoanAccountsForClient(demoClient.getId());
+		if (accounts == null || accounts.size() == 0) {
+			System.out.println("Nothing to delete for client " + demoClient.getFullNameWithId());
+			return;
+		}
+		for (LoanAccount account : accounts) {
+			String name = account.getLoanName();
+			if (name.contains(apiTestLoanNamePrefix)) {
+				AccountState state = account.getAccountState();
+				if (state == AccountState.PARTIAL_APPLICATION || state == AccountState.PENDING_APPROVAL
+						|| state == AccountState.APPROVED) {
+					String id = account.getId();
+					System.out.println("Deleting loan account " + name + " ID=" + id);
+					try {
+						loanService.deleteLoanAccount(id);
+					} catch (MambuApiException e) {
+						System.out.println("Account " + id + " is NOT deleted. Exception=" + e.getMessage());
+						continue;
+					}
+				}
+			}
+		}
+
 	}
 }

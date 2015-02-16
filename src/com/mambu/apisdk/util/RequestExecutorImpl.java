@@ -341,7 +341,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 
 		// Log Mambu response
-		logApiResponse(status, response);
+		logApiResponse(urlString, status, response);
 
 		// if status is Ok - return the response
 		if (status == HttpURLConnection.HTTP_OK || status == HttpURLConnection.HTTP_CREATED) {
@@ -554,6 +554,15 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 	}
 
+	// Strings and constants used for logging formatting
+	final static String documentContentParam = "\"documentContent\":";
+	final static String documentRoot = "\"document\":";
+	final static String documentsApiEndpoint = "/" + APIData.DOCUMENTS + "/";
+	final static String moreIndicator = "...\"";
+	final static int howManyEncodedCharsToShow = 20;
+	// must be long enough to show full string for boolean API responses
+	final static int howManyDocumentResponseCharsToShow = 50;
+
 	/**
 	 * Log Json string details. This is a helper method for modifying the original Json string to remove details that
 	 * are needed for logging (for example, encoded data when sending documents via Json)
@@ -573,17 +582,15 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		// Documents API case - remove base64 encoding
 		// Find the documentContent tag (containing base64 string) and remove extra content
-		final String documentRoot = "{\"document\":";
-		if (jsonString.startsWith(documentRoot)) {
-			final String documentContentParam = "\"documentContent\":";
+		if (jsonString.contains(documentRoot)) {
 			int contentStarts = jsonString.indexOf(documentContentParam);
 			if (contentStarts != -1) {
 				// Get everything up to the documentContent plus some more
 				final int encodedCharsToShow = 20;
 				// Also add "..." to indicate that the output was truncated
 				jsonString = jsonString
-						.substring(0, contentStarts + documentContentParam.length() + encodedCharsToShow) + "...\"}";
-
+						.substring(0, contentStarts + documentContentParam.length() + encodedCharsToShow)
+						+ moreIndicator + "}";
 			}
 		}
 
@@ -595,12 +602,14 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * Log API response details. This is a helper method for using consistent formating when using Java Logger to print
 	 * the details of the API response
 	 * 
+	 * @param urlString
+	 *            url request string
 	 * @param status
 	 *            response status
 	 * @param response
 	 *            response string
 	 */
-	private void logApiResponse(int status, String response) {
+	private void logApiResponse(String urlString, int status, String response) {
 
 		if (!LOGGER.isLoggable(Level.INFO)) {
 			return;
@@ -616,12 +625,19 @@ public class RequestExecutorImpl implements RequestExecutor {
 			// Find ";base64,";
 			final String encodedDataIndicator = APIData.BASE64_ENCODING_INDICATOR;
 			final int encodedDataStart = response.indexOf(encodedDataIndicator);
+			// Document APIs may also return very long strings with encoded content (but without the
+			// BASE64_ENCODING_INDICATOR as for image API)
+			final boolean isDocumentApiResponse = (urlString.contains(documentsApiEndpoint)) ? true : false;
 			if (encodedDataStart != -1) {
 				// This is a response containing base64 encoded data. Strip the bulk of it out
-				final int howManyEncodedToShow = 20;
-				int totalCharsToShow = encodedDataStart + encodedDataIndicator.length() + howManyEncodedToShow;
+				int totalCharsToShow = encodedDataStart + encodedDataIndicator.length() + howManyEncodedCharsToShow;
 				// Get the needed part of this response and add "..." indicator
-				response = response.substring(0, totalCharsToShow) + "...\"";
+				response = response.substring(0, totalCharsToShow) + moreIndicator;
+			} else if (isDocumentApiResponse) {
+				// It's a document API response. Could be also very long. Limit the output
+				if (response.length() > howManyDocumentResponseCharsToShow) {
+					response = response.substring(0, howManyDocumentResponseCharsToShow) + moreIndicator;
+				}
 			}
 
 			// Log API response Status and the Response string

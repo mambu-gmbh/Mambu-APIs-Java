@@ -13,8 +13,8 @@ Usage
 
 To use the Mambu Java API Wrapper, please include the following jars in your build path
 
-* build/Mambu-APIs-Java-3.8-bin.jar
-* lib/mambu-models-v3.8.jar
+* build/Mambu-APIs-Java-3.9-bin.jar
+* lib/mambu-models-v3.9.jar
 * further dependencies to run and test (see pom.xml for versions)
  * httpclient
  * gson

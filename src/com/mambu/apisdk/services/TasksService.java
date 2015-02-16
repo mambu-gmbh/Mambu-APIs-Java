@@ -110,11 +110,17 @@ public class TasksService {
 	 * Creates a new task using an html form encoded request
 	 * 
 	 * @param title
+	 *            title (mandatory)
 	 * @param username
+	 *            username, encodedKey or user id
 	 * @param description
+	 *            description
 	 * @param dueDate
+	 *            due date
 	 * @param clientId
+	 *            client encoded key or id
 	 * @param groupId
+	 *            group encoded key or id
 	 * 
 	 * @return the new task parsed as an object returned from the API call
 	 * 
@@ -144,17 +150,20 @@ public class TasksService {
 	 * Get tasks based on the specified criteria, which can include clientId, username, and/or task's state
 	 * 
 	 * @param username
+	 *            username, encodedKey or user id
 	 * @param clientId
+	 *            client encodedKey or id
 	 * @param taskStatus
+	 *            task status
 	 * @param offset
 	 *            pagination offset
 	 * @param limit
 	 *            pagination limit
 	 * 
 	 * @return a list of tasks matching specified criteria. If tasksStatus is null then Open tasks are returned. To get
-	 *         tasks for the user a username must not be null. To get tasks for the client the clientId must not be null
-	 *         and the username must be null. If both username and clientId are not null then the clientId is ignored
-	 *         and all tasks for the user are returned.
+	 *         tasks for the user a username(or id) must not be null. To get tasks for the client the clientId must not
+	 *         be null and the username must be null. If both username and clientId are not null then the clientId is
+	 *         ignored and all tasks for the user are returned.
 	 * 
 	 * @throws MambuApiException
 	 */
@@ -182,7 +191,7 @@ public class TasksService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public boolean deleteTasks(String taskId) throws MambuApiException {
+	public boolean deleteTask(String taskId) throws MambuApiException {
 		return serviceExecutor.execute(deleteTask, taskId);
 	}
 

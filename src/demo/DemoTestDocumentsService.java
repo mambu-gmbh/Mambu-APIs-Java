@@ -1,14 +1,7 @@
 package demo;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
-
-import org.apache.commons.codec.binary.Base64;
 
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIFactory;
@@ -65,6 +58,8 @@ public class DemoTestDocumentsService {
 
 			testGetDocument();
 
+			testDeleteDocument();
+
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Document Service");
 			System.out.println("Error code=" + e.getErrorCode());
@@ -113,7 +108,7 @@ public class DemoTestDocumentsService {
 
 		// Encode this file
 		Date d1 = new Date();
-		String encodedString = encodeFileIntoBase64String(filePath);
+		String encodedString = DemoUtil.encodeFileIntoBase64String(filePath);
 		Date d2 = new Date();
 		long diff1 = d2.getTime() - d1.getTime();
 		if (encodedString == null) {
@@ -121,8 +116,8 @@ public class DemoTestDocumentsService {
 			return;
 		}
 
-		System.out.println("Time to encode file=" + diff1 + " Length=" + encodedString.length() + " Encoded string:"
-				+ encodedString);
+		System.out.println("Time to encode file=" + diff1 + " Length=" + encodedString.length());
+		logDocumentContent(encodedString);
 
 		JSONDocument jsonDocument = new JSONDocument();
 
@@ -137,7 +132,7 @@ public class DemoTestDocumentsService {
 		// document.setName("Loan Sample JPEG file");
 
 		document.setName("test.jpg");
-		document.setOriginalFilename("abc d.txt");
+		document.setOriginalFilename("abc d.jpg");
 		document.setType("jpg");
 
 		jsonDocument.setDocument(document);
@@ -169,8 +164,10 @@ public class DemoTestDocumentsService {
 
 		if (imageKey == null) {
 			imageKey = UPLOADED_DOCUMENT_KEY;
-			System.out.println("testGetImage: Client =" + demoClient.getFullName()
-					+ "  doesn't have a picture attached. Getting the just uploaded image, Key=" + imageKey);
+			System.out.println("testGetImage: WARNING: Client =" + demoClient.getFullName()
+					+ "  doesn't have a picture attached to test getImage()");
+			return;
+
 		}
 
 		// LARGE, MEDIUM, SMALL_THUMB , TINY_THUMB or null for full size
@@ -236,7 +233,7 @@ public class DemoTestDocumentsService {
 		if (CLIENT_DOCUMENT_ID != null) {
 			System.out.println("\nDocument Details for a Client document with ID=" + CLIENT_DOCUMENT_ID);
 			document = documentsService.getDocument(CLIENT_DOCUMENT_ID);
-			System.out.println("\nContent:" + document);
+			logDocumentContent(document);
 		} else {
 			System.out.println("\nNo Documents attached to a demo client");
 		}
@@ -245,7 +242,7 @@ public class DemoTestDocumentsService {
 		if (LOAN_DOCUMENT_ID != null) {
 			System.out.println("\nDocument Details for a Loan document with ID=" + LOAN_DOCUMENT_ID);
 			document = documentsService.getDocument(LOAN_DOCUMENT_ID);
-			System.out.println("\nContent:" + document);
+			logDocumentContent(document);
 		} else {
 			System.out.println("\nNo Documents attached to a demo loan account");
 		}
@@ -254,58 +251,20 @@ public class DemoTestDocumentsService {
 		if (SAVAINGS_DOCUMENT_ID != null) {
 			System.out.println("\nDocument Details for a Savings document with ID=" + SAVAINGS_DOCUMENT_ID);
 			document = documentsService.getDocument(SAVAINGS_DOCUMENT_ID);
-			System.out.println("\nContent:" + document);
+			logDocumentContent(document);
 		} else {
 			System.out.println("\nNo Documents attached to a demo savings account");
 		}
 
 	}
 
-	// Private Helpers
-	private static String encodeFileIntoBase64String(String absolutePath) {
-		final String methodName = "encodeFileIntoBase64String";
+	public static void testDeleteDocument() throws MambuApiException {
+		System.out.println("\nIn testDeleteDocument");
 
-		System.out.println("Encoding image file=" + absolutePath);
-
-		InputStream inputStream = null;
-		try {
-			inputStream = new FileInputStream(absolutePath);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			System.out.println("Picture file not found. Path=" + absolutePath);
-			return null;
-		}
-
-		// Convert file to bytes stream
-		byte[] bytes;
-		byte[] buffer = new byte[8192];
-		int bytesRead;
-		ByteArrayOutputStream output = new ByteArrayOutputStream();
-		try {
-			while ((bytesRead = inputStream.read(buffer)) != -1) {
-				output.write(buffer, 0, bytesRead);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.out
-					.println(methodName + " IO Exception reading file=" + absolutePath + " Message=" + e.getMessage());
-			return null;
-		}
-		bytes = output.toByteArray();
-
-		// Encode the byte stream
-		String encodedString = Base64.encodeBase64URLSafeString(bytes);
-		boolean isBase64 = Base64.isArrayByteBase64(encodedString.getBytes());
-		System.out.println("Encoded document. Is String Base64=" + isBase64);
-
-		// Close open streams
-		try {
-			inputStream.close();
-			output.close();
-		} catch (IOException e) {
-
-		}
-		return encodedString;
+		String documentId = UPLOADED_DOCUMENT_KEY;
+		DocumentsService documentsService = MambuAPIFactory.getDocumentsService();
+		boolean deletionStatus = documentsService.deleteDocument(documentId);
+		System.out.println("Deleted Document ID=" + documentId + "\tStatus=" + deletionStatus);
 
 	}
 
@@ -336,5 +295,16 @@ public class DemoTestDocumentsService {
 				+ doc.getOriginalFilename() + "\tType=" + doc.getType());
 		System.out.println("Holder Type=" + doc.getDocumentHolderType() + "\tHolder Key=" + doc.getDocumentHolderKey());
 
+	}
+
+	// Log details for the encoded document content
+	private static void logDocumentContent(String content) {
+
+		if (content == null) {
+			System.out.println("\nContent is null");
+			return;
+		}
+		final int maxLength = 20;
+		System.out.println("\nContent:" + content.substring(0, Math.min(maxLength, content.length() - 1)) + "...");
 	}
 }
