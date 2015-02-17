@@ -118,7 +118,9 @@ public class DemoTestRepaymentService {
 
 		List<Repayment> modifiedRepayments = new ArrayList<Repayment>();
 		final long fiveDays = 5 * 24 * 60 * 60 * 1000; // 5 days
-		int minusOrPlusOne = -1;
+		int minusOrPlusOne = -1; // indicator to increase or t decrease repayment amount
+		final int maxRepaymentsToUpdate = 4; // Maximum number to update
+		int i = 0;
 		for (Repayment repayment : repayemnts) {
 			// Fully paid repayments cannot be modified
 			if (repayment.wasFullyPaid()) {
@@ -140,6 +142,10 @@ public class DemoTestRepaymentService {
 
 			// Change amount sign: update some repayments with additions and some with subtraction
 			minusOrPlusOne = -minusOrPlusOne;
+			i++;
+			if (i >= maxRepaymentsToUpdate) {
+				break;
+			}
 
 		}
 		// Submit Update schedule API request with these updated entries

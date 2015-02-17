@@ -556,7 +556,7 @@ public class DemoTestLoanService {
 		Money amountDef = demoProduct.getDefaultLoanAmount();
 		Money amountMin = demoProduct.getMinLoanAmount();
 		Money amountMax = demoProduct.getMaxLoanAmount();
-		Money amount = (amountDef == null) ? null : amountDef;
+		Money amount = amountDef;
 		amount = (amount == null && amountMin != null) ? amountMin : amount;
 		amount = (amount == null && amountMax != null) ? amountMax : amount;
 		if (amount == null) {
@@ -577,7 +577,7 @@ public class DemoTestLoanService {
 			BigDecimal interestRateDef = demoProduct.getDefaultInterestRate();
 			BigDecimal interestRateMin = demoProduct.getMinInterestRate();
 			BigDecimal interestRateMax = demoProduct.getMaxInterestRate();
-			BigDecimal interestRate = (interestRateDef == null) ? null : interestRateDef;
+			BigDecimal interestRate = interestRateDef;
 			interestRate = (interestRate == null && interestRateMin != null) ? interestRateMin : interestRate;
 			interestRate = (interestRate == null && interestRateMax != null) ? interestRateMax : interestRate;
 			if (interestRate == null) {
@@ -644,23 +644,24 @@ public class DemoTestLoanService {
 			loanAccount.setPrincipalRepaymentInterval(1);
 		}
 		// Penalty Rate
+		loanAccount.setPenaltyRate(null);
 		if (demoProduct.getLoanPenaltyCalculationMethod() != LoanPenaltyCalculationMethod.NONE) {
 			BigDecimal defPenaltyRate = demoProduct.getDefaultPenaltyRate();
 			BigDecimal minPenaltyRate = demoProduct.getMinPenaltyRate();
 			BigDecimal maxPenaltyRate = demoProduct.getMaxPenaltyRate();
-			BigDecimal penaltyRate = (defPenaltyRate == null) ? null : defPenaltyRate;
-			penaltyRate = (penaltyRate == null && minPenaltyRate != null) ? minPenaltyRate : null;
-			penaltyRate = (penaltyRate == null && maxPenaltyRate != null) ? maxPenaltyRate : null;
+			BigDecimal penaltyRate = defPenaltyRate;
+			penaltyRate = (penaltyRate == null && minPenaltyRate != null) ? minPenaltyRate : penaltyRate;
+			penaltyRate = (penaltyRate == null && maxPenaltyRate != null) ? maxPenaltyRate : penaltyRate;
 			loanAccount.setPenaltyRate(penaltyRate);
 		}
 
 		// GracePeriod
-		loanAccount.setGracePeriod(0);
+		loanAccount.setGracePeriod(null);
 		if (demoProduct.getGracePeriodType() != GracePeriodType.NONE) {
 			Integer defGrace = demoProduct.getDefaultGracePeriod();
 			Integer minGrace = demoProduct.getMinGracePeriod();
 			Integer maxGrace = demoProduct.getMaxGracePeriod();
-			Integer gracePeriod = (defGrace == null) ? null : defGrace;
+			Integer gracePeriod = defGrace;
 			gracePeriod = (gracePeriod == null && minGrace != null) ? minGrace : gracePeriod;
 			gracePeriod = (gracePeriod == null && maxGrace != null) ? maxGrace : gracePeriod;
 			// TODO: set directly when the new model has gracePeriod as Integer
