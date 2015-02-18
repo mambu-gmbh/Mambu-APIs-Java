@@ -547,7 +547,7 @@ public class DemoTestClientService {
 
 		String clientKey = demoClient.getEncodedKey();
 		// Get client picture
-		String profileDocument = clientService.getClientProfilePicture(clientKey);
+		String profileDocument = clientService.getClientProfilePictureFile(clientKey);
 		int responseLength = (profileDocument == null) ? 0 : profileDocument.length();
 		System.out.println("\nProfile picture file returned. Total chars=" + responseLength);
 
