@@ -716,11 +716,14 @@ public class ClientsService {
 	}
 
 	/***
-	 * Get client profile picture file
+	 * Get client profile picture API response message containing image type indicator and the base64 encoded picture
+	 * file
+	 * 
+	 * API response message format: "data:image/jpg;base64,/9j/4AAQSkZJRgABAgAA..."
 	 * 
 	 * @param clientId
 	 *            the encoded key or id of the Mambu Client
-	 * @return picture file as a Base64 string
+	 * @return API response string
 	 * @throws MambuApiException
 	 */
 	public String getClientProfilePicture(String clientId) throws MambuApiException {
@@ -729,13 +732,52 @@ public class ClientsService {
 		final String documentType = APIData.PROFILE_PICTURE;
 		String apiResponse = serviceExecutor.execute(getClientProfileFile, clientId, documentType, null);
 
+		return apiResponse;
+
+	}
+
+	/***
+	 * Convenience method to get get client profile picture file content only (base64 encoded)
+	 * 
+	 * @param clientId
+	 *            the encoded key or id of the Mambu Client
+	 * @return picture file as a Base64 string
+	 * @throws MambuApiException
+	 */
+	public String getClientProfilePictureFile(String clientId) throws MambuApiException {
+		// Example. GET /api/clients/{ID}/documents/PROFILE_PICTURE
+		// See MBU-7312 for details
+		String apiResponse = getClientProfilePicture(clientId);
+
 		// return just the image content part (i.e. without the base64 indicator)
 		return ServiceHelper.getContentForBase64EncodedMessage(apiResponse);
 
 	}
 
 	/***
-	 * Get client signature file
+	 * Get client signature API response message containing image type indicator and the base64 encoded signature file
+	 * 
+	 * API response message format: "data:image/PNG;base64,iVBORw0KGgoAAAANSUhE..."
+	 * 
+	 * @param clientId
+	 *            the encoded key or id of the Mambu Client
+	 * 
+	 * @return API response string
+	 * @throws MambuApiException
+	 */
+	public String getClientSignature(String clientId) throws MambuApiException {
+		// Example. GET /api/clients/{ID}/documents/SIGNATURE
+		// See MBU-7313 for details
+		final String documentType = APIData.SIGNATURE;
+		String apiResponse = serviceExecutor.execute(getClientProfileFile, clientId, documentType, null);
+
+		// return api response as is
+		return apiResponse;
+
+	}
+
+	/***
+	 * Convenience method to get get client signature file content only (base64 encoded)
 	 * 
 	 * @param clientId
 	 *            the encoded key or id of the Mambu Client
@@ -746,8 +788,8 @@ public class ClientsService {
 	public String getClientSignatureFile(String clientId) throws MambuApiException {
 		// Example. GET /api/clients/{ID}/documents/SIGNATURE
 		// See MBU-7313 for details
-		final String documentType = APIData.SIGNATURE;
-		String apiResponse = serviceExecutor.execute(getClientProfileFile, clientId, documentType, null);
+		// Response message format: "data:image/PNG;base64,iVBORw0KGgoAAAANSUhE..."
+		String apiResponse = getClientSignature(clientId);
 
 		// return just the image content part (i.e. without the base64 indicator)
 		return ServiceHelper.getContentForBase64EncodedMessage(apiResponse);
