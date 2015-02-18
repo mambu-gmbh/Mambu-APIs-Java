@@ -61,11 +61,11 @@ public class ClientsService {
 	private final static ApiDefinition createClient = new ApiDefinition(ApiType.CREATE_JSON_ENTITY,
 			ClientExpanded.class);
 	// Update Client
-	private final static ApiDefinition updateClient = new ApiDefinition(ApiType.UPDATE_JSON, ClientExpanded.class);
+	private final static ApiDefinition updateClient = new ApiDefinition(ApiType.POST_ENTITY, ClientExpanded.class);
 	// Create Group. POST JSON /api/groups
 	private final static ApiDefinition createGroup = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, GroupExpanded.class);
 	// Update Group. PATCH JSON /api/groups/groupId
-	private final static ApiDefinition updateGroup = new ApiDefinition(ApiType.UPDATE_JSON, GroupExpanded.class);
+	private final static ApiDefinition updateGroup = new ApiDefinition(ApiType.POST_ENTITY, GroupExpanded.class);
 	// Get Group Role Names. GET /api/grouprolenames/
 	private final static ApiDefinition getGroupRoles = new ApiDefinition(ApiType.GET_LIST, GroupRoleName.class);
 	// Get Group Role Name details. GET /api/grouprolenames/groupRoleNameId
@@ -288,10 +288,10 @@ public class ClientsService {
 	}
 
 	/***
-	 * Create a new client (expanded) using ClientExpanded object and sending it as a Json api. This API allows creating
+	 * Create a new client (expanded) using ClientExpanded object and sending it as a JSON api. This API allows creating
 	 * Client with more details, including creating custom fields.
 	 * 
-	 * Note: since Mambu3.2 this is the API that must be used for creating Clients. Non-json APIs for creating a client
+	 * Note: since Mambu3.2 this is the API that must be used for creating Clients. Non-JSON APIs for creating a client
 	 * could be deprecated in a future
 	 * 
 	 * @param clientDetails
@@ -314,7 +314,7 @@ public class ClientsService {
 	}
 
 	/***
-	 * Update an existent client (expanded) using ClientExpanded object and send it as a Json api. This API allows
+	 * Update an existent client (expanded) using ClientExpanded object and send it as a JSON api. This API allows
 	 * updating Client with new details, including modifying client details, custom fields, address, contacts and
 	 * document IDs
 	 * 
@@ -341,7 +341,7 @@ public class ClientsService {
 	}
 
 	/***
-	 * Create a new group using GroupExpanded object and sending it as a Json api. This API allows creating a new Group
+	 * Create a new group using GroupExpanded object and sending it as a JSON api. This API allows creating a new Group
 	 * with group details, group members, group roles, custom fields, and group address
 	 * 
 	 * Available since Mambu 3.8.10. See MBU-7336
@@ -366,7 +366,7 @@ public class ClientsService {
 	}
 
 	/***
-	 * Update an existent group using GroupExpanded object and send it as a Json api. This API allows updating Group
+	 * Update an existent group using GroupExpanded object and send it as a JSON api. This API allows updating Group
 	 * with new details, including modifying group details, group members, group roles, custom fields and group address
 	 * 
 	 * NOTE: This API to be available in 3.10. See MBU-7337
@@ -680,11 +680,10 @@ public class ClientsService {
 	}
 
 	/***
-	 * Get client types
+	 * Get client types for clients or for groups
 	 * 
 	 * @param clientType
-	 *            the account holder type (CLIENT or GROUP). If null then both CLIENT and GROUP client types are
-	 *            returned
+	 *            the account holder type (CLIENT or GROUP). Must be not null
 	 * @return client types
 	 * @throws MambuApiException
 	 */
@@ -692,14 +691,27 @@ public class ClientsService {
 		// Example GET /host/api/clienttypes?for=CLIENTS GET /host/api/clienttypes?for=GROUPS
 		// See MBU-7061 for more details
 
-		// If clientType is null then both types are returned
-		ParamsMap params = null;
-		if (clientType != null) {
-			params = new ParamsMap();
-			String clientTypeParam = (clientType == AccountHolderType.CLIENT) ? APIData.CLIENTS : APIData.GROUPS;
-			params.addParam(FOR_TYPE, clientTypeParam);
+		if (clientType == null) {
+			throw new IllegalArgumentException("Client Type must not be null");
 		}
+		ParamsMap params = new ParamsMap();
+		String clientTypeParam = (clientType == AccountHolderType.CLIENT) ? APIData.CLIENTS : APIData.GROUPS;
+		params.addParam(FOR_TYPE, clientTypeParam);
 
+		return serviceExecutor.execute(getClientTypes, params);
+	}
+
+	/***
+	 * Get client types for both clients and groups
+	 * 
+	 * @return all client types defined in Mambu for both clients and groups
+	 * @throws MambuApiException
+	 */
+	public List<ClientRole> getClientTypes() throws MambuApiException {
+		// Example GET /host/api/clienttypes
+		// See MBU-7061 for more details
+
+		ParamsMap params = null;
 		return serviceExecutor.execute(getClientTypes, params);
 	}
 

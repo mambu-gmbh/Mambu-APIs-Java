@@ -136,10 +136,10 @@ public class ApiDefinition {
 		CREATE_FORM_ENTITY(Method.POST, ContentType.WWW_FORM, noObjectId, noFullDetails, noRelatedEntityPart,
 				ApiReturnFormat.OBJECT),
 		// Update Entity JSON request. Example: POST loans/88666 (contentType=JSON) to update custom fields
-		UPDATE_JSON(Method.POST, ContentType.JSON, withObjectId, noFullDetails, noRelatedEntityPart,
+		POST_ENTITY(Method.POST, ContentType.JSON, withObjectId, noFullDetails, noRelatedEntityPart,
 				ApiReturnFormat.OBJECT),
 		// Patch Entity JSON request. Example: PATCH loans/88666 (contentType=JSON) to update loan term
-		PATCH_JSON(Method.PATCH, ContentType.JSON, withObjectId, noFullDetails, noRelatedEntityPart,
+		PATCH_ENTITY(Method.PATCH, ContentType.JSON, withObjectId, noFullDetails, noRelatedEntityPart,
 				ApiReturnFormat.BOOLEAN),
 		// Delete Entity Example: DELETE client/976
 		DELETE_ENTITY(Method.DELETE, ContentType.WWW_FORM, withObjectId, noFullDetails, noRelatedEntityPart,
@@ -325,8 +325,8 @@ public class ApiDefinition {
 			returnClass = entityClass;
 			break;
 		case CREATE_JSON_ENTITY:
-		case UPDATE_JSON:
-		case PATCH_JSON:
+		case POST_ENTITY:
+		case PATCH_ENTITY:
 			// If the result class was provided - use it. Otherwise assuming the return class is the same as the
 			// entityClass. For example, when creating loans, LoanAccountExpanded is used as input and also as output.
 			// But when creating a Document, JSONDocument is the input but the result class must be specified as

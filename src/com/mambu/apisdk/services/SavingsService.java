@@ -104,7 +104,7 @@ public class SavingsService {
 	private final static ApiDefinition createAccount = new ApiDefinition(ApiType.CREATE_JSON_ENTITY,
 			JSONSavingsAccount.class);
 	// Update Account
-	private final static ApiDefinition updateAccount = new ApiDefinition(ApiType.UPDATE_JSON, JSONSavingsAccount.class);
+	private final static ApiDefinition updateAccount = new ApiDefinition(ApiType.POST_ENTITY, JSONSavingsAccount.class);
 
 	// Loan Products API requests
 	// Get Loan Product Details

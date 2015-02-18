@@ -41,7 +41,7 @@ public class TasksService {
 	private final static ApiDefinition getTasks = new ApiDefinition(ApiType.GET_LIST, Task.class);
 	// Create and Update Task API expects JSONTask
 	private final static ApiDefinition createTask = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, JSONTask.class);
-	private final static ApiDefinition updateTask = new ApiDefinition(ApiType.UPDATE_JSON, JSONTask.class);
+	private final static ApiDefinition updateTask = new ApiDefinition(ApiType.POST_ENTITY, JSONTask.class);
 	private final static ApiDefinition createFormTask = new ApiDefinition(ApiType.CREATE_FORM_ENTITY, Task.class);
 	private final static ApiDefinition deleteTask = new ApiDefinition(ApiType.DELETE_ENTITY, Task.class);
 

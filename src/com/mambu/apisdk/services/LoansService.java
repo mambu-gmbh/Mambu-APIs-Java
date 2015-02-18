@@ -104,9 +104,9 @@ public class LoansService {
 	private final static ApiDefinition createAccount = new ApiDefinition(ApiType.CREATE_JSON_ENTITY,
 			LoanAccountExpanded.class);
 	// Update Account. Used to update custom fields for loan accounts only. POST JSON /api/loans/loanId
-	private final static ApiDefinition updateAccount = new ApiDefinition(ApiType.UPDATE_JSON, LoanAccountExpanded.class);
+	private final static ApiDefinition updateAccount = new ApiDefinition(ApiType.POST_ENTITY, LoanAccountExpanded.class);
 	// Patch Account. Used to update loan terms only. PATCH JSON /api/loans/loanId
-	private final static ApiDefinition patchAccount = new ApiDefinition(ApiType.PATCH_JSON, LoanAccount.class);
+	private final static ApiDefinition patchAccount = new ApiDefinition(ApiType.PATCH_ENTITY, LoanAccount.class);
 
 	// Loan Products API requests
 	// Get Loan Product Details
@@ -480,16 +480,16 @@ public class LoansService {
 	 * updateLoanAccount() to update custom fields for a loan account
 	 * 
 	 * @param loan
-	 *            LoanAccountExtended object containing LoanAccount. LoanAccount encodedKey must be NOT null for account
-	 *            update.
+	 *            LoanAccountExtended object containing LoanAccount. Either LoanAccount encoded key or its ID must be
+	 *            NOT null for updating account
 	 * 
-	 *            Note that only some loan terms can be updated. See MBU-7758 for details
+	 *            Note that only some loan terms can be updated. See MBU-7758 for details.
 	 * 
 	 *            Loan Account fields available for patching are: loanAmount, interestRate. interestSpread,
 	 *            repaymentInstallments, repaymentPeriodCount, repaymentPeriodUnit, expectedDisbursementDate,
 	 *            firstRepaymentDate, gracePeriod, principalRepaymentInterval, penaltyRate, periodicPayment
 	 * 
-	 * @returns success of failure
+	 * @returns success or failure
 	 * 
 	 * @throws MambuApiException
 	 * @throws IllegalArgumentException
@@ -501,13 +501,16 @@ public class LoansService {
 			throw new IllegalArgumentException("Account must not be NULL");
 		}
 
-		String encodedKey = loan.getId();
-		if (encodedKey == null) {
-			throw new IllegalArgumentException("Cannot update Account, the encoded key must be NOT null");
+		// The encodedKey or account Id must be not null
+		String encodedKey = loan.getEncodedKey();
+		String accountId = loan.getId();
+		if (encodedKey == null && accountId == null) {
+			throw new IllegalArgumentException("Cannot update Account, the encodedKey or ID must be NOT null");
 		}
 
+		String id = (accountId != null) ? accountId : encodedKey;
 		ParamsMap params = ServiceHelper.makeParamsForLoanTermsPatch(loan);
-		return serviceExecutor.execute(patchAccount, encodedKey, params);
+		return serviceExecutor.execute(patchAccount, id, params);
 
 	}
 
@@ -795,7 +798,7 @@ public class LoansService {
 		// The API returns a JSONLoanRepayments object containing a list of repayments
 		JSONLoanRepayments jsonRepayments = serviceExecutor.execute(getProductSchedule, productId, params);
 		// Return list of repayments
-		return (jsonRepayments == null) ? null : jsonRepayments.getRepayments();
+		return jsonRepayments.getRepayments();
 	}
 
 	/***

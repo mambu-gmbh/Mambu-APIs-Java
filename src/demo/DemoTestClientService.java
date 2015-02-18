@@ -151,7 +151,7 @@ public class DemoTestClientService {
 		ClientsService clientService = MambuAPIFactory.getClientService();
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		df.setTimeZone(TimeZone.getTimeZone("UTC"));
-		String birthDay = df.format(demoClient.getBirthDate()); // yyy-MM-dd
+		String birthDay = (demoClient.getBirthDate() == null) ? null : df.format(demoClient.getBirthDate()); // yyy-MM-dd
 		String lastName = demoClient.getLastName();
 
 		List<Client> myCLients = clientService.getClientByLastNameBirthday(lastName, birthDay);
@@ -639,9 +639,10 @@ public class DemoTestClientService {
 		// Create demo group
 		Group theGroup = new Group();
 		// Create unique ID
-		int randomIndex = (int) (Math.random() * 1000000);
-		String groupName = apiTestGroupNamePrefix + Integer.toString(randomIndex);
-		theGroup.setId(null);
+		String randomIndex = Integer.toString((int) (Math.random() * 1000000));
+
+		String groupName = apiTestGroupNamePrefix + randomIndex;
+		theGroup.setId(randomIndex);
 		ClientRole groupType = groupTypes.get(0);
 
 		theGroup.setClientRole(groupType);

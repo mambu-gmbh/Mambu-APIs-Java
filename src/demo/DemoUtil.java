@@ -1,5 +1,7 @@
 package demo;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -12,6 +14,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+
+import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -592,6 +596,43 @@ public class DemoUtil {
 		}
 		return encodedString;
 
+	}
+
+	// Helper to decode Base64 string into bytes
+	public static byte[] decodeBase64IntoBytes(String inputStringBase64) {
+		System.out.println("\nIn decodeBase64IntoBytes");
+		if (inputStringBase64 == null) {
+			System.out.println("Input is NULL");
+			return null;
+		}
+		// Mambu API returns encoded string in chunks separated by \r\n. Remove them
+		inputStringBase64 = inputStringBase64.replaceAll("(\\\\r)?\\\\n", "");
+
+		Base64 decoder = new Base64();
+		byte[] decodedBytes = decoder.decode(inputStringBase64);
+
+		if (decodedBytes == null) {
+			return null;
+		}
+		System.out.println("decodeBase64: Decoded byte stream length=" + decodedBytes.length);
+		return decodedBytes;
+
+	}
+
+	// Helper to Create BufferedImage file from the input Base64 encoded string
+	public static BufferedImage decodeBase64(String inputStringBase64) throws IOException {
+		System.out.println("\nIn decodeBase64");
+
+		byte[] decodedBytes = decodeBase64IntoBytes(inputStringBase64);
+
+		if (decodedBytes == null) {
+			System.out.println("decodeBase64: cannot decode string");
+			return null;
+		}
+
+		// Create BufferedImage
+		BufferedImage image = ImageIO.read(new ByteArrayInputStream(decodedBytes));
+		return image;
 	}
 
 }
