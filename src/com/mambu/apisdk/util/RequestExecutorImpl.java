@@ -291,7 +291,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * @param params
 	 *            ParamsMap with JSON string
 	 */
-	private StringEntity makeJsonEntity(ParamsMap params) throws UnsupportedEncodingException {
+	private static StringEntity makeJsonEntity(ParamsMap params) throws UnsupportedEncodingException {
 
 		if (params == null) {
 			throw new IllegalArgumentException("JSON requests require non NULL ParamsMap with JSON string");
@@ -322,7 +322,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 *            URL string for the HTTP request
 	 * @return HTTP response string
 	 */
-	private String processResponse(HttpResponse httpResponse, String urlString) throws IOException, MambuApiException {
+	private static String processResponse(HttpResponse httpResponse, String urlString) throws IOException,
+			MambuApiException {
 
 		// get status
 		int status = httpResponse.getStatusLine().getStatusCode();
@@ -369,7 +370,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * 
 	 * @throws IOException
 	 */
-	private String readStream(InputStream content) throws IOException {
+	private static String readStream(InputStream content) throws IOException {
 
 		String response = "";
 
@@ -399,7 +400,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * 
 	 * @throws
 	 */
-	private List<NameValuePair> getListFromParams(ParamsMap params) {
+	private static List<NameValuePair> getListFromParams(ParamsMap params) {
 
 		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(params.size());
 
@@ -416,7 +417,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	/**
 	 * Get the formatted content type string for the content type enum value
 	 */
-	private String getFormattedContentTypeString(ContentType contentTypeFormat) {
+	private static String getFormattedContentTypeString(ContentType contentTypeFormat) {
 		switch (contentTypeFormat) {
 		case WWW_FORM:
 			return wwwFormUrlEncodedContentType;
@@ -438,13 +439,29 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * 
 	 * @return jsonStringWithAppKey json string with appKey added
 	 */
-	private String addAppKeyToJson(String jsonString, ParamsMap params) {
+	private static String addAppKeyToJson(String jsonString, ParamsMap params) {
 
 		if (params == null) {
 			return jsonString;
 		}
 
 		String appKey = params.get(APPLICATION_KEY);
+		return addAppkeyValueToJson(appKey, jsonString);
+
+	}
+
+	/**
+	 * Add appKey value to the json string
+	 * 
+	 * @param appKey
+	 *            app key value
+	 * 
+	 * @param jsonString
+	 *            json string
+	 * @return jsonStringWithAppKey json string with appKey added
+	 */
+	private static String addAppkeyValueToJson(String appKey, String jsonString) {
+
 		if (appKey == null || appKey.length() == 0) {
 			return jsonString;
 		}
@@ -551,6 +568,96 @@ public class RequestExecutorImpl implements RequestExecutor {
 		if (jsonString != null) {
 			logJsonInput(jsonString);
 		}
+		// Optionally log a template for a curl command if it would be built with the provided API params
+		if (LOGGER.isLoggable(Level.FINEST)) {
+			logCurlCommandForRequest(method, contentType, urlString, urlWithParams, params);
+		}
+
+	}
+
+	/**
+	 * Make and log curl command template corresponding to the API params supplied in the request. This curl pattern can
+	 * be used for subsequent testing and troubleshooting: to execute Mmabu API requests as curl commands with exactly
+	 * the same request params and to compare wrapper built requests with the curl patterns required by Mambu for this
+	 * API.
+	 * 
+	 * NOTE: This method logs output only when the Logger level is set to FINEST.
+	 * 
+	 * Log output example: curl -k -G -H "Content-type: application/x-www-form-urlencoded; charset=UTF-8" -d
+	 * 'appkey=...' https://user:pwd@tenant.mambu.com/api/loans?offset=0&limit=5
+	 * 
+	 * @param method
+	 *            request's method
+	 * @param contentType
+	 *            request's content type
+	 * @param urlString
+	 *            request's url
+	 * @param urlWithParams
+	 *            url string with added params for www-form-urlencoded requests
+	 * @param params
+	 *            the ParamsMap.
+	 */
+	private static void logCurlCommandForRequest(Method method, ContentType contentType, String urlString,
+			String urlWithParams, ParamsMap params) {
+
+		if (!LOGGER.isLoggable(Level.FINEST) || method == null) {
+			return;
+		}
+		// Make method options and url string
+		String apiMethod = "";
+		switch (method) {
+		case GET:
+			apiMethod = " -G";
+			break;
+		case POST:
+			apiMethod = " -X POST";
+			break;
+		case PATCH:
+			apiMethod = " -X PATCH";
+			break;
+		case DELETE:
+			apiMethod = " -X DELETE";
+			break;
+		}
+		String url = urlString;
+		// Add content type header
+		contentType = (contentType == null) ? ContentType.WWW_FORM : contentType;
+		String contentHeader = " -H \"Content-type: " + getFormattedContentTypeString(contentType) + "\"";
+
+		// Make curl command
+		String curlCommand = "curl -k" + apiMethod + contentHeader;
+
+		// Add appkey param (as a placeholder only)
+		String appKeyValue = MambuAPIFactory.getApplicationKey();
+		if (appKeyValue != null) {
+			appKeyValue = "...";
+		}
+		// Make url command required for the contentType
+		switch (contentType) {
+		case WWW_FORM:
+			// Add appkey to the command line
+			if (appKeyValue != null) {
+				curlCommand = curlCommand + " -d 'appkey=" + appKeyValue + "' ";
+			}
+			// Use urlWithParams
+			url = urlWithParams;
+			break;
+		case JSON:
+			// Add appkey to the JSON
+			String jsonString = (params == null) ? "{}" : params.get(APIData.JSON_OBJECT);
+			if (appKeyValue != null) {
+				jsonString = addAppkeyValueToJson(appKeyValue, jsonString);
+			}
+			// Add JSON to the command line
+			curlCommand = curlCommand + " -d '" + jsonString + "' ";
+			break;
+		}
+		// Add placeholder for the user's credentials
+		url = url.replace("://", "://user:pwd@");
+
+		// Make final curl command and log it on a separate line
+		curlCommand = "\n" + curlCommand + url;
+		LOGGER.info(curlCommand);
 
 	}
 
@@ -571,7 +678,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 *            json string in the API request
 	 * 
 	 */
-	private void logJsonInput(String jsonString) {
+	private static void logJsonInput(String jsonString) {
 
 		if (!LOGGER.isLoggable(Level.INFO) || jsonString == null) {
 			return;
@@ -609,7 +716,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * @param response
 	 *            response string
 	 */
-	private void logApiResponse(String urlString, int status, String response) {
+	private static void logApiResponse(String urlString, int status, String response) {
 
 		if (!LOGGER.isLoggable(Level.INFO)) {
 			return;
@@ -653,7 +760,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * @param applicationKey
 	 *            Application Key string
 	 */
-	private void logAppKey(String applicationKey) {
+	private static void logAppKey(String applicationKey) {
 
 		if (!LOGGER.isLoggable(Level.INFO)) {
 			return;
