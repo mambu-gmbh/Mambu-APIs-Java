@@ -566,6 +566,8 @@ public class DemoTestLoanService {
 		loanAccount.setLoanAmount(amount); // Mandatory
 
 		// Add periodic payment: required and is mandatory for BALLOON_PAYMENTS products
+		Money nullMoney = null;
+		loanAccount.setPeriodicPayment(nullMoney);
 		if (demoProduct.getAmortizationMethod() == AmortizationMethod.BALLOON_PAYMENTS) {
 			loanAccount.setPeriodicPayment(amount.multiply(new BigDecimal(0.5)));
 		}
