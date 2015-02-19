@@ -509,8 +509,13 @@ public class DemoTestClientService {
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
-		AccountHolderType clientType = null; // AccountHolderType.CLIENT;
-		// Get Client Types from Mambu via API
+		// Test Get All Client Types from Mambu via API
+		List<ClientRole> allClientTypes = clientService.getClientTypes();
+		// Log response details
+		logClientTypes(allClientTypes, null);
+
+		// Test Get Specific Client Types from Mambu via API
+		AccountHolderType clientType = AccountHolderType.CLIENT; // or AccountHolderType.GROUP;
 		List<ClientRole> clientTypes = clientService.getClientTypes(clientType);
 		// Log response details
 		logClientTypes(clientTypes, clientType);
