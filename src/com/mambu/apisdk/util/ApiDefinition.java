@@ -237,6 +237,10 @@ public class ApiDefinition {
 	private Class<?> entityClass;
 	// The class of the object returned by Mambu
 	private Class<?> returnClass;
+	// Date time format for the output JSON strings. Mambu supports ISO-8601 "yyyy-MM-dd'T'HH:mm:ssZ". This is the
+	// default. ApiDefinition allows optionally setting this format for a specific API definition. For example, to use a
+	// shorter date only format, like "yyyy-MM-dd"
+	private String jsonDateTimeFormat = GsonUtils.defaultDateTimeFormat;
 
 	/**
 	 * Constructor used with ApiType requests for which only one entity class needs to be specified, Example GET
@@ -518,5 +522,13 @@ public class ApiDefinition {
 
 	public void setMethod(Method method) {
 		this.method = method;
+	}
+
+	public void setJsonDateTimeFormat(String dateTimeFormat) {
+		this.jsonDateTimeFormat = dateTimeFormat;
+	}
+
+	public String getJsonDateTimeFormat() {
+		return jsonDateTimeFormat;
 	}
 }

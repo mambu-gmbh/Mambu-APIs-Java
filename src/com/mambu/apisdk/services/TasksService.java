@@ -14,6 +14,7 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
+import com.mambu.apisdk.util.DateUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.tasks.shared.model.Task;
@@ -133,7 +134,7 @@ public class TasksService {
 			throw new IllegalArgumentException("Due date cannot be null");
 		}
 
-		DateFormat df = APIData.URLDATE_FORMATTER;
+		DateFormat df = DateUtils.FORMAT;
 
 		ParamsMap params = new ParamsMap();
 		params.put(TITLE, title);

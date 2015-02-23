@@ -1,9 +1,5 @@
 package com.mambu.apisdk.util;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Locale;
-
 //
 // This class defines string constants and other constants for Mambu API services
 //
@@ -16,9 +12,6 @@ public class APIData {
 	public static enum ACCOUNT_TYPE { // We should use com.mambu.accounts.shared.model.Account.Type instead
 		LOAN, SAVINGS
 	};
-
-	// ----- Date Formatting -----
-	public static final DateFormat URLDATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
 
 	// Users API
 
@@ -195,7 +188,7 @@ public class APIData {
 	public static String ID_DOCUMENT = "idDocument";
 
 	// Added to support Json object creation API
-	public static String yyyyMmddFormat = "yyyy-MM-dd";
+	public static String yyyyMmddFormat = DateUtils.DATE_FORMAT;// ISO_8601_FORMAT_DATE "yyyy-MM-dd";
 	public static String JSON_OBJECT = "JSON";
 
 	// Base64 encoded strings header's terminator in API responses

@@ -14,6 +14,7 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
+import com.mambu.apisdk.util.DateUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.ServiceExecutor;
 
@@ -117,8 +118,8 @@ public class AccountingService {
 		}
 
 		ParamsMap params = new ParamsMap();
-		params.put(APIData.FROM, APIData.URLDATE_FORMATTER.format(fromDate));
-		params.put(APIData.TO, APIData.URLDATE_FORMATTER.format(toDate));
+		params.put(APIData.FROM, DateUtils.FORMAT.format(fromDate));
+		params.put(APIData.TO, DateUtils.FORMAT.format(toDate));
 		params.put(APIData.OFFSET, Integer.toString(offset));
 		params.put(APIData.LIMIT, Integer.toString(limit));
 

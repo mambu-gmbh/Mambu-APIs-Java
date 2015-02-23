@@ -14,7 +14,7 @@ import com.google.gson.GsonBuilder;
  */
 public class GsonUtils {
 
-	private static String defaultDateTimeFormat = "yyyy-MM-dd'T'HH:mm:ssZ";
+	public static String defaultDateTimeFormat = "yyyy-MM-dd'T'HH:mm:ssZ";
 	private static GsonBuilder gsonBuilder = new GsonBuilder().setDateFormat(defaultDateTimeFormat);
 
 	/***

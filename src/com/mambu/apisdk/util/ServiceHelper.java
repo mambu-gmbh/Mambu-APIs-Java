@@ -294,12 +294,12 @@ public class ServiceHelper {
 		}
 
 		// Create JSON expected by the PATCH loan account API:
-		JsonObject accountFields = makeLoanFieldsJson(account, modifiableLoanAccountFields);
+		JsonObject accountFields = makeJsonObjectForFields(account, modifiableLoanAccountFields);
 		if (accountFields == null) {
 			return null;
 		}
 
-		// Create json string. Format: { "loanAccount":{"loanAmount":"1000", "repaymentPeriodCount":"10"}}'
+		// Create JSON string. Format: { "loanAccount":{"loanAmount":"1000", "repaymentPeriodCount":"10"}}'
 		String json = "{\"loanAccount\":" + accountFields.toString() + "}";
 
 		ParamsMap paramsMap = new ParamsMap();
@@ -332,32 +332,53 @@ public class ServiceHelper {
 		}
 
 		// Make JsonObject with the applicable fields only
-		JsonObject loanTermsObject = makeLoanFieldsJson(account, loanSchedulePreviewFields);
+		// Loan schedule API uses URL encoded params, so the dates should be in "yyyy-MM-dd" date format
+		JsonObject loanTermsObject = makeJsonObjectForFields(account, loanSchedulePreviewFields, APIData.yyyyMmddFormat);
 
 		// For this GET API we need to create params map with all individual params separately
 		// Convert Json object with the applicable fields into a ParamsMap.
 		Type type = new TypeToken<ParamsMap>() {
 		}.getType();
-		ParamsMap params = GsonUtils.createGson(APIData.yyyyMmddFormat).fromJson(loanTermsObject.toString(), type);
+		ParamsMap params = GsonUtils.createGson().fromJson(loanTermsObject.toString(), type);
 
 		return params;
 
 	}
 
 	/**
-	 * Helper to create a json object with a sub-set of the applicable loan account fields.
+	 * Helper to create a JSON object with a sub-set of the applicable object fields with the Mambu's default JSON date
+	 * time format ("yyyy-MM-dd'T'HH:mm:ssZ")
 	 * 
-	 * @param account
-	 *            loan account
+	 * @param object
+	 *            object
 	 * @param applicableFields
 	 *            a set of applicable fields
-	 * @return json object
+	 * @return JSON object
 	 */
-	private static JsonObject makeLoanFieldsJson(LoanAccount account, Set<String> applicableFields) {
+	public static <T> JsonObject makeJsonObjectForFields(T object, Set<String> applicableFields) {
 
+		return makeJsonObjectForFields(object, applicableFields, GsonUtils.defaultDateTimeFormat);
+	}
+
+	/**
+	 * Helper to create a JSON object with a sub-set of the applicable object fields
+	 * 
+	 * @param object
+	 *            object
+	 * @param applicableFields
+	 *            a set of applicable fields
+	 * @param dateTimeFormat
+	 *            a string representing Mambu API date time format
+	 * @return JSON object
+	 */
+	public static <T> JsonObject makeJsonObjectForFields(T object, Set<String> applicableFields, String dateTimeFormat) {
+
+		if (dateTimeFormat == null) {
+			dateTimeFormat = GsonUtils.defaultDateTimeFormat;
+		}
 		// Create JsonObject for the full loan account and then extract only the fields present in the applicableFields
 		// set
-		JsonObject loanAccountJson = GsonUtils.createGson(APIData.yyyyMmddFormat).toJsonTree(account).getAsJsonObject();
+		JsonObject loanAccountJson = GsonUtils.createGson(dateTimeFormat).toJsonTree(object).getAsJsonObject();
 
 		// Make JsonObject with the applicable fields only. Add only those which are not NULL
 		JsonObject loanSubsetObject = new JsonObject();
@@ -373,15 +394,33 @@ public class ServiceHelper {
 	}
 
 	/**
-	 * Convenience method to generate JSON string for an object
+	 * Generate a JSON string for an object using Mambu's default date time format ("yyyy-MM-dd'T'HH:mm:ssZ")
 	 * 
 	 * @param object
 	 *            object
 	 * @return JSON string for the object
 	 */
 	public static <T> String makeApiJson(T object) {
-		final String dateTimeFormat = APIData.yyyyMmddFormat;
-		return GsonUtils.createGson(dateTimeFormat).toJson(object, object.getClass());
+		return GsonUtils.createGson().toJson(object, object.getClass());
 	}
 
+	/**
+	 * Generate a JSON string for an object and with the specified format for date fields
+	 * 
+	 * @param object
+	 *            object
+	 * @param dateTimeFormat
+	 *            date time format string. Example: "yyyy-MM-dd". If null then the default date time format is used
+	 *            ("yyyy-MM-dd'T'HH:mm:ssZ")
+	 * @return JSON string for the object
+	 */
+	public static <T> String makeApiJson(T object, String dateTimeFormat) {
+		if (dateTimeFormat == null) {
+			// Use default API formatter
+			return GsonUtils.createGson().toJson(object, object.getClass());
+		} else {
+			// Use provided dateTimeFormat
+			return GsonUtils.createGson(dateTimeFormat).toJson(object, object.getClass());
+		}
+	}
 }

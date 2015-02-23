@@ -271,7 +271,8 @@ public class ServiceExecutor {
 		}
 
 		// Parse input object into a JSON string
-		final String jsonData = ServiceHelper.makeApiJson(object);
+		final String dateTimeFormat = apiDefinition.getJsonDateTimeFormat();
+		final String jsonData = ServiceHelper.makeApiJson(object, dateTimeFormat);
 
 		// Add JSON string as JSON_OBJECT to the ParamsMap
 		ParamsMap paramsMap = new ParamsMap();

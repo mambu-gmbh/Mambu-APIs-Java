@@ -161,7 +161,8 @@ public class RepaymentsService {
 			throws MambuApiException {
 		// Available since Mambu 3.9
 		// API example: PATCH -d JSONLoanRepayments_object /api/loans/loan_id/repayments. Returns list of Repayments
-
+		// TODO: currently this API accepts JSON requests with the dates in "yyyy-MM-dd" format only
+		updateRepaymentsForLoan.setJsonDateTimeFormat(APIData.yyyyMmddFormat);
 		return serviceExecutor.executeJson(updateRepaymentsForLoan, repayments, accountId);
 
 	}

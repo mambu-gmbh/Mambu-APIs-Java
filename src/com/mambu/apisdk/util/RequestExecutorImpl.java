@@ -570,7 +570,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 		// Optionally log a template for a curl command if it would be built with the provided API params
 		if (LOGGER.isLoggable(Level.FINEST)) {
-			logCurlCommandForRequest(method, contentType, urlString, urlWithParams, params);
+			logCurlCommandForRequest(method, contentType, urlString, params);
 		}
 
 	}
@@ -598,7 +598,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 *            the ParamsMap.
 	 */
 	private static void logCurlCommandForRequest(Method method, ContentType contentType, String urlString,
-			String urlWithParams, ParamsMap params) {
+			ParamsMap params) {
 
 		if (!LOGGER.isLoggable(Level.FINEST) || method == null) {
 			return;
@@ -633,14 +633,20 @@ public class RequestExecutorImpl implements RequestExecutor {
 			appKeyValue = "...";
 		}
 		// Make url command required for the contentType
+		String urlParams = "";
 		switch (contentType) {
 		case WWW_FORM:
-			// Add appkey to the command line
+			// Add appkey to the params
 			if (appKeyValue != null) {
-				curlCommand = curlCommand + " -d 'appkey=" + appKeyValue + "' ";
+				urlParams = "appkey=" + appKeyValue;
 			}
-			// Use urlWithParams
-			url = urlWithParams;
+			if (params != null && params.size() > 0) {
+				String paramsString = params.getURLString();
+				if (urlParams.length() > 0) {
+					urlParams = urlParams + "&";
+				}
+				urlParams = urlParams + paramsString;
+			}
 			break;
 		case JSON:
 			// Add appkey to the JSON
@@ -654,9 +660,12 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 		// Add placeholder for the user's credentials
 		url = url.replace("://", "://user:pwd@");
+		if (urlParams.length() > 0) {
+			url = url + "?" + urlParams;
+		}
 
 		// Make final curl command and log it on a separate line
-		curlCommand = "\n" + curlCommand + url;
+		curlCommand = "\n" + curlCommand + " '" + url + "'";
 		LOGGER.info(curlCommand);
 
 	}
