@@ -8,6 +8,7 @@ import com.mambu.accounting.shared.model.GLJournalEntry;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
+import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.api.server.handler.tasks.model.JSONTask;
 import com.mambu.apisdk.model.LoanAccountExpanded;
@@ -17,6 +18,8 @@ import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.GroupExpanded;
+import com.mambu.clients.shared.model.GroupRoleName;
+import com.mambu.core.shared.model.ClientRole;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
@@ -106,6 +109,9 @@ public class ApiDefinition {
 		// Get Entities owned by another entity, Example: GET clients/1233/loans or GET loans/233/transactions
 		GET_OWNED_ENTITIES(Method.GET, ContentType.WWW_FORM, withObjectId, noFullDetails, hasRelatedEntityPart,
 				ApiReturnFormat.COLLECTION),
+		// Get an Entity owned by another entity, Example: /api/loanproducts/<ID>/schedule
+		GET_OWNED_ENTITY(Method.GET, ContentType.WWW_FORM, withObjectId, noFullDetails, hasRelatedEntityPart,
+				ApiReturnFormat.OBJECT),
 		// Get Entities related to another entity, For example get transactions of loan type. Example: GET
 		// loans/transactions or GET savings/transactions
 		GET_RELATED_ENTITIES(Method.GET, ContentType.WWW_FORM, noObjectId, noFullDetails, hasRelatedEntityPart,
@@ -114,6 +120,11 @@ public class ApiDefinition {
 		// PATCH clients/client_id/custominformation/custom_field_id
 		PATCH_OWNED_ENTITY(Method.PATCH, ContentType.JSON, withObjectId, noFullDetails, hasRelatedEntityPart,
 				ApiReturnFormat.BOOLEAN),
+		// Update a list of entities owned by another entity with a JSON request and returning a list of updated
+		// entities. Example, update repayments for a loan account and get updated list back
+		// PATCH loans/loan_id/repayments/
+		PATCH_OWNED_ENTITIES(Method.PATCH, ContentType.JSON, withObjectId, noFullDetails, hasRelatedEntityPart,
+				ApiReturnFormat.COLLECTION),
 		// Delete and an entity owned by another entity. Example, delete custom field for a client:
 		// DELETE clients/client_id/custominformation/custom_field_id
 		DELETE_OWNED_ENTITY(Method.DELETE, ContentType.WWW_FORM, withObjectId, noFullDetails, hasRelatedEntityPart,
@@ -124,9 +135,12 @@ public class ApiDefinition {
 		// POST Entity using ContentType.WWW_FORM with params map. Used for older APIs versions not using JSON
 		CREATE_FORM_ENTITY(Method.POST, ContentType.WWW_FORM, noObjectId, noFullDetails, noRelatedEntityPart,
 				ApiReturnFormat.OBJECT),
-		// Update Entity JSON request. Example: POST loans/88666 (contentType=JSON)
-		UPDATE_JSON(Method.POST, ContentType.JSON, withObjectId, noFullDetails, noRelatedEntityPart,
+		// Update Entity JSON request. Example: POST loans/88666 (contentType=JSON) to update custom fields
+		POST_ENTITY(Method.POST, ContentType.JSON, withObjectId, noFullDetails, noRelatedEntityPart,
 				ApiReturnFormat.OBJECT),
+		// Patch Entity JSON request. Example: PATCH loans/88666 (contentType=JSON) to update loan term
+		PATCH_ENTITY(Method.PATCH, ContentType.JSON, withObjectId, noFullDetails, noRelatedEntityPart,
+				ApiReturnFormat.BOOLEAN),
 		// Delete Entity Example: DELETE client/976
 		DELETE_ENTITY(Method.DELETE, ContentType.WWW_FORM, withObjectId, noFullDetails, noRelatedEntityPart,
 				ApiReturnFormat.BOOLEAN),
@@ -210,6 +224,9 @@ public class ApiDefinition {
 
 	private ApiType apiType;
 
+	private Method method;
+	private ContentType contentType;
+
 	// URL path details in the format: endPoint/objectID/relatedEntity
 	private String endPoint;
 	// The 'relatedEntity' part of the URL path
@@ -220,6 +237,10 @@ public class ApiDefinition {
 	private Class<?> entityClass;
 	// The class of the object returned by Mambu
 	private Class<?> returnClass;
+	// Date time format for the output JSON strings. Mambu supports ISO-8601 "yyyy-MM-dd'T'HH:mm:ssZ". This is the
+	// default. ApiDefinition allows optionally setting this format for a specific API definition. For example, to use a
+	// shorter date only format, like "yyyy-MM-dd"
+	private String jsonDateTimeFormat = GsonUtils.defaultDateTimeFormat;
 
 	/**
 	 * Constructor used with ApiType requests for which only one entity class needs to be specified, Example GET
@@ -229,12 +250,13 @@ public class ApiDefinition {
 	 *            determines API's endpoint (e.g. LoanAccount for loans/)
 	 */
 	public ApiDefinition(ApiType apiType, Class<?> entityClass) {
+		this.relatedEntity = null; // no related entity
 		initDefintion(apiType, entityClass, null);
 	}
 
 	/**
 	 * Constructor used with ApiType requests for which two entity classes need to be specified, Example GET
-	 * clients/123/loans. Currently this is used only with ApiType.GetOwnedEntities
+	 * clients/123/loans.
 	 * 
 	 * @param entityClass
 	 *            determines API's endpoint (e.g. LoanAccount for loans/)
@@ -243,6 +265,26 @@ public class ApiDefinition {
 	 */
 
 	public ApiDefinition(ApiType apiType, Class<?> entityClass, Class<?> resultClass) {
+		this.relatedEntity = null; // the related entity name to be determined by the specified resultClass
+		initDefintion(apiType, entityClass, resultClass);
+	}
+
+	/**
+	 * Constructor which can be used with ApiType requests for which the result class must be specified independently of
+	 * the related entity class. For example, when getting client's profile picture which returns a string object ( GET
+	 * api/clients/\{ID\}/documents/PROFILE_PICTURE) or posting a profile picture, which returns a Boolean (POST
+	 * api/clients/\{ID\}/documents/PROFILE_PICTURE)
+	 * 
+	 * @param entityClass
+	 *            determines API's endpoint (e.g. LoanAccount for loans/)
+	 * @param relatedEntity
+	 *            related entity name class
+	 * @param resultClass
+	 *            determines the entity to be retrieved.
+	 */
+
+	public ApiDefinition(ApiType apiType, Class<?> entityClass, Class<?> relatedEntity, Class<?> resultClass) {
+		this.relatedEntity = getApiEndPoint(relatedEntity);
 		initDefintion(apiType, entityClass, resultClass);
 	}
 
@@ -270,7 +312,9 @@ public class ApiDefinition {
 		}
 		this.apiType = apiType;
 		this.entityClass = entityClass;
-		relatedEntity = null;
+		this.contentType = apiType.getContentType();
+		this.method = apiType.getMethod();
+
 		// Get defaults from the ApiType
 		returnFormat = apiType.getApiReturnFormat();
 
@@ -285,30 +329,42 @@ public class ApiDefinition {
 			returnClass = entityClass;
 			break;
 		case CREATE_JSON_ENTITY:
-		case UPDATE_JSON:
+		case POST_ENTITY:
+		case PATCH_ENTITY:
 			// If the result class was provided - use it. Otherwise assuming the return class is the same as the
 			// entityClass. For example, when creating loans, LoanAccountExpanded is used as input and also as output.
 			// But when creating a Document, JSONDocument is the input but the result class must be specified as
 			// Document
 			returnClass = (resultClass != null) ? resultClass : entityClass;
 			break;
+		case GET_OWNED_ENTITY:
 		case GET_OWNED_ENTITIES:
 		case GET_RELATED_ENTITIES:
 		case POST_OWNED_ENTITY:
 		case PATCH_OWNED_ENTITY:
+		case PATCH_OWNED_ENTITIES:
 		case DELETE_OWNED_ENTITY:
 			// For these API types the resultClass defines the 'relatedEntity' part. E.g. LOANS part in
 			// /clients/1233/LOANS or transactions part: /loans/123/transactions. These types return the result class
 			if (resultClass == null) {
 				throw new IllegalArgumentException("resultClass must be not null for " + apiType.name());
 			}
-			relatedEntity = getApiEndPoint(resultClass);
+			// Get relatedEntity based on the specified resultClass, unless relatedEntity was specified explicitly
+			if (relatedEntity == null) {
+				relatedEntity = getApiEndPoint(resultClass);
+			}
 			// These API types return object (or collection) of the resultClass (for OBJECT and COLLECTION return
 			// formats)
 			switch (returnFormat) {
 			case OBJECT:
 			case COLLECTION:
 				returnClass = resultClass;
+				// Change return format for our special cases (to avoid Gson parsing to Object for these special cases)
+				if (returnClass.equals(String.class)) {
+					returnFormat = ApiReturnFormat.RESPONSE_STRING;
+				} else if (returnClass.equals(Boolean.class)) {
+					returnFormat = ApiReturnFormat.BOOLEAN;
+				}
 				break;
 			case BOOLEAN:
 				returnClass = Boolean.class;
@@ -328,7 +384,10 @@ public class ApiDefinition {
 			if (resultClass == null) {
 				throw new IllegalArgumentException("resultClass must be not null for " + apiType.name());
 			}
-			relatedEntity = getApiEndPoint(resultClass);
+			// Get relatedEntity based on the specified resultClass, unless relatedEntity was specified explicitly
+			if (relatedEntity == null) {
+				relatedEntity = getApiEndPoint(resultClass);
+			}
 			returnClass = entityClass;
 			break;
 		}
@@ -343,6 +402,9 @@ public class ApiDefinition {
 		apiEndPointsMap.put(ClientExpanded.class, APIData.CLIENTS);
 		apiEndPointsMap.put(Group.class, APIData.GROUPS);
 		apiEndPointsMap.put(GroupExpanded.class, APIData.GROUPS);
+
+		apiEndPointsMap.put(ClientRole.class, APIData.CLIENT_TYPES);
+		apiEndPointsMap.put(GroupRoleName.class, APIData.GROUP_ROLE_NAMES);
 
 		apiEndPointsMap.put(LoanAccount.class, APIData.LOANS);
 		apiEndPointsMap.put(LoanAccountExpanded.class, APIData.LOANS);
@@ -364,6 +426,8 @@ public class ApiDefinition {
 
 		apiEndPointsMap.put(LoanProduct.class, APIData.LOANPRODUCTS);
 		apiEndPointsMap.put(SavingsProduct.class, APIData.SAVINGSRODUCTS);
+
+		apiEndPointsMap.put(JSONLoanRepayments.class, APIData.SCHEDULE);
 
 		apiEndPointsMap.put(Document.class, APIData.DOCUMENTS);
 		apiEndPointsMap.put(JSONDocument.class, APIData.DOCUMENTS);
@@ -412,11 +476,11 @@ public class ApiDefinition {
 	}
 
 	public Method getMethod() {
-		return apiType.getMethod();
+		return method;
 	}
 
 	public ContentType getContentType() {
-		return apiType.getContentType();
+		return contentType;
 	}
 
 	public String getRelatedEntity() {
@@ -452,4 +516,19 @@ public class ApiDefinition {
 		this.returnFormat = returnFormat;
 	}
 
+	public void setContentType(ContentType contentType) {
+		this.contentType = contentType;
+	}
+
+	public void setMethod(Method method) {
+		this.method = method;
+	}
+
+	public void setJsonDateTimeFormat(String dateTimeFormat) {
+		this.jsonDateTimeFormat = dateTimeFormat;
+	}
+
+	public String getJsonDateTimeFormat() {
+		return jsonDateTimeFormat;
+	}
 }

@@ -107,7 +107,7 @@ public class DemoTestTasksService {
 		task = tasksService.createTask(task.getTitle(), user.getUsername(), task.getDescription(), new Date(),
 				task.getTaskLinkKey(), null);
 
-		System.out.println("Created task =" + task + "  Returned=" + task.getId());
+		System.out.println("Created task =" + task + "  Returned=" + task.getId() + " for user=" + user.getFullName());
 
 	}
 
@@ -116,10 +116,7 @@ public class DemoTestTasksService {
 
 		// Get Input params
 		String clientId = demoClient.getId(); // or null;
-		String username = demoUser.getUsername(); // or null;
-
-		clientId = demoClient.getId();
-		username = demoUser.getId();
+		String username = null;// demoUser.getEncodedKey(); // or getId() or getUsername() or null; See MBU-7467
 
 		TaskStatus taskStatus = TaskStatus.OPEN; // TaskStatus.OPEN or TaskStatus.COMPLETED;
 		// Pagination params
@@ -160,8 +157,8 @@ public class DemoTestTasksService {
 		}
 
 		final String changeNote = " updated by API";
-		String description = taskToUpdate.getDescription();
-		taskToUpdate.setDescription(description + changeNote);
+		String originalDescription = (taskToUpdate.getDescription() == null) ? "" : taskToUpdate.getDescription();
+		taskToUpdate.setDescription(originalDescription + changeNote);
 
 		taskToUpdate.setTitle(taskToUpdate.getTitle() + changeNote);
 
@@ -212,7 +209,7 @@ public class DemoTestTasksService {
 		}
 
 		TasksService tasksService = MambuAPIFactory.getTasksService();
-		boolean status = tasksService.deleteTasks(taskId);
+		boolean status = tasksService.deleteTask(taskId);
 
 		System.out.println("Deletion status=" + status);
 	}

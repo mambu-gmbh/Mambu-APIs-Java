@@ -169,6 +169,14 @@ public class DemoTestUsersService {
 
 		System.out.println("User Permissions. List size=" + permissionList.size() + " HashSet="
 				+ permissionsHashSet.size() + "  HashMap=" + permissionsMap.size());
+
+		// Get "Can Manage" permissions
+		boolean canManageAllBranches = user.canManageAllBranches();
+		boolean canManageMultipleBranches = user.canManageMultipleBranches();
+		boolean canManageOtherOfficers = user.canManageEntitiesAssignedToOtherCreditOfficers(); // since 3.9
+
+		System.out.println("Can Manage All Branches=" + canManageAllBranches + "\t Can Manage Multiple Branches="
+				+ canManageMultipleBranches + "\tCan Manage Other Officers=" + canManageOtherOfficers);
 	}
 
 	public static void testGetUserByUsername() throws MambuApiException {
@@ -249,6 +257,7 @@ public class DemoTestUsersService {
 		}
 		System.out.println("Getting entities for " + views.size() + " views");
 
+		// TODO: when MBU-7042 is fixed - add additional branchId, centreId and centreId filtering params
 		for (CustomView view : views) {
 
 			logCustomView(view);
@@ -261,7 +270,6 @@ public class DemoTestUsersService {
 			String limit = "5";
 
 			// Get CustomViewApiType for this view to determine if it is supported by API
-
 			CustomViewApiType viewApiType = UsersService.supportedDataViewTypes.get(viewType);
 			if (viewApiType == null) {
 				System.out.println("\nSkipping custom view type=" + viewType
@@ -367,8 +375,7 @@ public class DemoTestUsersService {
 
 		Class<?> entityClass = User.class;
 		String entityName = entityClass.getSimpleName();
-		// Note, for Users API we use username or encodedKey (not the userId)
-		String entityId = demoUser.getUsername();
+		String entityId = demoUser.getId(); // username or user id or encoded key
 
 		// Get Current custom field values first for a Demo account
 		List<CustomFieldValue> customFieldValues = demoUser.getCustomFieldValues();
@@ -384,7 +391,7 @@ public class DemoTestUsersService {
 
 			String fieldId = value.getCustomField().getId(); // return null for Group, Branch, Centre, User?
 			// Create valid new value for a custom field
-			String newValue = DemoUtil.makeNewCustomFieldValue(value);
+			String newValue = DemoUtil.makeNewCustomFieldValue(value).getValue();
 
 			// Update Custom Field value
 			boolean updateStatus;

@@ -1,7 +1,6 @@
 package com.mambu.apisdk.exception;
 
 import com.google.gson.JsonSyntaxException;
-import com.mambu.apisdk.util.APIExceptionData;
 import com.mambu.apisdk.util.GsonUtils;
 
 /**
@@ -41,16 +40,6 @@ public class MambuApiResponseMessage {
 
 	}
 
-	// Constructor with the individual parts but without the returnCode. Look up Error code using APIExceptionData class
-	// E,g, lookup 902 by REQUIRED_CUSTOM_FIELD_MISSING as in {"returnCode"
-	// 902,"returnStatus":"REQUIRED_CUSTOM_FIELD_MISSING","errorSource":"Loan_Purpose_Loan_Accounts"}
-	public MambuApiResponseMessage(String status, String source) {
-		returnCode = APIExceptionData.getResponseCode(status);
-		returnStatus = status;
-		errorSource = source;
-
-	}
-
 	// Constructor with the actual Mambu's exception error message
 	// e.g ,"returnStatus":"REQUIRED_CUSTOM_FIELD_MISSING","errorSource":"Loan_Purpose_Loan_Accounts"
 	// Given an API error message the application can convert it into a MambuApiResponseMessage object
@@ -83,6 +72,7 @@ public class MambuApiResponseMessage {
 		errorSource = obj.errorSource;
 
 	}
+
 	// Constructor with Mambu Api exception.
 	// Given Mambu's APIexception the application can convert it into a MambuApiResponseMessage object
 	public MambuApiResponseMessage(MambuApiException e) {

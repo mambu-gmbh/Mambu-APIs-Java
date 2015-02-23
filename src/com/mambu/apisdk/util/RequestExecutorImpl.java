@@ -291,7 +291,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * @param params
 	 *            ParamsMap with JSON string
 	 */
-	private StringEntity makeJsonEntity(ParamsMap params) throws UnsupportedEncodingException {
+	private static StringEntity makeJsonEntity(ParamsMap params) throws UnsupportedEncodingException {
 
 		if (params == null) {
 			throw new IllegalArgumentException("JSON requests require non NULL ParamsMap with JSON string");
@@ -322,7 +322,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 *            URL string for the HTTP request
 	 * @return HTTP response string
 	 */
-	private String processResponse(HttpResponse httpResponse, String urlString) throws IOException, MambuApiException {
+	private static String processResponse(HttpResponse httpResponse, String urlString) throws IOException,
+			MambuApiException {
 
 		// get status
 		int status = httpResponse.getStatusLine().getStatusCode();
@@ -341,7 +342,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 
 		// Log Mambu response
-		logApiResponse(status, response);
+		logApiResponse(urlString, status, response);
 
 		// if status is Ok - return the response
 		if (status == HttpURLConnection.HTTP_OK || status == HttpURLConnection.HTTP_CREATED) {
@@ -369,7 +370,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * 
 	 * @throws IOException
 	 */
-	private String readStream(InputStream content) throws IOException {
+	private static String readStream(InputStream content) throws IOException {
 
 		String response = "";
 
@@ -399,7 +400,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * 
 	 * @throws
 	 */
-	private List<NameValuePair> getListFromParams(ParamsMap params) {
+	private static List<NameValuePair> getListFromParams(ParamsMap params) {
 
 		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(params.size());
 
@@ -416,7 +417,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	/**
 	 * Get the formatted content type string for the content type enum value
 	 */
-	private String getFormattedContentTypeString(ContentType contentTypeFormat) {
+	private static String getFormattedContentTypeString(ContentType contentTypeFormat) {
 		switch (contentTypeFormat) {
 		case WWW_FORM:
 			return wwwFormUrlEncodedContentType;
@@ -438,13 +439,29 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * 
 	 * @return jsonStringWithAppKey json string with appKey added
 	 */
-	private String addAppKeyToJson(String jsonString, ParamsMap params) {
+	private static String addAppKeyToJson(String jsonString, ParamsMap params) {
 
 		if (params == null) {
 			return jsonString;
 		}
 
 		String appKey = params.get(APPLICATION_KEY);
+		return addAppkeyValueToJson(appKey, jsonString);
+
+	}
+
+	/**
+	 * Add appKey value to the json string
+	 * 
+	 * @param appKey
+	 *            app key value
+	 * 
+	 * @param jsonString
+	 *            json string
+	 * @return jsonStringWithAppKey json string with appKey added
+	 */
+	private static String addAppkeyValueToJson(String appKey, String jsonString) {
+
 		if (appKey == null || appKey.length() == 0) {
 			return jsonString;
 		}
@@ -551,8 +568,116 @@ public class RequestExecutorImpl implements RequestExecutor {
 		if (jsonString != null) {
 			logJsonInput(jsonString);
 		}
+		// Optionally log a template for a curl command if it would be built with the provided API params
+		if (LOGGER.isLoggable(Level.FINEST)) {
+			logCurlCommandForRequest(method, contentType, urlString, params);
+		}
 
 	}
+
+	/**
+	 * Make and log curl command template corresponding to the API params supplied in the request. This curl pattern can
+	 * be used for subsequent testing and troubleshooting: to execute Mmabu API requests as curl commands with exactly
+	 * the same request params and to compare wrapper built requests with the curl patterns required by Mambu for this
+	 * API.
+	 * 
+	 * NOTE: This method logs output only when the Logger level is set to FINEST.
+	 * 
+	 * Log output example: curl -k -G -H "Content-type: application/x-www-form-urlencoded; charset=UTF-8" -d
+	 * 'appkey=...' https://user:pwd@tenant.mambu.com/api/loans?offset=0&limit=5
+	 * 
+	 * @param method
+	 *            request's method
+	 * @param contentType
+	 *            request's content type
+	 * @param urlString
+	 *            request's url
+	 * @param urlWithParams
+	 *            url string with added params for www-form-urlencoded requests
+	 * @param params
+	 *            the ParamsMap.
+	 */
+	private static void logCurlCommandForRequest(Method method, ContentType contentType, String urlString,
+			ParamsMap params) {
+
+		if (!LOGGER.isLoggable(Level.FINEST) || method == null) {
+			return;
+		}
+		// Make method options and url string
+		String apiMethod = "";
+		switch (method) {
+		case GET:
+			apiMethod = " -G";
+			break;
+		case POST:
+			apiMethod = " -X POST";
+			break;
+		case PATCH:
+			apiMethod = " -X PATCH";
+			break;
+		case DELETE:
+			apiMethod = " -X DELETE";
+			break;
+		}
+		String url = urlString;
+		// Add content type header
+		contentType = (contentType == null) ? ContentType.WWW_FORM : contentType;
+		String contentHeader = " -H \"Content-type: " + getFormattedContentTypeString(contentType) + "\"";
+
+		// Make curl command
+		String curlCommand = "curl -k" + apiMethod + contentHeader;
+
+		// Add appkey param (as a placeholder only)
+		String appKeyValue = MambuAPIFactory.getApplicationKey();
+		if (appKeyValue != null) {
+			appKeyValue = "...";
+		}
+		// Make url command required for the contentType
+		String urlParams = "";
+		switch (contentType) {
+		case WWW_FORM:
+			// Add appkey to the params
+			if (appKeyValue != null) {
+				urlParams = "appkey=" + appKeyValue;
+			}
+			if (params != null && params.size() > 0) {
+				String paramsString = params.getURLString();
+				if (urlParams.length() > 0) {
+					urlParams = urlParams + "&";
+				}
+				urlParams = urlParams + paramsString;
+			}
+			break;
+		case JSON:
+			// Add appkey to the JSON
+			String jsonString = (params == null) ? "{}" : params.get(APIData.JSON_OBJECT);
+			if (appKeyValue != null) {
+				jsonString = addAppkeyValueToJson(appKeyValue, jsonString);
+			}
+			// Add JSON to the command line
+			curlCommand = curlCommand + " -d '" + jsonString + "' ";
+			break;
+		}
+		// Add placeholder for the user's credentials
+		url = url.replace("://", "://user:pwd@");
+		if (urlParams.length() > 0) {
+			url = url + "?" + urlParams;
+		}
+
+		// Make final curl command and log it on a separate line
+		curlCommand = "\n" + curlCommand + " '" + url + "'";
+		LOGGER.info(curlCommand);
+
+	}
+
+	// Strings and constants used for logging formatting
+	final static String documentContentParam = "\"documentContent\":";
+	final static String documentRoot = "\"document\":";
+	final static String documentsApiEndpoint = "/" + APIData.DOCUMENTS + "/";
+	final static String moreIndicator = "...\"";
+	final static int howManyEncodedCharsToShow = 20;
+	// must be long enough to show full string for boolean API responses
+	final static int howManyDocumentResponseCharsToShow = 50;
 
 	/**
 	 * Log Json string details. This is a helper method for modifying the original Json string to remove details that
@@ -562,7 +687,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 *            json string in the API request
 	 * 
 	 */
-	private void logJsonInput(String jsonString) {
+	private static void logJsonInput(String jsonString) {
 
 		if (!LOGGER.isLoggable(Level.INFO) || jsonString == null) {
 			return;
@@ -573,17 +698,15 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		// Documents API case - remove base64 encoding
 		// Find the documentContent tag (containing base64 string) and remove extra content
-		final String documentRoot = "{\"document\":";
-		if (jsonString.startsWith(documentRoot)) {
-			final String documentContentParam = "\"documentContent\":";
+		if (jsonString.contains(documentRoot)) {
 			int contentStarts = jsonString.indexOf(documentContentParam);
 			if (contentStarts != -1) {
 				// Get everything up to the documentContent plus some more
 				final int encodedCharsToShow = 20;
 				// Also add "..." to indicate that the output was truncated
 				jsonString = jsonString
-						.substring(0, contentStarts + documentContentParam.length() + encodedCharsToShow) + "...\"}";
-
+						.substring(0, contentStarts + documentContentParam.length() + encodedCharsToShow)
+						+ moreIndicator + "}";
 			}
 		}
 
@@ -595,12 +718,14 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * Log API response details. This is a helper method for using consistent formating when using Java Logger to print
 	 * the details of the API response
 	 * 
+	 * @param urlString
+	 *            url request string
 	 * @param status
 	 *            response status
 	 * @param response
 	 *            response string
 	 */
-	private void logApiResponse(int status, String response) {
+	private static void logApiResponse(String urlString, int status, String response) {
 
 		if (!LOGGER.isLoggable(Level.INFO)) {
 			return;
@@ -616,12 +741,19 @@ public class RequestExecutorImpl implements RequestExecutor {
 			// Find ";base64,";
 			final String encodedDataIndicator = APIData.BASE64_ENCODING_INDICATOR;
 			final int encodedDataStart = response.indexOf(encodedDataIndicator);
+			// Document APIs may also return very long strings with encoded content (but without the
+			// BASE64_ENCODING_INDICATOR as for image API)
+			final boolean isDocumentApiResponse = (urlString.contains(documentsApiEndpoint)) ? true : false;
 			if (encodedDataStart != -1) {
 				// This is a response containing base64 encoded data. Strip the bulk of it out
-				final int howManyEncodedToShow = 20;
-				int totalCharsToShow = encodedDataStart + encodedDataIndicator.length() + howManyEncodedToShow;
+				int totalCharsToShow = encodedDataStart + encodedDataIndicator.length() + howManyEncodedCharsToShow;
 				// Get the needed part of this response and add "..." indicator
-				response = response.substring(0, totalCharsToShow) + "...\"";
+				response = response.substring(0, totalCharsToShow) + moreIndicator;
+			} else if (isDocumentApiResponse) {
+				// It's a document API response. Could be also very long. Limit the output
+				if (response.length() > howManyDocumentResponseCharsToShow) {
+					response = response.substring(0, howManyDocumentResponseCharsToShow) + moreIndicator;
+				}
 			}
 
 			// Log API response Status and the Response string
@@ -637,7 +769,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * @param applicationKey
 	 *            Application Key string
 	 */
-	private void logAppKey(String applicationKey) {
+	private static void logAppKey(String applicationKey) {
 
 		if (!LOGGER.isLoggable(Level.INFO)) {
 			return;

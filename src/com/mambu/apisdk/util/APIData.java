@@ -1,8 +1,5 @@
 package com.mambu.apisdk.util;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-
 //
 // This class defines string constants and other constants for Mambu API services
 //
@@ -11,13 +8,10 @@ public class APIData {
 
 	public final static String APPLICATION_KEY = "appkey";
 
-	//
-	public static enum ACCOUNT_TYPE {
+	@Deprecated
+	public static enum ACCOUNT_TYPE { // We should use com.mambu.accounts.shared.model.Account.Type instead
 		LOAN, SAVINGS
 	};
-
-	// ----- Date Formatting -----
-	public static final DateFormat URLDATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd");
 
 	// Users API
 
@@ -33,6 +27,11 @@ public class APIData {
 	public static final String CLIENTS = "clients";
 	public static final String GROUPS = "groups";
 	public static final String FULL_DETAILS = "fullDetails";
+
+	// Client Types. Added in 3.9
+	public static final String CLIENT_TYPES = "clienttypes";
+	// Group Role Names. Added in 3.9
+	public static final String GROUP_ROLE_NAMES = "grouprolenames";
 
 	public static final String DATE = "date";
 	public static final String FIRST_REPAYMENT_DATE = "firstRepaymentDate";
@@ -55,6 +54,7 @@ public class APIData {
 	public static final String TRANSACTIONS = "transactions";
 	public static final String TYPE_REPAYMENT = "REPAYMENT";
 	public static final String TYPE_DISBURSMENT = "DISBURSMENT";
+	public static final String DISBURSMENT_ADJUSTMENT = "DISBURSMENT_ADJUSTMENT"; // added in 3.9
 	public static final String TYPE_APPROVAL = "APPROVAL";
 	public static final String TYPE_UNDO_APPROVAL = "UNDO_APPROVAL";
 	public static final String TYPE_REJECT = "REJECT";
@@ -122,6 +122,23 @@ public class APIData {
 	// Repayments
 	public static final String REPAYMENTS = "repayments";
 
+	// Schedule for Loan Products endpoint. Added in 3.9
+	public static final String SCHEDULE = "schedule";
+	// Parameters supported by the loan product schedule API (MBU-6789) and loan terms patch API (MBU-7758)
+	public static final String LOAN_AMOUNT = "loanAmount";
+	public static final String ANTICIPATE_DISBURSEMENT = "anticipatedDisbursement";
+	public static final String EXPECTED_DISBURSEMENT = "expectedDisbursementDate";
+	// "firstRepaymentDate" - is already defined as FIRST_REPAYMENT_DATE
+	public static final String INTEREST_RATE = "interestRate";
+	public static final String INTEREST_RATE_SPREAD = "interestSpread";
+	public static final String REPAYMENT_INSTALLMENTS = "repaymentInstallments";
+	public static final String GRACE_PERIOD = "gracePeriod";
+	public static final String REPAYMENT_PERIOD_UNIT = "repaymentPeriodUnit";
+	public static final String REPAYMENT_PERIOD_COUNT = "repaymentPeriodCount";
+	public static final String PRNICIPAL_REPAYMENT_INTERVAL = "principalRepaymentInterval";
+	public static final String PERIODIC_PAYMENT = "periodicPayment";
+	public static final String PENALTY_RATE = "penaltyRate";
+
 	public static final String DUE_FROM = "dueFrom";
 	public static final String DUE_TO = "dueTo";
 
@@ -140,6 +157,9 @@ public class APIData {
 	// API's endpoint
 	public static String DOCUMENTS = "documents";
 
+	// API endpoints for uploading client profile picture and signature. Available since 3.9
+	public static String PROFILE_PICTURE = "PROFILE_PICTURE";
+	public static String SIGNATURE = "SIGNATURE";
 	// Image downloads
 	// API end point
 	public static String IMAGES = "images";
@@ -168,7 +188,7 @@ public class APIData {
 	public static String ID_DOCUMENT = "idDocument";
 
 	// Added to support Json object creation API
-	public static String yyyyMmddFormat = "yyyy-MM-dd";
+	public static String yyyyMmddFormat = DateUtils.DATE_FORMAT;// ISO_8601_FORMAT_DATE "yyyy-MM-dd";
 	public static String JSON_OBJECT = "JSON";
 
 	// Base64 encoded strings header's terminator in API responses
