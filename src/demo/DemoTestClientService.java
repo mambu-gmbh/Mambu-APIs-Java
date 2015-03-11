@@ -1,13 +1,17 @@
 package demo;
 
+import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
+import com.mambu.accounts.shared.model.AccountHolderType;
+import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.ClientsService;
@@ -16,12 +20,19 @@ import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.ClientState;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.GroupExpanded;
+import com.mambu.clients.shared.model.GroupMember;
+import com.mambu.clients.shared.model.GroupRole;
+import com.mambu.clients.shared.model.GroupRoleName;
 import com.mambu.clients.shared.model.IdentificationDocument;
 import com.mambu.core.shared.model.Address;
+import com.mambu.core.shared.model.ClientRole;
+import com.mambu.core.shared.model.ClientRolePermission;
 import com.mambu.core.shared.model.CustomField;
+import com.mambu.core.shared.model.CustomField.Type;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
+import com.mambu.docs.shared.model.OwnerType;
 
 /**
  * 
@@ -69,8 +80,19 @@ public class DemoTestClientService {
 
 			testGetDocuments();
 
-			// Available since 3.8
-			testUpdateDeleteCustomFields();
+			testUpdateDeleteCustomFields(); // Available since 3.8
+
+			GroupExpanded createdGroup = testCreateGroup(); // Available since 3.9
+
+			// TODO: uncomment testUpdateGroup() to test UPDATE group API when it's ready in 3.10 (MBU-7337)
+			// testUpdateGroup(createdGroup);// To be available in 3.10
+
+			testGetClientTypes(); // Available since 3.9
+			testGetGroupsRoles();// Available since 3.9
+
+			uploadClientProfileFiles(); // Available since 3.9
+			getClientProfileFiles(); // Available since 3.9
+			deleteClientProfileFiles(); // Available since 3.9
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Clients");
@@ -94,15 +116,10 @@ public class DemoTestClientService {
 			System.out.println("\nIn testGetClients");
 			ClientsService clientService = MambuAPIFactory.getClientService();
 
-			System.out
-					.println("Successfully returned " + clientService.getClients(true).size() + " clients(active)...");
-			System.out.println("Successfully returned " + clientService.getClients(false).size()
-					+ " clients(inactive)...");
-
 			System.out.println("Successfully returned " + clientService.getClients(true, 0, 10).size()
 					+ " clients(active,page size of 10)...");
 			System.out.println("Successfully returned " + clientService.getClients(false, 0, 10).size()
-					+ " clients(inactive,page size of 10)...");
+					+ " clients (inactive, page size of 10)...");
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Clients");
 			System.out.println("Error code=" + e.getErrorCode());
@@ -134,7 +151,7 @@ public class DemoTestClientService {
 		ClientsService clientService = MambuAPIFactory.getClientService();
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		df.setTimeZone(TimeZone.getTimeZone("UTC"));
-		String birthDay = df.format(demoClient.getBirthDate()); // yyy-MM-dd
+		String birthDay = (demoClient.getBirthDate() == null) ? null : df.format(demoClient.getBirthDate()); // yyy-MM-dd
 		String lastName = demoClient.getLastName();
 
 		List<Client> myCLients = clientService.getClientByLastNameBirthday(lastName, birthDay);
@@ -152,10 +169,11 @@ public class DemoTestClientService {
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
-		ClientExpanded clientDetails = clientService.getClientDetails(NEW_CLIENT_ID);
+		ClientExpanded clientDetails = clientService.getClientDetails(demoClient.getId());
+		Client client = clientDetails.getClient();
 
-		System.out.println("testGetClientDetails Ok, name=" + clientDetails.getClient().getFullName()
-				+ ".  and Name +id " + clientDetails.getClient().getFullNameWithId());
+		System.out.println("testGetClientDetails Ok, name=" + client.getFullName() + "\tName +id "
+				+ client.getFullNameWithId() + "\tClient Type=" + client.getClientRole().getName());
 
 	}
 
@@ -203,17 +221,16 @@ public class DemoTestClientService {
 
 	}
 
+	private static final String apiTestFirstNamePrefix = "Demo Name ";
+	private static final String apiTestLastNamePrefix = "API Client";
+
 	public static void testCreateJsonClient() throws MambuApiException {
 		System.out.println("\nIn testCreateJsonClient");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
-
-		Client clientIn = new Client("Миша456", "Lastname456"); // MikeNew
-
-		// Миша_98713
-
-		int randomIndex = (int) (Math.random() * 1000000);
-		NEW_CLIENT_ID = "Миша_98713" + Integer.toString(randomIndex);
+		int randomIndex = (int) (Math.random() * 10000);
+		NEW_CLIENT_ID = Integer.toString(randomIndex);
+		Client clientIn = new Client(apiTestFirstNamePrefix + NEW_CLIENT_ID, apiTestLastNamePrefix + NEW_CLIENT_ID);
 		clientIn.setId(NEW_CLIENT_ID);
 		clientIn.setLoanCycle(null);
 		clientIn.setGroupLoanCycle(null);
@@ -223,8 +240,8 @@ public class DemoTestClientService {
 		Date today = new Date();
 		Date tomorrow = new Date(today.getTime() + (1000 * 60 * 60 * 24));
 		clientIn.setCreationDate(tomorrow);
-		clientIn.setEmailAddress("MD_Json@test.ca");
-		clientIn.setHomePhone("604.271.7033");
+		clientIn.setEmailAddress("apiDemo@apidemo.mambu.com");
+		clientIn.setHomePhone("778.271.7033");
 		clientIn.setMiddleName(" Middle ");
 		clientIn.setMobilePhone1("1-778-2344");
 		clientIn.setMobilePhone2("2-778-2344");
@@ -236,51 +253,38 @@ public class DemoTestClientService {
 
 		clientIn.setBirthDate(birthdate);
 
+		// Set client role. Required since Mambu 3.9
+		List<ClientRole> clientTypes = clientService.getClientTypes(AccountHolderType.CLIENT);
+		ClientRole cientRole = clientTypes.get(0);
+		clientIn.setClientRole(cientRole);
+
+		// Add client assignments, they might be mandatory
+		String assignedTo = (demoUser.isCreditOfficer()) ? demoUser.getEncodedKey() : null;
+		clientIn.setAssignedUserKey(assignedTo);
+		clientIn.setAssignedBranchKey(demoUser.getAssignedBranchKey());
+		clientIn.setAssignedCentreKey(demoUser.getAssignedCentreKey());
+
 		// Create Expanded Client
 		ClientExpanded clExpanded = new ClientExpanded(clientIn);
 		// Add address
 		List<Address> addresses = new ArrayList<Address>();
 		Address address = new Address();
-		address.setLine1("Line1JsonAddress");
-		address.setCity("Kharkiv");
+		address.setLine1("Line 1 street address");
+		address.setLine2("Line 2 street address");
+		address.setCity("Berlin");
 		address.setIndexInList(0);
 		addresses.add(address);
 		clExpanded.setAddresses(addresses);
 		// ADd doc IDs
 		List<IdentificationDocument> idDocs = new ArrayList<IdentificationDocument>();
 		IdentificationDocument doc = new IdentificationDocument();
-		doc.setDocumentId("PasspId");
+		doc.setDocumentId("DFG6778899");
 		doc.setDocumentType("Passport");
 		idDocs.add(doc);
 		clExpanded.setIdDocuments(idDocs);
-		List<CustomFieldValue> clientCustomInformation = new ArrayList<CustomFieldValue>();
-
-		CustomFieldValue custField1 = new CustomFieldValue();
-		String customFieldId = "Family_Size_Clients";
-		String customFieldValue = "15";
-
-		custField1.setCustomFieldId(customFieldId);
-		custField1.setValue(customFieldValue);
-		// Add new field to the list
-		clientCustomInformation.add(custField1);
-
-		CustomFieldValue custField2 = new CustomFieldValue();
-		customFieldId = "From_Hollywood_Clients";
-		customFieldValue = "TRUE";
-
-		custField2.setCustomFieldId(customFieldId);
-		custField2.setValue(customFieldValue);
-
-		// Add new field to the list
-		clientCustomInformation.add(custField2);
-		CustomFieldValue custField3 = new CustomFieldValue();
-		customFieldId = "Custom_Field_6_Clients";
-		customFieldValue = "Custom_Field_6_Value";
-
-		custField3.setCustomFieldId(customFieldId);
-		custField3.setValue(customFieldValue);
-		// Add new field to the list
-		clientCustomInformation.add(custField3);
+		// Use helper to make test custom fields which are valid for the client's role
+		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(Type.CLIENT_INFO,
+				cientRole.getEncodedKey());
 		// Add All custom fields
 		clExpanded.setCustomFieldValues(clientCustomInformation);
 
@@ -295,14 +299,16 @@ public class DemoTestClientService {
 
 	}
 
+	private static final String updatedSuffix = "_ApiUpdated";
+
 	public static void testUpdateClient() throws MambuApiException {
 		System.out.println("\nIn testUpdateClient");
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
 		ClientExpanded clientUpdated = clientCreated;
 		Client client = clientUpdated.getClient();
-		client.setFirstName("Updated Name");
-		client.setLastName("Updated Last Name");
+		client.setFirstName(client.getFirstName() + updatedSuffix);
+		client.setLastName(client.getLastName() + updatedSuffix);
 
 		ClientExpanded clientExpandedResult = clientService.updateClient(clientUpdated);
 
@@ -333,6 +339,7 @@ public class DemoTestClientService {
 					+ "\tCentreId=" + client.getAssignedCentreKey() + "\tCredit Officer id="
 					+ client.getAssignedUserKey());
 		}
+		return;
 	}
 
 	public static void testGetGroupsByBranchCentreOfficer() throws MambuApiException {
@@ -354,6 +361,28 @@ public class DemoTestClientService {
 			System.out.println("Group Name=" + group.getGroupName() + "\tBranchId=" + group.getAssignedBranchKey()
 					+ "\tCentreId=" + group.getAssignedCentreKey() + "\tCredit Officer id="
 					+ group.getAssignedUserKey());
+		}
+	}
+
+	public static void testGetGroupsRoles() throws MambuApiException {
+		System.out.println("\nIn testGetGroupsRoles");
+
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		List<GroupRoleName> groupRoleNames = clientService.getGroupRoleNames();
+
+		int totalRoles = (groupRoleNames == null) ? 0 : groupRoleNames.size();
+		if (totalRoles == 0) {
+			System.out.println("No group roles returned");
+			return;
+		}
+		for (GroupRoleName role : groupRoleNames) {
+			System.out.println("Group Role=" + role.getName() + "\tGroup Role Name Key=" + role.getEncodedKey());
+
+			// Now test getting details for a specific role
+			GroupRoleName roleDeatils = clientService.getGroupRoleName(role.getEncodedKey());
+			System.out.println("OK for full Group Role details. Group Role Name=" + roleDeatils.getName());
+
 		}
 	}
 
@@ -404,7 +433,7 @@ public class DemoTestClientService {
 		boolean forClient = (entityClass.equals(Client.class)) ? true : false;
 		String entityId = (forClient) ? demoClient.getId() : demoGroup.getId();
 
-		// Get Current custom field values first. We need and entity with full details
+		// Get Current custom field values first. We need an entity with full details
 		List<CustomFieldValue> customFieldValues;
 		if (forClient) {
 			ClientExpanded clientExpanded = clientService.getClientDetails(entityId);
@@ -429,7 +458,7 @@ public class DemoTestClientService {
 			String fieldId = field.getId();
 
 			// Create valid new value for a custom field
-			String newValue = DemoUtil.makeNewCustomFieldValue(value);
+			String newValue = DemoUtil.makeNewCustomFieldValue(value).getValue();
 
 			// Update Custom Field value
 			boolean updateStatus;
@@ -472,5 +501,242 @@ public class DemoTestClientService {
 		String statusMessage = (deleteStatus) ? "Success" : "Failure";
 		System.out.println(statusMessage + " deleting Custom Field, ID=" + customFieldId + " for demo " + entityName
 				+ " with ID=" + entityId);
+	}
+
+	// Test getting client types
+	public static void testGetClientTypes() throws MambuApiException {
+		System.out.println("\nIn testGetClientTypes");
+
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		// Test Get All Client Types from Mambu via API
+		List<ClientRole> allClientTypes = clientService.getClientTypes();
+		// Log response details
+		logClientTypes(allClientTypes, null);
+
+		// Test Get Specific Client Types from Mambu via API
+		AccountHolderType clientType = AccountHolderType.CLIENT; // or AccountHolderType.GROUP;
+		List<ClientRole> clientTypes = clientService.getClientTypes(clientType);
+		// Log response details
+		logClientTypes(clientTypes, clientType);
+	}
+
+	// Log full details for the returned client types
+	private static void logClientTypes(List<ClientRole> clientTypes, AccountHolderType holderType) {
+
+		int totalClientTypes = (clientTypes == null) ? 0 : clientTypes.size();
+		System.out.println("Total client types returned=" + totalClientTypes + " for the holder type=" + holderType);
+		if (totalClientTypes == 0) {
+			return;
+		}
+		// Log details for the returned types
+		for (ClientRole clientType : clientTypes) {
+			System.out.println("\nRole Name=" + clientType.getName() + "\tClient Type=" + clientType.getClientType());
+			Map<ClientRolePermission, Boolean> permissionsMap = clientType.getPermissions();
+			if (permissionsMap == null) {
+				System.out.println("Null permissions map returned for client type=" + clientType.getName());
+				continue;
+			}
+			System.out.println("Permissions for " + clientType.getName());
+			for (ClientRolePermission permission : permissionsMap.keySet()) {
+				System.out.println(permission + " = " + permissionsMap.get(permission));
+			}
+		}
+	}
+
+	// Test getting client profile picture and client profile signature file
+	public static void getClientProfileFiles() throws MambuApiException {
+		System.out.println("\nIn getClientProfileFiles");
+
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		String clientKey = demoClient.getEncodedKey();
+		// Get client picture
+		String profileDocument = clientService.getClientProfilePictureFile(clientKey);
+		int responseLength = (profileDocument == null) ? 0 : profileDocument.length();
+		System.out.println("\nProfile picture file returned. Total chars=" + responseLength);
+
+		// Get client signature
+		String signatureDocument = clientService.getClientSignatureFile(clientKey);
+		responseLength = (signatureDocument == null) ? 0 : signatureDocument.length();
+		System.out.println("\nSignature file returned. Total chars=" + responseLength);
+
+	}
+
+	// Test uploading client profile picture and signature files
+	public static void uploadClientProfileFiles() throws MambuApiException {
+		System.out.println("\nIn uploadClientProfileFiles");
+		// Our Test file to upload.
+		final String filePath = "./test/data/IMG_1.JPG";
+
+		// Encode this file
+		String encodedString = DemoUtil.encodeFileIntoBase64String(filePath);
+		if (encodedString == null) {
+			System.out.println("Failed encoding the file");
+			return;
+		}
+
+		System.out.println("Encoded Length=" + encodedString.length());
+
+		JSONDocument jsonDocument = new JSONDocument();
+
+		Document document = new Document();
+		document.setCreatedByUserKey(demoUser.getId());
+		document.setDescription("Testing uploading profile file");
+		document.setDocumentHolderKey(demoClient.getEncodedKey());
+		document.setDocumentHolderType(OwnerType.CLIENT);
+		document.setOriginalFilename(filePath);
+		document.setType("jpg");
+
+		jsonDocument.setDocument(document);
+
+		// Set the encoded strings
+		jsonDocument.setDocumentContent(encodedString);
+
+		String clientKey = demoClient.getEncodedKey();
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		// Upload profile picture
+		jsonDocument.getDocument().setName("Profile Picture for " + demoClient.getFullName());
+		boolean uploadPictureStatus = clientService.uploadClientProfilePicture(clientKey, jsonDocument);
+		System.out.println("Profile Picture upload status=" + uploadPictureStatus);
+
+		// Upload signature
+		document.setName("Signature for " + demoClient.getFullName());
+		final String signatureFile = "./test/data/signature.png";
+		encodedString = DemoUtil.encodeFileIntoBase64String(signatureFile);
+		jsonDocument.setDocumentContent(encodedString);
+		document.setOriginalFilename(signatureFile);
+		document.setType("PNG");
+		boolean uploadSignatureStatus = clientService.uploadClientSignatureFile(clientKey, jsonDocument);
+		System.out.println("Signature upload status=" + uploadSignatureStatus);
+
+	}
+
+	// Test deleting client profile picture and client profile signature file
+	public static void deleteClientProfileFiles() throws MambuApiException {
+		System.out.println("\nIn deleteClientProfileFiles");
+
+		ClientsService clientService = MambuAPIFactory.getClientService();
+		String clientKey = demoClient.getEncodedKey();
+
+		// Delete picture
+		boolean deleteStatus = clientService.deleteClientProfilePicture(clientKey);
+		System.out.println("Deleting profile picture Status=" + deleteStatus);
+
+		// Delete signature
+		deleteStatus = clientService.deleteClientSignatureFile(clientKey);
+		System.out.println("Deleting profile signature Status=" + deleteStatus);
+
+	}
+
+	private static final String apiTestGroupNamePrefix = "API Test Group ";
+
+	public static GroupExpanded testCreateGroup() throws MambuApiException {
+		System.out.println("\nIn testCreateGroup");
+
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		// Get available ClientRole(s) first
+		AccountHolderType holderType = AccountHolderType.GROUP;
+		List<ClientRole> groupTypes = clientService.getClientTypes(holderType);
+
+		// Create demo group
+		Group theGroup = new Group();
+		// Create unique ID
+		String randomIndex = Integer.toString((int) (Math.random() * 1000000));
+
+		String groupName = apiTestGroupNamePrefix + randomIndex;
+		theGroup.setId(randomIndex);
+		ClientRole groupType = groupTypes.get(0);
+
+		theGroup.setClientRole(groupType);
+		theGroup.setAssignedBranchKey(demoUser.getAssignedBranchKey());
+		theGroup.setAssignedCentreKey(demoUser.getAssignedCentreKey());
+		theGroup.setAssignedUserKey(demoUser.getEncodedKey());
+		theGroup.setCreationDate(new Date());
+		theGroup.setEmailAddress("apiGroup@gmail.test");
+		theGroup.setGroupName(groupName); // make the same as name
+		theGroup.setHomePhone("604-5555-8889");
+		theGroup.setMobilePhone1("777-444-5555");
+		theGroup.setNotes("Created by API user " + demoUser.getFullName());
+
+		GroupExpanded groupDetails = new GroupExpanded(theGroup);
+		// Set Custom Fields
+
+		// Make test custom fields for our group role
+		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(Type.GROUP_INFO,
+				groupType.getEncodedKey());
+		// Add All custom fields
+		groupDetails.setCustomFieldValues(clientCustomInformation);
+
+		// Set addresses
+		List<Address> addresses = new ArrayList<Address>();
+		Address address = new Address();
+		address.setCity("Berlin");
+		address.setCountry("Germany");
+		address.setLine1("Line 1 street address");
+		address.setLine2("Line 2 street address");
+		address.setPostcode("9876");
+		// Latitude/Longitude - available since 3.9, see MBU-7067
+		address.setLatitude(new BigDecimal(52.5243700));
+		address.setLongitude(new BigDecimal(13.4105300));
+		addresses.add(address);
+		groupDetails.setAddresses(addresses);
+		// Set Group Members
+		List<GroupMember> groupMembers = new ArrayList<GroupMember>();
+		GroupMember groupMember = new GroupMember();
+		groupMember.setClientKey(demoClient.getEncodedKey());
+		groupMember.setCreationDate(new Date());
+		groupMembers.add(groupMember);
+		groupDetails.setGroupMembers(groupMembers);
+
+		// Set Group Roles
+		// Get existent roles first
+		List<GroupRoleName> allGroupRoles = clientService.getGroupRoleNames();
+		if (allGroupRoles != null && allGroupRoles.size() > 0) {
+			// Assign group member to the first available group role
+			GroupRole useRole = new GroupRole(allGroupRoles.get(0).getEncodedKey(), groupMembers.get(0).getClientKey());
+			// Add this role to group details
+			List<GroupRole> groupRoles = new ArrayList<GroupRole>();
+			groupRoles.add(useRole);
+			groupDetails.setGroupRoles(groupRoles);
+		}
+
+		// Send API request to create new group
+		GroupExpanded createdGroup = clientService.createGroup(groupDetails);
+		System.out.println("Group Created. Encoded Key=" + createdGroup.getEncodedKey() + "\tName and Id="
+				+ createdGroup.getGroup().getGroupNameWithId());
+
+		return createdGroup;
+	}
+
+	// TODO: test this API when MBU-7337 is implemented in 3.10
+	public static void testUpdateGroup(GroupExpanded goupExpanded) throws MambuApiException {
+		System.out.println("\nIn testUpdateGroup");
+
+		if (goupExpanded == null || goupExpanded.getGroup() == null) {
+			System.out.println("Cannot update: group details are NULL");
+			return;
+		}
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		// Update some group details
+		Group updatedGroup = goupExpanded.getGroup();
+		updatedGroup.setGroupName(updatedGroup.getGroupName() + updatedSuffix);
+		updatedGroup.setId(updatedGroup.getId() + updatedSuffix);
+		updatedGroup.setHomePhone(updatedGroup.getHomePhone() + "-22");
+		updatedGroup.setNotes(updatedGroup.getNotes() + updatedSuffix);
+		Address updatedAddress = goupExpanded.getAddresses().get(0);
+		if (updatedAddress == null) {
+			updatedAddress = new Address();
+		}
+		updatedAddress.setLine1(updatedAddress.getLine1() + updatedSuffix);
+		updatedGroup.setNotes(updatedGroup.getNotes() + updatedSuffix);
+
+		// Send API request to update this group
+		GroupExpanded updatedGroupExpaneded = clientService.updateGroup(goupExpanded);
+		System.out.println("Group Updated. Name=" + goupExpanded.getGroup().getGroupNameWithId() + "\tName and Id="
+				+ updatedGroupExpaneded.getGroup().getGroupNameWithId());
 	}
 }

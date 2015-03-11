@@ -12,7 +12,8 @@ import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.Address;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
-import com.mambu.core.shared.model.CustomFieldProductSettings;
+import com.mambu.core.shared.model.CustomFieldLink;
+import com.mambu.core.shared.model.CustomFieldLink.LinkType;
 import com.mambu.core.shared.model.CustomFieldSet;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.organization.shared.model.Branch;
@@ -239,7 +240,7 @@ public class DemoTestOrganizationService {
 		// E.g. CustomField.Type.CLIENT_INFO, CustomField.Type.LOAN_ACCOUNT_INFO, etc
 		CustomField.Type customFieldType = CustomField.Type.LOAN_ACCOUNT_INFO;
 
-		System.out.println("\nIn testGetCustomFieldSetsByType");
+		System.out.println("\nIn testGetCustomFieldSetsByType for " + customFieldType);
 
 		Date d1 = new Date();
 		List<CustomFieldSet> sustomFieldSets = organizationService.getCustomFieldSets(customFieldType);
@@ -250,44 +251,43 @@ public class DemoTestOrganizationService {
 		for (CustomFieldSet set : sustomFieldSets) {
 			List<CustomField> customFields = set.getCustomFields();
 
-			System.out.println(" Name=" + set.getName() + "\tType=" + set.getType().toString() + "  Total Fields="
-					+ customFields.size());
-			System.out.println("List of fields:\n");
+			System.out.println("\nSet Name=" + set.getName() + "\tType=" + set.getType().toString() + "  Total Fields="
+					+ customFields.size() + "\tUsage=" + set.getUsage());
+			System.out.println("List of fields");
 			for (CustomField field : customFields) {
 				System.out.println("\nField ID=" + field.getId() + "\tField Name=" + field.getName() + "\tDataType="
 						+ field.getDataType().toString() + "\tIsDefault=" + field.isDefault().toString() + "\tType="
-						+ field.getType().toString());
+						+ field.getType().toString() + "\tIs Active=" + !field.isDeactivated());
 
-				// Remember one of the CustomFields for testing testGetCustomField()
+				// Remember one of the active CustomFields for testing testGetCustomField()
 				if (!field.isDeactivated()) {
 					CUSTOM_FIELD_ID = (CUSTOM_FIELD_ID == null) ? field.getId() : CUSTOM_FIELD_ID;
 				}
-				// As of Mambu 3.8, settings for Loans and Savings custom fields are per product. See MBU-6280
-				List<CustomFieldProductSettings> customFieldProductSettings = field.getCustomFieldProductSettings();
 
-				if (customFieldProductSettings == null) {
-					System.out.println("Field has no CustomFieldProductSettings");
+				// As of Mambu 3.9, settings for custom fields are per entity type, see MBU-7034
+				List<CustomFieldLink> links = field.getCustomFieldLinks();
+				if (links == null) {
+					System.out.println("Field's CustomFieldLinks are null");
 					continue;
 				}
+				if (links.size() == 0) {
+					System.out.println("Field's CustomFieldLinks are empty");
+					continue;
+				}
+				for (CustomFieldLink link : links) {
+					LinkType linkType = link.getLinkType(); // PRODUCT or CLIENT_ROLE
+					String entityLinkedKey = link.getEntityLinkedKey();
+					boolean isLinkDefault = link.isDefault();
+					boolean isLinkRequired = link.isRequired();
+					System.out.println("Link Data. Type=" + linkType + "\tEntity Key=" + entityLinkedKey
+							+ "\tRequired=" + isLinkRequired + "\tDefault=" + isLinkDefault);
 
-				// Log product specific settings
-				for (CustomFieldProductSettings productSettings : customFieldProductSettings) {
-
-					String productKey = productSettings.getProductKey();
-					boolean isDefault = productSettings.isDefault();
-					boolean isRequired = productSettings.isRequired();
-					System.out.println("Field defined for productKey=" + productKey + " isDefault=" + isDefault
-							+ " isRequired=" + isRequired);
-
-					// Test availability methods for a specific product key. e.g isAvaliableForProduct(productKey)
-					boolean isForProduct = field.isAvaliableForProduct(productKey); // this must be always true
-					boolean isDefaultForProduct = field.isDefault(productKey); // must be the same as isDefault
-					boolean isRequiredForProduct = field.isRequired(productKey); // must be the same as isRequired
-
-					System.out.println("Product defaults by product. IsForThisProduct=" + isForProduct
-							+ " isDefaultForProduct=" + isDefaultForProduct + " isRequiredForProduct="
-							+ isRequiredForProduct);
-
+					// Test Get field properties for this entity
+					boolean isAvailableForEntity = field.isAvailableForEntity(entityLinkedKey);
+					boolean isRequiredForEntity = field.isRequired(entityLinkedKey);
+					boolean isDefaultForEntity = field.isDefault(entityLinkedKey);
+					System.out.println("Available =" + isAvailableForEntity + "\tRequired=" + isRequiredForEntity
+							+ "\tDefault=" + isDefaultForEntity);
 				}
 			}
 		}
@@ -361,7 +361,7 @@ public class DemoTestOrganizationService {
 			String fieldId = field.getId();
 
 			// Create valid new value for a custom field
-			String newValue = DemoUtil.makeNewCustomFieldValue(value);
+			String newValue = DemoUtil.makeNewCustomFieldValue(value).getValue();
 
 			// Update Custom Field value
 			boolean updateStatus;

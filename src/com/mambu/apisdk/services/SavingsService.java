@@ -6,12 +6,12 @@ package com.mambu.apisdk.services;
 import java.util.List;
 
 import com.google.inject.Inject;
+import com.mambu.accounts.shared.model.Account.Type;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
-import com.mambu.apisdk.util.APIData.ACCOUNT_TYPE;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
@@ -104,7 +104,7 @@ public class SavingsService {
 	private final static ApiDefinition createAccount = new ApiDefinition(ApiType.CREATE_JSON_ENTITY,
 			JSONSavingsAccount.class);
 	// Update Account
-	private final static ApiDefinition updateAccount = new ApiDefinition(ApiType.UPDATE_JSON, JSONSavingsAccount.class);
+	private final static ApiDefinition updateAccount = new ApiDefinition(ApiType.POST_ENTITY, JSONSavingsAccount.class);
 
 	// Loan Products API requests
 	// Get Loan Product Details
@@ -250,7 +250,6 @@ public class SavingsService {
 	 *            the key of the Custom View to filter savings transactions
 	 * @param offset
 	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * 
 	 * @param limit
 	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
@@ -400,8 +399,10 @@ public class SavingsService {
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
-	/****
-	 * Make a Transfer from an account.
+/**
+	 * Make transfer from an account
+	 * 
+	 *  @depreciated. Use {@link #makeTransfer(String, String, Type, String, String) instead.
 	 * 
 	 * @param fromAccountId
 	 *            the id of the account the amount to transfer from
@@ -417,8 +418,36 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public SavingsTransaction makeTransfer(String fromAccountId, String destinationAccountKey,
 			APIData.ACCOUNT_TYPE destinationAccountType, String amount, String notes) throws MambuApiException {
+
+		Type accountBaseType = null;
+		if (destinationAccountType != null) {
+			accountBaseType = (destinationAccountType == APIData.ACCOUNT_TYPE.LOAN) ? Type.LOAN : Type.SAVINGS;
+		}
+		return makeTransfer(fromAccountId, destinationAccountKey, accountBaseType, amount, notes);
+	}
+
+	/**
+	 * Make transfer from an account
+	 * 
+	 * @param fromAccountId
+	 *            the id of the account the amount to transfer from
+	 * @param destinationAccountKey
+	 *            the id of the account to transfer to
+	 * @param destinationAccountType
+	 *            type of the account (Type.Loan or Type.Savings)
+	 * @param amount
+	 *            amount to transfer
+	 * @param notes
+	 * 
+	 * @return Savings Transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public SavingsTransaction makeTransfer(String fromAccountId, String destinationAccountKey,
+			Type destinationAccountType, String amount, String notes) throws MambuApiException {
 
 		// E.g .format: POST "type=TYPE_TRANSFER"
 		// /api/savings/KHGJ593/transactions
@@ -432,7 +461,7 @@ public class SavingsService {
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_TRANSFER);
 
-		if (destinationAccountType == ACCOUNT_TYPE.LOAN) {
+		if (destinationAccountType == Type.LOAN) {
 			paramsMap.addParam(TO_LOAN, destinationAccountKey);
 		} else {
 			paramsMap.addParam(TO_SAVINGS, destinationAccountKey);
@@ -587,13 +616,12 @@ public class SavingsService {
 	}
 
 	/**
-	 * Requests a list of savings accounts for a custom view, limited by offset/limit
+	 * Requests a list of savings accounts for a custom view, limited by offset/limit only
 	 * 
 	 * @param customViewKey
 	 *            the key of the Custom View to filter savings accounts
 	 * @param offset
 	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * 
 	 * @param limit
 	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 

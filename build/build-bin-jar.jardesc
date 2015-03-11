@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <jardesc>
-    <jar path="Mambu-APIs-Java/build/Mambu-APIs-Java-3.8-bin.jar"/>
+    <jar path="Mambu-APIs-Java/build/Mambu-APIs-Java-3.9-bin.jar"/>
     <options buildIfNeeded="true" compress="true" descriptionLocation="/Mambu-APIs-Java/build/build-bin-jar.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="false" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
     <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
     <selectedProjects/>

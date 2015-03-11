@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gson.reflect.TypeToken;
+import com.google.inject.Inject;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
@@ -20,6 +21,8 @@ import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.GroupExpanded;
+import com.mambu.clients.shared.model.GroupRoleName;
+import com.mambu.core.shared.model.ClientRole;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
@@ -91,6 +94,7 @@ public class ServiceExecutor {
 	 * @param mambuAPIService
 	 *            the service responsible with the connection to the server
 	 */
+	@Inject
 	public ServiceExecutor(MambuAPIService mambuAPIService) {
 		this.mambuAPIService = mambuAPIService;
 	}
@@ -259,28 +263,48 @@ public class ServiceExecutor {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public <R, T> R executeJson(ApiDefinition apiDefinition, T object, String objectId) throws MambuApiException {
+	public <R, T> R executeJson(ApiDefinition apiDefinition, T object, String objectId, String relatedEntityId)
+			throws MambuApiException {
 
 		if (object == null) {
 			throw new IllegalArgumentException("JSON object must not be NULL");
 		}
 
 		// Parse input object into a JSON string
-		final String dateTimeFormat = APIData.yyyyMmddFormat;
-		final String jsonData = GsonUtils.createGson(dateTimeFormat).toJson(object, object.getClass());
+		final String dateTimeFormat = apiDefinition.getJsonDateTimeFormat();
+		final String jsonData = ServiceHelper.makeApiJson(object, dateTimeFormat);
 
 		// Add JSON string as JSON_OBJECT to the ParamsMap
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.put(APIData.JSON_OBJECT, jsonData);
 
-		// Execute this request with apiDefintion, objectId and paramsMap
-		return execute(apiDefinition, objectId, paramsMap);
+		// Execute this request with apiDefintion, objectId, relatedEntityId and paramsMap
+		return execute(apiDefinition, objectId, relatedEntityId, paramsMap);
 
 	}
 
 	/****
+	 * Convenience method for executing API JSON Post Request using its ApiDefinition, supplied object and object ID.
+	 * Can be used for JSON requests which do not require related entity id
+	 * 
+	 * @param apiDefinition
+	 *            API definition for the request
+	 * @param object
+	 *            the Mambu object to be created.
+	 * @param objectId
+	 *            object's id (optional, could be null if not used, for example for JSON create requests)
+	 * 
+	 * @return object a result object, which will be an API specific object
+	 * @throws MambuApiException
+	 */
+	public <R, T> R executeJson(ApiDefinition apiDefinition, T object, String objectId) throws MambuApiException {
+		String relatedEntityId = null;
+		return executeJson(apiDefinition, object, objectId, relatedEntityId);
+	}
+
+	/****
 	 * Convenience method for executing API JSON Post Request using its ApiDefinition and supplied object. Can be used
-	 * for JSON requests which do not require objectId parameter
+	 * for JSON requests which do not require objectId and related entity id parameters
 	 * 
 	 * @param apiDefinition
 	 *            API definition for the request
@@ -292,7 +316,8 @@ public class ServiceExecutor {
 	 */
 	public <R, T> R executeJson(ApiDefinition apiDefinition, T object) throws MambuApiException {
 		String objectId = null;
-		return executeJson(apiDefinition, object, objectId);
+		String relatedEntityId = null;
+		return executeJson(apiDefinition, object, objectId, relatedEntityId);
 	}
 
 	// // Private Helper methods ////
@@ -468,7 +493,12 @@ public class ServiceExecutor {
 		// Indicator. Note Indicator API returns HashMap<String, String>
 		collectionTypesMap.put(Indicator.class, new TypeToken<HashMap<String, String>>() {
 		}.getType());
-
+		// ClientRole
+		collectionTypesMap.put(ClientRole.class, new TypeToken<List<ClientRole>>() {
+		}.getType());
+		// Group Role
+		collectionTypesMap.put(GroupRoleName.class, new TypeToken<List<GroupRoleName>>() {
+		}.getType());
 	}
 
 	//

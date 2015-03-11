@@ -216,7 +216,7 @@ public class UsersService {
 	 * Update custom field value for a User. This method allows to set new value for a specific custom field
 	 * 
 	 * @param userName
-	 *            the userName or the encoded key of the Mambu User for which the custom field is updated.
+	 *            the userName, user id or the encoded key of the Mambu User for which the custom field is updated.
 	 * @param customFieldId
 	 *            the encoded key or id of the custom field to be updated
 	 * @param fieldValue

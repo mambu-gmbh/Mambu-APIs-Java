@@ -8,6 +8,7 @@ import java.util.List;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mambu.accounts.shared.model.TransactionDetails;
+import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.LoanAccountExpanded;
@@ -24,6 +25,7 @@ import com.mambu.docs.shared.model.Document;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
 import com.mambu.loans.shared.model.LoanTransaction;
+import com.mambu.loans.shared.model.Repayment;
 
 /**
  * Service class which handles API operations like retrieval, creation or changing state of loan accounts. See full
@@ -64,6 +66,8 @@ public class LoansService {
 	public static final String CENTRE_ID = APIData.CENTRE_ID;
 	private static final String CREDIT_OFFICER_USER_NAME = APIData.CREDIT_OFFICER_USER_NAME;
 	private static final String ACCOUNT_STATE = APIData.ACCOUNT_STATE;
+	// Loan Schedule
+	public static final String SCHEDULE = APIData.SCHEDULE;
 
 	// Our serviceExecutor
 	private ServiceExecutor serviceExecutor;
@@ -99,18 +103,24 @@ public class LoansService {
 	// Create Account
 	private final static ApiDefinition createAccount = new ApiDefinition(ApiType.CREATE_JSON_ENTITY,
 			LoanAccountExpanded.class);
-	// Update Account
-	private final static ApiDefinition updateAccount = new ApiDefinition(ApiType.UPDATE_JSON, LoanAccountExpanded.class);
+	// Update Account. Used to update custom fields for loan accounts only. POST JSON /api/loans/loanId
+	private final static ApiDefinition updateAccount = new ApiDefinition(ApiType.POST_ENTITY, LoanAccountExpanded.class);
+	// Patch Account. Used to update loan terms only. PATCH JSON /api/loans/loanId
+	private final static ApiDefinition patchAccount = new ApiDefinition(ApiType.PATCH_ENTITY, LoanAccount.class);
 
 	// Loan Products API requests
 	// Get Loan Product Details
 	private final static ApiDefinition getProduct = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LoanProduct.class);
 	// Get Lists of Loan Products
 	private final static ApiDefinition getProductsList = new ApiDefinition(ApiType.GET_LIST, LoanProduct.class);
-	// Update Custom Field value for a Loan Account
+	// Get schedule for Loan Products. GET /api/loanproducts/<ID>/schedule?loanAmount=50. Returns JSONLoanRepayments
+	private final static ApiDefinition getProductSchedule = new ApiDefinition(ApiType.GET_OWNED_ENTITY,
+			LoanProduct.class, JSONLoanRepayments.class);
+
+	// Update Custom Field value for a Loan Account. PATCH /api/loans/accointId/custominformation/customFieldId
 	private final static ApiDefinition updateAccountCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
 			LoanAccount.class, CustomFieldValue.class);
-	// Delete Custom Field for a Loan Account
+	// Delete Custom Field for a Loan Account. DELETE /api/loans/accointId/custominformation/customFieldId
 	private final static ApiDefinition deleteAccountCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
 			LoanAccount.class, CustomFieldValue.class);
 
@@ -358,6 +368,7 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	// TODO: Disbursements for Loans with tranches is NOT supported. See MBU-7214 (issue is closed as Incomplete)
 	public LoanTransaction disburseLoanAccount(String accountId, String amount, String disbursalDate,
 			String firstRepaymentDate, String notes, TransactionDetails transactionDetails) throws MambuApiException {
 
@@ -369,6 +380,26 @@ public class LoansService {
 
 		// Add also firstRepaymentDate
 		paramsMap.addParam(FIRST_REPAYMENT_DATE, firstRepaymentDate);
+
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
+
+	}
+
+	/***
+	 * Undo Disburse for a loan account. If the account has multiple tranches, reverses the last tranche
+	 * 
+	 * @param accountId
+	 * 
+	 * @return Loan Transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public LoanTransaction undoDisburseLoanAccount(String accountId) throws MambuApiException {
+		// Example POST "type=DISBURSMENT_ADJUSTMENT" /api/loans/{id}/transactions/
+		// Available since Mambu 3.9. See MBU-7189
+
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, APIData.DISBURSMENT_ADJUSTMENT);
 
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 
@@ -445,6 +476,45 @@ public class LoansService {
 	}
 
 	/***
+	 * Update loan terms for an existent LoanAccount This API allows updating LoanAccount terms only. Use
+	 * updateLoanAccount() to update custom fields for a loan account
+	 * 
+	 * @param loan
+	 *            LoanAccountExtended object containing LoanAccount. Either LoanAccount encoded key or its ID must be
+	 *            NOT null for updating account
+	 * 
+	 *            Note that only some loan terms can be updated. See MBU-7758 for details.
+	 * 
+	 *            Loan Account fields available for patching are: loanAmount, interestRate. interestSpread,
+	 *            repaymentInstallments, repaymentPeriodCount, repaymentPeriodUnit, expectedDisbursementDate,
+	 *            firstRepaymentDate, gracePeriod, principalRepaymentInterval, penaltyRate, periodicPayment
+	 * 
+	 * @returns success or failure
+	 * 
+	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
+	 */
+	public boolean patchLoanAccount(LoanAccount loan) throws MambuApiException {
+		// Example: PATCH JSON /api/loans/{ID}
+		// See MBU-7758 for details
+		if (loan == null) {
+			throw new IllegalArgumentException("Account must not be NULL");
+		}
+
+		// The encodedKey or account Id must be not null
+		String encodedKey = loan.getEncodedKey();
+		String accountId = loan.getId();
+		if (encodedKey == null && accountId == null) {
+			throw new IllegalArgumentException("Cannot update Account, the encodedKey or ID must be NOT null");
+		}
+
+		String id = (accountId != null) ? accountId : encodedKey;
+		ParamsMap params = ServiceHelper.makeParamsForLoanTermsPatch(loan);
+		return serviceExecutor.execute(patchAccount, id, params);
+
+	}
+
+	/***
 	 * Get loan account Transactions by Loan id and offset and limit
 	 * 
 	 * @param accountId
@@ -469,10 +539,9 @@ public class LoansService {
 	 * Requests a list of loan transactions for a custom view, limited by offset/limit
 	 * 
 	 * @param customViewKey
-	 *            the key of the Custom View to filter loan transaction
+	 *            the key of the Custom View to filter loan transactions
 	 * @param offset
 	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * 
 	 * @param limit
 	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
@@ -650,7 +719,6 @@ public class LoansService {
 	 *            the key of the Custom View to filter loan accounts
 	 * @param offset
 	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * 
 	 * @param limit
 	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
@@ -694,6 +762,43 @@ public class LoansService {
 	 */
 	public LoanProduct getLoanProduct(String productId) throws MambuApiException {
 		return serviceExecutor.execute(getProduct, productId);
+	}
+
+	/***
+	 * Get repayment schedule preview for a Loan Product
+	 * 
+	 * @param productId
+	 *            the id of the loan product
+	 * @param account
+	 *            loan account containing parameters for determining loan schedule
+	 * 
+	 *            Only the following loan account parameters are currently supported: loanAmount (mandatory),
+	 *            anticipatedDisbursement, firstRepaymentDate, interestRate, repaymentInstallments, gracePeriod,
+	 *            repaymentPeriodUnit, repaymentPeriodCount, principalRepaymentInterval
+	 * 
+	 *            See MBU-6789 and MBU-7676 for more details
+	 * 
+	 * @return the List of Repayments
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<Repayment> getLoanProductSchedule(String productId, LoanAccount account) throws MambuApiException {
+		// E.g. GET /api/loanproducts/{ID}/schedule?loanAmount=1250&anticipatedDisbursement=2015-02-10&interestRate=4
+
+		if (account == null) {
+			throw new IllegalArgumentException("Loan Account cannot be null");
+		}
+		if (account.getLoanAmount() == null || account.getLoanAmount().isZero()) {
+			throw new IllegalArgumentException("Loan Amount must be not null and not zero. It is "
+					+ account.getLoanAmount());
+		}
+		// Add applicable params to the map
+		ParamsMap params = ServiceHelper.makeParamsForLoanSchedule(account);
+
+		// The API returns a JSONLoanRepayments object containing a list of repayments
+		JSONLoanRepayments jsonRepayments = serviceExecutor.execute(getProductSchedule, productId, params);
+		// Return list of repayments
+		return jsonRepayments.getRepayments();
 	}
 
 	/***

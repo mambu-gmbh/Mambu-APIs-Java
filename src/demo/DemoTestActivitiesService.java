@@ -88,6 +88,7 @@ public class DemoTestActivitiesService {
 		}
 
 	}
+
 	public static void testGetActivitiesForEntity() throws MambuApiException {
 		System.out.println("\nIn testGetActivitiesForEntity");
 
@@ -107,6 +108,10 @@ public class DemoTestActivitiesService {
 		Class<Client> mambuEntity = Client.class;
 		// Use Client ID saved in the testGetAllActivities() unit test
 		String entityId = clientKeyWithActivities;
+		if (entityId == null) {
+			System.out.println("WARNING: No Activities for Client entity to retrieve");
+			return;
+		}
 
 		// Make an API call to get all activities for the specified MambuEntity type and its ID
 		List<JSONActivity> jsonActivities = activitiesService.getActivities(fromDate, toDate, mambuEntity, entityId);
