@@ -39,9 +39,7 @@ public class DemoTestRepaymentService {
 			demoLoanAccount = DemoUtil.getDemoLoanAccount(testAccountId);
 			LOAN_ACCOUNT_ID = demoLoanAccount.getId();
 
-			testGetLoanAccountRepayments();
-
-			repayemnts = testGetLoanAccountRepaymentsWithLimit();
+			repayemnts = testGetLoanAccountRepayments();
 
 			testUpdateLoanRepaymentsSchedule(); // Available since 3.9
 
@@ -55,24 +53,8 @@ public class DemoTestRepaymentService {
 
 	}
 
-	public static void testGetLoanAccountRepayments() throws MambuApiException {
+	public static List<Repayment> testGetLoanAccountRepayments() throws MambuApiException {
 		System.out.println("\nIn testGetLoanAccountRepayments");
-
-		RepaymentsService repaymentService = MambuAPIFactory.getRepaymentsService();
-
-		List<Repayment> repayemnts = repaymentService.getLoanAccountRepayments(LOAN_ACCOUNT_ID);
-
-		System.out.println("Total Repayments=" + repayemnts.size());
-		if (repayemnts.size() > 0) {
-			System.out.println("First Repayment  Due date=" + repayemnts.get(0).getDueDate().toString());
-			System.out.println("Last  Repayment  Due date="
-					+ repayemnts.get(repayemnts.size() - 1).getDueDate().toString());
-		}
-
-	}
-
-	public static List<Repayment> testGetLoanAccountRepaymentsWithLimit() throws MambuApiException {
-		System.out.println("\nIn testGetLoanAccountRepaymentsWithLimit");
 
 		RepaymentsService repaymentService = MambuAPIFactory.getRepaymentsService();
 		String offset = "0";

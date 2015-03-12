@@ -44,16 +44,6 @@ public class SavingsService {
 	private static final String TYPE_UNDO_APPROVAL = APIData.TYPE_UNDO_APPROVAL;
 
 	private static final String AMOUNT = APIData.AMOUNT;
-	private static final String DATE = APIData.DATE;
-
-	private static final String PAYMENT_METHOD = APIData.PAYMENT_METHOD;
-
-	private static final String BANK_NUMBER = APIData.BANK_NUMBER;
-
-	private static final String RECEIPT_NUMBER = APIData.RECEIPT_NUMBER;
-	private static final String CHECK_NUMBER = APIData.CHECK_NUMBER;
-	private static final String BANK_ACCOUNT_NUMBER = APIData.BANK_ACCOUNT_NUMBER;
-	private static final String BANK_ROUTING_NUMBER = APIData.BANK_ROUTING_NUMBER;
 	private static final String NOTES = APIData.NOTES;
 	// Savings filters
 	private static final String BRANCH_ID = APIData.BRANCH_ID;
@@ -265,43 +255,6 @@ public class SavingsService {
 	}
 
 	/****
-	 * @deprecated As of release 3.8, replaced by
-	 *             {@link #makeWithdrawal(String, String, String, String, TransactionDetails)}
-	 * 
-	 *             Make a withdrawal from an account.
-	 * 
-	 * @param accountId
-	 *            the id of the account the amount to withdraw notes
-	 * @param amount
-	 * @param date
-	 * @param paymentMethod
-	 * @param bankNumber
-	 * @param receiptNumber
-	 * @param checkNumber
-	 * @param bankAccountNumber
-	 * @param bankRoutingNumber
-	 * @param notes
-	 * 
-	 * @return Savings Transaction
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public SavingsTransaction makeWithdrawal(String accountId, String amount, String date, String notes,
-			String paymentMethod, String receiptNumber, String bankNumber, String checkNumber,
-			String bankAccountNumber, String bankRoutingNumber) throws MambuApiException {
-
-		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.addParam(TYPE, TYPE_WITHDRAWAL);
-
-		addPaymentMethodAccountDetails(paramsMap, amount, date, notes, paymentMethod, receiptNumber, bankNumber,
-				checkNumber, bankAccountNumber, bankRoutingNumber);
-
-		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
-
-	}
-
-	/****
 	 * Make a withdrawal from an account.
 	 * 
 	 * @param accountId
@@ -333,43 +286,6 @@ public class SavingsService {
 	}
 
 	/****
-	 * 
-	 * @deprecated As of release 3.8, replaced by
-	 *             {@link #makeDeposit(String, String, String, String, TransactionDetails)}
-	 * 
-	 *             Make a deposit to an account.
-	 * 
-	 * @param accountId
-	 *            the id of the account the amount to deposit notes
-	 * @param amount
-	 * @param date
-	 * @param paymentMethod
-	 * @param bankNumber
-	 * @param receiptNumber
-	 * @param checkNumber
-	 * @param bankAccountNumber
-	 * @param bankRoutingNumber
-	 * @param notes
-	 * 
-	 * @return Savings Transaction
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public SavingsTransaction makeDeposit(String accountId, String amount, String date, String notes,
-			String paymentMethod, String receiptNumber, String bankNumber, String checkNumber,
-			String bankAccountNumber, String bankRoutingNumber) throws MambuApiException {
-
-		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.addParam(TYPE, TYPE_DEPOSIT);
-
-		addPaymentMethodAccountDetails(paramsMap, amount, date, notes, paymentMethod, receiptNumber, bankNumber,
-				checkNumber, bankAccountNumber, bankRoutingNumber);
-
-		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
-	}
-
-	/****
 	 * Make a deposit to an account.
 	 * 
 	 * @param accountId
@@ -397,36 +313,6 @@ public class SavingsService {
 		ServiceHelper.addAccountTransactionParams(paramsMap, amount, date, notes, transactionDetails);
 
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
-	}
-
-/**
-	 * Make transfer from an account
-	 * 
-	 *  @depreciated. Use {@link #makeTransfer(String, String, Type, String, String) instead.
-	 * 
-	 * @param fromAccountId
-	 *            the id of the account the amount to transfer from
-	 * @param destinationAccountKey
-	 *            the id of the account to transfer to
-	 * @param destinationAccountType
-	 *            (SavingsService.Loan or SavingsService.Savings)
-	 * @param amount
-	 *            amount to transfer
-	 * @param notes
-	 * 
-	 * @return Savings Transaction
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public SavingsTransaction makeTransfer(String fromAccountId, String destinationAccountKey,
-			APIData.ACCOUNT_TYPE destinationAccountType, String amount, String notes) throws MambuApiException {
-
-		Type accountBaseType = null;
-		if (destinationAccountType != null) {
-			accountBaseType = (destinationAccountType == APIData.ACCOUNT_TYPE.LOAN) ? Type.LOAN : Type.SAVINGS;
-		}
-		return makeTransfer(fromAccountId, destinationAccountKey, accountBaseType, amount, notes);
 	}
 
 	/**
@@ -777,31 +663,4 @@ public class SavingsService {
 
 	}
 
-	// private helper method
-	@Deprecated
-	private void addPaymentMethodAccountDetails(ParamsMap paramsMap, String amount, String date, String notes,
-			String paymentMethod, String receiptNumber, String bankNumber, String checkNumber,
-			String bankAccountNumber, String bankRoutingNumber) {
-
-		paramsMap.addParam(AMOUNT, amount);
-		if (date != null)
-			paramsMap.addParam(DATE, date);
-		if (paymentMethod != null) {
-			paramsMap.addParam(PAYMENT_METHOD, paymentMethod);
-			if (receiptNumber != null)
-				paramsMap.addParam(RECEIPT_NUMBER, receiptNumber);
-			if (bankNumber != null)
-				paramsMap.addParam(BANK_NUMBER, bankNumber);
-			if (checkNumber != null)
-				paramsMap.addParam(CHECK_NUMBER, checkNumber);
-			if (bankAccountNumber != null)
-				paramsMap.addParam(BANK_ACCOUNT_NUMBER, bankAccountNumber);
-			if (bankRoutingNumber != null)
-				paramsMap.addParam(BANK_ROUTING_NUMBER, bankRoutingNumber);
-		}
-
-		paramsMap.addParam(NOTES, notes);
-
-		return;
-	}
 }

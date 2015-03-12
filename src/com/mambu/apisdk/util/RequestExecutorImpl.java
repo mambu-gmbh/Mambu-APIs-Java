@@ -583,8 +583,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * 
 	 * NOTE: This method logs output only when the Logger level is set to FINEST.
 	 * 
-	 * Log output example: curl -k -G -H "Content-type: application/x-www-form-urlencoded; charset=UTF-8" -d
-	 * 'appkey=...' https://user:pwd@tenant.mambu.com/api/loans?offset=0&limit=5
+	 * Log output example: curl -G -H "Content-type: application/x-www-form-urlencoded; charset=UTF-8" -d 'appkey=...'
+	 * https://user:pwd@tenant.mambu.com/api/loans?offset=0&limit=5
 	 * 
 	 * @param method
 	 *            request's method
@@ -625,7 +625,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		String contentHeader = " -H \"Content-type: " + getFormattedContentTypeString(contentType) + "\"";
 
 		// Make curl command
-		String curlCommand = "curl -k" + apiMethod + contentHeader;
+		String curlCommand = "curl" + apiMethod + contentHeader;
 
 		// Add appkey param (as a placeholder only)
 		String appKeyValue = MambuAPIFactory.getApplicationKey();

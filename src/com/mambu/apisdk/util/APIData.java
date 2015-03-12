@@ -8,11 +8,6 @@ public class APIData {
 
 	public final static String APPLICATION_KEY = "appkey";
 
-	@Deprecated
-	public static enum ACCOUNT_TYPE { // We should use com.mambu.accounts.shared.model.Account.Type instead
-		LOAN, SAVINGS
-	};
-
 	// Users API
 
 	public static final String USERS = "users";
@@ -27,7 +22,8 @@ public class APIData {
 	public static final String CLIENTS = "clients";
 	public static final String GROUPS = "groups";
 	public static final String FULL_DETAILS = "fullDetails";
-
+	public static final String ACTIVE = "ACTIVE";
+	public static final String INACTIVE = "INACTIVE";
 	// Client Types. Added in 3.9
 	public static final String CLIENT_TYPES = "clienttypes";
 	// Group Role Names. Added in 3.9
