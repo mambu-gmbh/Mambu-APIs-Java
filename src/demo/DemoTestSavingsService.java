@@ -17,6 +17,7 @@ import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.core.shared.model.InterestRateSettings;
 import com.mambu.core.shared.model.Money;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
@@ -564,6 +565,10 @@ public class DemoTestSavingsService {
 		System.out.println("\nIn makeSavingsAccountForDemoProduct for product name=" + demoSavingsProduct.getName()
 				+ " id=" + demoSavingsProduct.getId());
 
+		if (!demoSavingsProduct.isActivated()) {
+			System.out.println("*** WARNING ***: demo product is NOT Active. Product name="
+					+ demoSavingsProduct.getName() + " id=" + demoSavingsProduct.getId());
+		}
 		SavingsAccount savingsAccount = new SavingsAccount();
 		savingsAccount.setId(null);
 
@@ -600,8 +605,12 @@ public class DemoTestSavingsService {
 			maxOverdraftLimit = (maxOverdraftLimit != null) ? maxOverdraftLimit : new Money(120.00);
 			savingsAccount.setOverdraftAmount(maxOverdraftLimit);
 			// Set Overdraft Interest rate
-			BigDecimal minOerdraftInterestRate = demoSavingsProduct.getMinOverdraftInterestRate();
-			BigDecimal maxOverdraftInterestRate = demoSavingsProduct.getMaxOverdraftInterestRate();
+			InterestRateSettings overDraftRateSettings = demoSavingsProduct.getOverdraftInterestRateSettings();
+
+			BigDecimal minOerdraftInterestRate = (overDraftRateSettings == null) ? null : overDraftRateSettings
+					.getMinInterestRate();
+			BigDecimal maxOverdraftInterestRate = (overDraftRateSettings == null) ? null : overDraftRateSettings
+					.getMaxInterestRate();
 			BigDecimal overdraftInterestRate = (minOerdraftInterestRate != null) ? minOerdraftInterestRate : null;
 			overdraftInterestRate = (overdraftInterestRate != null && maxOverdraftInterestRate != null) ? maxOverdraftInterestRate
 					: overdraftInterestRate;

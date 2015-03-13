@@ -80,27 +80,6 @@ public class RepaymentsService {
 	}
 
 	/***
-	 * 
-	 * @deprecated As of release 3.8, replaced by {@link #getRapaymentsDueFromTo(String, String, String, String)}
-	 * 
-	 *             Get a loan account Repayments between FromDate and ToDate with default pagination parameters
-	 * 
-	 * 
-	 * @param dueFomString
-	 * @param dueToString
-	 * 
-	 * @return the List of Repayments
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public List<Repayment> getRapaymentsDueFromTo(String dueFromString, String dueToString) throws MambuApiException {
-		String offset = null;
-		String limit = null;
-		return getRapaymentsDueFromTo(dueFromString, dueToString, offset, limit);
-	}
-
-	/***
 	 * Get a all Repayments by Loan account id with an offset and limit parameters
 	 * 
 	 * @param accountId
@@ -124,25 +103,6 @@ public class RepaymentsService {
 	}
 
 	/***
-	 * @deprecated As of release 3.8, replaced by {@link #getLoanAccountRepayments(String, String, String)}
-	 * 
-	 *             Get Repayments by Loan account id with default pagination parameters
-	 * 
-	 * @param accountId
-	 *            the id of the loan account
-	 * 
-	 * @return the List of Repayments
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public List<Repayment> getLoanAccountRepayments(String accountId) throws MambuApiException {
-		String offset = null;
-		String limit = null;
-		return getLoanAccountRepayments(accountId, offset, limit);
-	}
-
-	/***
 	 * Update unpaid repayment schedule for a Loan Account
 	 * 
 	 * @param accountId
@@ -161,7 +121,7 @@ public class RepaymentsService {
 			throws MambuApiException {
 		// Available since Mambu 3.9
 		// API example: PATCH -d JSONLoanRepayments_object /api/loans/loan_id/repayments. Returns list of Repayments
-		// TODO: currently this API accepts JSON requests with the dates in "yyyy-MM-dd" format only
+		// This API accepts JSON requests with the dates in "yyyy-MM-dd" format only
 		updateRepaymentsForLoan.setJsonDateTimeFormat(APIData.yyyyMmddFormat);
 		return serviceExecutor.executeJson(updateRepaymentsForLoan, repayments, accountId);
 

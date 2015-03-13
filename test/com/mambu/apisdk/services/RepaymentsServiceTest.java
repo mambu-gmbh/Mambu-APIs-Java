@@ -34,7 +34,7 @@ public class RepaymentsServiceTest extends MambuAPIServiceTest {
 		// execute
 
 		final String accountId = "accountId_1234";
-		service.getLoanAccountRepayments(accountId);
+		service.getLoanAccountRepayments(accountId, null, null);
 
 		// verify
 		ParamsMap paramsMap = new ParamsMap();
@@ -50,7 +50,7 @@ public class RepaymentsServiceTest extends MambuAPIServiceTest {
 		// execute
 		final String dueFromString = "2014-02-01";
 		final String dueToString = "2014-07-05";
-		service.getRapaymentsDueFromTo(dueFromString, dueToString);
+		service.getRapaymentsDueFromTo(dueFromString, dueToString, null, null);
 
 		// verify
 		ParamsMap paramsMap = new ParamsMap();

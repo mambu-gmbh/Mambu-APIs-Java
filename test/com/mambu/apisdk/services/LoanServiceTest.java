@@ -121,7 +121,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 						+ "\"interestRate\":3.2,"
 						+ "\"principalRepaymentInterval\":1,"
 						+ "\"interestRateSource\":\"FIXED_INTEREST_RATE\","
-						+ "\"interestAdjustment\":0,\"accruedInterest\":0,"
+						+ "\"accruedInterest\":0,"
 						+ "\"accruedPenalty\":0,\"loanPenaltyCalculationMethod\":\"NONE\"},"
 						+ "\"customInformation\":["
 						+ "{\"value\":\"My Loan Purpose 5\",\"indexInList\":-1,\"toBeDeleted\":false,\"customFieldID\":\"Loan_Purpose_Loan_Accounts\"},"

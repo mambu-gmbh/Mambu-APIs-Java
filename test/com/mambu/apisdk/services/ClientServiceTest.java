@@ -55,7 +55,7 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 		params.addParam("state", "ACTIVE");
 
 		// execute
-		service.getClients(true);
+		service.getClients(true, null, null);
 
 		// verify
 		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET,
@@ -73,7 +73,7 @@ public class ClientServiceTest extends MambuAPIServiceTest {
 		params.addParam("state", "INACTIVE");
 
 		// execute
-		service.getClients(false);
+		service.getClients(false, null, null);
 
 		// verify
 		verify(executor).executeRequest("https://demo.mambutest.com/api/clients", params, Method.GET,

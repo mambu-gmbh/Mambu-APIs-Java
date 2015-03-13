@@ -40,11 +40,6 @@ public class LoansService {
 	private static final String FIRST_REPAYMENT_DATE = APIData.FIRST_REPAYMENT_DATE;
 
 	private static final String TYPE = APIData.TYPE;
-	private static final String BANK_NUMBER = APIData.BANK_NUMBER;
-	private static final String RECEIPT_NUMBER = APIData.RECEIPT_NUMBER;
-	private static final String CHECK_NUMBER = APIData.CHECK_NUMBER;
-	private static final String BANK_ACCOUNT_NUMBER = APIData.BANK_ACCOUNT_NUMBER;
-	private static final String BANK_ROUTING_NUMBER = APIData.BANK_ROUTING_NUMBER;
 	private static final String NOTES = APIData.NOTES;
 	//
 	private static final String TYPE_REPAYMENT = APIData.TYPE_REPAYMENT;
@@ -57,9 +52,6 @@ public class LoansService {
 	private static final String TYPE_UNLOCK = APIData.TYPE_UNLOCK;
 
 	private static final String AMOUNT = APIData.AMOUNT;
-	private static final String DATE = APIData.DATE;
-	private static final String PAYMENT_METHOD = APIData.PAYMENT_METHOD;
-
 	private static final String REPAYMENT_NUMBER = APIData.REPAYMENT_NUMBER;
 	// Loan filters
 	private static final String BRANCH_ID = APIData.BRANCH_ID;
@@ -299,56 +291,6 @@ public class LoansService {
 
 	/***
 	 * 
-	 * @deprecated As of release 3.8, replaced by
-	 *             {@link #disburseLoanAccount(String, String, String, String, String, TransactionDetails)}
-	 * 
-	 *             Disburse a loan account with a given disbursal date and some extra details.
-	 * 
-	 * @param accountId
-	 * @param disbursalDate
-	 * @param firstRepaymentDate
-	 * @param bankNumber
-	 * @param receiptNumber
-	 * @param checkNumber
-	 * @param bankAccountNumber
-	 * @param bankRoutingNumber
-	 * @param notes
-	 * @param amount
-	 * @param paymentMethod
-	 * 
-	 * @return Loan Transaction
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public LoanTransaction disburseLoanAccount(String accountId, String amount, String disbursalDate,
-			String firstRepaymentDate, String paymentMethod, String bankNumber, String receiptNumber,
-			String checkNumber, String bankAccountNumber, String bankRoutingNumber, String notes)
-			throws MambuApiException {
-		// Example: POST
-		// "type=DISBURSMENT&date=2012-10-04&firstRepaymentDate=2012-10-08&notes=using transactions"
-		// /api/loans/KHGJ593/transactions
-
-		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.addParam(TYPE, TYPE_DISBURSMENT);
-		paramsMap.addParam(AMOUNT, amount);
-
-		paramsMap.addParam(DATE, disbursalDate);
-		paramsMap.addParam(FIRST_REPAYMENT_DATE, firstRepaymentDate);
-		paramsMap.addParam(PAYMENT_METHOD, paymentMethod);
-		paramsMap.addParam(BANK_NUMBER, bankNumber);
-		paramsMap.addParam(RECEIPT_NUMBER, receiptNumber);
-		paramsMap.addParam(CHECK_NUMBER, checkNumber);
-		paramsMap.addParam(BANK_ACCOUNT_NUMBER, bankAccountNumber);
-		paramsMap.addParam(BANK_ROUTING_NUMBER, bankRoutingNumber);
-		paramsMap.addParam(NOTES, notes);
-
-		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
-
-	}
-
-	/***
-	 * 
 	 * Disburse a loan account with a given disbursal date and some extra transaction details
 	 * 
 	 * @param accountId
@@ -555,49 +497,6 @@ public class LoansService {
 		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
 		return serviceExecutor.execute(getAllLoanTransactions, params);
 
-	}
-
-	/****
-	 * @deprecated As of release 3.8, replaced by
-	 *             {@link #makeLoanRepayment(String, String, String, String, TransactionDetails)}
-	 * 
-	 *             Repayments on a loan account if the user has permission to repay loans, the maximum exposure is not
-	 *             exceeded for the client, the account was in Approved state.
-	 * 
-	 * @param accountId
-	 * @param amount
-	 * @param date
-	 * @param paymentMethod
-	 * @param bankNumber
-	 * @param receiptNumber
-	 * @param checkNumber
-	 * @param bankAccountNumber
-	 * @param bankRoutingNumber
-	 * @param notes
-	 * 
-	 * @return LoanTransaction
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public LoanTransaction makeLoanRepayment(String accountId, String amount, String date, String notes,
-			String paymentMethod, String receiptNumber, String bankNumber, String checkNumber,
-			String bankAccountNumber, String bankRoutingNumber) throws MambuApiException {
-
-		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.addParam(TYPE, TYPE_REPAYMENT);
-		paramsMap.addParam(AMOUNT, amount);
-		paramsMap.addParam(DATE, date);
-
-		paramsMap.addParam(PAYMENT_METHOD, paymentMethod);
-		paramsMap.addParam(RECEIPT_NUMBER, receiptNumber);
-		paramsMap.addParam(BANK_NUMBER, bankNumber);
-		paramsMap.addParam(CHECK_NUMBER, checkNumber);
-		paramsMap.addParam(BANK_ACCOUNT_NUMBER, bankAccountNumber);
-		paramsMap.addParam(BANK_ROUTING_NUMBER, bankRoutingNumber);
-		paramsMap.addParam(NOTES, notes);
-
-		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
 	/****

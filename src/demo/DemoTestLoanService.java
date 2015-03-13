@@ -5,9 +5,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.accounts.shared.model.AccountState;
+import com.mambu.accounts.shared.model.InterestRateSource;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -17,6 +19,7 @@ import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.core.shared.model.InterestRateSettings;
 import com.mambu.core.shared.model.LoanPenaltyCalculationMethod;
 import com.mambu.core.shared.model.Money;
 import com.mambu.core.shared.model.RepaymentAllocationElement;
@@ -538,6 +541,10 @@ public class DemoTestLoanService {
 		System.out.println("\nIn makeLoanAccountForDemoProduct for product name=" + demoProduct.getName() + " id="
 				+ demoProduct.getId());
 
+		if (!demoProduct.isActivated()) {
+			System.out.println("*** WARNING ***: demo product is NOT Active. Product name=" + demoProduct.getName()
+					+ " id=" + demoProduct.getId());
+		}
 		LoanAccount loanAccount = new LoanAccount();
 
 		// Set params to be consistent with the demo product (to be accepted by the GET product schedule API and create
@@ -571,14 +578,16 @@ public class DemoTestLoanService {
 		if (demoProduct.getAmortizationMethod() == AmortizationMethod.BALLOON_PAYMENTS) {
 			loanAccount.setPeriodicPayment(amount.multiply(new BigDecimal(0.5)));
 		}
-
 		// InterestRate
 		loanAccount.setInterestRate(null);
 		loanAccount.setInterestRateSource(null);
 		if (demoProduct.getRepaymentScheduleMethod() != RepaymentScheduleMethod.NONE) {
-			BigDecimal interestRateDef = demoProduct.getDefaultInterestRate();
-			BigDecimal interestRateMin = demoProduct.getMinInterestRate();
-			BigDecimal interestRateMax = demoProduct.getMaxInterestRate();
+			InterestRateSettings intRateSettings = demoProduct.getInterestRateSettings();
+
+			BigDecimal interestRateDef = (intRateSettings == null) ? null : intRateSettings.getDefaultInterestRate();
+			BigDecimal interestRateMin = (intRateSettings == null) ? null : intRateSettings.getMinInterestRate();
+			BigDecimal interestRateMax = (intRateSettings == null) ? null : intRateSettings.getMaxInterestRate();
+
 			BigDecimal interestRate = interestRateDef;
 			interestRate = (interestRate == null && interestRateMin != null) ? interestRateMin : interestRate;
 			interestRate = (interestRate == null && interestRateMax != null) ? interestRateMax : interestRate;
@@ -587,7 +596,10 @@ public class DemoTestLoanService {
 				interestRate = new BigDecimal(6.5f);
 			}
 			loanAccount.setInterestRate(interestRate);
-			loanAccount.setInterestRateSource(demoProduct.getInterestRateSource());
+			//
+			InterestRateSource intSoure = (intRateSettings == null) ? null : intRateSettings.getInterestRateSource();
+			loanAccount.setInterestRateSource(intSoure);
+
 		}
 
 		// DisbursementDate
@@ -604,7 +616,11 @@ public class DemoTestLoanService {
 			List<Integer> fixedDays = demoProduct.getFixedDaysOfMonth();
 			if (fixedDays != null && fixedDays.size() > 0) {
 				Calendar date = Calendar.getInstance();
-				date.set(date.get(Calendar.YEAR), date.get(Calendar.MONTH) + 1, fixedDays.get(fixedDays.size() - 1));
+				int year = date.get(Calendar.YEAR);
+				int month = date.get(Calendar.MONTH);
+				date.clear();
+				date.setTimeZone(TimeZone.getTimeZone("UTC"));
+				date.set(year, month + 1, fixedDays.get(fixedDays.size() - 1));
 				firstRepaymentDate = date.getTime();
 			}
 		}

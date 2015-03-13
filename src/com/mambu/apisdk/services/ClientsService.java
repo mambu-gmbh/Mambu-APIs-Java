@@ -176,49 +176,32 @@ public class ClientsService {
 	}
 
 	/**
-	 * @deprecated As of release 3.8, replaced by {@link #getClients(boolean, int, int)}
-	 * 
-	 *             Requests a list of all matching clients.
-	 * 
-	 * @param active
-	 *            True if active Clients should retrieved, false for inactive Clients
-	 * 
-	 * @return the list of Mambu clients
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public List<Client> getClients(boolean active) throws MambuApiException {
-
-		ParamsMap params = new ParamsMap();
-		params.addParam(CLIENT_STATE, (active ? "ACTIVE" : "INACTIVE"));
-
-		return serviceExecutor.execute(getClientsList, params);
-	}
-
-	/**
 	 * Requests a list of clients, limited by offset/limit
 	 * 
 	 * @param active
 	 *            True if active Clients should retrieved, false for inactive Clients
 	 * @param offset
-	 *            Offset to start loading Clients, has to be >= 0
+	 *            Offset to start loading Clients, has to be >= 0 if not null
 	 * @param limit
-	 *            Limit of Clients to load, has to be > 0
+	 *            Limit of Clients to load, has to be > 0 if not null
 	 * 
 	 * @return the list of Mambu clients
 	 * 
 	 * @throws MambuApiException
 	 */
-	public List<Client> getClients(boolean active, int offset, int limit) throws MambuApiException {
+	public List<Client> getClients(boolean active, Integer offset, Integer limit) throws MambuApiException {
 
-		if ((offset < 0) || (limit < 1)) {
+		if ((offset != null && offset < 0) || (limit != null && limit < 1)) {
 			throw new MambuApiException(new IllegalArgumentException("Offset has to be >= 0, limit has to be > 0"));
 		}
 		ParamsMap params = new ParamsMap();
-		params.addParam(CLIENT_STATE, (active ? "ACTIVE" : "INACTIVE"));
-		params.addParam(APIData.OFFSET, String.valueOf(offset));
-		params.addParam(APIData.LIMIT, String.valueOf(limit));
+		params.addParam(CLIENT_STATE, (active ? APIData.ACTIVE : APIData.INACTIVE));
+		if (offset != null) {
+			params.addParam(APIData.OFFSET, String.valueOf(offset));
+		}
+		if (limit != null) {
+			params.addParam(APIData.LIMIT, String.valueOf(limit));
+		}
 
 		return serviceExecutor.execute(getClientsList, params);
 
@@ -290,9 +273,6 @@ public class ClientsService {
 	/***
 	 * Create a new client (expanded) using ClientExpanded object and sending it as a JSON api. This API allows creating
 	 * Client with more details, including creating custom fields.
-	 * 
-	 * Note: since Mambu3.2 this is the API that must be used for creating Clients. Non-JSON APIs for creating a client
-	 * could be deprecated in a future
 	 * 
 	 * @param clientDetails
 	 *            The encodedKey for the clientExpanded object must be null to create a new client
