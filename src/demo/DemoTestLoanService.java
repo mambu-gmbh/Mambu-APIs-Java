@@ -15,6 +15,7 @@ import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.services.LoansService;
+import com.mambu.apisdk.util.DateUtils;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.CustomField;
@@ -75,6 +76,7 @@ public class DemoTestLoanService {
 			LOAN_ACCOUNT_ID = demoLoanAccount.getId();
 
 			testCreateJsonAccount();
+			testUpdateLoanAccount();
 			// Test Reject transactions first
 			testPatchLoanAccountTerms(); // Available since 3.9.3
 			testRejectLoanAccount();
@@ -86,13 +88,11 @@ public class DemoTestLoanService {
 			testUndoApproveLoanAccount();
 			testApproveLoanAccount();
 			// Test Disburse and Undo disburse
-			testDisburseLoanAccountWithDetails();
+			testDisburseLoanAccount();
 			testUndoDisburseLoanAccount(); // Available since 3.9
-			testDisburseLoanAccountWithDetails();
+			testDisburseLoanAccount();
 
 			testGetLoanProductSchedule(); // Available since 3.9
-
-			testUpdateLoanAccount();
 
 			testGetLoanAccount();
 			testGetLoanAccountDetails();
@@ -199,11 +199,15 @@ public class DemoTestLoanService {
 		// Use the newly created account and update some custom fields
 		LoanAccountExpanded updatedAccount = newAccount;
 		List<CustomFieldValue> customFields = updatedAccount.getCustomInformation();
+		List<CustomFieldValue> updatedFields = new ArrayList<CustomFieldValue>();
 		if (customFields != null) {
 			for (CustomFieldValue value : customFields) {
 				value = DemoUtil.makeNewCustomFieldValue(value);
+				updatedFields.add(value);
 			}
 		}
+		updatedAccount.setCustomInformation(updatedFields);
+		updatedAccount.setCustomInformation(null);
 
 		// Update account in Mambu
 		LoanAccountExpanded updatedAccountResult = loanService.updateLoanAccount(updatedAccount);
@@ -258,15 +262,18 @@ public class DemoTestLoanService {
 	}
 
 	// / Transactions testing
-	public static void testDisburseLoanAccountWithDetails() throws MambuApiException {
-		System.out.println("\nIn test Disburse LoanAccount with Details");
+	public static void testDisburseLoanAccount() throws MambuApiException {
+		System.out.println("\nIn test Disburse LoanAccount");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
-
-		String amount = "10000.00";
+		if (newAccount == null || newAccount.getLoanAccount() == null) {
+			System.out.println("\nThere is no account to disburse");
+			return;
+		}
+		String amount = newAccount.getLoanAccount().getLoanAmount().toPlainString();
 		String accountId = NEW_LOAN_ACCOUNT_ID;
-		String disbursalDate = "2014-10-3";
-		String firstRepaymentDate = null; // "2012-12-06";
+		String disbursalDate = DateUtils.format(new Date());
+		String firstRepaymentDate = null;
 		String notes = "Disbursed loan for testing";
 
 		// Make demo transactionDetails with the valid channel fields

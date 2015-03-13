@@ -72,23 +72,21 @@ public class DemoTestClientService {
 			testGetClientByLastNameBirthday();
 			testGetClientByDocIdLastName();
 
+			testGetClientsByBranchCentreOfficerState();
+			testGetGroupsByBranchCentreOfficer();
+
+			GroupExpanded createdGroup = testCreateGroup(); // Available since 3.9
+			testUpdateGroup(createdGroup); // Available since 3.10
+
 			testGetGroup();
 			testGetGroupDetails();
 
-			testGetClientsByBranchCentreOfficerState();
-			testGetGroupsByBranchCentreOfficer();
+			testGetClientTypes(); // Available since 3.9
+			testGetGroupsRoles();// Available since 3.9
 
 			testGetDocuments();
 
 			testUpdateDeleteCustomFields(); // Available since 3.8
-
-			GroupExpanded createdGroup = testCreateGroup(); // Available since 3.9
-
-			// TODO: uncomment testUpdateGroup() to test UPDATE group API when it's ready in 3.10 (MBU-7337)
-			// testUpdateGroup(createdGroup);// To be available in 3.10
-
-			testGetClientTypes(); // Available since 3.9
-			testGetGroupsRoles();// Available since 3.9
 
 			uploadClientProfileFiles(); // Available since 3.9
 			getClientProfileFiles(); // Available since 3.9
@@ -711,7 +709,6 @@ public class DemoTestClientService {
 		return createdGroup;
 	}
 
-	// TODO: test this API when MBU-7337 is implemented in 3.10
 	public static void testUpdateGroup(GroupExpanded goupExpanded) throws MambuApiException {
 		System.out.println("\nIn testUpdateGroup");
 
@@ -727,13 +724,22 @@ public class DemoTestClientService {
 		updatedGroup.setId(updatedGroup.getId() + updatedSuffix);
 		updatedGroup.setHomePhone(updatedGroup.getHomePhone() + "-22");
 		updatedGroup.setNotes(updatedGroup.getNotes() + updatedSuffix);
-		Address updatedAddress = goupExpanded.getAddresses().get(0);
+		List<Address> addresses = goupExpanded.getAddresses();
+		Address updatedAddress = (addresses == null || addresses.size() == 0) ? null : addresses.get(0);
 		if (updatedAddress == null) {
 			updatedAddress = new Address();
 		}
 		updatedAddress.setLine1(updatedAddress.getLine1() + updatedSuffix);
 		updatedGroup.setNotes(updatedGroup.getNotes() + updatedSuffix);
-
+		List<CustomFieldValue> customFields = goupExpanded.getCustomFieldValues();
+		List<CustomFieldValue> updatedFields = new ArrayList<CustomFieldValue>();
+		if (customFields != null) {
+			for (CustomFieldValue value : customFields) {
+				value = DemoUtil.makeNewCustomFieldValue(value);
+				updatedFields.add(value);
+			}
+		}
+		goupExpanded.setCustomFieldValues(updatedFields);
 		// Send API request to update this group
 		GroupExpanded updatedGroupExpaneded = clientService.updateGroup(goupExpanded);
 		System.out.println("Group Updated. Name=" + goupExpanded.getGroup().getGroupNameWithId() + "\tName and Id="
