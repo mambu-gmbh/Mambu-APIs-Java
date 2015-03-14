@@ -47,7 +47,6 @@ import com.mambu.loans.shared.model.ScheduleDueDatesMethod;
  */
 public class DemoTestLoanService {
 
-	private static String LOAN_ACCOUNT_ID;
 	private static String NEW_LOAN_ACCOUNT_ID; // will be assigned after creation in testCreateJsonAccount()
 
 	private static Client demoClient;
@@ -73,10 +72,10 @@ public class DemoTestLoanService {
 
 			demoProduct = DemoUtil.getDemoLoanProduct(testProductId);
 			demoLoanAccount = DemoUtil.getDemoLoanAccount(testAccountId);
-			LOAN_ACCOUNT_ID = demoLoanAccount.getId();
 
 			testCreateJsonAccount();
 			testUpdateLoanAccount();
+
 			// Test Reject transactions first
 			testPatchLoanAccountTerms(); // Available since 3.9.3
 			testRejectLoanAccount();
@@ -102,6 +101,7 @@ public class DemoTestLoanService {
 			testGetLoanAccountsForGroup();
 
 			testApplyFeeToLoanAccount();
+			testApplyInterestToLoanAccount(); // Available since 3.1
 			testRepayLoanAccount();
 
 			// transactions
@@ -357,7 +357,21 @@ public class DemoTestLoanService {
 		System.out.println("Loan Fee response= " + transaction.getTransactionId().toString() + "  Trans Amount="
 		// + transaction.getAmount().toString() + "   Fees paid=" + transaction.getFeesPaid().toString());
 				+ transaction.getAmount().toString() + "   Fees amount=" + transaction.getFeesAmount().toString());
+	}
 
+	public static void testApplyInterestToLoanAccount() throws MambuApiException {
+		System.out.println("\nIn test Applying Interest to a Loan Account");
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		String accountId = demoLoanAccount.getId();
+		Date date = new Date();
+		String notes = "Notes for applying interest to a loan";
+
+		LoanTransaction transaction = loanService.applyInterestToLoanAccount(accountId, date, notes);
+
+		System.out.println("Loan Interest response= " + transaction.getTransactionId().toString()
+				+ "\tTransaction Amount=" + transaction.getAmount().toString());
 	}
 
 	public static void testGetLoanAccountsByBranchCentreOfficerState() throws MambuApiException {

@@ -60,6 +60,7 @@ public class APIData {
 	public static final String TYPE_TRANSFER = "TRANSFER";
 	public static final String TYPE_LOCK = "LOCK";
 	public static final String TYPE_UNLOCK = "UNLOCK";
+	public static final String TYPE_INTEREST_APPLIED = "INTEREST_APPLIED";
 
 	// Type of account closer transaction
 	public static enum CLOSER_TYPE {
