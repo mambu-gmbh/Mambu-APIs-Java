@@ -212,10 +212,14 @@ public class DemoTestClientService {
 	public static void testGetGroupDetails() throws MambuApiException {
 		System.out.println("\nIn testGetGroupDetails");
 
+		String groupId = demoGroup.getId();
+
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
-		System.out.println("testGetGroupDetails Ok, name="
-				+ clientService.getGroupDetails(demoGroup.getId()).getGroup().getGroupName());
+		GroupExpanded groupDetails = clientService.getGroupDetails(groupId);
+
+		System.out.println("testGetGroupDetails Ok, Name=" + groupDetails.getGroup().getGroupName() + "\tID="
+				+ groupDetails.getGroup().getId());
 
 	}
 
@@ -653,8 +657,9 @@ public class DemoTestClientService {
 		theGroup.setAssignedCentreKey(demoUser.getAssignedCentreKey());
 		theGroup.setAssignedUserKey(demoUser.getEncodedKey());
 		theGroup.setCreationDate(new Date());
-		theGroup.setEmailAddress("apiGroup@gmail.test");
 		theGroup.setGroupName(groupName); // make the same as name
+
+		theGroup.setEmailAddress("apiGroup@gmail.com");
 		theGroup.setHomePhone("604-5555-8889");
 		theGroup.setMobilePhone1("777-444-5555");
 		theGroup.setNotes("Created by API user " + demoUser.getFullName());
@@ -695,6 +700,7 @@ public class DemoTestClientService {
 		if (allGroupRoles != null && allGroupRoles.size() > 0) {
 			// Assign group member to the first available group role
 			GroupRole useRole = new GroupRole(allGroupRoles.get(0).getEncodedKey(), groupMembers.get(0).getClientKey());
+
 			// Add this role to group details
 			List<GroupRole> groupRoles = new ArrayList<GroupRole>();
 			groupRoles.add(useRole);
@@ -721,15 +727,31 @@ public class DemoTestClientService {
 		// Update some group details
 		Group updatedGroup = goupExpanded.getGroup();
 		updatedGroup.setGroupName(updatedGroup.getGroupName() + updatedSuffix);
-		updatedGroup.setId(updatedGroup.getId() + updatedSuffix);
+
+		// TODO: group id cannot be updated - Mambu returns INCONSISTENT_IDENTIFIER_WITH_JSON
+		// updatedGroup.setId(updatedGroup.getId() + updatedSuffix);
+
 		updatedGroup.setHomePhone(updatedGroup.getHomePhone() + "-22");
 		updatedGroup.setNotes(updatedGroup.getNotes() + updatedSuffix);
+
 		List<Address> addresses = goupExpanded.getAddresses();
-		Address updatedAddress = (addresses == null || addresses.size() == 0) ? null : addresses.get(0);
-		if (updatedAddress == null) {
-			updatedAddress = new Address();
+		Address currentAddress = (addresses == null || addresses.size() == 0) ? null : addresses.get(0);
+		if (currentAddress == null) {
+			currentAddress = new Address();
 		}
-		updatedAddress.setLine1(updatedAddress.getLine1() + updatedSuffix);
+		List<Address> updatedAddresses = new ArrayList<Address>();
+		Address updatedAddress = new Address();
+		updatedAddress.setLine1(currentAddress.getLine1() + updatedSuffix);
+		updatedAddress.setLine2(currentAddress.getLine2() + updatedSuffix);
+		updatedAddress.setCity(currentAddress.getCity() + updatedSuffix);
+		updatedAddress.setPostcode(currentAddress.getPostcode() + updatedSuffix);
+		updatedAddress.setCountry(currentAddress.getCountry() + updatedSuffix);
+		updatedAddress.setLatitude(currentAddress.getLatitude());
+		updatedAddress.setLongitude(currentAddress.getLongitude());
+
+		updatedAddresses.add(updatedAddress);
+		goupExpanded.setAddresses(updatedAddresses);
+
 		updatedGroup.setNotes(updatedGroup.getNotes() + updatedSuffix);
 		List<CustomFieldValue> customFields = goupExpanded.getCustomFieldValues();
 		List<CustomFieldValue> updatedFields = new ArrayList<CustomFieldValue>();
@@ -740,6 +762,18 @@ public class DemoTestClientService {
 			}
 		}
 		goupExpanded.setCustomFieldValues(updatedFields);
+		// TODO: Group Roles cannot be sent as they are- Mambu returns INCONSISTENT_GROUP_ROLE_ENCODED_KEY
+		// New Group roles needs to be re-created with the same assignments but with no encodedKey
+		List<GroupRole> currentRoles = goupExpanded.getGroupRoles();
+		List<GroupRole> updateRoles = new ArrayList<GroupRole>();
+		if (currentRoles != null) {
+			for (GroupRole role : currentRoles) {
+				GroupRole updated = new GroupRole(role.getGroupRoleNameKey(), role.getClientKey());
+				updateRoles.add(updated);
+			}
+		}
+		goupExpanded.setGroupRoles(updateRoles);
+
 		// Send API request to update this group
 		GroupExpanded updatedGroupExpaneded = clientService.updateGroup(goupExpanded);
 		System.out.println("Group Updated. Name=" + goupExpanded.getGroup().getGroupNameWithId() + "\tName and Id="
