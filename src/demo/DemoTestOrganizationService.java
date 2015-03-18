@@ -14,8 +14,10 @@ import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldLink;
 import com.mambu.core.shared.model.CustomFieldLink.LinkType;
+import com.mambu.core.shared.model.CustomFieldSelection;
 import com.mambu.core.shared.model.CustomFieldSet;
 import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.core.shared.model.CustomFilterConstraint;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 
@@ -238,7 +240,7 @@ public class DemoTestOrganizationService {
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		// E.g. CustomField.Type.CLIENT_INFO, CustomField.Type.LOAN_ACCOUNT_INFO, etc
-		CustomField.Type customFieldType = CustomField.Type.LOAN_ACCOUNT_INFO;
+		CustomField.Type customFieldType = CustomField.Type.CLIENT_INFO;
 
 		System.out.println("\nIn testGetCustomFieldSetsByType for " + customFieldType);
 
@@ -288,6 +290,22 @@ public class DemoTestOrganizationService {
 					boolean isDefaultForEntity = field.isDefault(entityLinkedKey);
 					System.out.println("Available =" + isAvailableForEntity + "\tRequired=" + isRequiredForEntity
 							+ "\tDefault=" + isDefaultForEntity);
+				}
+				// Log Custom Field selection options and dependencies
+				// Dependent Custom fields are available since 3.10 (see MBU-7914)
+				List<CustomFieldSelection> customFieldSelectionOptions = field.getCustomFieldSelectionOptions();
+				if (customFieldSelectionOptions != null && customFieldSelectionOptions.size() > 0) {
+					for (CustomFieldSelection option : customFieldSelectionOptions) {
+						System.out.println("\nSelection Options:");
+						String value = option.getValue();
+						System.out.println("Value =" + value + "\tKey=" + option.getEncodedKey());
+						CustomFilterConstraint constraint = option.getConstraint();
+						if (constraint != null) {
+							CUSTOM_FIELD_ID = field.getId(); // Store this field's ID for testGetCustomField() test
+							System.out.println("Value =" + value + "\tdepends on field="
+									+ constraint.getCustomFieldKey() + "\twith valueKey=" + constraint.getValue());
+						}
+					}
 				}
 			}
 		}
