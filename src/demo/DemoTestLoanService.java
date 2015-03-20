@@ -207,7 +207,6 @@ public class DemoTestLoanService {
 			}
 		}
 		updatedAccount.setCustomInformation(updatedFields);
-		updatedAccount.setCustomInformation(null);
 
 		// Update account in Mambu
 		LoanAccountExpanded updatedAccountResult = loanService.updateLoanAccount(updatedAccount);
@@ -604,6 +603,7 @@ public class DemoTestLoanService {
 		loanAccount.setInterestRateSource(null);
 		if (demoProduct.getRepaymentScheduleMethod() != RepaymentScheduleMethod.NONE) {
 			InterestRateSettings intRateSettings = demoProduct.getInterestRateSettings();
+			InterestRateSource rateSource = (intRateSettings == null) ? null : intRateSettings.getInterestRateSource();
 
 			BigDecimal interestRateDef = (intRateSettings == null) ? null : intRateSettings.getDefaultInterestRate();
 			BigDecimal interestRateMin = (intRateSettings == null) ? null : intRateSettings.getMinInterestRate();
@@ -616,11 +616,11 @@ public class DemoTestLoanService {
 				// Is still null, so no limits
 				interestRate = new BigDecimal(6.5f);
 			}
-			loanAccount.setInterestRate(interestRate);
-			//
-			InterestRateSource intSoure = (intRateSettings == null) ? null : intRateSettings.getInterestRateSource();
-			loanAccount.setInterestRateSource(intSoure);
-
+			if (rateSource == InterestRateSource.INDEX_INTEREST_RATE) {
+				loanAccount.setInterestSpread(interestRate); // set the spread
+			} else {
+				loanAccount.setInterestRate(interestRate); // set the rate
+			}
 		}
 
 		// DisbursementDate
