@@ -349,8 +349,6 @@ public class ClientsService {
 	 * Update an existent group using GroupExpanded object and send it as a JSON api. This API allows updating Group
 	 * with new details, including modifying group details, group members, group roles, custom fields and group address
 	 * 
-	 * NOTE: This API to be available in 3.10. See MBU-7337
-	 * 
 	 * @param groupDetails
 	 *            group details to be updated. The encodedKey for the groupDetails object must be NOT null to update an
 	 *            existent group.
@@ -361,6 +359,8 @@ public class ClientsService {
 	 * @throws IllegalArgumentException
 	 */
 	public GroupExpanded updateGroup(GroupExpanded groupDetails) throws MambuApiException {
+		// Available since Mambu 3.10. See MBU-7337
+		// POST groupJSON /api/groups/groupId
 
 		// Verify that the encodedKey for this object is not NULL
 		String encodedKey = groupDetails.getEncodedKey();

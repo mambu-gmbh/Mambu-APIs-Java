@@ -15,6 +15,7 @@ import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.ClientsService;
+import com.mambu.apisdk.util.DateUtils;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.ClientState;
@@ -47,6 +48,9 @@ public class DemoTestClientService {
 	private static String NEW_CLIENT_ID;
 	private static ClientExpanded clientCreated;
 
+	private static String NEW_GROUP_ID;
+	private static GroupExpanded createdGroup;
+
 	private static Client demoClient;
 	private static Group demoGroup;
 	private static User demoUser;
@@ -75,7 +79,7 @@ public class DemoTestClientService {
 			testGetClientsByBranchCentreOfficerState();
 			testGetGroupsByBranchCentreOfficer();
 
-			GroupExpanded createdGroup = testCreateGroup(); // Available since 3.9
+			createdGroup = testCreateGroup(); // Available since 3.9
 			testUpdateGroup(createdGroup); // Available since 3.10
 
 			testGetGroup();
@@ -103,7 +107,8 @@ public class DemoTestClientService {
 		System.out.println("\nIn testGetClient");
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
-		Client myClient = clientService.getClient(demoClient.getEncodedKey());
+		String clientKey = demoClient.getEncodedKey();
+		Client myClient = clientService.getClient(clientKey);
 
 		System.out.println("Client Service by ID Ok, ID=" + myClient.getId());
 
@@ -130,8 +135,8 @@ public class DemoTestClientService {
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
-		String lastname = demoClient.getLastName(); // Chernaya FullClient
-		String firstName = demoClient.getFirstName(); // Irina API
+		String lastname = demoClient.getLastName();
+		String firstName = demoClient.getFirstName();
 
 		List<Client> myCLients = clientService.getClientByFullName(lastname, firstName);
 
@@ -147,7 +152,7 @@ public class DemoTestClientService {
 		System.out.println("\nIn testGetClientByLastNameBirthday");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		DateFormat df = new SimpleDateFormat(DateUtils.DATE_FORMAT);
 		df.setTimeZone(TimeZone.getTimeZone("UTC"));
 		String birthDay = (demoClient.getBirthDate() == null) ? null : df.format(demoClient.getBirthDate()); // yyy-MM-dd
 		String lastName = demoClient.getLastName();
@@ -166,8 +171,8 @@ public class DemoTestClientService {
 		System.out.println("\nIn testGetClientDetails");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
-
-		ClientExpanded clientDetails = clientService.getClientDetails(demoClient.getId());
+		String clientKey = demoClient.getId();
+		ClientExpanded clientDetails = clientService.getClientDetails(clientKey);
 		Client client = clientDetails.getClient();
 
 		System.out.println("testGetClientDetails Ok, name=" + client.getFullName() + "\tName +id "
@@ -205,14 +210,15 @@ public class DemoTestClientService {
 		System.out.println("\nIn testGetGroup");
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
-		System.out.println("testGetGroup OK, name=" + clientService.getGroup(demoGroup.getId()).getGroupName());
+		String groupId = NEW_GROUP_ID;
+		System.out.println("testGetGroup OK, name=" + clientService.getGroup(groupId).getGroupName());
 
 	}
 
 	public static void testGetGroupDetails() throws MambuApiException {
 		System.out.println("\nIn testGetGroupDetails");
 
-		String groupId = demoGroup.getId();
+		String groupId = NEW_GROUP_ID;
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
@@ -223,7 +229,7 @@ public class DemoTestClientService {
 
 	}
 
-	private static final String apiTestFirstNamePrefix = "Demo Name ";
+	private static final String apiTestFirstNamePrefix = "Name ";
 	private static final String apiTestLastNamePrefix = "API Client";
 
 	public static void testCreateJsonClient() throws MambuApiException {
@@ -252,7 +258,6 @@ public class DemoTestClientService {
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(1983, 8, 15); // format: year, month, day_of_month
 		Date birthdate = calendar.getTime();
-
 		clientIn.setBirthDate(birthdate);
 
 		// Set client role. Required since Mambu 3.9
@@ -280,8 +285,9 @@ public class DemoTestClientService {
 		// ADd doc IDs
 		List<IdentificationDocument> idDocs = new ArrayList<IdentificationDocument>();
 		IdentificationDocument doc = new IdentificationDocument();
-		doc.setDocumentId("DFG6778899");
+		doc.setDocumentId("DFG1234");
 		doc.setDocumentType("Passport");
+		doc.setIssuingAuthority("Vancouver");
 		idDocs.add(doc);
 		clExpanded.setIdDocuments(idDocs);
 		// Use helper to make test custom fields which are valid for the client's role
@@ -301,7 +307,7 @@ public class DemoTestClientService {
 
 	}
 
-	private static final String updatedSuffix = "_ApiUpdated";
+	private static final String updatedSuffix = "_updated";
 
 	public static void testUpdateClient() throws MambuApiException {
 		System.out.println("\nIn testUpdateClient");
@@ -632,7 +638,7 @@ public class DemoTestClientService {
 
 	}
 
-	private static final String apiTestGroupNamePrefix = "API Test Group ";
+	private static final String apiTestGroupNamePrefix = "API Group ";
 
 	public static GroupExpanded testCreateGroup() throws MambuApiException {
 		System.out.println("\nIn testCreateGroup");
@@ -711,6 +717,7 @@ public class DemoTestClientService {
 		GroupExpanded createdGroup = clientService.createGroup(groupDetails);
 		System.out.println("Group Created. Encoded Key=" + createdGroup.getEncodedKey() + "\tName and Id="
 				+ createdGroup.getGroup().getGroupNameWithId());
+		NEW_GROUP_ID = createdGroup.getGroup().getId();
 
 		return createdGroup;
 	}
@@ -727,11 +734,10 @@ public class DemoTestClientService {
 		// Update some group details
 		Group updatedGroup = goupExpanded.getGroup();
 		updatedGroup.setGroupName(updatedGroup.getGroupName() + updatedSuffix);
-
-		// TODO: group id cannot be updated - Mambu returns INCONSISTENT_IDENTIFIER_WITH_JSON
-		// updatedGroup.setId(updatedGroup.getId() + updatedSuffix);
+		// Keep the same group ID, groupID cannot be modified
 
 		updatedGroup.setHomePhone(updatedGroup.getHomePhone() + "-22");
+		// TODO: GET Group and GET Group?fullDeatils do no return notes field. Update API may erase existent notes
 		updatedGroup.setNotes(updatedGroup.getNotes() + updatedSuffix);
 
 		List<Address> addresses = goupExpanded.getAddresses();
@@ -752,7 +758,6 @@ public class DemoTestClientService {
 		updatedAddresses.add(updatedAddress);
 		goupExpanded.setAddresses(updatedAddresses);
 
-		updatedGroup.setNotes(updatedGroup.getNotes() + updatedSuffix);
 		List<CustomFieldValue> customFields = goupExpanded.getCustomFieldValues();
 		List<CustomFieldValue> updatedFields = new ArrayList<CustomFieldValue>();
 		if (customFields != null) {
@@ -762,8 +767,7 @@ public class DemoTestClientService {
 			}
 		}
 		goupExpanded.setCustomFieldValues(updatedFields);
-		// TODO: Group Roles cannot be sent as they are- Mambu returns INCONSISTENT_GROUP_ROLE_ENCODED_KEY
-		// New Group roles needs to be re-created with the same assignments but with no encodedKey
+		// Test submitting Group roles with the same assignments but as new roles (no encoded key)
 		List<GroupRole> currentRoles = goupExpanded.getGroupRoles();
 		List<GroupRole> updateRoles = new ArrayList<GroupRole>();
 		if (currentRoles != null) {
