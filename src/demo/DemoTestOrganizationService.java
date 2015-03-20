@@ -1,5 +1,6 @@
 package demo;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -18,6 +19,7 @@ import com.mambu.core.shared.model.CustomFieldSelection;
 import com.mambu.core.shared.model.CustomFieldSet;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.CustomFilterConstraint;
+import com.mambu.core.shared.model.IndexRate;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 
@@ -43,6 +45,8 @@ public class DemoTestOrganizationService {
 		try {
 			demoBranch = DemoUtil.getDemoBranch();
 			demoCentre = DemoUtil.getDemoCentre();
+
+			testPostIndexInterestRate(); // Available since 3.10
 
 			// Available since 3.7
 			testGetTransactionChannels();
@@ -349,6 +353,29 @@ public class DemoTestOrganizationService {
 
 		System.out.println("\nDeleting first custom field for a demo Centre...");
 		deleteCustomField(Group.class, customFieldValues);
+
+	}
+
+	// Test Posting Index Interest Rates. Available since 3.10
+	public static void testPostIndexInterestRate() throws MambuApiException {
+		System.out.println("\nIn testPostIndexInterestRate");
+		// Note that there is no API yet to get Index Rate Sources. API developers need to know the rate source key to
+		// post new rates. These keys can be obtained from Mambu. They can also be looked up from the getProduct API
+		// response. See MBU-8059 for more details
+
+		// Encoded key for the Index Interest Rate Source
+		String indexRateSourceKey = "8a6c06384b47afd4014b480624e6003a";
+		int dateOffset = (int) (Math.random() * 30) * 24 * 60 * 60 * 1000; // rate start dates cannot be duplicated. Use
+																			// random offset for each test run
+		Date startDate = new Date(new Date().getTime() + dateOffset);
+		// Create new IndexRate
+		IndexRate indexRate = new IndexRate(startDate, new BigDecimal(3.5));
+
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+		IndexRate indexRateResult = organizationService.postIndexInterestRate(indexRateSourceKey, indexRate);
+
+		System.out.println("Interest Rate updated. New Rate=" + indexRateResult.getRate() + " for source="
+				+ indexRateResult.getRateSource().getName() + " Start date=" + indexRateResult.getStartDate());
 
 	}
 

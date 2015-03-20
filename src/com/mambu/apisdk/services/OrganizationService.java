@@ -7,18 +7,22 @@ import java.util.List;
 
 import com.google.inject.Inject;
 import com.mambu.accounts.shared.model.TransactionChannel;
+import com.mambu.api.server.handler.indexratesources.model.JsonIndexRate;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
 import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.core.shared.model.IndexRate;
+import com.mambu.core.shared.model.IndexRateSource;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 
@@ -62,6 +66,9 @@ public class OrganizationService {
 	// Delete Custom Field for a Centre
 	private final static ApiDefinition deleteCentreCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
 			Centre.class, CustomFieldValue.class);
+	// Post Index Interest Rate
+	private final static ApiDefinition postIndexInterestRate = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
+			IndexRateSource.class, IndexRate.class);
 
 	/***
 	 * Create a new organization service
@@ -293,5 +300,32 @@ public class OrganizationService {
 		// e.g. DELETE /host/api/centres/centreId/custominformation/customFieldId
 		return serviceExecutor.execute(deleteCentreCustomField, centreId, customFieldId, null);
 
+	}
+
+	/**
+	 * Post Index Interest Rate
+	 * 
+	 * @param indexRateSourceKey
+	 *            the encoded key of the Interest Rate Source
+	 * @param indexRate
+	 *            index rate object
+	 * @return index rate
+	 * @throws MambuApiException
+	 */
+	public IndexRate postIndexInterestRate(String indexRateSourceKey, IndexRate indexRate) throws MambuApiException {
+
+		// Example: POST JsonIndexRate /api/indexratesources/40288a164bda92a4014bda9358ee0001/indexrates
+		// Available since 3.10. See MBU-8059
+
+		// indexRateSourceKey is validated by the serviceExecutor
+		if (indexRate == null) {
+			throw new IllegalArgumentException("Index Rate must not  be null");
+		}
+
+		JsonIndexRate jsonIndexRate = new JsonIndexRate(indexRate);
+		// This API expects JSON content. The dates are expected in "yyyy-MM-dd" format
+		postIndexInterestRate.setContentType(ContentType.JSON);
+		postIndexInterestRate.setJsonDateTimeFormat(APIData.yyyyMmddFormat);
+		return serviceExecutor.executeJson(postIndexInterestRate, jsonIndexRate, indexRateSourceKey);
 	}
 }

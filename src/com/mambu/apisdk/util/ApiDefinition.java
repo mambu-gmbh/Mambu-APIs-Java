@@ -26,6 +26,8 @@ import com.mambu.core.shared.model.CustomFieldSet;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.CustomView;
 import com.mambu.core.shared.model.Image;
+import com.mambu.core.shared.model.IndexRate;
+import com.mambu.core.shared.model.IndexRateSource;
 import com.mambu.core.shared.model.SearchResult;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
@@ -446,6 +448,9 @@ public class ApiDefinition {
 		apiEndPointsMap.put(Image.class, APIData.IMAGES);
 
 		apiEndPointsMap.put(SearchResult.class, APIData.SEARCH);
+		// Index interest sources
+		apiEndPointsMap.put(IndexRateSource.class, APIData.INDEXRATESOURCES);
+		apiEndPointsMap.put(IndexRate.class, APIData.INDEXRATES);
 
 	}
 
