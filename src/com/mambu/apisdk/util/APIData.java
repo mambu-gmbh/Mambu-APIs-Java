@@ -61,6 +61,10 @@ public class APIData {
 	public static final String TYPE_LOCK = "LOCK";
 	public static final String TYPE_UNLOCK = "UNLOCK";
 	public static final String TYPE_INTEREST_APPLIED = "INTEREST_APPLIED";
+	// Savings reversal transactions
+	public static final String TYPE_DEPOSIT_ADJUSTMENT = "DEPOSIT_ADJUSTMENT";
+	public static final String TYPE_WITHDRAWAL_ADJUSTMENT = "WITHDRAWAL_ADJUSTMENT";
+	public static final String TYPE_TRANSFER_ADJUSTMENT = "TRANSFER_ADJUSTMENT";
 
 	// Type of account closer transaction
 	public static enum CLOSER_TYPE {
@@ -76,6 +80,7 @@ public class APIData {
 
 	public static final String TO_SAVINGS = "toSavingsAccount";
 	public static final String TO_LOAN = "toLoanAccount";
+	public static final String ORIGINAL_TRANSACTION_ID = "originalTransactionId";
 
 	// Filters
 	public static final String BRANCH_ID = "branchId";
@@ -89,6 +94,10 @@ public class APIData {
 	// Products
 	public static final String LOANPRODUCTS = "loanproducts";
 	public static final String SAVINGSRODUCTS = "savingsproducts";
+
+	// Interest Rate Sources source API (available since 3.10)
+	public static final String INDEXRATESOURCES = "indexratesources";
+	public static final String INDEXRATES = "indexrates";
 
 	// Tasks
 	public static final String TITLE = "title";
