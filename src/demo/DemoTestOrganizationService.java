@@ -13,12 +13,8 @@ import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.Address;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
-import com.mambu.core.shared.model.CustomFieldLink;
-import com.mambu.core.shared.model.CustomFieldLink.LinkType;
-import com.mambu.core.shared.model.CustomFieldSelection;
 import com.mambu.core.shared.model.CustomFieldSet;
 import com.mambu.core.shared.model.CustomFieldValue;
-import com.mambu.core.shared.model.CustomFilterConstraint;
 import com.mambu.core.shared.model.IndexRate;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
@@ -261,56 +257,7 @@ public class DemoTestOrganizationService {
 					+ customFields.size() + "\tUsage=" + set.getUsage());
 			System.out.println("List of fields");
 			for (CustomField field : customFields) {
-				System.out.println("\nField ID=" + field.getId() + "\tField Name=" + field.getName() + "\tDataType="
-						+ field.getDataType().toString() + "\tIsDefault=" + field.isDefault().toString() + "\tType="
-						+ field.getType().toString() + "\tIs Active=" + !field.isDeactivated());
-
-				// Remember one of the active CustomFields for testing testGetCustomField()
-				if (!field.isDeactivated()) {
-					CUSTOM_FIELD_ID = (CUSTOM_FIELD_ID == null) ? field.getId() : CUSTOM_FIELD_ID;
-				}
-
-				// As of Mambu 3.9, settings for custom fields are per entity type, see MBU-7034
-				List<CustomFieldLink> links = field.getCustomFieldLinks();
-				if (links == null) {
-					System.out.println("Field's CustomFieldLinks are null");
-					continue;
-				}
-				if (links.size() == 0) {
-					System.out.println("Field's CustomFieldLinks are empty");
-					continue;
-				}
-				for (CustomFieldLink link : links) {
-					LinkType linkType = link.getLinkType(); // PRODUCT or CLIENT_ROLE
-					String entityLinkedKey = link.getEntityLinkedKey();
-					boolean isLinkDefault = link.isDefault();
-					boolean isLinkRequired = link.isRequired();
-					System.out.println("Link Data. Type=" + linkType + "\tEntity Key=" + entityLinkedKey
-							+ "\tRequired=" + isLinkRequired + "\tDefault=" + isLinkDefault);
-
-					// Test Get field properties for this entity
-					boolean isAvailableForEntity = field.isAvailableForEntity(entityLinkedKey);
-					boolean isRequiredForEntity = field.isRequired(entityLinkedKey);
-					boolean isDefaultForEntity = field.isDefault(entityLinkedKey);
-					System.out.println("Available =" + isAvailableForEntity + "\tRequired=" + isRequiredForEntity
-							+ "\tDefault=" + isDefaultForEntity);
-				}
-				// Log Custom Field selection options and dependencies
-				// Dependent Custom fields are available since 3.10 (see MBU-7914)
-				List<CustomFieldSelection> customFieldSelectionOptions = field.getCustomFieldSelectionOptions();
-				if (customFieldSelectionOptions != null && customFieldSelectionOptions.size() > 0) {
-					for (CustomFieldSelection option : customFieldSelectionOptions) {
-						System.out.println("\nSelection Options:");
-						String value = option.getValue();
-						System.out.println("Value =" + value + "\tKey=" + option.getEncodedKey());
-						CustomFilterConstraint constraint = option.getConstraint();
-						if (constraint != null) {
-							CUSTOM_FIELD_ID = field.getId(); // Store this field's ID for testGetCustomField() test
-							System.out.println("Value =" + value + "\tdepends on field="
-									+ constraint.getCustomFieldKey() + "\twith valueKey=" + constraint.getValue());
-						}
-					}
-				}
+				CUSTOM_FIELD_ID = DemoUtil.logCustomField(field);
 			}
 		}
 		System.out.println();

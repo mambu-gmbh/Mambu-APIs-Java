@@ -140,10 +140,26 @@ public class DemoTestLoanService {
 		System.out.println("\nIn testGetLoanAccountDetails");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
-		String accountId = NEW_LOAN_ACCOUNT_ID; // LOAN_ACCOUNT_ID NEW_LOAN_ACCOUNT_ID
-		System.out.println("Got loan account by ID with details: "
-				+ loanService.getLoanAccountDetails(accountId).getName());
+		String accountId = demoLoanAccount.getId();
 
+		LoanAccount loanDeatils = loanService.getLoanAccountDetails(accountId);
+		System.out.println("Got loan account by ID with details: " + loanDeatils.getName() + "\tId="
+				+ loanDeatils.getId());
+
+		// If account has Securities, log their custom info to test MBU-7684
+		// See MBU-7684 As a Developer, I need to work with guarantees with custom fields
+		List<Guaranty> guarantees = loanDeatils.getGuarantees();
+		if (guarantees == null) {
+			return;
+		}
+		for (Guaranty guaranty : guarantees) {
+			System.out.println("Gurantor type=" + guaranty.getType() + "\tAssetName=" + guaranty.getAssetName()
+					+ "\tGurantor Key=" + guaranty.getGuarantorKey() + "\tSavinsg Key="
+					+ guaranty.getSavingsAccountKey() + "\tAmount=" + guaranty.getAmount());
+
+			List<CustomFieldValue> guarantyCustomValues = guaranty.getCustomFieldValues();
+			DemoUtil.logCustomFieldValues(guarantyCustomValues, "Guarantor", guaranty.getEncodedKey());
+		}
 	}
 
 	// Create Loan Account
@@ -169,25 +185,21 @@ public class DemoTestLoanService {
 
 		// Create Account in Mambu
 		newAccount = loanService.createLoanAccount(accountExpanded);
+		LoanAccount createdAccount = newAccount.getLoanAccount();
 
-		NEW_LOAN_ACCOUNT_ID = newAccount.getLoanAccount().getId();
+		NEW_LOAN_ACCOUNT_ID = createdAccount.getId();
 
-		System.out.println("Loan Account created OK, ID=" + newAccount.getLoanAccount().getId() + " Name= "
-				+ newAccount.getLoanAccount().getLoanName() + " Account Holder Key="
-				+ newAccount.getLoanAccount().getAccountHolderKey());
+		System.out.println("Loan Account created OK, ID=" + createdAccount.getId() + " Name= "
+				+ createdAccount.getLoanName() + " Account Holder Key=" + createdAccount.getAccountHolderKey());
 
 		// Check returned custom fields after create. For LoanAccountExpanded custom information is not part of the
 		// LoanAccount but is a member of LoanAccountExoended. So get it from there
-		List<CustomFieldValue> updatedCustomFields = newAccount.getCustomInformation();
+		List<CustomFieldValue> customFieldValues = newAccount.getCustomInformation();
+		// Log Custom Field Values
 
-		if (updatedCustomFields != null) {
-			System.out.println("Custom Fields for Account\n");
-			for (CustomFieldValue value : updatedCustomFields) {
-				System.out.println("CustomFieldKey=" + value.getCustomFieldKey() + "\tValue=" + value.getValue()
-						+ "\tName=" + value.getCustomField().getName());
+		String accountName = createdAccount.getLoanName();
+		DemoUtil.logCustomFieldValues(customFieldValues, accountName, createdAccount.getId());
 
-			}
-		}
 	}
 
 	// Update Loan account
