@@ -701,6 +701,15 @@ public class DemoTestSavingsService {
 		if (savingsType == SavingsType.SAVINGS_PLAN) {
 			savingsAccount.setTargetAmount(new BigDecimal(1000000.00));
 		}
+		// Provide Tax Source. Available since 3.10. See MBU-8070- "As a Developer, I need to post savings accounts
+		// linked to a tax source"
+		if (demoSavingsProduct.hasWithholdingTaxEnabled()) {
+			// Need to obtain withholdingTaxSourceKey from Mambu. For example, create an account with a tax source in
+			// Mambu and get its full details to obtain withholdingTaxSourceKey
+			String withholdingTaxSourceKey = "8a8497464c2e0b01014c2e2337290030";
+			savingsAccount.setWithholdingTaxSourceKey(withholdingTaxSourceKey);
+		}
+
 		savingsAccount.setNotes("Created by API on " + new Date());
 		return savingsAccount;
 	}
