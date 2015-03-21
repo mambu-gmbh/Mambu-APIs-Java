@@ -87,16 +87,16 @@ public class DemoTestSavingsService {
 
 			// Test deposit and reversal transactions
 			SavingsTransaction deposiTransaction = testDepositToSavingsAccount();
-			testReverseDepositToSavingsAccount(deposiTransaction); // Available since 3.10
+			testReverseSavingsAccountTransaction(deposiTransaction); // Available since 3.10
 			testDepositToSavingsAccount(); // Make another deposit after reversal to continue testing
 
 			// Test withdrawal and reversal transactions
 			SavingsTransaction withdrawalTransaction = testWithdrawalFromSavingsAccount();
-			testReverseWithdrawalFromSavingsAccount(withdrawalTransaction); // Available since 3.10
+			testReverseSavingsAccountTransaction(withdrawalTransaction); // Available since 3.10
 
 			// Test transfer and reversal transactions
 			SavingsTransaction transferTransaction = testTransferFromSavingsAccount();
-			testReverseTransferFromSavingsAccount(transferTransaction);
+			testReverseSavingsAccountTransaction(transferTransaction);
 
 			testApplyFeeToSavingsAccount(); // Available since 3.6
 
@@ -208,24 +208,6 @@ public class DemoTestSavingsService {
 		return transaction;
 	}
 
-	// Test Reversing deposit transaction. Available since 3.10
-	public static void testReverseWithdrawalFromSavingsAccount(SavingsTransaction transaction) throws MambuApiException {
-		System.out.println("\nIn testReverseWithdrawalFromSavingsAccount");
-
-		SavingsService savingsService = MambuAPIFactory.getSavingsService();
-
-		String originalTransactionId = transaction.getEncodedKey();
-		String notes = "Reversed by API";
-
-		// Test Reversing this withdrawal transaction. Available since 3.10
-		SavingsTransaction reversedTransaction = savingsService.reverseWithdrawalForSavingsAccount(SAVINGS_ACCOUNT_ID,
-				originalTransactionId, notes);
-
-		System.out.println("Reversed Withdrawal from Savings for account with the " + SAVINGS_ACCOUNT_ID + " id:"
-				+ ". Amount=" + reversedTransaction.getAmount().toString() + " Balance ="
-				+ reversedTransaction.getBalance().toString());
-	}
-
 	// Deposit
 	public static SavingsTransaction testDepositToSavingsAccount() throws MambuApiException {
 		System.out.println("\nIn testDepositToSavingsAccount");
@@ -247,22 +229,6 @@ public class DemoTestSavingsService {
 		return transaction;
 	}
 
-	// Test Reversing deposit transaction. Available since 3.10
-	public static void testReverseDepositToSavingsAccount(SavingsTransaction transaction) throws MambuApiException {
-		System.out.println("\nIn testReverseDepositToSavingsAccount");
-
-		SavingsService savingsService = MambuAPIFactory.getSavingsService();
-
-		String originalTransactionId = transaction.getEncodedKey();
-		String notes = "Reversed by API";
-		SavingsTransaction reversedTransaction = savingsService.reverseDepositForSavingsAccount(SAVINGS_ACCOUNT_ID,
-				originalTransactionId, notes);
-
-		System.out.println("Reversed Deposit To Savings for account with the " + SAVINGS_ACCOUNT_ID + " id:"
-				+ ". Amount=" + reversedTransaction.getAmount().toString() + " Balance ="
-				+ reversedTransaction.getBalance().toString());
-	}
-
 	public static SavingsTransaction testTransferFromSavingsAccount() throws MambuApiException {
 		System.out.println("\nIn testTransferFromSavingsAccount");
 
@@ -278,28 +244,24 @@ public class DemoTestSavingsService {
 				destinationAccountType, amount, notes);
 
 		System.out.println("Transfer From account:" + SAVINGS_ACCOUNT_ID + "   To account id=" + destinationAccountKey
-				+ " Amount=" + transaction.getAmount().toString() + " Transac Id=" + transaction.getTransactionId());
+				+ " Amount=" + transaction.getAmount().toString() + " Transac Id=" + transaction.getTransactionId()
+				+ "\tBalance=" + transaction.getBalance());
 
 		return transaction;
 	}
 
-	// Test Reversing transfer transaction. Available since 3.10
-	public static void testReverseTransferFromSavingsAccount(SavingsTransaction transaction) throws MambuApiException {
-		System.out.println("\nIn testReverseTransferFromSavingsAccount");
+	// Test Reversing savings transaction. Available since 3.10 for Deposit, Withdrawal and Transfer transactions
+	public static void testReverseSavingsAccountTransaction(SavingsTransaction transaction) throws MambuApiException {
+		System.out.println("\nIn testReverseSavingsAccountTransaction");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
-		String originalTransactionId = transaction.getEncodedKey();
-		String notes = "Reversed by API";
+		String notes = "Reversed by Demo API";
+		SavingsTransaction reversed = savingsService.reverseSavingsTransaction(transaction, notes);
 
-		// Test Reversing this transfer transaction. Available since 3.10
-		SavingsTransaction reversedTransaction = savingsService.reverseTransferForSavingsAccount(SAVINGS_ACCOUNT_ID,
-				originalTransactionId, notes);
-
-		System.out.println("Reversed Transfer from Savings for account with the " + SAVINGS_ACCOUNT_ID + " id:"
-				+ ". Amount=" + reversedTransaction.getAmount().toString() + " Balance ="
-				+ reversedTransaction.getBalance().toString());
-
+		System.out.println("Reversed Transaction=" + transaction.getType() + "\tReversed Amount="
+				+ reversed.getAmount().toString() + "\tBalance =" + reversed.getBalance().toString()
+				+ "Transaction Type=" + reversed.getType() + "\tAccount key=" + reversed.getParentAccountKey());
 	}
 
 	// Apply Arbitrary Fee. Available since 3.6
