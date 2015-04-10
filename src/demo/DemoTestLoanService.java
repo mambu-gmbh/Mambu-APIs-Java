@@ -253,9 +253,12 @@ public class DemoTestLoanService {
 		account.setEncodedKey(theAccount.getEncodedKey()); // encoded key is needed for patching
 		// Set fields to be updated. Update some account terms
 		account.setLoanAmount(theAccount.getLoanAmount()); // loanAmount
-		account.setInterestRate(theAccount.getInterestRate()); // interestRate
+		if (demoProduct.getInterestRateSettings().getInterestRateSource() == InterestRateSource.FIXED_INTEREST_RATE) {
+			account.setInterestRate(theAccount.getInterestRate()); // interestRate
+		} else {
+			account.setInterestSpread(theAccount.getInterestSpread());
+		}
 		// Leave some other updatable terms unchanged
-		account.setInterestSpread(theAccount.getInterestSpread()); // interestSpread
 		account.setRepaymentInstallments(theAccount.getRepaymentInstallments()); // repaymentInstallments
 		account.setRepaymentPeriodCount(theAccount.getRepaymentPeriodCount()); // repaymentPeriodCount
 		account.setRepaymentPeriodUnit(theAccount.getRepaymentPeriodUnit()); // repaymentPeriodUnit
