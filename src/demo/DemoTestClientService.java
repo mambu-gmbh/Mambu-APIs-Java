@@ -232,6 +232,7 @@ public class DemoTestClientService {
 	private static final String apiTestFirstNamePrefix = "Name ";
 	private static final String apiTestLastNamePrefix = "API Client";
 
+	// Test creating new client. Save newly created client in clientCreated object for testing updates
 	public static void testCreateJsonClient() throws MambuApiException {
 		System.out.println("\nIn testCreateJsonClient");
 
@@ -309,6 +310,7 @@ public class DemoTestClientService {
 
 	private static final String updatedSuffix = "_updated";
 
+	// Test update client. This method updates previously created client saved in clientCreated object
 	public static void testUpdateClient() throws MambuApiException {
 		System.out.println("\nIn testUpdateClient");
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -640,6 +642,7 @@ public class DemoTestClientService {
 
 	private static final String apiTestGroupNamePrefix = "API Group ";
 
+	// Test Creating new group. Return new group on success
 	public static GroupExpanded testCreateGroup() throws MambuApiException {
 		System.out.println("\nIn testCreateGroup");
 
@@ -722,29 +725,28 @@ public class DemoTestClientService {
 		return createdGroup;
 	}
 
-	public static void testUpdateGroup(GroupExpanded goupExpanded) throws MambuApiException {
+	// Test updating Group. Pass existent group as a parameter
+	public static void testUpdateGroup(GroupExpanded groupExpanded) throws MambuApiException {
 		System.out.println("\nIn testUpdateGroup");
 
-		if (goupExpanded == null || goupExpanded.getGroup() == null) {
+		if (groupExpanded == null || groupExpanded.getGroup() == null) {
 			System.out.println("Cannot update: group details are NULL");
 			return;
 		}
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
 		// Update some group details
-		Group updatedGroup = goupExpanded.getGroup();
+		Group updatedGroup = groupExpanded.getGroup();
 		updatedGroup.setGroupName(updatedGroup.getGroupName() + updatedSuffix);
 		// Keep the same group ID, groupID cannot be modified
 
 		updatedGroup.setHomePhone(updatedGroup.getHomePhone() + "-22");
-		// TODO: GET Group and GET Group?fullDeatils do no return notes field. Update API may erase existent notes
+		// TODO: GET Group and GET Group?fullDeatils do no return notes field. Update API may erase existent notes (see
+		// MBU-8560)
 		updatedGroup.setNotes(updatedGroup.getNotes() + updatedSuffix);
 
-		List<Address> addresses = goupExpanded.getAddresses();
-		Address currentAddress = (addresses == null || addresses.size() == 0) ? null : addresses.get(0);
-		if (currentAddress == null) {
-			currentAddress = new Address();
-		}
+		List<Address> addresses = groupExpanded.getAddresses();
+		Address currentAddress = (addresses == null || addresses.size() == 0) ? new Address() : addresses.get(0);
 		List<Address> updatedAddresses = new ArrayList<Address>();
 		Address updatedAddress = new Address();
 		updatedAddress.setLine1(currentAddress.getLine1() + updatedSuffix);
@@ -756,9 +758,9 @@ public class DemoTestClientService {
 		updatedAddress.setLongitude(currentAddress.getLongitude());
 
 		updatedAddresses.add(updatedAddress);
-		goupExpanded.setAddresses(updatedAddresses);
+		groupExpanded.setAddresses(updatedAddresses);
 
-		List<CustomFieldValue> customFields = goupExpanded.getCustomFieldValues();
+		List<CustomFieldValue> customFields = groupExpanded.getCustomFieldValues();
 		List<CustomFieldValue> updatedFields = new ArrayList<CustomFieldValue>();
 		if (customFields != null) {
 			for (CustomFieldValue value : customFields) {
@@ -766,21 +768,31 @@ public class DemoTestClientService {
 				updatedFields.add(value);
 			}
 		}
-		goupExpanded.setCustomFieldValues(updatedFields);
+		groupExpanded.setCustomFieldValues(updatedFields);
+		// Set new Group Members
+		List<GroupMember> groupMembers = new ArrayList<GroupMember>();
+		GroupMember groupMember = new GroupMember();
+		// Replace demoClient with newly created client as a group member
+		String newClientKey = clientCreated.getEncodedKey();
+		groupMember.setClientKey(newClientKey);
+		groupMember.setCreationDate(new Date());
+		groupMembers.add(groupMember);
+		groupExpanded.setGroupMembers(groupMembers);
+
 		// Test submitting Group roles with the same assignments but as new roles (no encoded key)
-		List<GroupRole> currentRoles = goupExpanded.getGroupRoles();
+		List<GroupRole> currentRoles = groupExpanded.getGroupRoles();
 		List<GroupRole> updateRoles = new ArrayList<GroupRole>();
 		if (currentRoles != null) {
 			for (GroupRole role : currentRoles) {
-				GroupRole updated = new GroupRole(role.getGroupRoleNameKey(), role.getClientKey());
+				GroupRole updated = new GroupRole(role.getGroupRoleNameKey(), newClientKey);
 				updateRoles.add(updated);
 			}
 		}
-		goupExpanded.setGroupRoles(updateRoles);
+		groupExpanded.setGroupRoles(updateRoles);
 
 		// Send API request to update this group
-		GroupExpanded updatedGroupExpaneded = clientService.updateGroup(goupExpanded);
-		System.out.println("Group Updated. Name=" + goupExpanded.getGroup().getGroupNameWithId() + "\tName and Id="
+		GroupExpanded updatedGroupExpaneded = clientService.updateGroup(groupExpanded);
+		System.out.println("Group Updated. Name=" + groupExpanded.getGroup().getGroupNameWithId() + "\tName and Id="
 				+ updatedGroupExpaneded.getGroup().getGroupNameWithId());
 	}
 }

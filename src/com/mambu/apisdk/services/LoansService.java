@@ -560,9 +560,9 @@ public class LoansService {
 	 * Apply Interest to a loan account on a given date
 	 * 
 	 * @param accountId
-	 *            the id of the account
+	 *            the id of the account. Mandatory
 	 * @param date
-	 *            back date
+	 *            date. Mandatory.
 	 * @param notes
 	 *            notes
 	 * @return Loan Transaction

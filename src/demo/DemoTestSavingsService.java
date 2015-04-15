@@ -638,12 +638,12 @@ public class DemoTestSavingsService {
 			}
 			InterestRateSource rateSource = overdraftRateSettings.getInterestRateSource();
 
-			BigDecimal defOerdraftInterestRate = overdraftRateSettings.getDefaultInterestRate();
-			BigDecimal minOerdraftInterestRate = overdraftRateSettings.getMinInterestRate();
+			BigDecimal defOverdraftInterestRate = overdraftRateSettings.getDefaultInterestRate();
+			BigDecimal minOverdraftInterestRate = overdraftRateSettings.getMinInterestRate();
 			BigDecimal maxOverdraftInterestRate = overdraftRateSettings.getMaxInterestRate();
 
-			BigDecimal overdraftInterestRate = defOerdraftInterestRate;
-			overdraftInterestRate = (overdraftInterestRate == null && minOerdraftInterestRate != null) ? minOerdraftInterestRate
+			BigDecimal overdraftInterestRate = defOverdraftInterestRate;
+			overdraftInterestRate = (overdraftInterestRate == null && minOverdraftInterestRate != null) ? minOverdraftInterestRate
 					: overdraftInterestRate;
 			overdraftInterestRate = (overdraftInterestRate == null && maxOverdraftInterestRate != null) ? maxOverdraftInterestRate
 					: overdraftInterestRate;

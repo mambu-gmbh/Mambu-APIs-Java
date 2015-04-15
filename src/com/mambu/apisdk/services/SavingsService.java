@@ -451,7 +451,7 @@ public class SavingsService {
 	}
 
 	/****
-	 * Convenience method to reverse transaction for a savings account by providing the original savings transaction
+	 * Reverse transaction for a savings account by providing the original savings transaction
 	 * 
 	 * @param originalTransaction
 	 *            The following transactions can be reversed: DEPOSIT, WITHDRAWAL and TRANSFER. Mandatory.
