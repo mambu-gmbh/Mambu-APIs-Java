@@ -41,6 +41,33 @@ public class ServiceHelper {
 	 * @return params
 	 */
 	// TODO: when MBU-7042 is fixed - add additional branchId, centreId and centreId filtering params
+	public static ParamsMap makeParamsForGetByCustomView(String customViewKey) {
+
+		// Verify that the customViewKey is not null or empty
+		if (customViewKey == null || customViewKey.trim().isEmpty()) {
+			throw new IllegalArgumentException("customViewKey must not be null or empty");
+		}
+
+		ParamsMap params = new ParamsMap();
+		params.addParam(APIData.VIEW_FILTER, customViewKey);
+
+		return params;
+
+	}
+	
+	/**
+	 * Validate Input params and make ParamsMap for GET Mambu entities for a custom view API requests
+	 * 
+	 * @param customViewKey
+	 *            the encoded key of the Custom View to filter entities
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null the must be an integer greater than zero
+	 * 
+	 * @return params
+	 */
+	// TODO: when MBU-7042 is fixed - add additional branchId, centreId and centreId filtering params
 	public static ParamsMap makeParamsForGetByCustomView(String customViewKey, String offset, String limit) {
 
 		// Verify that the customViewKey is not null or empty

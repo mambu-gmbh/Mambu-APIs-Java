@@ -478,6 +478,24 @@ public class LoansService {
 
 		return serviceExecutor.execute(getAccountTransactions, accountId, paramsMap);
 	}
+	
+	/**
+	 * Requests a list of loan transactions for a custom view, limited by offset/limit
+	 * 
+	 * @param customViewKey
+	 *            the key of the Custom View to filter loan transactions
+	 *            
+	 * @return the list of Mambu loan transactions
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<LoanTransaction> getLoanTransactionsByCustomView(String customViewKey)
+			throws MambuApiException {
+		// Example GET loan/transactions?viewfilter=123
+		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey);
+		return serviceExecutor.execute(getAllLoanTransactions, params);
+
+	}
 
 	/**
 	 * Requests a list of loan transactions for a custom view, limited by offset/limit
