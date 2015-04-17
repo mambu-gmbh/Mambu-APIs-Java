@@ -7,7 +7,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -30,15 +29,19 @@ import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.services.UsersService;
-import com.mambu.apisdk.util.APIData;
+import com.mambu.apisdk.util.DateUtils;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomField.DataType;
+import com.mambu.core.shared.model.CustomFieldLink;
+import com.mambu.core.shared.model.CustomFieldLink.LinkType;
+import com.mambu.core.shared.model.CustomFieldSelection;
 import com.mambu.core.shared.model.CustomFieldSet;
 import com.mambu.core.shared.model.CustomFieldSet.Usage;
 import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.core.shared.model.CustomFilterConstraint;
 import com.mambu.core.shared.model.User;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
@@ -415,20 +418,28 @@ public class DemoUtil {
 			break;
 		case SELECTION:
 			// Change selection to any other allowed selection (if more than one is defined)
-			ArrayList<String> values = customField.getValues();
-			for (String selectionValue : values) {
+			// For selection fields use CustomFieldSelection class, available since 3.10, see MBU-7914
+			List<CustomFieldSelection> selectionOptions = customField.getCustomFieldSelectionOptions();
+			if (selectionOptions == null || selectionOptions.size() == 0) {
+				System.out.println("WARNING: Cannot update selection value as no values are now defined for field ID="
+						+ fieldId);
+				newValue = null;
+				break switchloop;
+			}
+			for (CustomFieldSelection option : selectionOptions) {
+				String selectionValue = option.getValue();
 				if (initialValue == null || !initialValue.equalsIgnoreCase(selectionValue)) {
 					newValue = selectionValue;
 					break switchloop;
 				}
 			}
-			System.out.println("WARNING: Cannot update selection value as only one value is defined, Field ID="
+			System.out.println("WARNING: Cannot update selection value as only one value is defined for field ID="
 					+ fieldId);
-			newValue = "";
+			newValue = null;
 			break;
 		case DATE:
 			// return current date as new value
-			newValue = new SimpleDateFormat(APIData.yyyyMmddFormat).format(new Date());
+			newValue = DateUtils.FORMAT.format(new Date());
 			break;
 		}
 		value.setValue(newValue);
@@ -473,17 +484,120 @@ public class DemoUtil {
 	// Make valid test custom field values of a specific type and for the specific entity
 	public static List<CustomFieldValue> makeForEntityCustomFieldValues(CustomField.Type customFieldType,
 			String entityKey) throws MambuApiException {
+		boolean requiredOnly = true;
+
+		return makeForEntityCustomFieldValues(customFieldType, entityKey, requiredOnly);
+	}
+
+	// Make valid test custom field values of a specific type and for the specific entity
+	public static List<CustomFieldValue> makeForEntityCustomFieldValues(CustomField.Type customFieldType,
+			String entityKey, boolean requiredOnly) throws MambuApiException {
 		// Get all for entity custom fields
 		List<CustomField> forEntityCustomFields = getForEntityCustomFields(customFieldType, entityKey);
 		// Make custom field values for these fields with valid values
 		List<CustomFieldValue> customInformation = new ArrayList<CustomFieldValue>();
 
 		for (CustomField field : forEntityCustomFields) {
+			// return only required fields if requested so
+			if (requiredOnly && !field.isRequired(entityKey)) {
+				continue;
+			}
+			//
 			CustomFieldValue fieldValue = makeNewCustomFieldValue(field, null);
 			customInformation.add(fieldValue);
+
 		}
 
 		return customInformation;
+
+	}
+
+	// Helper to log custom field values
+	public static void logCustomFieldValues(List<CustomFieldValue> customFieldValues, String name, String entityId) {
+		System.out.println("\nCustom Field Values for entity " + name + " with id=" + entityId);
+		for (CustomFieldValue fieldValue : customFieldValues) {
+
+			System.out.println("\nCustom Field Name=" + fieldValue.getCustomField().getName() + "\tValue="
+					+ fieldValue.getValue() + "\tAmount=" + fieldValue.getAmount());
+			Integer groupIndex = fieldValue.getCustomFieldSetGroupIndex();
+			if (groupIndex != null) {
+				System.out.println("Group Index=" + groupIndex);
+			}
+
+			CustomField field = fieldValue.getCustomField();
+			logCustomField(field);
+
+		}
+	}
+
+	// Helper to Log Custom Field set details
+	public static void logCustomFieldSet(CustomFieldSet set) {
+		List<CustomField> customFields = set.getCustomFields();
+		System.out.println("\nSet Name=" + set.getName() + "\tType=" + set.getType().toString() + "  Total Fields="
+				+ customFields.size() + "\tUsage=" + set.getUsage());
+		System.out.println("List of fields");
+		for (CustomField field : customFields) {
+			DemoUtil.logCustomField(field);
+		}
+	}
+
+	// Helper to Log CustomField - return field id for any existent active field
+	public static String logCustomField(CustomField field) {
+		if (field == null) {
+			return null;
+		}
+		String activeId = null;
+		System.out.println("Field ID=" + field.getId() + "\tField Name=" + field.getName() + "\tDataType="
+				+ field.getDataType().toString() + "\tIsDefault=" + field.isDefault().toString() + "\tType="
+				+ field.getType().toString() + "\tIs Active=" + !field.isDeactivated());
+
+		// Remember one of the active CustomFields for testing testGetCustomField()
+		if (!field.isDeactivated()) {
+			activeId = field.getId();
+		}
+
+		// As of Mambu 3.9, settings for custom fields are per entity type, see MBU-7034
+		List<CustomFieldLink> links = field.getCustomFieldLinks();
+		if (links == null || links.size() == 0) {
+			System.out.println("Field's CustomFieldLinks are empty");
+			if (links == null) {
+				links = new ArrayList<CustomFieldLink>();
+			}
+		}
+		for (CustomFieldLink link : links) {
+			LinkType linkType = link.getLinkType(); // PRODUCT or CLIENT_ROLE
+			String entityLinkedKey = link.getEntityLinkedKey();
+			boolean isLinkDefault = link.isDefault();
+			boolean isLinkRequired = link.isRequired();
+			System.out.println("Link Data. Type=" + linkType + "\tEntity Key=" + entityLinkedKey + "\tRequired="
+					+ isLinkRequired + "\tDefault=" + isLinkDefault);
+
+			// Test Get field properties for this entity
+			boolean isAvailableForEntity = field.isAvailableForEntity(entityLinkedKey);
+			boolean isRequiredForEntity = field.isRequired(entityLinkedKey);
+			boolean isDefaultForEntity = field.isDefault(entityLinkedKey);
+			System.out.println("Available =" + isAvailableForEntity + "\tRequired=" + isRequiredForEntity
+					+ "\tDefault=" + isDefaultForEntity);
+		}
+		// Log Custom Field selection options and dependencies
+		// Dependent Custom fields are available since 3.10 (see MBU-7914)
+		List<CustomFieldSelection> customFieldSelectionOptions = field.getCustomFieldSelectionOptions();
+		if (customFieldSelectionOptions != null && customFieldSelectionOptions.size() > 0) {
+			for (CustomFieldSelection option : customFieldSelectionOptions) {
+				System.out.println("\nSelection Options:");
+				String value = option.getValue();
+				System.out.println("Value =" + value + "\tKey=" + option.getEncodedKey());
+				CustomFilterConstraint constraint = option.getConstraint();
+				if (constraint != null) {
+					if (!field.isDeactivated()) {
+						activeId = field.getId();
+					}
+					System.out.println("Value =" + value + "\tdepends on field=" + constraint.getCustomFieldKey()
+							+ "\twith valueKey=" + constraint.getValue());
+				}
+			}
+		}
+		return activeId;
 
 	}
 

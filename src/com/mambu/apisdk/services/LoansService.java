@@ -3,6 +3,7 @@
  */
 package com.mambu.apisdk.services;
 
+import java.util.Date;
 import java.util.List;
 
 import com.google.inject.Inject;
@@ -15,6 +16,7 @@ import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
+import com.mambu.apisdk.util.DateUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
@@ -549,6 +551,35 @@ public class LoansService {
 		paramsMap.addParam(TYPE, TYPE_FEE);
 		paramsMap.addParam(AMOUNT, amount);
 		paramsMap.addParam(REPAYMENT_NUMBER, repaymentNumber);
+		paramsMap.addParam(NOTES, notes);
+
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
+	}
+
+	/****
+	 * Apply Interest to a loan account on a given date
+	 * 
+	 * @param accountId
+	 *            the id of the account. Mandatory
+	 * @param date
+	 *            date. Mandatory.
+	 * @param notes
+	 *            notes
+	 * @return Loan Transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public LoanTransaction applyInterestToLoanAccount(String accountId, Date date, String notes)
+			throws MambuApiException {
+		// Example: POST "type=INTEREST_APPLIED&date=2011-09-01" /api/loans/KHGJ593/transactions
+		// Available since Mambu 3.1. See MBU-2938
+
+		if (date == null) {
+			throw new IllegalArgumentException("Date cannot be null");
+		}
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, APIData.TYPE_INTEREST_APPLIED);
+		paramsMap.addParam(APIData.DATE, DateUtils.format(date));
 		paramsMap.addParam(NOTES, notes);
 
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);

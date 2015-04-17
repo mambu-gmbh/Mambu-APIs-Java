@@ -16,6 +16,9 @@ public class DateUtils {
 	public static SimpleDateFormat FORMAT = new SimpleDateFormat(DATE_FORMAT);
 
 	public static String format(Date date) {
+		if (date == null) {
+			return null;
+		}
 		return FORMAT.format(date);
 	}
 }

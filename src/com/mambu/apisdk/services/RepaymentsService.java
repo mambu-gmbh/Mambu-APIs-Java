@@ -59,9 +59,9 @@ public class RepaymentsService {
 	 * @param dueFomString
 	 * @param dueToString
 	 * @param offset
-	 *            pagination offset
+	 *            pagination offset. Has to be >= 0 if not null. If null, Mambu default will be used
 	 * @param limit
-	 *            pagination limit
+	 *            pagination limit. Has to be > 0 if not null. If null, Mambu default will be used
 	 * 
 	 * @return the List of Repayments
 	 * 
@@ -86,9 +86,9 @@ public class RepaymentsService {
 	 *            the id of the loan account limit - last transaction number Note: if offset and limit both equal null,
 	 *            all transactions are returned
 	 * @param offset
-	 *            pagination offset
+	 *            pagination offset. Has to be >= 0 if not null. If null, Mambu default will be used
 	 * @param limit
-	 *            pagination limit
+	 *            pagination limit. Has to be > 0 if not null. If null, Mambu default will be used
 	 * @return the List of Repayments
 	 * 
 	 * @throws MambuApiException

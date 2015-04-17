@@ -1,5 +1,6 @@
 package demo;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -12,10 +13,9 @@ import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.Address;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
-import com.mambu.core.shared.model.CustomFieldLink;
-import com.mambu.core.shared.model.CustomFieldLink.LinkType;
 import com.mambu.core.shared.model.CustomFieldSet;
 import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.core.shared.model.IndexRate;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 
@@ -41,6 +41,8 @@ public class DemoTestOrganizationService {
 		try {
 			demoBranch = DemoUtil.getDemoBranch();
 			demoCentre = DemoUtil.getDemoCentre();
+
+			testPostIndexInterestRate(); // Available since 3.10
 
 			// Available since 3.7
 			testGetTransactionChannels();
@@ -238,7 +240,7 @@ public class DemoTestOrganizationService {
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		// E.g. CustomField.Type.CLIENT_INFO, CustomField.Type.LOAN_ACCOUNT_INFO, etc
-		CustomField.Type customFieldType = CustomField.Type.LOAN_ACCOUNT_INFO;
+		CustomField.Type customFieldType = CustomField.Type.CLIENT_INFO;
 
 		System.out.println("\nIn testGetCustomFieldSetsByType for " + customFieldType);
 
@@ -255,40 +257,7 @@ public class DemoTestOrganizationService {
 					+ customFields.size() + "\tUsage=" + set.getUsage());
 			System.out.println("List of fields");
 			for (CustomField field : customFields) {
-				System.out.println("\nField ID=" + field.getId() + "\tField Name=" + field.getName() + "\tDataType="
-						+ field.getDataType().toString() + "\tIsDefault=" + field.isDefault().toString() + "\tType="
-						+ field.getType().toString() + "\tIs Active=" + !field.isDeactivated());
-
-				// Remember one of the active CustomFields for testing testGetCustomField()
-				if (!field.isDeactivated()) {
-					CUSTOM_FIELD_ID = (CUSTOM_FIELD_ID == null) ? field.getId() : CUSTOM_FIELD_ID;
-				}
-
-				// As of Mambu 3.9, settings for custom fields are per entity type, see MBU-7034
-				List<CustomFieldLink> links = field.getCustomFieldLinks();
-				if (links == null) {
-					System.out.println("Field's CustomFieldLinks are null");
-					continue;
-				}
-				if (links.size() == 0) {
-					System.out.println("Field's CustomFieldLinks are empty");
-					continue;
-				}
-				for (CustomFieldLink link : links) {
-					LinkType linkType = link.getLinkType(); // PRODUCT or CLIENT_ROLE
-					String entityLinkedKey = link.getEntityLinkedKey();
-					boolean isLinkDefault = link.isDefault();
-					boolean isLinkRequired = link.isRequired();
-					System.out.println("Link Data. Type=" + linkType + "\tEntity Key=" + entityLinkedKey
-							+ "\tRequired=" + isLinkRequired + "\tDefault=" + isLinkDefault);
-
-					// Test Get field properties for this entity
-					boolean isAvailableForEntity = field.isAvailableForEntity(entityLinkedKey);
-					boolean isRequiredForEntity = field.isRequired(entityLinkedKey);
-					boolean isDefaultForEntity = field.isDefault(entityLinkedKey);
-					System.out.println("Available =" + isAvailableForEntity + "\tRequired=" + isRequiredForEntity
-							+ "\tDefault=" + isDefaultForEntity);
-				}
+				CUSTOM_FIELD_ID = DemoUtil.logCustomField(field);
 			}
 		}
 		System.out.println();
@@ -331,6 +300,29 @@ public class DemoTestOrganizationService {
 
 		System.out.println("\nDeleting first custom field for a demo Centre...");
 		deleteCustomField(Group.class, customFieldValues);
+
+	}
+
+	// Test Posting Index Interest Rates. Available since 3.10
+	public static void testPostIndexInterestRate() throws MambuApiException {
+		System.out.println("\nIn testPostIndexInterestRate");
+		// Note that there is no API yet to get Index Rate Sources. API developers need to know the rate source key to
+		// post new rates. These keys can be obtained from Mambu. They can also be looked up from the getProduct API
+		// response. See MBU-8059 for more details
+
+		// Encoded key for the Index Interest Rate Source
+		String indexRateSourceKey = "8a6c06384b47afd4014b480624e6003a";
+		int dateOffset = (int) (Math.random() * 30) * 24 * 60 * 60 * 1000; // rate start dates cannot be duplicated. Use
+																			// random offset for each test run
+		Date startDate = new Date(new Date().getTime() + dateOffset);
+		// Create new IndexRate
+		IndexRate indexRate = new IndexRate(startDate, new BigDecimal(3.5));
+
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+		IndexRate indexRateResult = organizationService.postIndexInterestRate(indexRateSourceKey, indexRate);
+
+		System.out.println("Interest Rate updated. New Rate=" + indexRateResult.getRate() + " for source="
+				+ indexRateResult.getRateSource().getName() + " Start date=" + indexRateResult.getStartDate());
 
 	}
 

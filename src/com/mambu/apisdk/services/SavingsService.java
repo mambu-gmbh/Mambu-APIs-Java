@@ -24,6 +24,7 @@ import com.mambu.docs.shared.model.Document;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
 import com.mambu.savings.shared.model.SavingsTransaction;
+import com.mambu.savings.shared.model.SavingsTransactionType;
 
 /**
  * Service class which handles API operations like retrieval, creation or changing state of savings accounts. See full
@@ -39,6 +40,11 @@ public class SavingsService {
 	private static final String TYPE_WITHDRAWAL = APIData.TYPE_WITHDRAWAL;
 	private static final String TYPE_TRANSFER = APIData.TYPE_TRANSFER;
 	private static final String TYPE_FEE = APIData.TYPE_FEE;
+	private static final String TYPE_DEPOSIT_ADJUSTMENT = APIData.TYPE_DEPOSIT_ADJUSTMENT;
+	private static final String TYPE_WITHDRAWAL_ADJUSTMENT = APIData.TYPE_WITHDRAWAL_ADJUSTMENT;
+	private static final String TYPE_TRANSFER_ADJUSTMENT = APIData.TYPE_TRANSFER_ADJUSTMENT;
+
+	private static final String ORIGINAL_TRANSACTION_ID = APIData.ORIGINAL_TRANSACTION_ID;
 
 	private static final String TYPE_APPROVAL = APIData.TYPE_APPROVAL;
 	private static final String TYPE_UNDO_APPROVAL = APIData.TYPE_UNDO_APPROVAL;
@@ -385,6 +391,102 @@ public class SavingsService {
 		paramsMap.addParam(NOTES, notes);
 
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
+	}
+
+	/****
+	 * Reverse savings transactions for a savings account
+	 * 
+	 * @param accountId
+	 *            the id of the savings account. Mandatory
+	 * @param originalTransactionType
+	 *            Original transaction type to be reversed. The following transaction types can be reversed: DEPOSIT,
+	 *            WITHDRAWAL and TRANSFER. Mandatory.
+	 * @param originalTransactionId
+	 *            the id or the encodedKey of the transaction to be reversed. Mandatory
+	 * @param notes
+	 *            transaction notes
+	 * @return Savings Transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public SavingsTransaction reverseSavingsTransaction(String accountId,
+			SavingsTransactionType originalTransactionType, String originalTransactionId, String notes)
+			throws MambuApiException {
+
+		// Available since 3.10. See MBU-7933, MBU-7935, MBU-7936 for more details
+		// Example POST "type=DEPOSIT_ADJUSTMENT&notes=reason&originalTransactionId=123" /api/savings/67/transactions/
+		// Note: When posting reversal transaction to Mambu the required reversal transaction type is supplied by the
+		// wrapper : DEPOSIT_ADJUSTMENT, WITHDRAWAL_ADJUSTMENT or TRANSFER_ADJUSTMENT
+
+		// originalTransactionType is mandatory
+		if (originalTransactionType == null) {
+			throw new IllegalArgumentException("Transaction Type cannot be null");
+		}
+		// originalTransactionId is mandatory
+		if (originalTransactionId == null || originalTransactionId.isEmpty()) {
+			throw new IllegalArgumentException("Original Transaction ID must not be null or empty");
+		}
+		// Get reversal transaction type for the original transaction type
+		String transactionTypeParam;
+		switch (originalTransactionType) {
+		case DEPOSIT:
+			transactionTypeParam = TYPE_DEPOSIT_ADJUSTMENT;
+			break;
+		case WITHDRAWAL:
+			transactionTypeParam = TYPE_WITHDRAWAL_ADJUSTMENT;
+			break;
+		case TRANSFER:
+			transactionTypeParam = TYPE_TRANSFER_ADJUSTMENT;
+			break;
+		default:
+			throw new IllegalArgumentException("Reversal for Savings Transaction Type "
+					+ originalTransactionType.name() + " is not supported");
+		}
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, transactionTypeParam);
+		paramsMap.addParam(ORIGINAL_TRANSACTION_ID, originalTransactionId);
+		paramsMap.addParam(NOTES, notes);
+
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
+	}
+
+	/****
+	 * Reverse transaction for a savings account by providing the original savings transaction
+	 * 
+	 * @param originalTransaction
+	 *            The following transactions can be reversed: DEPOSIT, WITHDRAWAL and TRANSFER. Mandatory.
+	 * @param notes
+	 *            transaction notes
+	 * @return Savings Transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public SavingsTransaction reverseSavingsTransaction(SavingsTransaction originalTransaction, String notes)
+			throws MambuApiException {
+
+		// Available since 3.10. See MBU-7933, MBU-7935, MBU-7936 for more details
+		// Example. POST "type=TYPE_WITHDRAWAL_ADJUSTMENT&notes=reason&originalTransactionId=123"
+		// /api/savings/67/transactions/
+
+		if (originalTransaction == null) {
+			throw new IllegalArgumentException("Original Transaction cannot be null");
+		}
+		// Get original transaction Key from the original transaction. Either encoded key or transaction id can be used
+		String transactionKey = originalTransaction.getEncodedKey();
+		if (transactionKey == null || transactionKey.isEmpty()) {
+			// Try getting the id
+			long transId = originalTransaction.getTransactionId();
+			if (transId == 0) {
+				throw new IllegalArgumentException(
+						"Original Transaction must have either the encoded key or id not null or empty");
+			}
+			transactionKey = String.valueOf(transId);
+		}
+		// Get account id and original transaction type from the original transaction
+		String accountId = originalTransaction.getParentAccountKey();
+		SavingsTransactionType transactionType = originalTransaction.getType();
+
+		return reverseSavingsTransaction(accountId, transactionType, transactionKey, notes);
 	}
 
 	/***

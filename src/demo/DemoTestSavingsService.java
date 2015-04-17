@@ -7,6 +7,7 @@ import java.util.List;
 import com.mambu.accounts.shared.model.Account;
 import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.accounts.shared.model.AccountState;
+import com.mambu.accounts.shared.model.InterestRateSource;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIFactory;
@@ -84,10 +85,18 @@ public class DemoTestSavingsService {
 
 			testGetSavingsAccountsForClient();
 
-			testDepositToSavingsAccount();
-			testWithdrawalFromSavingsAccount();
+			// Test deposit and reversal transactions
+			SavingsTransaction deposiTransaction = testDepositToSavingsAccount();
+			testReverseSavingsAccountTransaction(deposiTransaction); // Available since 3.10
+			testDepositToSavingsAccount(); // Make another deposit after reversal to continue testing
 
-			testTransferFromSavingsAccount();
+			// Test withdrawal and reversal transactions
+			SavingsTransaction withdrawalTransaction = testWithdrawalFromSavingsAccount();
+			testReverseSavingsAccountTransaction(withdrawalTransaction); // Available since 3.10
+
+			// Test transfer and reversal transactions
+			SavingsTransaction transferTransaction = testTransferFromSavingsAccount();
+			testReverseSavingsAccountTransaction(transferTransaction);
 
 			testApplyFeeToSavingsAccount(); // Available since 3.6
 
@@ -178,7 +187,7 @@ public class DemoTestSavingsService {
 	}
 
 	// Make Withdrawal
-	public static void testWithdrawalFromSavingsAccount() throws MambuApiException {
+	public static SavingsTransaction testWithdrawalFromSavingsAccount() throws MambuApiException {
 		System.out.println("\nIn testWithdrawalFromSavingsAccount");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
@@ -191,16 +200,16 @@ public class DemoTestSavingsService {
 
 		SavingsTransaction transaction = savingsService.makeWithdrawal(SAVINGS_ACCOUNT_ID, amount, date, notes,
 				transactionDetails);
-
 		System.out
 				.println("Made Withdrawal from Savings for account with the " + SAVINGS_ACCOUNT_ID + " id:"
 						+ ". Amount=" + transaction.getAmount().toString() + " Balance ="
 						+ transaction.getBalance().toString());
 
+		return transaction;
 	}
 
 	// Deposit
-	public static void testDepositToSavingsAccount() throws MambuApiException {
+	public static SavingsTransaction testDepositToSavingsAccount() throws MambuApiException {
 		System.out.println("\nIn testDepositToSavingsAccount");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
@@ -217,9 +226,10 @@ public class DemoTestSavingsService {
 		System.out.println("Made Deposit To Savings for account with the " + SAVINGS_ACCOUNT_ID + " id:" + ". Amount="
 				+ transaction.getAmount().toString() + " Balance =" + transaction.getBalance().toString());
 
+		return transaction;
 	}
 
-	public static void testTransferFromSavingsAccount() throws MambuApiException {
+	public static SavingsTransaction testTransferFromSavingsAccount() throws MambuApiException {
 		System.out.println("\nIn testTransferFromSavingsAccount");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
@@ -234,8 +244,24 @@ public class DemoTestSavingsService {
 				destinationAccountType, amount, notes);
 
 		System.out.println("Transfer From account:" + SAVINGS_ACCOUNT_ID + "   To account id=" + destinationAccountKey
-				+ " Amount=" + transaction.getAmount().toString() + " Transac Id=" + transaction.getTransactionId());
+				+ " Amount=" + transaction.getAmount().toString() + " Transac Id=" + transaction.getTransactionId()
+				+ "\tBalance=" + transaction.getBalance());
 
+		return transaction;
+	}
+
+	// Test Reversing savings transaction. Available since 3.10 for Deposit, Withdrawal and Transfer transactions
+	public static void testReverseSavingsAccountTransaction(SavingsTransaction transaction) throws MambuApiException {
+		System.out.println("\nIn testReverseSavingsAccountTransaction");
+
+		SavingsService savingsService = MambuAPIFactory.getSavingsService();
+
+		String notes = "Reversed by Demo API";
+		SavingsTransaction reversed = savingsService.reverseSavingsTransaction(transaction, notes);
+
+		System.out.println("Reversed Transaction=" + transaction.getType() + "\tReversed Amount="
+				+ reversed.getAmount().toString() + "\tBalance =" + reversed.getBalance().toString()
+				+ "Transaction Type=" + reversed.getType() + "\tAccount key=" + reversed.getParentAccountKey());
 	}
 
 	// Apply Arbitrary Fee. Available since 3.6
@@ -601,29 +627,52 @@ public class DemoTestSavingsService {
 		// Overdraft params
 		if (demoSavingsProduct.isAllowOverdraft()) {
 			// Set Overdraft Amount
+			savingsAccount.setAllowOverdraft(true);
 			Money maxOverdraftLimit = demoSavingsProduct.getMaxOverdraftLimitMoney();
 			maxOverdraftLimit = (maxOverdraftLimit != null) ? maxOverdraftLimit : new Money(120.00);
-			savingsAccount.setOverdraftAmount(maxOverdraftLimit);
+			savingsAccount.setOverdraftLimitMoney(maxOverdraftLimit);
 			// Set Overdraft Interest rate
-			InterestRateSettings overDraftRateSettings = demoSavingsProduct.getOverdraftInterestRateSettings();
+			InterestRateSettings overdraftRateSettings = demoSavingsProduct.getOverdraftInterestRateSettings();
+			if (overdraftRateSettings == null) {
+				overdraftRateSettings = new InterestRateSettings();
+			}
+			InterestRateSource rateSource = overdraftRateSettings.getInterestRateSource();
 
-			BigDecimal minOerdraftInterestRate = (overDraftRateSettings == null) ? null : overDraftRateSettings
-					.getMinInterestRate();
-			BigDecimal maxOverdraftInterestRate = (overDraftRateSettings == null) ? null : overDraftRateSettings
-					.getMaxInterestRate();
-			BigDecimal overdraftInterestRate = (minOerdraftInterestRate != null) ? minOerdraftInterestRate : null;
-			overdraftInterestRate = (overdraftInterestRate != null && maxOverdraftInterestRate != null) ? maxOverdraftInterestRate
+			BigDecimal defOverdraftInterestRate = overdraftRateSettings.getDefaultInterestRate();
+			BigDecimal minOverdraftInterestRate = overdraftRateSettings.getMinInterestRate();
+			BigDecimal maxOverdraftInterestRate = overdraftRateSettings.getMaxInterestRate();
+
+			BigDecimal overdraftInterestRate = defOverdraftInterestRate;
+			overdraftInterestRate = (overdraftInterestRate == null && minOverdraftInterestRate != null) ? minOverdraftInterestRate
 					: overdraftInterestRate;
-			savingsAccount.setOverdraftInterestRate(overdraftInterestRate);
+			overdraftInterestRate = (overdraftInterestRate == null && maxOverdraftInterestRate != null) ? maxOverdraftInterestRate
+					: overdraftInterestRate;
+			if (rateSource == InterestRateSource.INDEX_INTEREST_RATE) {
+				savingsAccount.setOverdraftInterestSpread(overdraftInterestRate);
+			} else {
+				savingsAccount.setOverdraftInterestRate(overdraftInterestRate);
+			}
 			if (overdraftInterestRate != null) {
 				savingsAccount.setOverdraftExpiryDate(new Date(new Date().getTime() + hundredDays));
 			}
+			savingsAccount.setOverdraftInterestRateSource(rateSource);
+			savingsAccount.setOverdraftInterestRateReviewCount(overdraftRateSettings.getInterestRateReviewCount());
+			savingsAccount.setOverdraftInterestRateReviewUnit(overdraftRateSettings.getInterestRateReviewUnit());
 		}
 
 		if (savingsType == SavingsType.SAVINGS_PLAN) {
 			savingsAccount.setTargetAmount(new BigDecimal(1000000.00));
 		}
-		savingsAccount.setNotes("Created by DemoTest on " + new Date());
+		// Provide Tax Source. Available since 3.10. See MBU-8070- "As a Developer, I need to post savings accounts
+		// linked to a tax source"
+		if (demoSavingsProduct.hasWithholdingTaxEnabled()) {
+			// Need to obtain withholdingTaxSourceKey from Mambu. For example, create an account with a tax source in
+			// Mambu and get its full details to obtain withholdingTaxSourceKey
+			String withholdingTaxSourceKey = "8a8497464c2e0b01014c2e2337290030";
+			savingsAccount.setWithholdingTaxSourceKey(withholdingTaxSourceKey);
+		}
+
+		savingsAccount.setNotes("Created by API on " + new Date());
 		return savingsAccount;
 	}
 
