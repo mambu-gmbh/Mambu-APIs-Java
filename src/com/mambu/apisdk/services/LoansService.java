@@ -48,7 +48,6 @@ public class LoansService {
 	private static final String TYPE_DISBURSMENT = APIData.TYPE_DISBURSMENT;
 	private static final String TYPE_APPROVAL = APIData.TYPE_APPROVAL;
 	private static final String TYPE_UNDO_APPROVAL = APIData.TYPE_UNDO_APPROVAL;
-	private static final String TYPE_REJECT = APIData.TYPE_REJECT;
 	private static final String TYPE_FEE = APIData.TYPE_FEE;
 	private static final String TYPE_LOCK = APIData.TYPE_LOCK;
 	private static final String TYPE_UNLOCK = APIData.TYPE_UNLOCK;
@@ -283,9 +282,52 @@ public class LoansService {
 	 */
 	public LoanAccount rejectLoanAccount(String accountId, String notes) throws MambuApiException {
 		// E.g. format: POST "type=REJECT" /api/loans/KHGJ593/transactions
+		return closeLoanAccount(accountId, APIData.CLOSER_TYPE.REJECT, notes);
+	}
 
+	/****
+	 * Withdraw (close) loan account if the user has permission to withdraw loan accounts.
+	 * 
+	 * @param accountId
+	 *            the id of the account
+	 * @param notes
+	 *            the reason why the account was withdrawn
+	 * 
+	 * @return LoanAccount
+	 * 
+	 * @throws MambuApiException
+	 */
+	public LoanAccount withdrawLoanAccount(String accountId, String notes) throws MambuApiException {
+		// E.g. format: POST "type=WITHDRAW" /api/loans/KHGJ593/transactions
+		// Available since Mambu 3.3. See MBU-3090
+		return closeLoanAccount(accountId, APIData.CLOSER_TYPE.WITHDRAW, notes);
+	}
+
+	/****
+	 * Close Loan account specifying the type of closer (withdraw or reject)
+	 * 
+	 * @param accountId
+	 *            the id of the account to withdraw
+	 * 
+	 * @param closerType
+	 *            type of closer (withdraw or reject)
+	 * @param notes
+	 *            closer reason notes
+	 * @return loan account
+	 * 
+	 * @throws MambuApiException
+	 */
+
+	public LoanAccount closeLoanAccount(String accountId, APIData.CLOSER_TYPE closerType, String notes)
+			throws MambuApiException {
+		// E.g. POST "type=WITHDRAW" /api/loans/KHGJ593/transactions
+		// or POST "type=REJECT" /api/loans/KHGJ593/transactions
+		// Available since Mambu 3.3 See MBU-MBU-3090 for details.
+		if (closerType == null) {
+			throw new IllegalArgumentException("Closer Type must not  be null");
+		}
 		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.addParam(TYPE, TYPE_REJECT);
+		paramsMap.addParam(TYPE, closerType.name());
 		paramsMap.addParam(NOTES, notes);
 
 		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
