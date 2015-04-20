@@ -15,6 +15,7 @@ import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.services.LoansService;
+import com.mambu.apisdk.util.APIData.CLOSER_TYPE;
 import com.mambu.apisdk.util.DateUtils;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
@@ -78,7 +79,7 @@ public class DemoTestLoanService {
 
 			// Test Reject transactions first
 			testPatchLoanAccountTerms(); // Available since 3.9.3
-			testRejectLoanAccount();
+			testCloseLoanAccount(); // Available since 3.3
 			testDeleteLoanAccount();
 
 			testCreateJsonAccount();
@@ -456,11 +457,14 @@ public class DemoTestLoanService {
 				+ account.getLoanName() + "  Account State=" + account.getState().toString());
 	}
 
-	public static void testRejectLoanAccount() throws MambuApiException {
-		System.out.println("\nIn test Reject LoanAccount");
+	public static void testCloseLoanAccount() throws MambuApiException {
+		System.out.println("\nIn test Close LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		LoanAccount account = loanService.rejectLoanAccount(NEW_LOAN_ACCOUNT_ID, "some demo notes ', \" ü = : \n as");
+		// CLose as REJECT or WITHDRAW
+		CLOSER_TYPE closerType = CLOSER_TYPE.WITHDRAW; // or CLOSER_TYPE.REJECT
+		LoanAccount account = loanService.closeLoanAccount(NEW_LOAN_ACCOUNT_ID, closerType,
+				"some demo notes ', \" ü = : \n as");
 
 		System.out.println("Rejecting loan account with the " + NEW_LOAN_ACCOUNT_ID + " Loan name"
 				+ account.getLoanName() + "  Account State=" + account.getState().toString());

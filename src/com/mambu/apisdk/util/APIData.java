@@ -53,7 +53,6 @@ public class APIData {
 	public static final String DISBURSMENT_ADJUSTMENT = "DISBURSMENT_ADJUSTMENT"; // added in 3.9
 	public static final String TYPE_APPROVAL = "APPROVAL";
 	public static final String TYPE_UNDO_APPROVAL = "UNDO_APPROVAL";
-	public static final String TYPE_REJECT = "REJECT";
 	public static final String TYPE_FEE = "FEE";
 	public static final String TYPE_DEPOSIT = "DEPOSIT";
 	public static final String TYPE_WITHDRAWAL = "WITHDRAWAL";
