@@ -19,6 +19,7 @@ import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.GroupExpanded;
 import com.mambu.clients.shared.model.GroupRoleName;
+import com.mambu.clients.shared.model.IdentificationDocumentTemplate;
 import com.mambu.core.shared.model.ClientRole;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
@@ -236,7 +237,6 @@ public class ApiDefinition {
 	// API return format. Specified in the ApiType but can be modified
 	private ApiReturnFormat returnFormat;
 
-	private Class<?> entityClass;
 	// The class of the object returned by Mambu
 	private Class<?> returnClass;
 	// Date time format for the output JSON strings. Mambu supports ISO-8601 "yyyy-MM-dd'T'HH:mm:ssZ". This is the
@@ -269,6 +269,27 @@ public class ApiDefinition {
 	public ApiDefinition(ApiType apiType, Class<?> entityClass, Class<?> resultClass) {
 		this.relatedEntity = null; // the related entity name to be determined by the specified resultClass
 		initDefintion(apiType, entityClass, resultClass);
+	}
+
+	/**
+	 * Constructor used with ApiType requests for which two api endpoints need to be specified and the api returns
+	 * related entity associated with the second endpoint. Example GET api/settings/iddocumenttemplates, GET
+	 * api/loans/transactions
+	 * 
+	 * This constructor accepts the first api endpoint as a string but otherwise is identical to the {@link
+	 * ApiDefinition(ApiType apiType, Class<?> entityClass, Class<?> resultClass)}. This constructor can be used in
+	 * cased when there is no Mambu class to map to the api endpoint. Example GET settings/iddocumenttemplates.
+	 * 
+	 * @param apiEndPoint
+	 *            determines API's endpoint string directly . E.g "settings" as in /api/settings
+	 * @param resultClass
+	 *            determines the entity to be retrieved. E.g. Organization in the API calls GET api/setting/organization
+	 */
+
+	public ApiDefinition(ApiType apiType, String apiEndPoint, Class<?> resultClass) {
+		this.relatedEntity = null; // the related entity name to be determined by the specified resultClass
+		this.endPoint = apiEndPoint; // api endpoint string
+		initDefintion(apiType, null, resultClass);
 	}
 
 	/**
@@ -309,25 +330,26 @@ public class ApiDefinition {
 			throw new IllegalArgumentException("apiType must not be null");
 		}
 
-		if (entityClass == null) {
-			throw new IllegalArgumentException("entityClass must not be null");
-		}
 		this.apiType = apiType;
-		this.entityClass = entityClass;
 		this.contentType = apiType.getContentType();
 		this.method = apiType.getMethod();
 
 		// Get defaults from the ApiType
 		returnFormat = apiType.getApiReturnFormat();
 
-		// Get the end point for the entityClass
-		this.endPoint = getApiEndPoint(entityClass);
+		// Get the end point. It can be specified directly or derived from an entityClass
+		if (endPoint == null) {
+			this.endPoint = getApiEndPoint(entityClass);
+		}
 
 		switch (apiType) {
 		case GET_ENTITY:
 		case GET_ENTITY_DETAILS:
 		case GET_LIST:
 		case CREATE_FORM_ENTITY:
+			if (entityClass == null) {
+				throw new IllegalArgumentException("entityClass must not be null for " + apiType.name());
+			}
 			returnClass = entityClass;
 			break;
 		case CREATE_JSON_ENTITY:
@@ -338,6 +360,10 @@ public class ApiDefinition {
 			// But when creating a Document, JSONDocument is the input but the result class must be specified as
 			// Document
 			returnClass = (resultClass != null) ? resultClass : entityClass;
+			if (returnClass == null) {
+				throw new IllegalArgumentException("Either entityClass or Result class must not be null for "
+						+ apiType.name());
+			}
 			break;
 		case GET_OWNED_ENTITY:
 		case GET_OWNED_ENTITIES:
@@ -451,7 +477,8 @@ public class ApiDefinition {
 		// Index interest sources
 		apiEndPointsMap.put(IndexRateSource.class, APIData.INDEXRATESOURCES);
 		apiEndPointsMap.put(IndexRate.class, APIData.INDEXRATES);
-
+		// Identification Document Template
+		apiEndPointsMap.put(IdentificationDocumentTemplate.class, APIData.ID_DOCUMENT_TEMPLATES);
 	}
 
 	// Get an Api endpoint for a Mambu class
@@ -498,10 +525,6 @@ public class ApiDefinition {
 
 	public boolean getWithFullDetails() {
 		return apiType.isWithFullDetails();
-	}
-
-	public Class<?> getEntityClass() {
-		return entityClass;
 	}
 
 	public Class<?> getReturnClass() {
