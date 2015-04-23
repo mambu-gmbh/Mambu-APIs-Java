@@ -71,7 +71,7 @@ public class OrganizationService {
 	private final static ApiDefinition postIndexInterestRate = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
 			IndexRateSource.class, IndexRate.class);
 	// Get Identification Document Templates defined for an organization. Specify endpoint directly as APIData.SETTINGS
-	private final static ApiDefinition getDocumentTemapltes = new ApiDefinition(ApiType.GET_RELATED_ENTITIES,
+	private final static ApiDefinition getDocumentTemplates = new ApiDefinition(ApiType.GET_RELATED_ENTITIES,
 			APIData.SETTINGS, IdentificationDocumentTemplate.class);
 
 	/***
@@ -344,6 +344,6 @@ public class OrganizationService {
 	public List<IdentificationDocumentTemplate> getIdentificationDocumentTemplates() throws MambuApiException {
 		// Example: GET /api/settings/iddocumenttemplates
 		// Available since 3.10.5. See MBU-8780
-		return serviceExecutor.execute(getDocumentTemapltes);
+		return serviceExecutor.execute(getDocumentTemplates);
 	}
 }
