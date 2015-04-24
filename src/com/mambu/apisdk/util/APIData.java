@@ -192,6 +192,11 @@ public class APIData {
 	public static String BIRTH_DATE = "birthdate";
 	public static String ID_DOCUMENT = "idDocument";
 
+	// Api endpoint for Organisational Settings. Available since 3.10.5
+	public static String SETTINGS = "settings";
+	// Api endpoint for ID Document Templates. Available since 3.10.5
+	public static String ID_DOCUMENT_TEMPLATES = "iddocumenttemplates";
+
 	// Added to support Json object creation API
 	public static String yyyyMmddFormat = DateUtils.DATE_FORMAT;// ISO_8601_FORMAT_DATE "yyyy-MM-dd";
 	public static String JSON_OBJECT = "JSON";

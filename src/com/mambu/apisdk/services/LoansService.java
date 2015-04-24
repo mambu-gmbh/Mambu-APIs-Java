@@ -172,6 +172,7 @@ public class LoansService {
 		return serviceExecutor.execute(getAccountsForGroup, groupId);
 	}
 
+	// TODO: Support Posting transactions in JSON. See MBU-3076. API documentation now allows for JSON transactions
 	/****
 	 * Approve a loan account if the user has permission to approve loans, the maximum exposure is not exceeded for the
 	 * client, the account was in Pending Approval state and if the number of loans is not exceeded
@@ -272,7 +273,7 @@ public class LoansService {
 	 * Reject a loan account if the user has permission to reject loan accounts.
 	 * 
 	 * @param accountId
-	 *            the id of the account
+	 *            the id of the account. Mandatory
 	 * @param notes
 	 *            the reason why the account was reject
 	 * 
@@ -289,7 +290,7 @@ public class LoansService {
 	 * Withdraw (close) loan account if the user has permission to withdraw loan accounts.
 	 * 
 	 * @param accountId
-	 *            the id of the account
+	 *            the id of the account. Mandatory
 	 * @param notes
 	 *            the reason why the account was withdrawn
 	 * 
@@ -307,10 +308,10 @@ public class LoansService {
 	 * Close Loan account specifying the type of closer (withdraw or reject)
 	 * 
 	 * @param accountId
-	 *            the id of the account to withdraw
+	 *            the id of the account to close. Mandatory
 	 * 
 	 * @param closerType
-	 *            type of closer (withdraw or reject)
+	 *            type of closer (withdraw or reject). Mandatory
 	 * @param notes
 	 *            closer reason notes
 	 * @return loan account
@@ -322,7 +323,7 @@ public class LoansService {
 			throws MambuApiException {
 		// E.g. POST "type=WITHDRAW" /api/loans/KHGJ593/transactions
 		// or POST "type=REJECT" /api/loans/KHGJ593/transactions
-		// Available since Mambu 3.3 See MBU-MBU-3090 for details.
+		// Available since Mambu 3.3 See MBU-3090 for details.
 		if (closerType == null) {
 			throw new IllegalArgumentException("Closer Type must not  be null");
 		}

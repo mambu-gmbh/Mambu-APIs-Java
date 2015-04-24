@@ -10,6 +10,7 @@ import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.clients.shared.model.Group;
+import com.mambu.clients.shared.model.IdentificationDocumentTemplate;
 import com.mambu.core.shared.model.Address;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
@@ -44,8 +45,7 @@ public class DemoTestOrganizationService {
 
 			testPostIndexInterestRate(); // Available since 3.10
 
-			// Available since 3.7
-			testGetTransactionChannels();
+			testGetTransactionChannels(); // Available since 3.7
 
 			testGetAllBranches();
 
@@ -64,8 +64,9 @@ public class DemoTestOrganizationService {
 
 			testGetBranch();
 
-			// Available since 3.8
-			testUpdateDeleteCustomFields();
+			testUpdateDeleteCustomFields(); // Available since 3.8
+
+			testGetDocumentTemplates(); // Available since 3.10.5
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Organization Service");
@@ -370,6 +371,24 @@ public class DemoTestOrganizationService {
 		}
 
 		return customFieldValues;
+	}
+
+	// Test getting Identification Document Templates
+	public static void testGetDocumentTemplates() throws MambuApiException {
+		System.out.println("\nIn testGetDocumentTemplates");
+
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+		List<IdentificationDocumentTemplate> templates = organizationService.getIdentificationDocumentTemplates();
+
+		System.out.println("Total Templates Returned=" + templates.size());
+		// Print templates details
+		for (IdentificationDocumentTemplate template : templates) {
+			System.out.println("Template=" + template.getDocumentIdTemplate() + "\tType=" + template.getDocumentType()
+					+ "\tAuthority=" + template.getIssuingAuthority() + "\tIs Mandatory="
+					+ template.getMandatoryForClients() + "\tAllow Attachments=" + template.getAllowAttachments()
+					+ "\tKey=" + template.getEncodedKey());
+
+		}
 	}
 
 	// Private helper to Delete the first custom field for a client or group

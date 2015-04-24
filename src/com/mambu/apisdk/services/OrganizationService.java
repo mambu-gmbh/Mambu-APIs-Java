@@ -17,6 +17,7 @@ import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
+import com.mambu.clients.shared.model.IdentificationDocumentTemplate;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
@@ -69,6 +70,9 @@ public class OrganizationService {
 	// Post Index Interest Rate
 	private final static ApiDefinition postIndexInterestRate = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
 			IndexRateSource.class, IndexRate.class);
+	// Get Identification Document Templates defined for an organization. Specify endpoint directly as APIData.SETTINGS
+	private final static ApiDefinition getDocumentTemplates = new ApiDefinition(ApiType.GET_RELATED_ENTITIES,
+			APIData.SETTINGS, IdentificationDocumentTemplate.class);
 
 	/***
 	 * Create a new organization service
@@ -327,5 +331,19 @@ public class OrganizationService {
 		postIndexInterestRate.setContentType(ContentType.JSON);
 		postIndexInterestRate.setJsonDateTimeFormat(APIData.yyyyMmddFormat);
 		return serviceExecutor.executeJson(postIndexInterestRate, jsonIndexRate, indexRateSourceKey);
+	}
+
+	/**
+	 * Get all Identification Document Templates
+	 * 
+	 * @return a list of all Identification Document Templates defined for an organization. This API doesn't support
+	 *         pagination.
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<IdentificationDocumentTemplate> getIdentificationDocumentTemplates() throws MambuApiException {
+		// Example: GET /api/settings/iddocumenttemplates
+		// Available since 3.10.5. See MBU-8780
+		return serviceExecutor.execute(getDocumentTemplates);
 	}
 }
