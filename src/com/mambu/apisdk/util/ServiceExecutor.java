@@ -29,6 +29,7 @@ import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
 import com.mambu.core.shared.model.CustomView;
 import com.mambu.core.shared.model.SearchResult;
+import com.mambu.core.shared.model.SearchType;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
 import com.mambu.intelligence.shared.model.Intelligence.Indicator;
@@ -488,8 +489,8 @@ public class ServiceExecutor {
 		// TransactionChannel
 		collectionTypesMap.put(TransactionChannel.class, new TypeToken<List<TransactionChannel>>() {
 		}.getType());
-		// SearchResult. Note Search API returns Map<SearchResult.Type, List<SearchResult>>
-		collectionTypesMap.put(SearchResult.class, new TypeToken<Map<SearchResult.Type, List<SearchResult>>>() {
+		// SearchResult. Note Search API returns Map<SearchType, List<SearchResult>>
+		collectionTypesMap.put(SearchResult.class, new TypeToken<Map<SearchType, List<SearchResult>>>() {
 		}.getType());
 		// Indicator. Note Indicator API returns HashMap<String, String>
 		collectionTypesMap.put(Indicator.class, new TypeToken<HashMap<String, String>>() {

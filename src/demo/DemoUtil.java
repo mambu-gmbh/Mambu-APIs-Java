@@ -34,12 +34,13 @@ import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.CustomField;
-import com.mambu.core.shared.model.CustomField.DataType;
+import com.mambu.core.shared.model.CustomFieldDataType;
 import com.mambu.core.shared.model.CustomFieldLink;
 import com.mambu.core.shared.model.CustomFieldLink.LinkType;
 import com.mambu.core.shared.model.CustomFieldSelection;
 import com.mambu.core.shared.model.CustomFieldSet;
 import com.mambu.core.shared.model.CustomFieldSet.Usage;
+import com.mambu.core.shared.model.CustomFieldType;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.CustomFilterConstraint;
 import com.mambu.core.shared.model.User;
@@ -397,12 +398,13 @@ public class DemoUtil {
 			return new CustomFieldValue();
 		}
 		String fieldId = customField.getId();
-		DataType fieldType = customField.getDataType();
+		CustomFieldDataType fieldType = customField.getDataType();
 
 		CustomFieldValue value = new CustomFieldValue();
 		value.setCustomFieldId(customField.getId());
 
 		String newValue = null;
+		// TODO: add dealing with new in 3.11 CustomFieldDataType enums; CLIENT_LINK, GROUP_LINK
 		switchloop: switch (fieldType) {
 		case STRING:
 			// Set demo string with the current date
@@ -447,7 +449,7 @@ public class DemoUtil {
 	}
 
 	// Get custom fields of a specific type and for the specific entity
-	public static List<CustomField> getForEntityCustomFields(CustomField.Type customFieldType, String entityKey)
+	public static List<CustomField> getForEntityCustomFields(CustomFieldType customFieldType, String entityKey)
 			throws MambuApiException {
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 		List<CustomFieldSet> sets = organizationService.getCustomFieldSets(customFieldType);
@@ -482,7 +484,7 @@ public class DemoUtil {
 	}
 
 	// Make valid test custom field values of a specific type and for the specific entity
-	public static List<CustomFieldValue> makeForEntityCustomFieldValues(CustomField.Type customFieldType,
+	public static List<CustomFieldValue> makeForEntityCustomFieldValues(CustomFieldType customFieldType,
 			String entityKey) throws MambuApiException {
 		boolean requiredOnly = true;
 
@@ -490,7 +492,7 @@ public class DemoUtil {
 	}
 
 	// Make valid test custom field values of a specific type and for the specific entity
-	public static List<CustomFieldValue> makeForEntityCustomFieldValues(CustomField.Type customFieldType,
+	public static List<CustomFieldValue> makeForEntityCustomFieldValues(CustomFieldType customFieldType,
 			String entityKey, boolean requiredOnly) throws MambuApiException {
 		// Get all for entity custom fields
 		List<CustomField> forEntityCustomFields = getForEntityCustomFields(customFieldType, entityKey);

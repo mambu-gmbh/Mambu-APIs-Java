@@ -9,7 +9,7 @@ import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.SearchService;
 import com.mambu.core.shared.model.SearchResult;
-import com.mambu.core.shared.model.SearchResult.Type;
+import com.mambu.core.shared.model.SearchType;
 
 /**
  * Test class to show example usage of the api calls
@@ -53,7 +53,7 @@ public class DemoTestSearchService {
 
 		Date d1 = new Date();
 
-		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, null, limit);
+		Map<SearchType, List<SearchResult>> results = searchService.search(query, null, limit);
 
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
@@ -71,10 +71,10 @@ public class DemoTestSearchService {
 
 		String query = "i";
 		String limit = "300";
-		List<Type> searchTypes = Arrays.asList(Type.CLIENT, Type.GROUP); // or null
+		List<SearchType> searchTypes = Arrays.asList(SearchType.CLIENT, SearchType.GROUP); // or null
 
 		Date d1 = new Date();
-		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
+		Map<SearchType, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
@@ -93,9 +93,9 @@ public class DemoTestSearchService {
 		String query = "fish";
 		String limit = "100";
 
-		List<Type> searchTypes = Arrays.asList(Type.LOAN_ACCOUNT, Type.SAVINGS_ACCOUNT); // or null
+		List<SearchType> searchTypes = Arrays.asList(SearchType.LOAN_ACCOUNT, SearchType.SAVINGS_ACCOUNT); // or null
 
-		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
+		Map<SearchType, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
 
 		System.out.println("Search Loans/Savings for query=" + query + "\tReturned=" + results.size());
 
@@ -111,11 +111,11 @@ public class DemoTestSearchService {
 		String query = "Map";
 		String limit = "100";
 
-		List<Type> searchTypes = Arrays.asList(Type.USER, Type.BRANCH, Type.CENTRE); // or null
+		List<SearchType> searchTypes = Arrays.asList(SearchType.USER, SearchType.BRANCH, SearchType.CENTRE); // or null
 
 		Date d1 = new Date();
 
-		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
+		Map<SearchType, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
 
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
@@ -138,8 +138,8 @@ public class DemoTestSearchService {
 		// Use different Search Types combinations as needed
 		// List<Type> searchTypes = Arrays.asList(Type.CLIENT, Type.GROUP, Type.LOAN_ACCOUNT, Type.SAVINGS_ACCOUNT,
 		// Type.USER, Type.CENTRE); // or null
-		List<Type> searchTypes = Arrays.asList(Type.CLIENT);
-		Map<SearchResult.Type, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
+		List<SearchType> searchTypes = Arrays.asList(SearchType.CLIENT);
+		Map<SearchType, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
 
 		if (results != null)
 			System.out.println("Searching for query=" + query + "\tTypes Returned=" + results.size());
@@ -149,22 +149,22 @@ public class DemoTestSearchService {
 	}
 
 	// Helper for printing search results
-	private static void logSearchResults(Map<SearchResult.Type, List<SearchResult>> results) {
+	private static void logSearchResults(Map<SearchType, List<SearchResult>> results) {
 
 		if (results == null || results.size() == 0) {
 			System.out.println("No results found");
 			return;
 
 		}
-		for (SearchResult.Type type : results.keySet()) {
+		for (SearchType type : results.keySet()) {
 			List<SearchResult> items = results.get(type);
 			System.out.println("Returned Search Type=" + type.toString() + "  with " + items.size() + "  items:");
 
 			for (SearchResult result : items) {
-				System.out
-						.println("   Type=" + result.getResultType().toString() + " \tId=" + result.getResultID()
-								+ "\tDisplay String=" + result.getDisplayString() + "\tDisplay Text="
-								+ result.getDisplayText());
+				System.out.println("   Type=" + result.getSelectionType() + " \tId=" + result.getSelectionID()
+						+ "\tDisplay String=" + result.getDisplayString() + "\tDisplay Text="
+						+ result.getDisplayString() + "\tKey=" + result.getSelectionKey());
+
 			}
 
 		}

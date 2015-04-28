@@ -16,7 +16,7 @@ import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
-import com.mambu.core.shared.model.CustomField;
+import com.mambu.core.shared.model.CustomFieldType;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.InterestRateSettings;
 import com.mambu.core.shared.model.Money;
@@ -361,7 +361,7 @@ public class DemoTestSavingsService {
 
 		// Add Custom Fields
 		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(
-				CustomField.Type.SAVINGS_ACCOUNT_INFO, demoSavingsProduct.getEncodedKey());
+				CustomFieldType.SAVINGS_ACCOUNT_INFO, demoSavingsProduct.getEncodedKey());
 		//
 
 		JSONSavingsAccount jsonSavingsAccount = new JSONSavingsAccount(savingsAccount);

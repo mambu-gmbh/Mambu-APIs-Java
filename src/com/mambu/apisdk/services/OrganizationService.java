@@ -21,6 +21,7 @@ import com.mambu.clients.shared.model.IdentificationDocumentTemplate;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
+import com.mambu.core.shared.model.CustomFieldType;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.IndexRate;
 import com.mambu.core.shared.model.IndexRateSource;
@@ -201,7 +202,7 @@ public class OrganizationService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public List<CustomFieldSet> getCustomFieldSets(CustomField.Type customFieldType) throws MambuApiException {
+	public List<CustomFieldSet> getCustomFieldSets(CustomFieldType customFieldType) throws MambuApiException {
 
 		ParamsMap params = null;
 		// if customFieldType is null then all types are requested

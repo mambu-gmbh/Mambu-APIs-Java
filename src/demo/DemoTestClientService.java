@@ -29,7 +29,7 @@ import com.mambu.core.shared.model.Address;
 import com.mambu.core.shared.model.ClientRole;
 import com.mambu.core.shared.model.ClientRolePermission;
 import com.mambu.core.shared.model.CustomField;
-import com.mambu.core.shared.model.CustomField.Type;
+import com.mambu.core.shared.model.CustomFieldType;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
@@ -292,8 +292,8 @@ public class DemoTestClientService {
 		idDocs.add(doc);
 		clExpanded.setIdDocuments(idDocs);
 		// Use helper to make test custom fields which are valid for the client's role
-		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(Type.CLIENT_INFO,
-				cientRole.getEncodedKey());
+		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(
+				CustomFieldType.CLIENT_INFO, cientRole.getEncodedKey());
 		// Add All custom fields
 		clExpanded.setCustomFieldValues(clientCustomInformation);
 
@@ -677,8 +677,8 @@ public class DemoTestClientService {
 		// Set Custom Fields
 
 		// Make test custom fields for our group role
-		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(Type.GROUP_INFO,
-				groupType.getEncodedKey());
+		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(
+				CustomFieldType.GROUP_INFO, groupType.getEncodedKey());
 		// Add All custom fields
 		groupDetails.setCustomFieldValues(clientCustomInformation);
 
@@ -795,4 +795,5 @@ public class DemoTestClientService {
 		System.out.println("Group Updated. Name=" + groupExpanded.getGroup().getGroupNameWithId() + "\tName and Id="
 				+ updatedGroupExpaneded.getGroup().getGroupNameWithId());
 	}
+
 }

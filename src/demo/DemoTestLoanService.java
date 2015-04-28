@@ -19,7 +19,7 @@ import com.mambu.apisdk.util.APIData.CLOSER_TYPE;
 import com.mambu.apisdk.util.DateUtils;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
-import com.mambu.core.shared.model.CustomField;
+import com.mambu.core.shared.model.CustomFieldType;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.InterestRateSettings;
 import com.mambu.core.shared.model.LoanPenaltyCalculationMethod;
@@ -176,7 +176,7 @@ public class DemoTestLoanService {
 
 		// Use helper to make test custom fields valid for the account's product
 		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(
-				CustomField.Type.LOAN_ACCOUNT_INFO, demoProduct.getEncodedKey());
+				CustomFieldType.LOAN_ACCOUNT_INFO, demoProduct.getEncodedKey());
 
 		// Create Account Expanded
 		LoanAccountExpanded accountExpanded = new LoanAccountExpanded();

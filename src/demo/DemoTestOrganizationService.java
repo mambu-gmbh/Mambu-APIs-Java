@@ -15,6 +15,7 @@ import com.mambu.core.shared.model.Address;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
+import com.mambu.core.shared.model.CustomFieldType;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.IndexRate;
 import com.mambu.organization.shared.model.Branch;
@@ -40,6 +41,7 @@ public class DemoTestOrganizationService {
 		DemoUtil.setUp();
 
 		try {
+			DemoUtil.getDemoUser();
 			demoBranch = DemoUtil.getDemoBranch();
 			demoCentre = DemoUtil.getDemoCentre();
 
@@ -241,7 +243,7 @@ public class DemoTestOrganizationService {
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		// E.g. CustomField.Type.CLIENT_INFO, CustomField.Type.LOAN_ACCOUNT_INFO, etc
-		CustomField.Type customFieldType = CustomField.Type.CLIENT_INFO;
+		CustomFieldType customFieldType = CustomFieldType.CLIENT_INFO;
 
 		System.out.println("\nIn testGetCustomFieldSetsByType for " + customFieldType);
 
