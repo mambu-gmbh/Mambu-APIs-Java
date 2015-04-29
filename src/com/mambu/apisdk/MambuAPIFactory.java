@@ -8,6 +8,7 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.AccountingService;
 import com.mambu.apisdk.services.ActivitiesService;
 import com.mambu.apisdk.services.ClientsService;
+import com.mambu.apisdk.services.CommentsService;
 import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.services.IntelligenceService;
 import com.mambu.apisdk.services.LoansService;
@@ -216,6 +217,12 @@ public class MambuAPIFactory {
 		validateFactorySetUp();
 		return injector.getInstance(ActivitiesService.class);
 	}
+
+	public static CommentsService getCommentsService() throws MambuApiException {
+		validateFactorySetUp();
+		return injector.getInstance(CommentsService.class);
+	}
+
 	/***
 	 * Setter for an Application Key
 	 * 

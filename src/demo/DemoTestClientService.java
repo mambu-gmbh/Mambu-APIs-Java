@@ -6,8 +6,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 
 import com.mambu.accounts.shared.model.AccountHolderType;
@@ -15,7 +17,9 @@ import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.ClientsService;
+import com.mambu.apisdk.services.CommentsService;
 import com.mambu.apisdk.util.DateUtils;
+import com.mambu.apisdk.util.MambuEntity;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.ClientState;
@@ -28,6 +32,7 @@ import com.mambu.clients.shared.model.IdentificationDocument;
 import com.mambu.core.shared.model.Address;
 import com.mambu.core.shared.model.ClientRole;
 import com.mambu.core.shared.model.ClientRolePermission;
+import com.mambu.core.shared.model.Comment;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldType;
 import com.mambu.core.shared.model.CustomFieldValue;
@@ -63,6 +68,8 @@ public class DemoTestClientService {
 			demoUser = DemoUtil.getDemoUser();
 			demoClient = DemoUtil.getDemoClient();
 			demoGroup = DemoUtil.getDemoGroup();
+
+			testPostGetComments(); // Available since 3.11
 
 			testCreateJsonClient();
 
@@ -796,4 +803,47 @@ public class DemoTestClientService {
 				+ updatedGroupExpaneded.getGroup().getGroupNameWithId());
 	}
 
+	// Test posting comments and getting comments for all supported entities
+	public static void testPostGetComments() throws MambuApiException {
+		System.out.println("\nIn testPostGetComments");
+
+		// Getting Comments for all supported entities
+		CommentsService commentsService = MambuAPIFactory.getCommentsService();
+
+		Set<MambuEntity> supportedEntities = CommentsService.supportedEntities;
+		Iterator<MambuEntity> iterator = supportedEntities.iterator();
+		while (iterator.hasNext()) {
+			// Get Parent's key
+			MambuEntity parentEntity = iterator.next();
+			DemoEntityParams entityParams = DemoEntityParams.getEntityParams(parentEntity);
+			String parentyKey = entityParams.getEncodedKey();
+			String parentName = entityParams.getName();
+
+			System.out.println("Testing Comments for  " + parentEntity + "\tName=" + parentName + "\twith Key="
+					+ parentyKey);
+			// Test Posting comments first to have at least one comment available for the entity to test GET API
+			// Make test comment
+			Comment aComment = new Comment();
+			aComment.setCreationDate(new Date());
+			aComment.setText("Test Comment For " + parentEntity + " " + parentName + " on " + new Date().toString());
+			aComment.setParentKey(parentyKey);
+			aComment.setUserKey(demoUser.getEncodedKey());
+			// Post it
+			commentsService.postComment(parentEntity, parentyKey, aComment);
+
+			// Test GET Comments for this parent
+			Integer offset = 0;
+			Integer limit = 20;
+			// Now Test getting Comments back
+			List<Comment> comments = commentsService.getComments(parentEntity, parentyKey, offset, limit);
+			// Log returned Comments
+			System.out.println("Total comments returned=" + comments.size());
+			for (Comment comment : comments) {
+				System.out.println("Comment=" + comment.getText() + " Parent=" + comment.getParentKey() + " User="
+						+ comment.getUserKey());
+			}
+
+		}
+
+	}
 }

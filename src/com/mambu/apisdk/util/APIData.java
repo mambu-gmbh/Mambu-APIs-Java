@@ -98,6 +98,9 @@ public class APIData {
 	public static final String INDEXRATESOURCES = "indexratesources";
 	public static final String INDEXRATES = "indexrates";
 
+	// Comments (available since 3.11)
+	public static final String COMMENTS = "comments";
+
 	// Tasks
 	public static final String TITLE = "title";
 	public static final String USERNAME = "username";

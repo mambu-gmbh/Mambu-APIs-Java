@@ -21,6 +21,7 @@ import com.mambu.clients.shared.model.GroupExpanded;
 import com.mambu.clients.shared.model.GroupRoleName;
 import com.mambu.clients.shared.model.IdentificationDocumentTemplate;
 import com.mambu.core.shared.model.ClientRole;
+import com.mambu.core.shared.model.Comment;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
@@ -477,6 +478,9 @@ public class ApiDefinition {
 		// Index interest sources
 		apiEndPointsMap.put(IndexRateSource.class, APIData.INDEXRATESOURCES);
 		apiEndPointsMap.put(IndexRate.class, APIData.INDEXRATES);
+		// Comments
+		apiEndPointsMap.put(Comment.class, APIData.COMMENTS);
+		apiEndPointsMap.put(JSONComment.class, APIData.COMMENTS);
 		// Identification Document Template
 		apiEndPointsMap.put(IdentificationDocumentTemplate.class, APIData.ID_DOCUMENT_TEMPLATES);
 	}
