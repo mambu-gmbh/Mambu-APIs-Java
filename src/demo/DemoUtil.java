@@ -329,7 +329,7 @@ public class DemoUtil {
 		LoansService service = MambuAPIFactory.getLoanService();
 		List<LoanAccount> loans = service.getLoanAccountsByBranchOfficerState(null, demoUsername, null, "0", "5");
 
-		if (loans != null) {
+		if (loans != null && loans.size() > 0) {
 			int randomIndex = (int) (Math.random() * (loans.size() - 1));
 			return loans.get(randomIndex);
 		}
@@ -360,12 +360,12 @@ public class DemoUtil {
 		List<SavingsAccount> savings = service.getSavingsAccountsByBranchOfficerState(null, demoUsername, null, "0",
 				"5");
 
-		if (savings != null) {
+		if (savings != null && savings.size() > 0) {
 			int randomIndex = (int) (Math.random() * (savings.size() - 1));
 			return savings.get(randomIndex);
 		}
 
-		System.out.println("getDemoLoanAccount: no Loan Accounts the Demo User exist");
+		System.out.println("getDemoSavingsAccount: no Savings Accounts for the Demo User exist");
 
 		return null;
 	}
@@ -384,16 +384,27 @@ public class DemoUtil {
 		return account;
 	}
 
-	// Make new value for a CustomFieldValue
+	// Make new value for a CustomFieldValue with a known CustomFieldSet
+	public static CustomFieldValue makeNewCustomFieldValue(CustomFieldSet set, CustomFieldValue value) {
+		if (value == null) {
+			return new CustomFieldValue();
+		}
+		return makeNewCustomFieldValue(set, value.getCustomField(), value);
+	}
+
+	// Make new value for a CustomFieldValue when only original value is available
 	public static CustomFieldValue makeNewCustomFieldValue(CustomFieldValue value) {
 		if (value == null) {
 			return new CustomFieldValue();
 		}
-		return makeNewCustomFieldValue(value.getCustomField(), value.getValue());
+		CustomFieldSet set = null;
+		return makeNewCustomFieldValue(set, value.getCustomField(), value);
 	}
 
 	// Helper to create a new, valid test value for a custom field value based on field's data type and initial value
-	public static CustomFieldValue makeNewCustomFieldValue(CustomField customField, String initialValue) {
+	private static CustomFieldValue makeNewCustomFieldValue(CustomFieldSet set, CustomField customField,
+			CustomFieldValue initialField) {
+
 		if (customField == null) {
 			return new CustomFieldValue();
 		}
@@ -402,9 +413,17 @@ public class DemoUtil {
 
 		CustomFieldValue value = new CustomFieldValue();
 		value.setCustomFieldId(customField.getId());
+		// Set group index from current value
+		Integer groupIndex = (initialField == null) ? null : initialField.getCustomFieldSetGroupIndex();
+		value.setCustomFieldSetGroupIndex(groupIndex);
 
+		// For Grouped custom field values we need also to set Group Index. See MBU-7511
+		if (groupIndex == null && set != null && set.getUsage() == Usage.GROUPED) {
+			value.setCustomFieldSetGroupIndex(0);
+		}
+
+		String initialValue = (initialField == null) ? null : initialField.getValue();
 		String newValue = null;
-		// TODO: add dealing with new in 3.11 CustomFieldDataType enums; CLIENT_LINK, GROUP_LINK
 		switchloop: switch (fieldType) {
 		case STRING:
 			// Set demo string with the current date
@@ -443,43 +462,45 @@ public class DemoUtil {
 			// return current date as new value
 			newValue = DateUtils.FORMAT.format(new Date());
 			break;
+		case CLIENT_LINK:
+			try {
+				Client client = getDemoClient();
+				newValue = client.getEncodedKey();
+			} catch (MambuApiException e) {
+				newValue = null;
+			}
+			break;
+		case GROUP_LINK:
+			try {
+				Group group = getDemoGroup();
+				newValue = group.getEncodedKey();
+			} catch (MambuApiException e) {
+				newValue = null;
+			}
+			break;
 		}
 		value.setValue(newValue);
 		return value;
 	}
 
 	// Get custom fields of a specific type and for the specific entity
-	public static List<CustomField> getForEntityCustomFields(CustomFieldType customFieldType, String entityKey)
+	public static List<CustomField> getForEntityCustomFields(CustomFieldSet set, String entityKey)
 			throws MambuApiException {
-		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
-		List<CustomFieldSet> sets = organizationService.getCustomFieldSets(customFieldType);
-		if (sets == null || sets.size() == 0) {
-			System.out.println("No Custom Field Sets found for type=" + customFieldType);
-			return new ArrayList<CustomField>();
-		}
 
 		List<CustomField> customFields = new ArrayList<CustomField>();
-		for (CustomFieldSet set : sets) {
-			// TODO: remove this check when support for Grouped Custom fields is implemented, see MBU-7511
-			if (set.getUsage() == Usage.GROUPED) {
-				System.out.println("Skipping using set " + set.getName()
-						+ ". GROUPED sets are not supported by API yet");
-				continue;
-			}
-			// get required and default custom fields for the specified entity key
-			List<CustomField> fields = set.getCustomFields();
-			if (fields == null || fields.size() == 0) {
-				continue;
-			}
-			for (CustomField field : fields) {
-				if (!field.isAvailableForEntity(entityKey) || field.isDeactivated()) {
-					continue;
-				}
-				// Add this field
-				customFields.add(field);
-
-			}
+		// get required and default custom fields for the specified entity key
+		List<CustomField> fields = set.getCustomFields();
+		if (fields == null || fields.size() == 0) {
+			return customFields;
 		}
+		for (CustomField field : fields) {
+			if (!field.isAvailableForEntity(entityKey) || field.isDeactivated()) {
+				continue;
+			}
+			// Add this field
+			customFields.add(field);
+		}
+
 		return customFields;
 	}
 
@@ -494,23 +515,36 @@ public class DemoUtil {
 	// Make valid test custom field values of a specific type and for the specific entity
 	public static List<CustomFieldValue> makeForEntityCustomFieldValues(CustomFieldType customFieldType,
 			String entityKey, boolean requiredOnly) throws MambuApiException {
-		// Get all for entity custom fields
-		List<CustomField> forEntityCustomFields = getForEntityCustomFields(customFieldType, entityKey);
-		// Make custom field values for these fields with valid values
-		List<CustomFieldValue> customInformation = new ArrayList<CustomFieldValue>();
 
-		for (CustomField field : forEntityCustomFields) {
-			// return only required fields if requested so
-			if (requiredOnly && !field.isRequired(entityKey)) {
-				continue;
+		List<CustomFieldValue> customFieldValues = new ArrayList<CustomFieldValue>();
+		// Get all Custom Field sets
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+		List<CustomFieldSet> sets = organizationService.getCustomFieldSets(customFieldType);
+
+		if (sets == null || sets.size() == 0) {
+			System.out.println("No Custom Field Sets found for type=" + customFieldType);
+			return customFieldValues;
+		}
+		// Process each set
+		for (CustomFieldSet set : sets) {
+			List<CustomField> forEntityCustomFields = getForEntityCustomFields(set, entityKey);
+			List<CustomFieldValue> customInformation = new ArrayList<CustomFieldValue>();
+
+			for (CustomField field : forEntityCustomFields) {
+				// return only required fields if requested so
+				if (requiredOnly && !field.isRequired(entityKey)) {
+					continue;
+				}
+				//
+				CustomFieldValue fieldValue = makeNewCustomFieldValue(set, field, null);
+				customInformation.add(fieldValue);
+
 			}
-			//
-			CustomFieldValue fieldValue = makeNewCustomFieldValue(field, null);
-			customInformation.add(fieldValue);
+			customFieldValues.addAll(customInformation);
 
 		}
 
-		return customInformation;
+		return customFieldValues;
 
 	}
 
