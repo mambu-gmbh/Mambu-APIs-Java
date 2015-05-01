@@ -423,7 +423,8 @@ public class DemoUtil {
 		}
 
 		String initialValue = (initialField == null) ? null : initialField.getValue();
-		String newValue = null;
+		String newValue = null; // custom field value
+		String linkedValue = null; // linked value
 		switchloop: switch (fieldType) {
 		case STRING:
 			// Set demo string with the current date
@@ -465,21 +466,22 @@ public class DemoUtil {
 		case CLIENT_LINK:
 			try {
 				Client client = getDemoClient();
-				newValue = client.getEncodedKey();
+				linkedValue = client.getEncodedKey();
 			} catch (MambuApiException e) {
-				newValue = null;
+				linkedValue = null;
 			}
 			break;
 		case GROUP_LINK:
 			try {
 				Group group = getDemoGroup();
-				newValue = group.getEncodedKey();
+				linkedValue = group.getEncodedKey();
 			} catch (MambuApiException e) {
-				newValue = null;
+				linkedValue = null;
 			}
 			break;
 		}
 		value.setValue(newValue);
+		value.setLinkedEntityKeyValue(linkedValue);
 		return value;
 	}
 
