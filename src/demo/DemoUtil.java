@@ -554,7 +554,8 @@ public class DemoUtil {
 		for (CustomFieldValue fieldValue : customFieldValues) {
 
 			System.out.println("\nCustom Field Name=" + fieldValue.getCustomField().getName() + "\tValue="
-					+ fieldValue.getValue() + "\tAmount=" + fieldValue.getAmount());
+					+ fieldValue.getValue() + "\tAmount=" + fieldValue.getAmount() + "\tLinked Entity Key="
+					+ fieldValue.getLinkedEntityKeyValue());
 			Integer groupIndex = fieldValue.getCustomFieldSetGroupIndex();
 			if (groupIndex != null) {
 				System.out.println("Group Index=" + groupIndex);
