@@ -22,6 +22,7 @@ import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.GroupExpanded;
 import com.mambu.clients.shared.model.GroupRoleName;
+import com.mambu.clients.shared.model.IdentificationDocumentTemplate;
 import com.mambu.core.shared.model.ClientRole;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
@@ -499,6 +500,10 @@ public class ServiceExecutor {
 		// Group Role
 		collectionTypesMap.put(GroupRoleName.class, new TypeToken<List<GroupRoleName>>() {
 		}.getType());
+		// IdentificationDocumentTemplate
+		collectionTypesMap.put(IdentificationDocumentTemplate.class,
+				new TypeToken<List<IdentificationDocumentTemplate>>() {
+				}.getType());
 	}
 
 	//
