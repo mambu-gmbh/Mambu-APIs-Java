@@ -30,6 +30,7 @@ import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
 import com.mambu.core.shared.model.CustomView;
+import com.mambu.core.shared.model.ObjectLabel;
 import com.mambu.core.shared.model.SearchResult;
 import com.mambu.core.shared.model.SearchType;
 import com.mambu.core.shared.model.User;
@@ -342,7 +343,13 @@ public class ServiceExecutor {
 			throw new IllegalArgumentException("Api definition cannot be null");
 		}
 		// Get the API's end point
-		String urlPath = apiDefinition.getEndPoint();
+		String urlPath = apiDefinition.getUrlPath();
+		if (urlPath != null) {
+			// We have URL path provided
+			return mambuAPIService.createUrl(urlPath);
+		}
+		// Make URL path from the Api Definition
+		urlPath = apiDefinition.getEndPoint();
 
 		// Build URL path as per definition pattern
 		// For APIs requiring an object ID, add object id's value after the api's end point
@@ -510,7 +517,9 @@ public class ServiceExecutor {
 		collectionTypesMap.put(IdentificationDocumentTemplate.class,
 				new TypeToken<List<IdentificationDocumentTemplate>>() {
 				}.getType());
-
+		// Object Labels
+		collectionTypesMap.put(ObjectLabel.class, new TypeToken<List<ObjectLabel>>() {
+		}.getType());
 	}
 
 	//

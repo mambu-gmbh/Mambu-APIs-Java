@@ -7,6 +7,7 @@ import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.accounting.shared.model.GLJournalEntry;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
+import com.mambu.api.server.handler.coments.model.JSONComment;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
@@ -27,9 +28,12 @@ import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.CustomView;
+import com.mambu.core.shared.model.GeneralSettings;
 import com.mambu.core.shared.model.Image;
 import com.mambu.core.shared.model.IndexRate;
 import com.mambu.core.shared.model.IndexRateSource;
+import com.mambu.core.shared.model.ObjectLabel;
+import com.mambu.core.shared.model.Organization;
 import com.mambu.core.shared.model.SearchResult;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
@@ -231,12 +235,18 @@ public class ApiDefinition {
 	private Method method;
 	private ContentType contentType;
 
-	// URL path details in the format: endPoint/objectID/relatedEntity
+	// URL path can be specified directly or created in the format: endPoint/objectID/relatedEntity
+	// URL path if specified directly
+	private String urlPath;
+	// API's end point
 	private String endPoint;
+	private boolean requiresObjectId;
 	// The 'relatedEntity' part of the URL path
 	private String relatedEntity;
 	// API return format. Specified in the ApiType but can be modified
 	private ApiReturnFormat returnFormat;
+	// Is fill details param required
+	private boolean isWithFullDetails;
 
 	// The class of the object returned by Mambu
 	private Class<?> returnClass;
@@ -294,6 +304,37 @@ public class ApiDefinition {
 	}
 
 	/**
+	 * Make ApiDefintion by explicitly specifying all required HTTPS request parameters.
+	 * 
+	 * @param urlPath
+	 *            full URL path (without the https prefix). Example settings/branding/log
+	 * @param contentType
+	 *            content type
+	 * @param method
+	 *            method
+	 * @param retrunClass
+	 *            returned object's class
+	 * @param returnFormt
+	 *            returned format type
+	 */
+	public ApiDefinition(String urlPath, ContentType contentType, Method method, Class<?> retrunClass,
+			ApiReturnFormat returnFormt) {
+
+		this.urlPath = urlPath;
+		this.method = method;
+		this.returnClass = retrunClass;
+		this.contentType = contentType;
+		this.returnFormat = returnFormt;
+		this.requiresObjectId = false;
+		// Not specified
+		this.apiType = null;
+		this.isWithFullDetails = false;
+		this.relatedEntity = null;
+		this.endPoint = null;
+
+	}
+
+	/**
 	 * Constructor which can be used with ApiType requests for which the result class must be specified independently of
 	 * the related entity class. For example, when getting client's profile picture which returns a string object ( GET
 	 * api/clients/\{ID\}/documents/PROFILE_PICTURE) or posting a profile picture, which returns a Boolean (POST
@@ -334,11 +375,14 @@ public class ApiDefinition {
 		this.apiType = apiType;
 		this.contentType = apiType.getContentType();
 		this.method = apiType.getMethod();
+		this.requiresObjectId = apiType.isObjectIdNeeded();
+		this.isWithFullDetails = apiType.isWithFullDetails();
 
 		// Get defaults from the ApiType
 		returnFormat = apiType.getApiReturnFormat();
 
 		// Get the end point. It can be specified directly or derived from an entityClass
+		this.urlPath = null;
 		if (endPoint == null) {
 			this.endPoint = getApiEndPoint(entityClass);
 		}
@@ -483,6 +527,10 @@ public class ApiDefinition {
 		apiEndPointsMap.put(JSONComment.class, APIData.COMMENTS);
 		// Identification Document Template
 		apiEndPointsMap.put(IdentificationDocumentTemplate.class, APIData.ID_DOCUMENT_TEMPLATES);
+		// Organization
+		apiEndPointsMap.put(Organization.class, APIData.ORGANIZATION);
+		apiEndPointsMap.put(GeneralSettings.class, APIData.GENERAL);
+		apiEndPointsMap.put(ObjectLabel.class, APIData.LABELS);
 	}
 
 	// Get an Api endpoint for a Mambu class
@@ -508,7 +556,7 @@ public class ApiDefinition {
 	}
 
 	public boolean isObjectIdNeeded() {
-		return apiType.isObjectIdNeeded();
+		return requiresObjectId;
 	}
 
 	public Method getMethod() {
@@ -528,7 +576,7 @@ public class ApiDefinition {
 	}
 
 	public boolean getWithFullDetails() {
-		return apiType.isWithFullDetails();
+		return isWithFullDetails;
 	}
 
 	public Class<?> getReturnClass() {
@@ -562,5 +610,17 @@ public class ApiDefinition {
 
 	public String getJsonDateTimeFormat() {
 		return jsonDateTimeFormat;
+	}
+
+	public void setRequiresObjectId(boolean requires) {
+		this.requiresObjectId = requires;
+	}
+
+	public String getUrlPath() {
+		return urlPath;
+	}
+
+	public void setUrlPath(String urlPath) {
+		this.urlPath = urlPath;
 	}
 }

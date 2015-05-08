@@ -12,9 +12,11 @@ import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
+import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.IdentificationDocumentTemplate;
@@ -23,8 +25,11 @@ import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
 import com.mambu.core.shared.model.CustomFieldType;
 import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.core.shared.model.GeneralSettings;
 import com.mambu.core.shared.model.IndexRate;
 import com.mambu.core.shared.model.IndexRateSource;
+import com.mambu.core.shared.model.ObjectLabel;
+import com.mambu.core.shared.model.Organization;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 
@@ -71,9 +76,6 @@ public class OrganizationService {
 	// Post Index Interest Rate
 	private final static ApiDefinition postIndexInterestRate = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
 			IndexRateSource.class, IndexRate.class);
-	// Get Identification Document Templates defined for an organization. Specify endpoint directly as APIData.SETTINGS
-	private final static ApiDefinition getDocumentTemplates = new ApiDefinition(ApiType.GET_RELATED_ENTITIES,
-			APIData.SETTINGS, IdentificationDocumentTemplate.class);
 
 	/***
 	 * Create a new organization service
@@ -345,6 +347,95 @@ public class OrganizationService {
 	public List<IdentificationDocumentTemplate> getIdentificationDocumentTemplates() throws MambuApiException {
 		// Example: GET /api/settings/iddocumenttemplates
 		// Available since 3.10.5. See MBU-8780
+
+		String urlPath = APIData.SETTINGS + "/" + APIData.ID_DOCUMENT_TEMPLATES;
+		ApiDefinition getDocumentTemplates = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET,
+				IdentificationDocumentTemplate.class, ApiReturnFormat.COLLECTION);
 		return serviceExecutor.execute(getDocumentTemplates);
+	}
+
+	/**
+	 * Get Organization details
+	 * 
+	 * @return Mambu organization definition details
+	 * 
+	 * @throws MambuApiException
+	 */
+	public Organization getOrganization() throws MambuApiException {
+		// GET /api/settings/organization
+		// Available since 3.11. See MBU-8776
+
+		String urlPath = APIData.SETTINGS + "/" + APIData.ORGANIZATION;
+		ApiDefinition getOrganization = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET,
+				Organization.class, ApiReturnFormat.OBJECT);
+		return serviceExecutor.execute(getOrganization);
+	}
+
+	/**
+	 * Get organization's general settings
+	 * 
+	 * @return Mambu organization general settings
+	 * 
+	 * @throws MambuApiException
+	 */
+	public GeneralSettings getGeneralSettings() throws MambuApiException {
+		// GET /api/settings/general
+		// Available since 3.11. See MBU-8779
+
+		String urlPath = APIData.SETTINGS + "/" + APIData.GENERAL;
+		ApiDefinition getGeneralSettings = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET,
+				GeneralSettings.class, ApiReturnFormat.OBJECT);
+		return serviceExecutor.execute(getGeneralSettings);
+	}
+
+	/**
+	 * Get Object labels
+	 * 
+	 * @return a list of all object labels defined for all languages supported by Mambu
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<ObjectLabel> getObjectLabels() throws MambuApiException {
+		// GET /api/settings/labels
+		// Available since 3.11. See MBU-8778
+
+		String urlPath = APIData.SETTINGS + "/" + APIData.LABELS;
+		ApiDefinition getObjectLabels = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET, ObjectLabel.class,
+				ApiReturnFormat.COLLECTION);
+		return serviceExecutor.execute(getObjectLabels);
+	}
+
+	/**
+	 * Get Organization Logo
+	 * 
+	 * @return string with base64 encoded logo image, Example: data:image/PNG;base64,iVBORw0...
+	 * 
+	 * @throws MambuApiException
+	 */
+	public String getBrandingLogo() throws MambuApiException {
+		// GET /api/settings/branding/logo
+		// Available since 3.11. See MBU-8777
+
+		String urlPath = APIData.SETTINGS + "/" + APIData.BRANDING + "/" + APIData.LOGO;
+		ApiDefinition getLogo = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET, String.class,
+				ApiReturnFormat.OBJECT);
+		return serviceExecutor.execute(getLogo);
+	}
+
+	/**
+	 * Get Organization Icon
+	 * 
+	 * @return string with base64 encoded logo image, Example: data:image/PNG;base64,iVBORw0...
+	 * 
+	 * @throws MambuApiException
+	 */
+	public String getBrandingIcon() throws MambuApiException {
+		// GET /api/settings/branding/icon
+		// Available since 3.11. See MBU-8777
+
+		String urlPath = APIData.SETTINGS + "/" + APIData.BRANDING + "/" + APIData.ICON;
+		ApiDefinition getIcon = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET, String.class,
+				ApiReturnFormat.OBJECT);
+		return serviceExecutor.execute(getIcon);
 	}
 }

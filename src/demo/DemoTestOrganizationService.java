@@ -17,7 +17,11 @@ import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
 import com.mambu.core.shared.model.CustomFieldType;
 import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.core.shared.model.DateFormatType;
+import com.mambu.core.shared.model.GeneralSettings;
 import com.mambu.core.shared.model.IndexRate;
+import com.mambu.core.shared.model.ObjectLabel;
+import com.mambu.core.shared.model.Organization;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 
@@ -44,6 +48,8 @@ public class DemoTestOrganizationService {
 			DemoUtil.getDemoUser();
 			demoBranch = DemoUtil.getDemoBranch();
 			demoCentre = DemoUtil.getDemoCentre();
+
+			testGetOrganizationDetails();// Available since 3.11
 
 			testPostIndexInterestRate(); // Available since 3.10
 
@@ -391,6 +397,46 @@ public class DemoTestOrganizationService {
 					+ "\tKey=" + template.getEncodedKey());
 
 		}
+	}
+
+	// Get Organization details. Available since 3.11
+	public static void testGetOrganizationDetails() throws MambuApiException {
+		System.out.println("\nIn testGetOrganization");
+
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+
+		// Test Get organization
+		Organization organization = organizationService.getOrganization();
+
+		System.out.println("Organization=" + organization.getName() + "\tTimeZoneId=" + organization.getTimeZoneID()
+				+ "\tPhone=" + organization.getPhoneNo() + "\tEmail=" + organization.getEmailAddress());
+
+		// Test Get General Settings
+		GeneralSettings generalSettings = organizationService.getGeneralSettings();
+		System.out.println("\nSettings. BirthDateRequired=" + generalSettings.getBirthDateRequired() + "\tDATE_FORMAT="
+				+ generalSettings.getDateFormats().get(DateFormatType.DATE_FORMAT) + "\tDATETIME_FORMAT="
+				+ generalSettings.getDateFormats().get(DateFormatType.DATE_TIME_FORMAT) + "\tDecimalSeperator="
+				+ generalSettings.getDecimalSeperator());
+
+		// Test Get Mambu Object Labels
+		List<ObjectLabel> objectLabels = organizationService.getObjectLabels();
+		System.out.println("\nTotal Object Labels Returned=" + objectLabels.size());
+		// Print ObjectLabel details
+		for (ObjectLabel label : objectLabels) {
+			System.out.println("Object Label. Type=" + label.getType() + "\tSingular=" + label.getSingularValue()
+					+ "\tPlural=" + label.getPluralValue() + "\tLanguage=" + label.getLanguage()
+					// Note, Encoded key is not returned in response.
+					+ "\tHas Custom Value=" + label.hasCustomValue());
+
+		}
+		// Test Get Organization Logo
+		String logo = organizationService.getBrandingLogo();
+		System.out.println("\nEncoded Logo file=" + logo);
+
+		// Test Get Organization Icon
+		String icon = organizationService.getBrandingIcon();
+		System.out.println("\nEncoded Icon file=" + icon);
+
 	}
 
 	// Private helper to Delete the first custom field for a client or group

@@ -198,7 +198,14 @@ public class APIData {
 	// Api endpoint for Organisational Settings. Available since 3.10.5
 	public static String SETTINGS = "settings";
 	// Api endpoint for ID Document Templates. Available since 3.10.5
-	public static String ID_DOCUMENT_TEMPLATES = "iddocumenttemplates";
+	public static String ID_DOCUMENT_TEMPLATES = "iddocumenttemplates"; // /api/settings/iddocumenttemplates
+	// Api endpoints for organization. Available since 3.11
+	public static String ORGANIZATION = "organization"; // /api/settings/organization
+	public static String BRANDING = "branding";
+	public static String LOGO = "logo"; // /api/settings/branding/logo
+	public static String ICON = "icon"; // /api/settings/branding/icon
+	public static String LABELS = "labels"; // /api/settings/labels
+	public static String GENERAL = "general"; // /api/settings/general
 
 	// Added to support Json object creation API
 	public static String yyyyMmddFormat = DateUtils.DATE_FORMAT;// ISO_8601_FORMAT_DATE "yyyy-MM-dd";
