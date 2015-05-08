@@ -1,9 +1,7 @@
 package demo;
 
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -44,12 +42,10 @@ public class DemoTestCommentsService {
 		// Getting Comments for all supported entities
 		CommentsService commentsService = MambuAPIFactory.getCommentsService();
 
-		// Iterate through supported entity types and Post a comment first and then get all comments back
-		Set<MambuEntity> supportedEntities = commentsService.getSupportedEntities();
-		Iterator<MambuEntity> iterator = supportedEntities.iterator();
-		while (iterator.hasNext()) {
+		// Iterate through supported entity types and Create a comment first and then Get all comments back
+		MambuEntity[] supportedEntities = commentsService.getSupportedEntities();
+		for (MambuEntity parentEntity : supportedEntities) {
 			// Get key for a parent entity. Use demo entity
-			MambuEntity parentEntity = iterator.next();
 			DemoEntityParams entityParams = DemoEntityParams.getEntityParams(parentEntity);
 			String parentyKey = entityParams.getEncodedKey();
 			String parentName = entityParams.getName();

@@ -1,14 +1,11 @@
 package com.mambu.apisdk.services;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import com.google.inject.Inject;
+import com.mambu.api.server.handler.coments.model.JSONComment;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.util.JSONComment;
+import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.MambuEntity;
-import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.core.shared.model.Comment;
 
 /**
@@ -16,53 +13,46 @@ import com.mambu.core.shared.model.Comment;
  * Getting Comments for the following entities are currently supported: Client, Group. LoanAccount, SavingsAccount,
  * LoanProduct, SavingsProduct, Branch, Centre, User
  * 
- * See more details in MBU-8608 - As a Developer, I'd like to GET comments via APIs and MBU-8609 - As a Developer, I
- * need to POST comments via APIs
+ * Comments API currently supports:
+ * 
+ * GET Comments (see MBU-8608 - As a Developer, I'd like to GET comments via APIs) and
+ * 
+ * POST Comment (see MBU-8609 - As a Developer, I need to POST comments via APIs)
  * 
  * @author mdanilkis
  * 
  */
 
 public class CommentsService extends OwnedEntityService {
-	// Entity managed by the class
+	// Specify Entity managed by the class
 	private final static MambuEntity ownedEntity = MambuEntity.COMMENT;
 
+	@Override
 	protected MambuEntity getOwnedEntity() {
 		return ownedEntity;
 	}
 
 	// Specify Mambu entities supported by the Comments API
-	final public static Set<MambuEntity> supportedEntities;
-	static {
-		supportedEntities = new HashSet<MambuEntity>();
-		// See MBU-8609 (Mambu 3.11) for a list of supported entities
-		supportedEntities.add(MambuEntity.CLIENT);
-		supportedEntities.add(MambuEntity.GROUP);
-		supportedEntities.add(MambuEntity.LOAN_ACCOUNT);
-		supportedEntities.add(MambuEntity.SAVINGS_ACCOUNT);
-		supportedEntities.add(MambuEntity.LOAN_PRODUCT);
-		supportedEntities.add(MambuEntity.SAVINGS_PRODUCT);
-		supportedEntities.add(MambuEntity.BRANCH);
-		supportedEntities.add(MambuEntity.CENTRE);
-		supportedEntities.add(MambuEntity.USER);
+	// Comments are supported by Client, Group. LoanAccount, SavingsAccount, LoanProduct, SavingsProduct, Branch,
+	// Centre, User
+	final static MambuEntity[] supportedEntities = new MambuEntity[] { MambuEntity.CLIENT, MambuEntity.GROUP,
+			MambuEntity.LOAN_ACCOUNT, MambuEntity.SAVINGS_ACCOUNT, MambuEntity.LOAN_PRODUCT,
+			MambuEntity.SAVINGS_PRODUCT, MambuEntity.BRANCH, MambuEntity.CENTRE, MambuEntity.USER };
 
-	}
-
-	protected Set<MambuEntity> getSupportedEntities() {
+	@Override
+	public MambuEntity[] getSupportedEntities() {
 		return supportedEntities;
 	}
 
 	// Specify Mambu API Methods supported by the Comments API
-	final public static Set<Method> supportedMethods;
-	static {
-		supportedMethods = new HashSet<Method>();
-		// See MBU-8609 (Mambu 3.11) for a list of supported APIs
-		supportedMethods.add(Method.GET);
-		supportedMethods.add(Method.POST);
-	}
+	// Comments API currently support GET comments and POST Comment. See MBU-8608 and MBU-8609
+	// Example: GET /api/clients/ABC123/comments
+	// Example: POST {"comment:":{"text":"Posting a new comment" }} /api/centres/ABC123/comments
+	final static ApiType[] supportedApiTypes = new ApiType[] { ApiType.GET_OWNED_ENTITIES, ApiType.POST_OWNED_ENTITY };
 
-	protected Set<Method> getSupporteMethods() {
-		return supportedMethods;
+	@Override
+	protected ApiType[] getSupporteApiTypes() {
+		return supportedApiTypes;
 	}
 
 	/***
@@ -77,24 +67,45 @@ public class CommentsService extends OwnedEntityService {
 	}
 
 	/**
-	 * Post new Comment
+	 * Create new Comment. Only "text" field is used, other comment fields are ignored for new comments
 	 * 
 	 * @param parentEntity
-	 *            class for the entity for which comments are retrieved. Example, Client.class, Branch.class
-	 * 
+	 *            MambuEntity for which comments are retrieved. Example: MambuEntity.CLIENT for comments owned by
+	 *            Client.
 	 * @param parentEntityId
-	 *            entity id or encoded key for the parent
+	 *            entity id or encoded key for the parent entity. Example, ciinetId for MambuEntity.CLIENT
 	 * @param comment
 	 *            comment to post
+	 * @return created comment
 	 * @throws MambuApiException
 	 */
-	public Comment postComment(MambuEntity parentEntity, String parentEntityId, Comment comment)
+	public Comment createComment(MambuEntity parentEntity, String parentEntityId, Comment comment)
 			throws MambuApiException {
+
 		// POST {"comment:":{"text":"Posting a new comment" }} /api/centres/ABC123/comments
 		// See MBU-8609 for more details
 
-		// POST comment using JSONComment wrapper class
+		if (comment == null) {
+			throw new IllegalArgumentException("Comment cannot be null");
+		}
+		// Set all fields except the text field to null: Mambu expects only on field in the JSON request
+		Comment postComment = new Comment();
+		postComment.setText(comment.getText());
+
+		// POST comment using JSONComment wrapper class and parse the result into Comment object
 		JSONComment jsonComment = new JSONComment(comment);
-		return postOwnedEntity(parentEntity, parentEntityId, jsonComment);
+		return createOwnedEntity(parentEntity, parentEntityId, jsonComment, Comment.class);
 	}
+
+	/**
+	 * Get comments for a parent entity. Example: GET /api/clients/ABC123/comments
+	 * 
+	 * Users of the Comments service should call {@link #getOwnedEntities(MambuEntity, String, Integer, Integer)} See
+	 * MBU-8608 for details.
+	 * 
+	 * Example:
+	 * 
+	 * List<Comment> comments =commentsService.getOwnedEntities(MambuEntity, String, Integer, Integer)}
+	 */
+
 }

@@ -1,5 +1,7 @@
 package com.mambu.apisdk.services;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -29,10 +31,10 @@ public abstract class OwnedEntityService {
 	abstract protected MambuEntity getOwnedEntity();
 
 	// Extended classes must specify supported parent classes
-	abstract public Set<MambuEntity> getSupportedEntities();
+	abstract public MambuEntity[] getSupportedEntities();
 
 	// Extended classes must specify ApiTypes supported by it
-	abstract protected Set<ApiType> getSupporteApiTypes();
+	abstract protected ApiType[] getSupporteApiTypes();
 
 	// Service helper
 	protected ServiceExecutor serviceExecutor;
@@ -197,6 +199,17 @@ public abstract class OwnedEntityService {
 
 	// Private methods
 	/**
+	 * Helper to convert an array of supported entities into a set. This method uses abstract
+	 * {@link #getSupportedEntities()} to get an array of supported entities
+	 * 
+	 * @return set of supported entities
+	 */
+	private Set<MambuEntity> getSupportedEntitiesSet() {
+		MambuEntity[] supportedEntities = getSupportedEntities();
+		return new HashSet<MambuEntity>(Arrays.asList(supportedEntities));
+	}
+
+	/**
 	 * Validate that specified parent entity is supported by the extending class
 	 * 
 	 * @param parentEntity
@@ -204,7 +217,7 @@ public abstract class OwnedEntityService {
 	 */
 	private void validateParentEntity(MambuEntity parentEntity) {
 		// Get MambuEntities supported by the extending class
-		Set<MambuEntity> supportedEntities = getSupportedEntities();
+		Set<MambuEntity> supportedEntities = getSupportedEntitiesSet();
 
 		// Check if the the specified parent entity type is supported
 		if (supportedEntities == null || !supportedEntities.contains(parentEntity)) {
@@ -221,7 +234,7 @@ public abstract class OwnedEntityService {
 	 */
 	private void validateAPiIsSupported(ApiType apiType) {
 		// Get ApiTypes supported by the extending class
-		Set<ApiType> supportedEntities = getSupporteApiTypes();
+		Set<ApiType> supportedEntities = new HashSet<ApiType>(Arrays.asList(getSupporteApiTypes()));
 
 		// Check if the the method's apiType is supported
 		if (supportedEntities == null || !supportedEntities.contains(apiType)) {
