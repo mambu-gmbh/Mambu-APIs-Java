@@ -510,6 +510,7 @@ public class ServiceExecutor {
 		collectionTypesMap.put(IdentificationDocumentTemplate.class,
 				new TypeToken<List<IdentificationDocumentTemplate>>() {
 				}.getType());
+
 	}
 
 	//
@@ -534,8 +535,8 @@ public class ServiceExecutor {
 	}
 
 	// A set of convenience helper methods to perform standard API requests by specifying Mambu entities
-	// Note: These methods throw exception if the API operation is not supported by Mambu. Users of these these methods
-	// must/ ensure they are invoked for the supported API operations only
+	// Note: These methods throw exception if a requested API operation is not supported by Mambu. Users of these these
+	// methods must ensure they are invoked for the supported API operations only
 
 	/**
 	 * Get a list of entities owned by a parent entity. For example GET all documents for a client or for a loan account
@@ -554,7 +555,7 @@ public class ServiceExecutor {
 	public <R> R getOwnedEntities(MambuEntity parentEntity, String parentId, MambuEntity ownedEntity, ParamsMap params)
 			throws MambuApiException {
 		if (parentEntity == null || ownedEntity == null) {
-			throw new IllegalArgumentException("Parent Class and Owned Class cannot be null");
+			throw new IllegalArgumentException("Parent Entity and Owned Entity cannot be null");
 		}
 		Class<?> parentClass = parentEntity.getEntityClass();
 		Class<?> ownedClass = ownedEntity.getEntityClass();
@@ -565,7 +566,7 @@ public class ServiceExecutor {
 
 	/**
 	 * Convenience method to Get a list of entities owned by a parent entity by specifying only pagination parameters
-	 * offset and limit. For example GET all comment for a client or for a loan account with offset and limit
+	 * offset and limit. For example GET all comments for a client or for a loan account with offset and limit
 	 * 
 	 * @param parentEntity
 	 *            parent's MambuEntity. Example MambuEntity.CLIENT
@@ -595,32 +596,119 @@ public class ServiceExecutor {
 	}
 
 	/**
-	 * Post new entity owned by a parent entity. For example. POST new document for a client or for a loan account
+	 * Create new entity owned by a parent entity. For example. Create new document for a client or for a loan account.
+	 * This method is used for API returning objects of the same class as posted entity
 	 * 
-	 * @param parentClass
-	 *            parent's class. Example Client.class
+	 * @param parentEntity
+	 *            parent entity
 	 * @param parentId
 	 *            encoded key or id of the parent entity
-	 * @param ownedEntity
-	 *            owned entity
-	 * @return list of owned entities
+	 * @param postEntity
+	 *            posted entity
+	 * @return updated posted entity
 	 * @throws MambuApiException
 	 */
-	public <R, T> R postOwnedEntity(MambuEntity parentEntity, String parentId, T ownedEntity) throws MambuApiException {
+	public <T> T createOwnedEntity(MambuEntity parentEntity, String parentId, T postEntity) throws MambuApiException {
+		if (parentEntity == null || postEntity == null) {
+			throw new IllegalArgumentException("Parent Class and Owned Entity cannot be null");
+		}
+
+		Class<?> parentClass = parentEntity.getEntityClass();
+		Class<?> ownedEntityClass = postEntity.getClass();
+		ApiDefinition postDefinition = new ApiDefinition(ApiType.POST_OWNED_ENTITY, parentClass, ownedEntityClass);
+		postDefinition.setContentType(ContentType.JSON);
+
+		return executeJson(postDefinition, postEntity, parentId);
+	}
+
+	/**
+	 * Create new entity owned by a parent entity. For example. Create new document for a client or for a loan account.
+	 * This method is used for API returning objects of a different class than the posted entity's class. The class of
+	 * returned object must be specified in the call
+	 * 
+	 * @param parentEntity
+	 *            parent entity
+	 * @param parentId
+	 *            encoded key or id of the parent entity
+	 * @param postEntity
+	 *            posted entity
+	 * @param resultClass
+	 *            the class of the Mambu model returned in response.
+	 * @return updated posted entity
+	 * @throws MambuApiException
+	 */
+	public <R, T> R createOwnedEntity(MambuEntity parentEntity, String parentId, T postEntity, Class<?> resultClass)
+			throws MambuApiException {
+		if (parentEntity == null || postEntity == null) {
+			throw new IllegalArgumentException("Parent Class and Owned Entity cannot be null");
+		}
+
+		Class<?> parentClass = parentEntity.getEntityClass();
+		Class<?> ownedEntityClass = postEntity.getClass();
+		ApiDefinition postDefinition = new ApiDefinition(ApiType.POST_OWNED_ENTITY, parentClass, ownedEntityClass,
+				resultClass);
+		postDefinition.setContentType(ContentType.JSON);
+
+		return executeJson(postDefinition, postEntity, parentId);
+	}
+
+	/**
+	 * Update existent owned entity. For example. Update document for a client or for a loan account
+	 * 
+	 * @param parentEntity
+	 *            parent entity
+	 * @param parentId
+	 *            encoded key or id of the parent entity
+	 * @param ownedEntityId
+	 *            the encoded key or id of the entity being patched
+	 * @return updated owned entity
+	 * @throws MambuApiException
+	 */
+	public <R, T> R updateOwnedEntity(MambuEntity parentEntity, String parentId, T ownedEntity, String ownedEntityId)
+			throws MambuApiException {
 		if (parentEntity == null || ownedEntity == null) {
 			throw new IllegalArgumentException("Parent Class and Owned Entity cannot be null");
 		}
 
 		Class<?> parentClass = parentEntity.getEntityClass();
 		Class<?> ownedEntityClass = ownedEntity.getClass();
-		ApiDefinition postEntity = new ApiDefinition(ApiType.POST_OWNED_ENTITY, parentClass, ownedEntityClass);
-		postEntity.setContentType(ContentType.JSON);
 
-		return executeJson(postEntity, ownedEntity, parentId);
+		ApiDefinition patchEntity = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY, parentClass, ownedEntityClass);
+		return executeJson(patchEntity, ownedEntity, parentId, ownedEntityId);
+	}
+
+	/**
+	 * Delete owned entity. For example. DELETE document for a client or for a loan account
+	 * 
+	 * @param parentEntity
+	 *            parent entity
+	 * @param parentId
+	 *            encoded key or id of the parent entity
+	 * @param ownedEntityId
+	 *            the encoded key or id of the entity being patched
+	 * @return true if successful
+	 * @throws MambuApiException
+	 */
+	public <R> Boolean deleteOwnedEntity(MambuEntity mambuEntity, String parentId, MambuEntity ownedEntity,
+			String ownedEntityId) throws MambuApiException {
+		Class<?> parentClass = mambuEntity.getEntityClass();
+		Class<?> ownedClass = ownedEntity.getEntityClass();
+		// Create ApiDefinition for DELETE_OWNED_ENTITY
+		ApiDefinition apiDefinition = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY, parentClass, ownedClass);
+		return execute(apiDefinition, parentId, ownedEntityId, null);
 	}
 
 	// Other helpers. Not used yet currently
-	// Get Mambu Entity. Example: GET api/clients/{entityId}
+	/**
+	 * Get Mambu entity. Example: GET api/clients/{entityId}
+	 * 
+	 * @param mambuEntity
+	 *            Mambu entity
+	 * @param entityId
+	 *            entity id or encoded key
+	 * @return Mambu object
+	 * @throws MambuApiException
+	 */
 	public <R> R getEntity(MambuEntity mambuEntity, String entityId) throws MambuApiException {
 
 		Class<?> clazz = mambuEntity.getEntityClass();
@@ -628,17 +716,39 @@ public class ServiceExecutor {
 		return execute(apiDefinition, entityId);
 	}
 
-	// Get a list of Mambu entities. Example; GET /api/groups by branch and centre
+	/**
+	 * Get a list of Mambu entities. Example; GET /api/groups (by branch and centre and pagination params)
+	 * 
+	 * @param mambuEntity
+	 *            Mambu entity
+	 * @param params
+	 *            params map for getting a list of entities. The params map can contain all parameters specific to the
+	 *            API, for example, pagination parameters, filter setting, branch and credit officer is, etc.
+	 * @return list of entities
+	 * @throws MambuApiException
+	 */
 	public <R> List<R> getList(MambuEntity mambuEntity, ParamsMap params) throws MambuApiException {
 		Class<?> clazz = mambuEntity.getEntityClass();
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.GET_LIST, clazz);
 		return execute(apiDefinition, params);
 	}
 
-	// Convenience method to get a paginated list of entities. Example: GET api/users with offset and limit
+	/**
+	 * Convenience method to GET a paginated list of Mambu entities. Example; GET /api/clients with offset and limit
+	 * 
+	 * @param mambuEntity
+	 *            Mambu entity
+	 * @param offset
+	 *            offset
+	 * @param limit
+	 *            limit
+	 * @return list of entities for the requested page
+	 * @throws MambuApiException
+	 */
 	public <R> List<R> getPaginatedList(MambuEntity mambuEntity, Integer offset, Integer limit)
 			throws MambuApiException {
 		Class<?> clazz = mambuEntity.getEntityClass();
+
 		ParamsMap params = new ParamsMap();
 		if (offset != null) {
 			params.addParam(APIData.OFFSET, String.valueOf(offset));
@@ -650,20 +760,44 @@ public class ServiceExecutor {
 		return execute(apiDefinition, params);
 	}
 
-	// Create new entity
+	/**
+	 * Create new entity
+	 * 
+	 * @param entity
+	 *            entity to create
+	 * @return created entity
+	 * @throws MambuApiException
+	 */
 	public <R> R createEntity(Class<R> entity) throws MambuApiException {
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, entity.getClass());
 		return executeJson(apiDefinition, entity);
 	}
 
-	// Update entity
-	public <R> R updateEntity(Class<R> entity) throws MambuApiException {
-
+	/**
+	 * Update entity
+	 * 
+	 * @param entity
+	 *            entity to update
+	 * @param entityId
+	 *            entity id or encoded key
+	 * @return updated entity
+	 * @throws MambuApiException
+	 */
+	public <R> R updateEntity(Class<R> entity, String entityId) throws MambuApiException {
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.POST_ENTITY, entity.getClass());
-		return executeJson(apiDefinition, entity);
+		return executeJson(apiDefinition, entity, entityId);
 	}
 
-	// Delete entity
+	/**
+	 * Delete entity
+	 * 
+	 * @param mambuEntity
+	 *            mambu entity to delete
+	 * @param entityId
+	 *            id or encoded key of the entity to be deleted
+	 * @return true if successfully deleted
+	 * @throws MambuApiException
+	 */
 	public <R> Boolean deleteEntity(MambuEntity mambuEntity, String entityId) throws MambuApiException {
 		Class<?> clazz = mambuEntity.getEntityClass();
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.DELETE_ENTITY, clazz);

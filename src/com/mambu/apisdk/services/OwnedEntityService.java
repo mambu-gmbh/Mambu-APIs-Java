@@ -6,19 +6,18 @@ import java.util.Set;
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.MambuEntity;
-import com.mambu.apisdk.util.RequestExecutor;
-import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.apisdk.util.ServiceExecutor;
 
 /**
  * Abstract Service class which handles API operations for the owned Mambu entities (getting, posting, patching and
  * deleting owned entities). Extending class must specify the type of entity they manage (their owned entity, example
- * Document) the supported API methods and the set of parent entities that are supported for this owned entity.
+ * Document) the supported ApiTypes and the set of parent entities that are supported for this owned entity.
  * 
- * For example, CommentsService can extend this class and would specify MambuEntity.COMMENT as the owned entity,
- * supported API methods as GET and POST, and also a set of MambuEntities supported by the Comments API. The
- * OwnedEntityService provides the implementation for the actual API calls
+ * For example, CommentsService can extend this class and would return MambuEntity.COMMENT as the owned entity it
+ * manages, supported ApiTypes as GET_OWNED_ENTITIES and POST_OWNED_ENTITY, and also a set of MambuEntities parents
+ * supported by the Comments API. The OwnedEntityService provides the implementation for the actual API calls
  * 
  * @author mdanilkis
  * 
@@ -26,14 +25,14 @@ import com.mambu.apisdk.util.ServiceExecutor;
 
 public abstract class OwnedEntityService {
 
-	// Extended classes must specify the type of owned entity. Example, Document, Comment
+	// Extended classes must specify the type of owned entity. Example: Document or Comment
 	abstract protected MambuEntity getOwnedEntity();
 
 	// Extended classes must specify supported parent classes
-	abstract protected Set<MambuEntity> getSupportedEntities();
+	abstract public Set<MambuEntity> getSupportedEntities();
 
-	// Extended classes must specify API methods supported by it
-	abstract protected Set<RequestExecutor.Method> getSupporteMethods();
+	// Extended classes must specify ApiTypes supported by it
+	abstract protected Set<ApiType> getSupporteApiTypes();
 
 	// Service helper
 	protected ServiceExecutor serviceExecutor;
@@ -53,83 +52,118 @@ public abstract class OwnedEntityService {
 	 * Get all owned entities for a given parent entity
 	 * 
 	 * @param parentEntity
-	 *            Mambu entity for which owned entities are retrieved. Example, Client, Branch
-	 * 
-	 * @param entityId
-	 *            entity id or encoded key. Example, client id for a Client.class
-	 * 
-	 * @return a list of owned entities for parentEntity
+	 *            Mambu entity for which owned entities are retrieved. MambuEntity.CLIENT, MambuEntity.BRANCH
+	 * @param parentId
+	 *            entity id or encoded key for the parent entity. Example, client id for a MmabuEntity.CLIENT
+	 * @param offset
+	 *            pagination offset
+	 * @param limit
+	 *            pagination limit
+	 * @return a list of owned entities for the parent entity
 	 * 
 	 * @throws MambuApiException
 	 */
-	public <T> List<T> getOwnedEntities(MambuEntity parentEntity, String entityId, Integer offset, Integer limit)
+	public <T> List<T> getOwnedEntities(MambuEntity parentEntity, String parentId, Integer offset, Integer limit)
 			throws MambuApiException {
-		// Example: GET /api/clients/ABC123/comments ; GET /api/savings/ABC123/comments
-		// See MBU-8608 for more details
+		// Example: GET /api/clients/ABC123/comments ; GET /api/savings/ABC123/documents
 
-		// Validate GET is supported
-		validateAPiIsSupported(Method.GET);
+		// Validate that GET_OWNED_ENTITIES API is supported
+		validateAPiIsSupported(ApiType.GET_OWNED_ENTITIES);
 
-		// Validate the API is used for the Supported entity
+		// Validate specified parent entity is supported
 		validateParentEntity(parentEntity);
 
 		// Get a list of owned entities for a parent entity
 		// Derived class provides the owned entity managed by it. Example, Comment, CustomFieldValue
 		MambuEntity ownedEntity = getOwnedEntity();
-		return serviceExecutor.getOwnedEntities(parentEntity, entityId, ownedEntity, offset, limit);
+		return serviceExecutor.getOwnedEntities(parentEntity, parentId, ownedEntity, offset, limit);
 
 	}
 
 	/**
-	 * Post new owned entity
+	 * Create new owned entity. This method is used when Mambu returns the same class as the posted entity
 	 * 
 	 * @param parentEntity
-	 *            class for the entity for which comments are retrieved. Example, Client.class, Branch.class
+	 *            parent MambuEntity for which owned entities are retrieved. Example: MambuEntity.CLIENT,
+	 *            MambuEntity.BRANCH
 	 * @param parentEntityId
-	 *            entity id or encoded key for the parent
+	 *            entity id or encoded key for the parent entity
 	 * @param ownedEntity
-	 *            owned entity to post
+	 *            owned entity object to post
+	 * @return resulting owned entity
+	 * 
 	 * @throws MambuApiException
 	 */
-	public <R, T> R postOwnedEntity(MambuEntity parentEntity, String parentEntityId, T ownedEntity)
+	public <T> T createOwnedEntity(MambuEntity parentEntity, String parentEntityId, T ownedEntity)
 			throws MambuApiException {
-		// POST {"comment:":{"text":"Posting a new comment" }} /api/centres/ABC123/comments
-		// See MBU-8609 for more details
+		// Example: POST LoanTransaction /api/loans/ABC123/transactions
+
+		// Validate POST_OWNED_ENTITY is supported
+		validateAPiIsSupported(ApiType.POST_OWNED_ENTITY);
 
 		// Validate API is used for Supported entity
 		validateParentEntity(parentEntity);
 
-		return serviceExecutor.postOwnedEntity(parentEntity, parentEntityId, ownedEntity);
+		return serviceExecutor.createOwnedEntity(parentEntity, parentEntityId, ownedEntity);
+	}
+
+	/**
+	 * Create new owned entity. This method is used when the class of the result returned by Mambu differs form the
+	 * posted entity class
+	 * 
+	 * @param parentEntity
+	 *            parent MambuEntity for which owned entities are retrieved. Example: MambuEntity.CLIENT,
+	 *            MambuEntity.BRANCH
+	 * @param parentEntityId
+	 *            entity id or encoded key for the parent entity
+	 * @param ownedEntity
+	 *            owned entity object to post
+	 * @param resultClass
+	 *            the class for the result returned by Mambu. Example: Comment.class
+	 * @return resulting owned entity
+	 * @throws MambuApiException
+	 */
+	public <R, T> R createOwnedEntity(MambuEntity parentEntity, String parentEntityId, T ownedEntity,
+			Class<?> resultClass) throws MambuApiException {
+		// Example: Post JSONComment. Mambu returns resulting Comment object back
+		// POST {"comment:":{"text":"Posting a new comment" }} /api/centres/ABC123/comments
+
+		// Validate that POST_OWNED_ENTITY is supported
+		validateAPiIsSupported(ApiType.POST_OWNED_ENTITY);
+
+		// Validate API is used for Supported entity
+		validateParentEntity(parentEntity);
+
+		return serviceExecutor.createOwnedEntity(parentEntity, parentEntityId, ownedEntity, resultClass);
 	}
 
 	/***
-	 * Update owned value. This method sends a PATCH request for the provided owned entity
+	 * Update owned entity. This method sends a PATCH request for the provided owned entity
 	 * 
 	 * @param parentEntity
-	 *            Mambu entity for which the owned entity is updated. Example, Client, Branch
+	 *            Mambu entity for which the owned entity is updated. Example: MambuEntity.CLIENT, MambuEntity.BRANCH
 	 * @param parentEntityId
-	 *            entity id or encoded key for the parent
+	 *            entity id or encoded key for the parent entity
 	 * @param ownedEntityId
 	 *            the encoded key or id of the owned entity to be updated
 	 * @param ownedEntity
-	 *            the new owned entity object
+	 *            owned entity object
 	 * @return updated owned entity
 	 * @throws MambuApiException
 	 */
 	public <T> boolean updateOwnedEntity(MambuEntity parentEntity, String parentEntityId, String ownedEntityId,
 			T ownedEntity) throws MambuApiException {
-
-		// Execute request for PATCH API to update custom field value for a Loan Account. See MBU-6661
+		// Example: Execute request for PATCH API to update custom field value for a Loan Account
 		// e.g. PATCH "{ "value": "10" }" /host/api/loans/accointId/custominformation/customFieldId
 
-		// Or API request to PATCH a linked field for the custom field value (see MBU-8514)
-		// PATCH '{ "linkedEntityKeyValue": "40288a13...." }'// /api/loans/abc123/custominformation/customFieldId
+		// Validate that PATCH_OWNED_ENTITY is supported
+		validateAPiIsSupported(ApiType.PATCH_OWNED_ENTITY);
 
 		// Validate API is used for Supported entity
 		validateParentEntity(parentEntity);
 
 		// Submit API request
-		return serviceExecutor.patchOwnedEntity(parentEntity, parentEntityId, ownedEntity, ownedEntityId);
+		return serviceExecutor.updateOwnedEntity(parentEntity, parentEntityId, ownedEntity, ownedEntityId);
 
 	}
 
@@ -137,9 +171,9 @@ public abstract class OwnedEntityService {
 	 * Delete owned entity for a Mambu parent entity
 	 * 
 	 * @param parentEntity
-	 *            Mambu entity for which owned entity is deleted. Example, Client, Branch
+	 *            Mambu entity for which owned entity is deleted. Example: MambuEntity.CLIENT, MambuEntity.BRANCH
 	 * @param parentEntityId
-	 *            entity id or encoded key for the parent
+	 *            entity id or encoded key for the parent entity
 	 * @param ownedEntityId
 	 *            the encoded key or id of the owned entity to be deleted
 	 * @return true if successful
@@ -147,8 +181,11 @@ public abstract class OwnedEntityService {
 	 */
 	public boolean deleteOwnedEntity(MambuEntity parentEntity, String parentEntityId, String ownedEntityId)
 			throws MambuApiException {
-		// Execute request for DELETE API to delete custom field value for a client
+		// Example: Execute request for DELETE API to delete custom field for a client
 		// e.g. DELETE /host/api/clients/clientId/custominformation/customFieldId
+
+		// Validate that DELETE_OWNED_ENTITY is supported
+		validateAPiIsSupported(ApiType.DELETE_OWNED_ENTITY);
 
 		validateParentEntity(parentEntity);
 
@@ -158,15 +195,18 @@ public abstract class OwnedEntityService {
 
 	}
 
+	// Private methods
 	/**
-	 * Validate parent entity. This methods validates if the provided parent entity is supported by the extending class
+	 * Validate that specified parent entity is supported by the extending class
 	 * 
 	 * @param parentEntity
 	 *            parent entity
 	 */
-	protected void validateParentEntity(MambuEntity parentEntity) {
+	private void validateParentEntity(MambuEntity parentEntity) {
+		// Get MambuEntities supported by the extending class
 		Set<MambuEntity> supportedEntities = getSupportedEntities();
 
+		// Check if the the specified parent entity type is supported
 		if (supportedEntities == null || !supportedEntities.contains(parentEntity)) {
 			throw new IllegalArgumentException("Parent Entity  " + parentEntity + " is not supported by "
 					+ getOwnedEntity());
@@ -174,16 +214,18 @@ public abstract class OwnedEntityService {
 	}
 
 	/**
-	 * Validate API supported entity. This methods validates if the provided request is supported by the extending class
+	 * Validate if the requested method (its Api Type) is supported by the extending class.
 	 * 
-	 * @param parentEntity
-	 *            parent entity
+	 * @param apiType
+	 *            Api type used by a method
 	 */
-	protected void validateAPiIsSupported(Method method) {
-		Set<RequestExecutor.Method> supportedEntities = getSupporteMethods();
+	private void validateAPiIsSupported(ApiType apiType) {
+		// Get ApiTypes supported by the extending class
+		Set<ApiType> supportedEntities = getSupporteApiTypes();
 
-		if (supportedEntities == null || !supportedEntities.contains(method)) {
-			throw new IllegalArgumentException("API method  " + method + " is not supported for " + getOwnedEntity());
+		// Check if the the method's apiType is supported
+		if (supportedEntities == null || !supportedEntities.contains(apiType)) {
+			throw new IllegalArgumentException("API method  " + apiType + " is not supported for " + getOwnedEntity());
 		}
 	}
 }
