@@ -6,8 +6,10 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.AccountingService;
 import com.mambu.apisdk.services.ActivitiesService;
 import com.mambu.apisdk.services.ClientsService;
+import com.mambu.apisdk.services.CommentsService;
 import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.services.IntelligenceService;
+import com.mambu.apisdk.services.LinesOfCreditService;
 import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.apisdk.services.RepaymentsService;
@@ -190,4 +192,25 @@ public final class MambuAPIServiceFactory {
 		return injector.getInstance(ActivitiesService.class);
 	}
 
+	/***
+	 * Get an instance of the CommentsService class
+	 * 
+	 * @return the obtained instance
+	 * 
+	 * @throws MambuApiException
+	 */
+	public CommentsService getCommentsService() throws MambuApiException {
+		return injector.getInstance(CommentsService.class);
+	}
+
+	/***
+	 * Get an instance of the LinesOfCreditService class
+	 * 
+	 * @return the obtained instance
+	 * 
+	 * @throws MambuApiException
+	 */
+	public LinesOfCreditService getLineOfCreditService() throws MambuApiException {
+		return injector.getInstance(LinesOfCreditService.class);
+	}
 }
