@@ -36,6 +36,7 @@ import com.mambu.core.shared.model.SearchType;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
 import com.mambu.intelligence.shared.model.Intelligence.Indicator;
+import com.mambu.linesofcredit.shared.model.LineOfCredit;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
 import com.mambu.loans.shared.model.LoanTransaction;
@@ -520,6 +521,9 @@ public class ServiceExecutor {
 		// Object Labels
 		collectionTypesMap.put(ObjectLabel.class, new TypeToken<List<ObjectLabel>>() {
 		}.getType());
+		// Lines of Credit
+		collectionTypesMap.put(LineOfCredit.class, new TypeToken<List<LineOfCredit>>() {
+		}.getType());
 	}
 
 	//
@@ -602,6 +606,36 @@ public class ServiceExecutor {
 
 		return getOwnedEntities(parentEntity, parentId, ownedEntity, params);
 
+	}
+
+	/**
+	 * Get owned entity. For example GET all documents for a client or for a loan account
+	 * 
+	 * @param parentEntity
+	 *            parent's MambuEntity. Example MambuEntity.CLIENT
+	 * @param parentId
+	 *            encoded key or id of the parent entity
+	 * @param ownedEntity
+	 *            Mambu owned entity. Example, MambuEntity.COMMENT
+	 * @param ownedEntityId
+	 *            encoded key or id of the owned entity. Optional. Can be null. Example GET
+	 *            /api/loanproducts/{ID}/schedule
+	 * @param params
+	 *            params map with filtering parameters. Optional. Can be null.
+	 * 
+	 * @return owned entity
+	 * @throws MambuApiException
+	 */
+	public <R> R getOwnedEntity(MambuEntity parentEntity, String parentId, MambuEntity ownedEntity,
+			String ownedEntityId, ParamsMap params) throws MambuApiException {
+		if (parentEntity == null) {
+			throw new IllegalArgumentException("Parent Entity cannot be null");
+		}
+		Class<?> parentClass = parentEntity.getEntityClass();
+		Class<?> ownedClass = ownedEntity.getEntityClass();
+
+		ApiDefinition apiDefinition = new ApiDefinition(ApiType.GET_OWNED_ENTITY, parentClass, ownedClass);
+		return execute(apiDefinition, parentId, ownedEntityId, params);
 	}
 
 	/**
