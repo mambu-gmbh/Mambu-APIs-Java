@@ -71,11 +71,12 @@ public class CommentsService extends OwnedEntityService {
 	 * 
 	 * @param parentEntity
 	 *            MambuEntity for which comments are retrieved. Example: MambuEntity.CLIENT for comments owned by
-	 *            Client.
+	 *            Client. Must not be null;
 	 * @param parentEntityId
-	 *            entity id or encoded key for the parent entity. Example, ciinetId for MambuEntity.CLIENT
+	 *            entity id or encoded key for the parent entity. Example, ciinetId for MambuEntity.CLIENT. Must not be
+	 *            null
 	 * @param comment
-	 *            comment to post
+	 *            comment to post. Must not be null
 	 * @return created comment
 	 * @throws MambuApiException
 	 */
