@@ -20,8 +20,7 @@ import com.mambu.core.shared.model.User;
 
 /**
  * Service class which handles API operations like getting and creating users. When getting users, for safety reasons
- * the API call will have the response stripped of some fields: - transactionLimits - password - apiAppId - apiAppKey -
- * preferences - permissions
+ * the API call will have the response stripped of some fields: password - apiAppId - apiAppKey
  * 
  * @author ipenciuc
  * 

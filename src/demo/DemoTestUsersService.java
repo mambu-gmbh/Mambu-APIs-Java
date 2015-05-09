@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import com.mambu.accounts.shared.model.TransactionLimitType;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.customviews.model.CustomViewApiType;
 import com.mambu.apisdk.MambuAPIFactory;
@@ -24,8 +25,10 @@ import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.CustomView;
 import com.mambu.core.shared.model.FieldColumn;
+import com.mambu.core.shared.model.Money;
 import com.mambu.core.shared.model.Permissions;
 import com.mambu.core.shared.model.Permissions.Permission;
+import com.mambu.core.shared.model.Role;
 import com.mambu.core.shared.model.User;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanTransaction;
@@ -177,6 +180,12 @@ public class DemoTestUsersService {
 
 		System.out.println("Can Manage All Branches=" + canManageAllBranches + "\t Can Manage Multiple Branches="
 				+ canManageMultipleBranches + "\tCan Manage Other Officers=" + canManageOtherOfficers);
+
+		// Verify Transaction Limits and User Role are returned (see MBU-7019)
+		Role userRole = user.getRole();
+		String userRoleKey = (userRole == null) ? null : userRole.getEncodedKey();
+		HashMap<TransactionLimitType, Money> transactionLimits = user.getTransactionLimits();
+		System.out.println("User Role Key=" + userRoleKey + "\tTransaction Limits=" + transactionLimits);
 	}
 
 	public static void testGetUserByUsername() throws MambuApiException {
