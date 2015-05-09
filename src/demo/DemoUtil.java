@@ -238,6 +238,17 @@ public class DemoUtil {
 
 	}
 
+	// Get Demo client by ID
+	public static Client getDemoClient(String clientId) throws MambuApiException {
+		System.out.println("\nIn getDemoClient for id=" + clientId);
+
+		ClientsService clientsService = MambuAPIFactory.getClientService();
+		Client client = clientsService.getClient(clientId);
+
+		return client;
+
+	}
+
 	// Get Demo group
 	public static Group getDemoGroup() throws MambuApiException {
 		System.out.println("\nIn getDemoGroup");
@@ -254,6 +265,17 @@ public class DemoUtil {
 		System.out.println("getDemoGroup: no groups for the Demo User in the demo data");
 
 		return null;
+
+	}
+
+	// Get Demo group by ID
+	public static Group getDemoGroup(String groupId) throws MambuApiException {
+		System.out.println("\nIn getDemoGroup for id=" + groupId);
+
+		ClientsService clientsService = MambuAPIFactory.getClientService();
+		Group group = clientsService.getGroup(groupId);
+
+		return group;
 
 	}
 
