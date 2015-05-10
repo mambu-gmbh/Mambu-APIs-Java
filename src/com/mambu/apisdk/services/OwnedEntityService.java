@@ -65,7 +65,7 @@ public abstract class OwnedEntityService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public <T> List<T> getOwnedEntities(MambuEntity parentEntity, String parentId, Integer offset, Integer limit)
+	public <T> List<T> getList(MambuEntity parentEntity, String parentId, Integer offset, Integer limit)
 			throws MambuApiException {
 		// Example: GET /api/clients/ABC123/comments ; GET /api/savings/ABC123/documents
 
@@ -96,7 +96,7 @@ public abstract class OwnedEntityService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public <T> T createOwnedEntity(MambuEntity parentEntity, String parentEntityId, T ownedEntity)
+	public <T> T create(MambuEntity parentEntity, String parentEntityId, T ownedEntity)
 			throws MambuApiException {
 		// Example: POST LoanTransaction /api/loans/ABC123/transactions
 
@@ -125,7 +125,7 @@ public abstract class OwnedEntityService {
 	 * @return resulting owned entity
 	 * @throws MambuApiException
 	 */
-	public <R, T> R createOwnedEntity(MambuEntity parentEntity, String parentEntityId, T ownedEntity,
+	public <R, T> R create(MambuEntity parentEntity, String parentEntityId, T ownedEntity,
 			Class<?> resultClass) throws MambuApiException {
 		// Example: Post JSONComment. Mambu returns resulting Comment object back
 		// POST {"comment:":{"text":"Posting a new comment" }} /api/centres/ABC123/comments
@@ -146,15 +146,16 @@ public abstract class OwnedEntityService {
 	 *            Mambu entity for which the owned entity is updated. Example: MambuEntity.CLIENT, MambuEntity.BRANCH
 	 * @param parentEntityId
 	 *            entity id or encoded key for the parent entity
-	 * @param ownedEntityId
-	 *            the encoded key or id of the owned entity to be updated
 	 * @param ownedEntity
 	 *            owned entity object
+	 * @param ownedEntityId
+	 *            the encoded key or id of the owned entity to be updated
+	 * 
 	 * @return updated owned entity
 	 * @throws MambuApiException
 	 */
-	public <T> boolean updateOwnedEntity(MambuEntity parentEntity, String parentEntityId, String ownedEntityId,
-			T ownedEntity) throws MambuApiException {
+	public <T> boolean update(MambuEntity parentEntity, String parentEntityId, T ownedEntity,
+			String ownedEntityId) throws MambuApiException {
 		// Example: Execute request for PATCH API to update custom field value for a Loan Account
 		// e.g. PATCH "{ "value": "10" }" /host/api/loans/accointId/custominformation/customFieldId
 
@@ -181,7 +182,7 @@ public abstract class OwnedEntityService {
 	 * @return true if successful
 	 * @throws MambuApiException
 	 */
-	public boolean deleteOwnedEntity(MambuEntity parentEntity, String parentEntityId, String ownedEntityId)
+	public boolean delete(MambuEntity parentEntity, String parentEntityId, String ownedEntityId)
 			throws MambuApiException {
 		// Example: Execute request for DELETE API to delete custom field for a client
 		// e.g. DELETE /host/api/clients/clientId/custominformation/customFieldId

@@ -48,6 +48,12 @@ public class CommentsService extends OwnedEntityService {
 	// Comments API currently support GET comments and POST Comment. See MBU-8608 and MBU-8609
 	// Example: GET /api/clients/ABC123/comments
 	// Example: POST {"comment:":{"text":"Posting a new comment" }} /api/centres/ABC123/comments
+	/**
+	 * Usage: {@link CommentsService#getList(MambuEntity, String, Integer, Integer)}
+	 * 
+	 * Usage: {@link CommentsService#create(MambuEntity, String, Comment)}
+	 * 
+	 */
 	final static ApiType[] supportedApiTypes = new ApiType[] { ApiType.GET_OWNED_ENTITIES, ApiType.POST_OWNED_ENTITY };
 
 	@Override
@@ -80,7 +86,7 @@ public class CommentsService extends OwnedEntityService {
 	 * @return created comment
 	 * @throws MambuApiException
 	 */
-	public Comment createComment(MambuEntity parentEntity, String parentEntityId, Comment comment)
+	public Comment create(MambuEntity parentEntity, String parentEntityId, Comment comment)
 			throws MambuApiException {
 
 		// POST {"comment:":{"text":"Posting a new comment" }} /api/centres/ABC123/comments
@@ -95,7 +101,7 @@ public class CommentsService extends OwnedEntityService {
 
 		// POST comment using JSONComment wrapper class and parse the result into Comment object
 		JSONComment jsonComment = new JSONComment(comment);
-		return createOwnedEntity(parentEntity, parentEntityId, jsonComment, Comment.class);
+		return create(parentEntity, parentEntityId, jsonComment, Comment.class);
 	}
 
 	/**

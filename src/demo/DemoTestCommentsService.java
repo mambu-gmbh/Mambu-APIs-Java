@@ -59,14 +59,14 @@ public class DemoTestCommentsService {
 			aComment.setText("Test Comment For " + parentEntity + " " + parentName + " on " + new Date().toString());
 
 			// Post this Comment
-			Comment result = commentsService.createComment(parentEntity, parentyKey, aComment);
+			Comment result = commentsService.create(parentEntity, parentyKey, aComment);
 			System.out.println("POSTED Comment OK. Text=" + result.getText());
 
 			// Now Test getting Comments back
 			// Test GET all Comments for this parent entity
 			Integer offset = 0;
 			Integer limit = 20;
-			List<Comment> comments = commentsService.getOwnedEntities(parentEntity, parentyKey, offset, limit);
+			List<Comment> comments = commentsService.getList(parentEntity, parentyKey, offset, limit);
 			// Log returned Comments
 			System.out.println("\nTotal comments returned=" + comments.size());
 			for (Comment comment : comments) {
