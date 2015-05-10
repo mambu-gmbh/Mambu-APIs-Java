@@ -1,11 +1,15 @@
 package demo;
 
 import java.util.HashSet;
+import java.util.List;
 
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.MambuEntity;
 import com.mambu.clients.shared.model.Client;
+import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
+import com.mambu.clients.shared.model.GroupExpanded;
+import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.User;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
@@ -111,4 +115,56 @@ public class DemoEntityParams {
 
 	}
 
+	/**
+	 * Retrieve custom field values for demo Mambu Entity
+	 * 
+	 * @param mambuEntity
+	 *            Mambu demo entity
+	 * @param entityParams
+	 *            demo entity params
+	 * @return custom field values
+	 */
+	public static List<CustomFieldValue> getCustomFieldValues(MambuEntity mambuEntity, DemoEntityParams entityParams)
+			throws MambuApiException {
+		if (mambuEntity == null) {
+			throw new IllegalArgumentException("Demo entity  cannot be null");
+		}
+		if (entityParams == null) {
+			throw new IllegalArgumentException("Entity params cannot be null");
+		}
+		if (!demoEntities.contains(mambuEntity)) {
+			throw new IllegalArgumentException("Demo entity " + mambuEntity + " is not supported");
+		}
+
+		String entityId = entityParams.getId();
+		switch (mambuEntity) {
+		case CLIENT:
+			ClientExpanded client = DemoUtil.getDemoClientDetails(entityId);
+			return client.getCustomFieldValues();
+		case GROUP:
+			GroupExpanded group = DemoUtil.getDemoGroupDetails(entityId);
+			return group.getCustomFieldValues();
+		case LOAN_ACCOUNT:
+			LoanAccount loan = DemoUtil.getDemoLoanAccount(entityId);
+			return loan.getCustomFieldValues();
+		case SAVINGS_ACCOUNT:
+			SavingsAccount savings = DemoUtil.getDemoSavingsAccount(entityId);
+			return savings.getCustomFieldValues();
+		case LOAN_PRODUCT:
+		case SAVINGS_PRODUCT:
+			throw new IllegalArgumentException("Custom Fields are not supported for " + mambuEntity);
+		case USER:
+			User user = DemoUtil.getDemoUser();
+			return user.getCustomFieldValues();
+		case BRANCH:
+			Branch branch = DemoUtil.getDemoBranch();
+			return branch.getCustomFieldValues();
+		case CENTRE:
+			Centre centre = DemoUtil.getDemoCentre();
+			return centre.getCustomFieldValues();
+		default:
+			throw new IllegalArgumentException("Custom Filed Value for  " + mambuEntity + " implementation is missing");
+		}
+
+	}
 }

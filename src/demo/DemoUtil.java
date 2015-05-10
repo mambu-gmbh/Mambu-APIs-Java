@@ -33,6 +33,7 @@ import com.mambu.apisdk.util.DateUtils;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
+import com.mambu.clients.shared.model.GroupExpanded;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldDataType;
 import com.mambu.core.shared.model.CustomFieldLink;
@@ -249,6 +250,17 @@ public class DemoUtil {
 
 	}
 
+	// Get Demo client details by ID
+	public static ClientExpanded getDemoClientDetails(String clientId) throws MambuApiException {
+		System.out.println("\nIn getDemoClient with details for id=" + clientId);
+
+		ClientsService clientsService = MambuAPIFactory.getClientService();
+		ClientExpanded client = clientsService.getClientDetails(clientId);
+
+		return client;
+
+	}
+
 	// Get Demo group
 	public static Group getDemoGroup() throws MambuApiException {
 		System.out.println("\nIn getDemoGroup");
@@ -274,6 +286,17 @@ public class DemoUtil {
 
 		ClientsService clientsService = MambuAPIFactory.getClientService();
 		Group group = clientsService.getGroup(groupId);
+
+		return group;
+
+	}
+
+	// Get Demo group details by ID
+	public static GroupExpanded getDemoGroupDetails(String groupId) throws MambuApiException {
+		System.out.println("\nIn getDemoGroup for id=" + groupId);
+
+		ClientsService clientsService = MambuAPIFactory.getClientService();
+		GroupExpanded group = clientsService.getGroupDetails(groupId);
 
 		return group;
 

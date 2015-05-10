@@ -17,6 +17,7 @@ import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.util.APIData.CLOSER_TYPE;
 import com.mambu.apisdk.util.DateUtils;
+import com.mambu.apisdk.util.MambuEntity;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.CustomFieldType;
@@ -694,12 +695,10 @@ public class DemoTestLoanService {
 		}
 		loanAccount.setRepaymentInstallments(repaymentInsatllments);
 		// PrincipalRepaymentInterval
+		loanAccount.setPrincipalRepaymentInterval(1);
 		Integer principalRepaymentInterva = demoProduct.getDefaultPrincipalRepaymentInterval();
 		if (principalRepaymentInterva != null) {
 			loanAccount.setPrincipalRepaymentInterval(principalRepaymentInterva);
-		} else {
-			// TODO: remove this assignment when model changed to Integer
-			loanAccount.setPrincipalRepaymentInterval(1);
 		}
 		// Penalty Rate
 		loanAccount.setPenaltyRate(null);
@@ -722,10 +721,8 @@ public class DemoTestLoanService {
 			Integer gracePeriod = defGrace;
 			gracePeriod = (gracePeriod == null && minGrace != null) ? minGrace : gracePeriod;
 			gracePeriod = (gracePeriod == null && maxGrace != null) ? maxGrace : gracePeriod;
-			// TODO: set directly when the new model has gracePeriod as Integer
-			if (gracePeriod != null) {
-				loanAccount.setGracePeriod(gracePeriod);
-			}
+			loanAccount.setGracePeriod(gracePeriod);
+
 		}
 		// Set Guarantees. Available for API since 3.9. See MBU-6528
 		ArrayList<Guaranty> guarantees = new ArrayList<Guaranty>();
@@ -775,75 +772,9 @@ public class DemoTestLoanService {
 	public static void testUpdateDeleteCustomFields() throws MambuApiException {
 		System.out.println("\nIn testUpdateDeleteCustomFields");
 
-		List<CustomFieldValue> customFieldValues;
-		System.out.println("\nUpdating demo Loan Account custom fields...");
-		customFieldValues = updateCustomFields();
+		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
+		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntity.LOAN_ACCOUNT);
 
-		System.out.println("\nDeleting first custom field for a demo Loan Account ...");
-		deleteCustomField(customFieldValues);
-
-	}
-
-	// Private helper to Update all custom fields for a Loan Account
-	private static List<CustomFieldValue> updateCustomFields() throws MambuApiException {
-
-		Class<?> entityClass = LoanAccount.class;
-		String entityName = entityClass.getSimpleName();
-		String entityId = demoLoanAccount.getId();
-
-		// Get Current custom field values first for a Demo account
-		List<CustomFieldValue> customFieldValues = demoLoanAccount.getCustomFieldValues();
-
-		if (customFieldValues == null || customFieldValues.size() == 0) {
-			System.out.println("WARNING: No Custom fields defined for demo " + entityName + " with ID=" + entityId
-					+ ". Nothing to update");
-			return null;
-		}
-		// Update custom field values
-		LoansService loanService = MambuAPIFactory.getLoanService();
-		for (CustomFieldValue value : customFieldValues) {
-
-			String fieldId = value.getCustomFieldId(); // return null for Group, Branch, Centre?
-			// Create valid new value for a custom field
-			String newValue = DemoUtil.makeNewCustomFieldValue(value).getValue();
-
-			// Update Custom Field value
-			boolean updateStatus;
-			System.out.println("\nUpdating Custom Field with ID=" + fieldId + " for " + entityName + " with ID="
-					+ entityId);
-
-			updateStatus = loanService.updateLoanAccountCustomField(entityId, fieldId, newValue);
-
-			String statusMessage = (updateStatus) ? "Success" : "Failure";
-			System.out.println(statusMessage + " updating Custom Field, ID=" + fieldId + " for demo " + entityName
-					+ " with ID=" + entityId + " New value=" + newValue);
-
-		}
-
-		return customFieldValues;
-	}
-
-	// Private helper to Delete the first custom field for a Loan Account
-	private static void deleteCustomField(List<CustomFieldValue> customFieldValues) throws MambuApiException {
-
-		Class<?> entityClass = LoanAccount.class;
-		String entityName = entityClass.getSimpleName();
-		String entityId = demoLoanAccount.getId();
-
-		if (customFieldValues == null || customFieldValues.size() == 0) {
-			System.out.println("WARNING: No Custom fields defined for demo " + entityName + " with ID=" + entityId
-					+ ". Nothing to delete");
-			return;
-		}
-		// Delete the first field on the list
-		String customFieldId = customFieldValues.get(0).getCustomField().getId();
-
-		LoansService loanService = MambuAPIFactory.getLoanService();
-		boolean deleteStatus = loanService.deleteLoanAccountCustomField(entityId, customFieldId);
-
-		String statusMessage = (deleteStatus) ? "Success" : "Failure";
-		System.out.println(statusMessage + " deleting Custom Field, ID=" + customFieldId + " for demo " + entityName
-				+ " with ID=" + entityId);
 	}
 
 	// Internal clean up routine. Can be used to delete non-disbursed accounts created by these demo test runs

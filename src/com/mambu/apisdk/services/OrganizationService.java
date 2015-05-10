@@ -61,18 +61,6 @@ public class OrganizationService {
 
 	private final static ApiDefinition getTransactionChannels = new ApiDefinition(ApiType.GET_LIST,
 			TransactionChannel.class);
-	// Update Custom Field value for a Branch
-	private final static ApiDefinition updateBranchCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
-			Branch.class, CustomFieldValue.class);
-	// Delete Custom Field for a Branch
-	private final static ApiDefinition deleteBranchCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
-			Branch.class, CustomFieldValue.class);
-	// Update Custom Field value for a Centre
-	private final static ApiDefinition updateCentreCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
-			Centre.class, CustomFieldValue.class);
-	// Delete Custom Field for a Centre
-	private final static ApiDefinition deleteCentreCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
-			Centre.class, CustomFieldValue.class);
 	// Post Index Interest Rate
 	private final static ApiDefinition postIndexInterestRate = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
 			IndexRateSource.class, IndexRate.class);
@@ -232,6 +220,10 @@ public class OrganizationService {
 	/***
 	 * Update custom field value for a Branch. This method allows to set new value for a specific custom field
 	 * 
+	 * @deprecated use
+	 *             {@link CustomFieldValueService#update(com.mambu.apisdk.util.MambuEntity, String, CustomFieldValue, String)}
+	 *             to update custom field values . This method doesn't support updating grouped and linked custom fields
+	 *             available since 3.11
 	 * @param branchId
 	 *            the encoded key or id of the Mambu Branch
 	 * @param customFieldId
@@ -241,11 +233,14 @@ public class OrganizationService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public boolean updateBranchCustomField(String branchId, String customFieldId, String fieldValue)
 			throws MambuApiException {
 		// Execute request for PATCH API to update custom field value for a Branch. See MBU-6661
 		// e.g. PATCH "{ "value": "10" }" /host/api/branches/branchId/custominformation/customFieldId
-
+		// Update Custom Field value for a Branch
+		final ApiDefinition updateBranchCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY, Branch.class,
+				CustomFieldValue.class);
 		// Make ParamsMap with JSON request for Update API
 		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
 		return serviceExecutor.execute(updateBranchCustomField, branchId, customFieldId, params);
@@ -254,6 +249,8 @@ public class OrganizationService {
 	/***
 	 * Delete custom field for a Branch
 	 * 
+	 * @deprecated use {@link CustomFieldValueService#delete(com.mambu.apisdk.util.MambuEntity, String, String)} to
+	 *             delete custom field values
 	 * @param branchId
 	 *            the encoded key or id of the Mambu Branch
 	 * @param customFieldId
@@ -261,10 +258,13 @@ public class OrganizationService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public boolean deleteBranchCustomField(String branchId, String customFieldId) throws MambuApiException {
 		// Execute request for DELETE API to delete custom field value for a Branch. See MBU-6661
 		// e.g. DELETE /host/api/branches/branchId/custominformation/customFieldId
-
+		// Delete Custom Field for a Branch
+		final ApiDefinition deleteBranchCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY, Branch.class,
+				CustomFieldValue.class);
 		return serviceExecutor.execute(deleteBranchCustomField, branchId, customFieldId, null);
 
 	}
@@ -272,6 +272,10 @@ public class OrganizationService {
 	/***
 	 * Update custom field value for a Centre. This method allows to set new value for a specific custom field
 	 * 
+	 * @deprecated use
+	 *             {@link CustomFieldValueService#update(com.mambu.apisdk.util.MambuEntity, String, CustomFieldValue, String)}
+	 *             to update custom field values . This method doesn't support updating grouped and linked custom fields
+	 *             available since 3.11
 	 * @param centreId
 	 *            the encoded key or id of the Mambu Centre for which the custom field is updated
 	 * @param customFieldId
@@ -281,10 +285,15 @@ public class OrganizationService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public boolean updateCentreCustomField(String centreId, String customFieldId, String fieldValue)
 			throws MambuApiException {
 		// Execute request for PATCH API to update custom field value for a Centre. See MBU-6661
 		// e.g. PATCH "{ "value": "10" }" /host/api/centres/centreId/custominformation/customFieldId
+
+		// Update Custom Field value for a Centre
+		final ApiDefinition updateCentreCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY, Centre.class,
+				CustomFieldValue.class);
 
 		// Make ParamsMap with JSON request for Update API
 		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
@@ -295,6 +304,8 @@ public class OrganizationService {
 	/***
 	 * Delete custom field for a Centre
 	 * 
+	 * @deprecated use {@link CustomFieldValueService#delete(com.mambu.apisdk.util.MambuEntity, String, String)} to
+	 *             delete custom field values
 	 * @param centreId
 	 *            the encoded key or id of the Mambu Centre
 	 * @param customFieldId
@@ -302,9 +313,15 @@ public class OrganizationService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public boolean deleteCentreCustomField(String centreId, String customFieldId) throws MambuApiException {
 		// Execute request for DELETE API to delete custom field for a Centre. See MBU-6661
 		// e.g. DELETE /host/api/centres/centreId/custominformation/customFieldId
+
+		// Delete Custom Field for a Centre
+		final ApiDefinition deleteCentreCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY, Centre.class,
+				CustomFieldValue.class);
+
 		return serviceExecutor.execute(deleteCentreCustomField, centreId, customFieldId, null);
 
 	}

@@ -38,12 +38,6 @@ public class UsersService {
 	private final static ApiDefinition getUser = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, User.class);
 	private final static ApiDefinition getCustomViews = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, User.class,
 			CustomView.class);
-	// Update Custom Field value for a User
-	private final static ApiDefinition updateUserCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
-			User.class, CustomFieldValue.class);
-	// Delete Custom Field for a User
-	private final static ApiDefinition deleteUserCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
-			User.class, CustomFieldValue.class);
 
 	/***
 	 * Create a new users service
@@ -214,6 +208,10 @@ public class UsersService {
 	/***
 	 * Update custom field value for a User. This method allows to set new value for a specific custom field
 	 * 
+	 * @deprecated use
+	 *             {@link CustomFieldValueService#update(com.mambu.apisdk.util.MambuEntity, String, CustomFieldValue, String)}
+	 *             to update custom field values . This method doesn't support updating grouped and linked custom fields
+	 *             available since 3.11
 	 * @param userName
 	 *            the userName, user id or the encoded key of the Mambu User for which the custom field is updated.
 	 * @param customFieldId
@@ -223,11 +221,14 @@ public class UsersService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public boolean updateUserCustomField(String userName, String customFieldId, String fieldValue)
 			throws MambuApiException {
 		// Execute request for PATCH API to update custom field value for a User. See MBU-6661
 		// e.g. PATCH "{ "value": "10" }" /host/api/users/userName/custominformation/customFieldId
-
+		// Update Custom Field value for a User
+		final ApiDefinition updateUserCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY, User.class,
+				CustomFieldValue.class);
 		// Make ParamsMap with JSON request for Update API
 		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
 		return serviceExecutor.execute(updateUserCustomField, userName, customFieldId, params);
@@ -237,6 +238,8 @@ public class UsersService {
 	/***
 	 * Delete custom field for a User
 	 * 
+	 * @deprecated use {@link CustomFieldValueService#delete(com.mambu.apisdk.util.MambuEntity, String, String)} to
+	 *             delete custom field values
 	 * @param username
 	 *            the userName or the encoded key of the Mambu User for which the custom field is updated.
 	 * @param customFieldId
@@ -244,10 +247,13 @@ public class UsersService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public boolean deleteUserCustomField(String username, String customFieldId) throws MambuApiException {
 		// Execute request for DELETE API to delete custom field for a User. See MBU-6661
 		// e.g. DELETE /host/api/users/username/custominformation/customFieldId
-
+		// Delete Custom Field for a User
+		final ApiDefinition deleteUserCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY, User.class,
+				CustomFieldValue.class);
 		return serviceExecutor.execute(deleteUserCustomField, username, customFieldId, null);
 
 	}

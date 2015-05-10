@@ -14,6 +14,7 @@ import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.util.APIData;
+import com.mambu.apisdk.util.MambuEntity;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.CustomFieldType;
@@ -510,78 +511,9 @@ public class DemoTestSavingsService {
 	public static void testUpdateDeleteCustomFields() throws MambuApiException {
 		System.out.println("\nIn testUpdateDeleteCustomFields");
 
-		List<CustomFieldValue> customFieldValues;
-		System.out.println("\nUpdating demo Savings Account custom fields...");
-		customFieldValues = updateCustomFields();
+		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
+		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntity.SAVINGS_ACCOUNT);
 
-		System.out.println("\nDeleting first custom field for a demo Savings Account ...");
-		deleteCustomField(customFieldValues);
-
-	}
-
-	// Private helper to Update all custom fields for a Savings Account
-	private static List<CustomFieldValue> updateCustomFields() throws MambuApiException {
-
-		Class<?> entityClass = SavingsAccount.class;
-		String entityName = entityClass.getSimpleName();
-		String entityId = demoSavingsAccount.getId();
-
-		SavingsService savingsService = MambuAPIFactory.getSavingsService();
-		demoSavingsAccount = savingsService.getSavingsAccountDetails(entityId);
-
-		// Get Current custom field values first for a Demo account
-		List<CustomFieldValue> customFieldValues = demoSavingsAccount.getCustomFieldValues();
-
-		if (customFieldValues == null || customFieldValues.size() == 0) {
-			System.out.println("WARNING: No Custom fields defined for demo " + entityName + " with ID=" + entityId
-					+ ". Nothing to update");
-			return null;
-		}
-
-		// Update custom field values
-		for (CustomFieldValue value : customFieldValues) {
-
-			String fieldId = value.getCustomFieldId();
-			// Create valid new value for a custom field
-			String newValue = DemoUtil.makeNewCustomFieldValue(value).getValue();
-
-			// Update Custom Field value
-			boolean updateStatus = false;
-			System.out.println("\nUpdating Custom Field with ID=" + fieldId + " for " + entityName + " with ID="
-					+ entityId);
-
-			updateStatus = savingsService.updateSavingsAccountCustomField(entityId, fieldId, newValue);
-
-			String statusMessage = (updateStatus) ? "Success" : "Failure";
-			System.out.println(statusMessage + " updating Custom Field, ID=" + fieldId + " for demo " + entityName
-					+ " with ID=" + entityId + " New value=" + newValue);
-
-		}
-
-		return customFieldValues;
-	}
-
-	// Private helper to Delete the first custom field for a Savings Account
-	private static void deleteCustomField(List<CustomFieldValue> customFieldValues) throws MambuApiException {
-
-		Class<?> entityClass = SavingsAccount.class;
-		String entityName = entityClass.getSimpleName();
-		String entityId = demoSavingsAccount.getId();
-
-		if (customFieldValues == null || customFieldValues.size() == 0) {
-			System.out.println("WARNING: No Custom fields defined for demo " + entityName + " with ID=" + entityId
-					+ ". Nothing to delete");
-			return;
-		}
-		// Delete the first field on the list
-		String customFieldId = customFieldValues.get(0).getCustomField().getId();
-
-		SavingsService savingsService = MambuAPIFactory.getSavingsService();
-		boolean deleteStatus = savingsService.deleteSavingsAccountCustomField(entityId, customFieldId);
-
-		String statusMessage = (deleteStatus) ? "Success" : "Failure";
-		System.out.println(statusMessage + " deleting Custom Field, ID=" + customFieldId + " for demo " + entityName
-				+ " with ID=" + entityId);
 	}
 
 	private static final String apiTestNamePrefix = "API Test Savings ";
