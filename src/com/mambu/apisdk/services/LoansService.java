@@ -45,7 +45,7 @@ public class LoansService {
 	private static final String NOTES = APIData.NOTES;
 	//
 	private static final String TYPE_REPAYMENT = APIData.TYPE_REPAYMENT;
-	private static final String TYPE_DISBURSMENT = APIData.TYPE_DISBURSMENT;
+	private static final String TYPE_DISBURSEMENT = APIData.TYPE_DISBURSEMENT;
 	private static final String TYPE_APPROVAL = APIData.TYPE_APPROVAL;
 	private static final String TYPE_UNDO_APPROVAL = APIData.TYPE_UNDO_APPROVAL;
 	private static final String TYPE_FEE = APIData.TYPE_FEE;
@@ -353,7 +353,7 @@ public class LoansService {
 			String firstRepaymentDate, String notes, TransactionDetails transactionDetails) throws MambuApiException {
 
 		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.addParam(TYPE, TYPE_DISBURSMENT);
+		paramsMap.addParam(TYPE, TYPE_DISBURSEMENT);
 
 		// Add transactionDetails to the paramsMap
 		ServiceHelper.addAccountTransactionParams(paramsMap, amount, disbursalDate, notes, transactionDetails);
