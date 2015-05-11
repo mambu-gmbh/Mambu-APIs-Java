@@ -33,6 +33,7 @@ public class DemoTestSearchService {
 
 			testSearchUsersBranchesCentres();
 
+			testSearchGlAccounts();
 			testTypesCombinations();
 
 		} catch (MambuApiException e) {
@@ -122,6 +123,29 @@ public class DemoTestSearchService {
 
 		System.out.println("Search Users/Branches for query=" + query + "\tReturned=" + results.size()
 				+ "\tTotal time=" + diff);
+
+		logSearchResults(results);
+
+	}
+
+	public static void testSearchGlAccounts() throws MambuApiException {
+		System.out.println("\nIn testSearchGlAccounts");
+
+		SearchService searchService = MambuAPIFactory.getSearchService();
+
+		String query = "g";
+		String limit = "100";
+
+		List<SearchType> searchTypes = Arrays.asList(SearchType.GL_ACCOUNT);
+		Date d1 = new Date();
+
+		Map<SearchType, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
+
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
+
+		System.out.println("Search GL Accounts for query=" + query + "\tReturned=" + results.size() + "\tTotal time="
+				+ diff);
 
 		logSearchResults(results);
 
