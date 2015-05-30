@@ -6,10 +6,11 @@ import java.util.List;
 
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
+import com.mambu.api.server.handler.settings.organization.model.JSONOrganization;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.OrganizationService;
-import com.mambu.apisdk.util.MambuEntity;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.model.IdentificationDocumentTemplate;
 import com.mambu.core.shared.model.Address;
 import com.mambu.core.shared.model.Currency;
@@ -298,10 +299,10 @@ public class DemoTestOrganizationService {
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
 		// Test fields for a Branch
-		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntity.BRANCH);
+		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.BRANCH);
 
 		// Test fields for a Centre
-		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntity.CENTRE);
+		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.CENTRE);
 	}
 
 	// Test Posting Index Interest Rates. Available since 3.10
@@ -352,12 +353,16 @@ public class DemoTestOrganizationService {
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		// Test Get organization
-		Organization organization = organizationService.getOrganization();
+		JSONOrganization jsonOrganization = organizationService.getOrganization();
+
+		Organization organization = jsonOrganization.getOrganization();
+		Address address = jsonOrganization.getAddress();
+		System.out.println("Address=" + address.getLine1() + " " + address.getCity());
 
 		System.out.println("Organization=" + organization.getName() + "\tTimeZoneId=" + organization.getTimeZoneID()
 				+ "\tPhone=" + organization.getPhoneNo() + "\tEmail=" + organization.getEmailAddress());
 
-		// Test Get General Settings
+		// Test Get General Settings API
 		GeneralSettings generalSettings = organizationService.getGeneralSettings();
 		System.out.println("\nSettings. BirthDateRequired=" + generalSettings.getBirthDateRequired() + "\tDATE_FORMAT="
 				+ generalSettings.getDateFormats().get(DateFormatType.DATE_FORMAT) + "\tDATETIME_FORMAT="
@@ -384,5 +389,4 @@ public class DemoTestOrganizationService {
 		System.out.println("\nEncoded Icon file=" + icon);
 
 	}
-
 }

@@ -8,18 +8,21 @@ import java.util.List;
 import com.google.inject.Inject;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.api.server.handler.indexratesources.model.JsonIndexRate;
+import com.mambu.api.server.handler.settings.organization.model.JSONOrganization;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
+import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.IdentificationDocumentTemplate;
+import com.mambu.core.shared.model.Address;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
@@ -378,14 +381,29 @@ public class OrganizationService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public Organization getOrganization() throws MambuApiException {
+	public JSONOrganization getOrganization() throws MambuApiException {
 		// GET /api/settings/organization
+		// Response example:{”name”:”Org name”,”timeZoneID":"PST",... "address":{"line1":"1st Rd.","city":"City"}
 		// Available since 3.11. See MBU-8776
 
+		// TODO: There is no Mambu model class for this JSON response. Cannot use JSONOrganization because Mambu
+		// response does not contain "organization:" prefix in front of organization fields
+		// Temporary Solution: GET as a String and create JSONOrganization Mambu model object in the wrapper
+
 		String urlPath = APIData.SETTINGS + "/" + APIData.ORGANIZATION;
-		ApiDefinition getOrganization = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET,
-				Organization.class, ApiReturnFormat.OBJECT);
-		return serviceExecutor.execute(getOrganization);
+		ApiDefinition getOrganization = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET, String.class,
+				ApiReturnFormat.RESPONSE_STRING);
+
+		String jsonResponse = serviceExecutor.execute(getOrganization);
+		if (jsonResponse == null) {
+			return null;
+		}
+		// Parse as Organization and then parse the same response as JSONOrganization to get just the Address.
+		Organization organization = GsonUtils.createGson().fromJson(jsonResponse, Organization.class);
+		JSONOrganization jsonOrganization = GsonUtils.createGson().fromJson(jsonResponse, JSONOrganization.class);
+		Address address = (jsonOrganization == null) ? null : jsonOrganization.getAddress();
+		// Return as JSONOrganization
+		return new JSONOrganization(organization, address);
 	}
 
 	/**
