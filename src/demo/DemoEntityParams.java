@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.util.MambuEntity;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
@@ -27,18 +27,18 @@ import com.mambu.savings.shared.model.SavingsProduct;
 
 public class DemoEntityParams {
 
-	private final static HashSet<MambuEntity> demoEntities;
+	private final static HashSet<MambuEntityType> demoEntities;
 	static {
-		demoEntities = new HashSet<MambuEntity>();
-		demoEntities.add(MambuEntity.CLIENT);
-		demoEntities.add(MambuEntity.GROUP);
-		demoEntities.add(MambuEntity.LOAN_ACCOUNT);
-		demoEntities.add(MambuEntity.SAVINGS_ACCOUNT);
-		demoEntities.add(MambuEntity.LOAN_PRODUCT);
-		demoEntities.add(MambuEntity.SAVINGS_PRODUCT);
-		demoEntities.add(MambuEntity.USER);
-		demoEntities.add(MambuEntity.BRANCH);
-		demoEntities.add(MambuEntity.CENTRE);
+		demoEntities = new HashSet<MambuEntityType>();
+		demoEntities.add(MambuEntityType.CLIENT);
+		demoEntities.add(MambuEntityType.GROUP);
+		demoEntities.add(MambuEntityType.LOAN_ACCOUNT);
+		demoEntities.add(MambuEntityType.SAVINGS_ACCOUNT);
+		demoEntities.add(MambuEntityType.LOAN_PRODUCT);
+		demoEntities.add(MambuEntityType.SAVINGS_PRODUCT);
+		demoEntities.add(MambuEntityType.USER);
+		demoEntities.add(MambuEntityType.BRANCH);
+		demoEntities.add(MambuEntityType.CENTRE);
 
 	}
 
@@ -71,7 +71,7 @@ public class DemoEntityParams {
 	 *            Mambu demo entity
 	 * @return params for the demo entity, including it's name, key and id
 	 */
-	public static DemoEntityParams getEntityParams(MambuEntity mambuEntity) throws MambuApiException {
+	public static DemoEntityParams getEntityParams(MambuEntityType mambuEntity) throws MambuApiException {
 		if (mambuEntity == null) {
 			throw new IllegalArgumentException("Demo entity  cannot be null");
 		}
@@ -124,7 +124,7 @@ public class DemoEntityParams {
 	 *            demo entity params
 	 * @return custom field values
 	 */
-	public static List<CustomFieldValue> getCustomFieldValues(MambuEntity mambuEntity, DemoEntityParams entityParams)
+	public static List<CustomFieldValue> getCustomFieldValues(MambuEntityType mambuEntity, DemoEntityParams entityParams)
 			throws MambuApiException {
 		if (mambuEntity == null) {
 			throw new IllegalArgumentException("Demo entity  cannot be null");

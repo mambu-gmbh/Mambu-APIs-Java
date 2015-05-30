@@ -5,7 +5,7 @@ import java.util.List;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.CustomFieldValueService;
-import com.mambu.apisdk.util.MambuEntity;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.core.shared.model.CustomFieldValue;
 
 /**
@@ -40,9 +40,9 @@ public class DemoTestCustomFiledValueService {
 
 		// Iterate through supported entity types and Update a field first and then delete field
 		// This API is available for Client, Group. LoanAccount, SavingsAccount, Branch, Centre entities
-		MambuEntity[] supportedEntities = CustomFieldValueService.getSupportedEntities();
+		MambuEntityType[] supportedEntities = CustomFieldValueService.getSupportedEntities();
 
-		for (MambuEntity parentEntity : supportedEntities) {
+		for (MambuEntityType parentEntity : supportedEntities) {
 
 			testUpdateDeleteCustomFields(parentEntity);
 		}
@@ -56,7 +56,7 @@ public class DemoTestCustomFiledValueService {
 	 *            Mambu entity for which custom fields are updated or deleted
 	 * @throws MambuApiException
 	 */
-	public static void testUpdateDeleteCustomFields(MambuEntity parentEntity) throws MambuApiException {
+	public static void testUpdateDeleteCustomFields(MambuEntityType parentEntity) throws MambuApiException {
 		System.out.println("\nIn testUpdateDeleteCustomFields");
 
 		// Get ID of the parent entity. Use demo entity
@@ -83,7 +83,7 @@ public class DemoTestCustomFiledValueService {
 	 * @return custom field values for a demo entity
 	 * @throws MambuApiException
 	 */
-	private static List<CustomFieldValue> updateCustomFields(MambuEntity parentEntity, DemoEntityParams entityParams)
+	private static List<CustomFieldValue> updateCustomFields(MambuEntityType parentEntity, DemoEntityParams entityParams)
 			throws MambuApiException {
 		System.out.println("\nIn updateCustomFields");
 
@@ -137,7 +137,7 @@ public class DemoTestCustomFiledValueService {
 	 *            custom field values for this entity
 	 * @throws MambuApiException
 	 */
-	private static void deleteCustomField(MambuEntity parentEntity, String entityId,
+	private static void deleteCustomField(MambuEntityType parentEntity, String entityId,
 			List<CustomFieldValue> customFieldValues) throws MambuApiException {
 		System.out.println("\nIn deleteCustomField");
 

@@ -1,9 +1,13 @@
 package com.mambu.apisdk.services;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.util.MambuEntity;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.core.shared.model.CustomFieldValue;
 
@@ -19,16 +23,16 @@ import com.mambu.core.shared.model.CustomFieldValue;
 public class CustomFieldValueService {
 
 	// Mambu Entity managed by this class
-	private static MambuEntity serviceEntity = MambuEntity.CUSTOM_FIELD_VALUE;
+	private static MambuEntityType serviceEntity = MambuEntityType.CUSTOM_FIELD_VALUE;
 
 	// Service helper
 	protected ServiceExecutor serviceExecutor;
 
 	// Specify Mambu entities supported by the Custom Field Value API: Client, Group. LoanAccount, SavingsAccount,
 	// Branch, Centre
-	private final static MambuEntity[] supportedEntities = new MambuEntity[] { MambuEntity.CLIENT, MambuEntity.GROUP,
-			MambuEntity.LOAN_ACCOUNT, MambuEntity.SAVINGS_ACCOUNT, MambuEntity.BRANCH, MambuEntity.CENTRE,
-			MambuEntity.USER };
+	private final static MambuEntityType[] supportedEntities = new MambuEntityType[] { MambuEntityType.CLIENT,
+			MambuEntityType.GROUP, MambuEntityType.LOAN_ACCOUNT, MambuEntityType.SAVINGS_ACCOUNT,
+			MambuEntityType.BRANCH, MambuEntityType.CENTRE, MambuEntityType.USER };
 
 	// Custom Field Values API supports Updating (PATCH) and Deleting (DELETE). Note, custom field values cannot be
 	// retrieved separately from the parent entity. (Use GET Entity with full details to retrieve all custom field
@@ -43,15 +47,6 @@ public class CustomFieldValueService {
 	@Inject
 	public CustomFieldValueService(MambuAPIService mambuAPIService) {
 		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
-	}
-
-	/**
-	 * Get Mambu Entities supporting Custom Field Value API
-	 * 
-	 * @return supported entities
-	 */
-	public static MambuEntity[] getSupportedEntities() {
-		return supportedEntities;
 	}
 
 	/***
@@ -70,7 +65,7 @@ public class CustomFieldValueService {
 	 * @return true if updated successfully
 	 * @throws MambuApiException
 	 */
-	public boolean update(MambuEntity parentEntity, String parentEntityId, CustomFieldValue customFieldValue,
+	public boolean update(MambuEntityType parentEntity, String parentEntityId, CustomFieldValue customFieldValue,
 			String customFieldValueId) throws MambuApiException {
 		// Update Custom Field Values API examples:
 		// Execute request for PATCH API to update custom field value for a Loan Account. See MBU-6661
@@ -110,7 +105,7 @@ public class CustomFieldValueService {
 	 * @return true if successful
 	 * @throws MambuApiException
 	 */
-	public boolean delete(MambuEntity parentEntity, String parentEntityId, String ownedEntityId)
+	public boolean delete(MambuEntityType parentEntity, String parentEntityId, String ownedEntityId)
 			throws MambuApiException {
 
 		// Exammple:Execute request for DELETE API to delete custom field value for a client See MBU-6661
@@ -146,4 +141,29 @@ public class CustomFieldValueService {
 		return apiField;
 	}
 
+	/**
+	 * Get Mambu Entities supporting Custom Field Value API
+	 * 
+	 * @return supported entities
+	 */
+	public static MambuEntityType[] getSupportedEntities() {
+		return supportedEntities;
+	}
+
+	/**
+	 * Is parent entity type supported by the Custom Field Value API
+	 * 
+	 * @param parentEntityType
+	 *            Mambu Entity type
+	 * @return true if supported
+	 */
+	public static boolean isSupported(MambuEntityType parentEntityType) {
+		if (parentEntityType == null) {
+			return false;
+		}
+
+		Set<MambuEntityType> set = new HashSet<MambuEntityType>(Arrays.asList(supportedEntities));
+		return (set.contains(parentEntityType)) ? true : false;
+
+	}
 }
