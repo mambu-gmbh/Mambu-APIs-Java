@@ -3,15 +3,15 @@ package com.mambu.apisdk.services;
 import java.util.List;
 
 import com.google.inject.Inject;
-import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
-import com.mambu.apisdk.util.MambuEntity;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.linesofcredit.shared.model.AccountsFromLineOfCredit;
 import com.mambu.linesofcredit.shared.model.LineOfCredit;
+import com.mambu.linesofcredit.shared.model.LineOfCreditExpanded;
 
 /**
  * Service class which handles API operations for Lines of Credit (LoC)
@@ -35,7 +35,7 @@ public class LinesOfCreditService {
 
 	private ServiceExecutor serviceExecutor;
 	// MambuEntity managed by this service
-	private static final MambuEntity serviceEntity = MambuEntity.LINE_OF_CREDIT;
+	private static final MambuEntityType serviceEntity = MambuEntityType.LINE_OF_CREDIT;
 
 	/***
 	 * Create a new Lines Of Credit service
@@ -76,21 +76,23 @@ public class LinesOfCreditService {
 	 */
 	public LineOfCredit getLineOfCredit(String lineofcreditId) throws MambuApiException {
 		// GET api/linesofcredit/{id}
+		// Response example: {"lineOfCredit":{"encodedKey":"abc123","id":"FVT160", "amount":"5000",.. }}
 		// Available since 3.11. See MBU-8417
 
-		// This API returns JSONLineOfCredit object
-		ApiDefinition apiDefinition = new ApiDefinition(ApiType.GET_ENTITY, JSONLineOfCredit.class);
-		JSONLineOfCredit jsonLineOfCredit = serviceExecutor.execute(apiDefinition, lineofcreditId);
+		// This API returns LineOfCreditExpanded object
+		ApiDefinition apiDefinition = new ApiDefinition(ApiType.GET_ENTITY, LineOfCreditExpanded.class);
+		LineOfCreditExpanded lineOfCreditExpanded = serviceExecutor.execute(apiDefinition, lineofcreditId);
 
-		// Return LineOfCredit
-		return (jsonLineOfCredit == null) ? null : jsonLineOfCredit.getLineOfCredit();
+		// Return as the LineOfCredit
+		return (lineOfCreditExpanded == null) ? null : lineOfCreditExpanded.getLineOfCredit();
 	}
 
 	/***
 	 * Get lines of credit for a Client or a Group
 	 * 
 	 * @param customerType
-	 *            customer type (Client or Group). Mandatory. Must not be null.
+	 *            customer type (Client or Group). Must be either MambuEntityType.CLIENT or MambuEntityType.GROUP.
+	 *            Mandatory. Must not be null.
 	 * @param customerId
 	 *            the encoded key or id of the customer. Mandatory. Must not be null.
 	 * @param offset
@@ -100,18 +102,15 @@ public class LinesOfCreditService {
 	 * @return the List of Lines of Credit
 	 * @throws MambuApiException
 	 */
-	public List<LineOfCredit> getCustomerLinesOfCredit(AccountHolderType customerType, String customerId,
-			Integer offset, Integer limit) throws MambuApiException {
+	public List<LineOfCredit> getLinesOfCredit(MambuEntityType customerType, String customerId, Integer offset,
+			Integer limit) throws MambuApiException {
 		// Example: GET /api/clients/{clientId}/linesofcredit or GET /api/groups/{groupId}/linesofcredit
 		// Available since 3.11. See MBU-8413
 
-		if (customerType == null) {
-			throw new IllegalArgumentException("Customer type cannot be null");
+		if (customerType != MambuEntityType.CLIENT && customerType != MambuEntityType.GROUP) {
+			throw new IllegalArgumentException("Lines Of Credit Supported only for Clients and Groups");
 		}
-
-		MambuEntity customerEntity = (customerType == AccountHolderType.CLIENT) ? MambuEntity.CLIENT
-				: MambuEntity.GROUP;
-		return serviceExecutor.getOwnedEntities(customerEntity, customerId, serviceEntity, offset, limit);
+		return serviceExecutor.getOwnedEntities(customerType, customerId, serviceEntity, offset, limit);
 	}
 
 	/***
@@ -131,7 +130,7 @@ public class LinesOfCreditService {
 		// Example: GET /api/clients/{clientId}/linesofcredit
 		// Available since 3.11. See MBU-8413
 
-		return getCustomerLinesOfCredit(AccountHolderType.CLIENT, clientId, offset, limit);
+		return getLinesOfCredit(MambuEntityType.CLIENT, clientId, offset, limit);
 	}
 
 	/***
@@ -151,7 +150,7 @@ public class LinesOfCreditService {
 		// Example: GET /api/groups/{groupId}/linesofcredit
 		// Available since 3.11. See MBU-8413
 
-		return getCustomerLinesOfCredit(AccountHolderType.GROUP, groupId, offset, limit);
+		return getLinesOfCredit(MambuEntityType.GROUP, groupId, offset, limit);
 	}
 
 	/***
