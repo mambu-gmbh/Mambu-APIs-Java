@@ -302,7 +302,7 @@ public class DemoUtil {
 
 	}
 
-	// Get random loan product
+	// Get random active loan product.
 	public static LoanProduct getDemoLoanProduct() throws MambuApiException {
 		System.out.println("\nIn getDemoLoanProduct");
 
@@ -310,15 +310,24 @@ public class DemoUtil {
 
 		// all products for our demo user
 		List<LoanProduct> products = service.getLoanProducts("0", "5");
-
-		if (products != null) {
-			int randomIndex = (int) (Math.random() * (products.size() - 1));
-			return products.get(randomIndex);
+		if (products == null || products.size() == 0) {
+			System.out.println("getDemoLoanProduct: no Loan products defined");
+			return null;
 		}
 
-		System.out.println("getDemoLoanProduct: no Loan products defined");
+		List<LoanProduct> activeProducts = new ArrayList<LoanProduct>();
+		for (LoanProduct product : products) {
+			if (product.isActivated()) {
+				activeProducts.add(product);
+			}
+		}
+		if (activeProducts.size() == 0) {
+			System.out.println("getDemoLoanProduct: no Active Loan products defined");
+			return null;
+		}
 
-		return null;
+		int randomIndex = (int) (Math.random() * (activeProducts.size() - 1));
+		return products.get(randomIndex);
 
 	}
 
@@ -336,21 +345,31 @@ public class DemoUtil {
 
 	}
 
-	// Get random savings product
+	// Get random active savings product
 	public static SavingsProduct getDemoSavingsProduct() throws MambuApiException {
 		System.out.println("\nIn getDemoSavingsProduct");
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
 		List<SavingsProduct> products = service.getSavingsProducts("0", "5");
 
-		if (products != null) {
-			int randomIndex = (int) (Math.random() * (products.size() - 1));
-			return products.get(randomIndex);
+		if (products == null || products.size() == 0) {
+			System.out.println("getDemoSavingsProduct: no Savings products defined");
+			return null;
+		}
+		List<SavingsProduct> activeProducts = new ArrayList<SavingsProduct>();
+		for (SavingsProduct product : products) {
+			if (product.isActivated()) {
+				activeProducts.add(product);
+			}
+		}
+		if (activeProducts.size() == 0) {
+			System.out.println("getDemoSavingsProduct: no Active Savings products defined");
+			return null;
 		}
 
-		System.out.println("getDemoSavingsProduct: no Savings products defined");
+		int randomIndex = (int) (Math.random() * (activeProducts.size() - 1));
+		return products.get(randomIndex);
 
-		return null;
 	}
 
 	// Get specific savings product by ID
