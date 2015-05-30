@@ -327,7 +327,7 @@ public class DemoUtil {
 		}
 
 		int randomIndex = (int) (Math.random() * (activeProducts.size() - 1));
-		return products.get(randomIndex);
+		return activeProducts.get(randomIndex);
 
 	}
 
@@ -368,7 +368,7 @@ public class DemoUtil {
 		}
 
 		int randomIndex = (int) (Math.random() * (activeProducts.size() - 1));
-		return products.get(randomIndex);
+		return activeProducts.get(randomIndex);
 
 	}
 
