@@ -5,7 +5,7 @@ import java.util.List;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.LinesOfCreditService;
-import com.mambu.apisdk.util.MambuEntity;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.linesofcredit.shared.model.AccountsFromLineOfCredit;
 import com.mambu.linesofcredit.shared.model.LineOfCredit;
 import com.mambu.loans.shared.model.LoanAccount;
@@ -81,7 +81,7 @@ public class DemoTestLoCService {
 		Integer limit = 30;
 		// Test Get line of credit for a Client
 		// Get Demo Client ID first
-		DemoEntityParams entityParams = DemoEntityParams.getEntityParams(MambuEntity.CLIENT);
+		DemoEntityParams entityParams = DemoEntityParams.getEntityParams(MambuEntityType.CLIENT);
 		final String clientId = entityParams.getId();
 		// Get Lines of Credit for a client
 		List<LineOfCredit> clientLoCs = linesOfCreditService.getClientLinesOfCredit(clientId, offset, limit);
@@ -91,7 +91,7 @@ public class DemoTestLoCService {
 		String clientLoCId = (clientLoCs.size() > 0) ? clientLoCs.get(0).getId() : null;
 		// Test Get line of credit for a Group
 		// Get Demo Group ID first
-		entityParams = DemoEntityParams.getEntityParams(MambuEntity.GROUP);
+		entityParams = DemoEntityParams.getEntityParams(MambuEntityType.GROUP);
 		final String groupId = entityParams.getId();
 		// Get Lines of Credit for a group
 		List<LineOfCredit> groupLoCs = linesOfCreditService.getGroupLinesOfCredit(groupId, offset, limit);
@@ -118,6 +118,7 @@ public class DemoTestLoCService {
 			System.out.println("No Line of credit to get accounts");
 			return;
 		}
+
 		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
 
 		System.out.println("\nGetting all accounts for LoC with ID= " + lineOfCreditId);

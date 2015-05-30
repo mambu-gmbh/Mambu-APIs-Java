@@ -13,7 +13,6 @@ import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.api.server.handler.tasks.model.JSONTask;
 import com.mambu.apisdk.model.LoanAccountExpanded;
-import com.mambu.apisdk.services.JSONLineOfCredit;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.clients.shared.model.Client;
@@ -41,6 +40,7 @@ import com.mambu.docs.shared.model.Document;
 import com.mambu.intelligence.shared.model.Intelligence.Indicator;
 import com.mambu.linesofcredit.shared.model.AccountsFromLineOfCredit;
 import com.mambu.linesofcredit.shared.model.LineOfCredit;
+import com.mambu.linesofcredit.shared.model.LineOfCreditExpanded;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
 import com.mambu.loans.shared.model.LoanTransaction;
@@ -536,7 +536,7 @@ public class ApiDefinition {
 		apiEndPointsMap.put(ObjectLabel.class, APIData.LABELS);
 		// Lines Of Credit
 		apiEndPointsMap.put(LineOfCredit.class, APIData.LINES_OF_CREDIT);
-		apiEndPointsMap.put(JSONLineOfCredit.class, APIData.LINES_OF_CREDIT);
+		apiEndPointsMap.put(LineOfCreditExpanded.class, APIData.LINES_OF_CREDIT);
 		apiEndPointsMap.put(AccountsFromLineOfCredit.class, APIData.ACCOUNTS);
 
 	}

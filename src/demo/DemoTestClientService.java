@@ -16,7 +16,7 @@ import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.util.DateUtils;
-import com.mambu.apisdk.util.MambuEntity;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.ClientState;
@@ -422,10 +422,10 @@ public class DemoTestClientService {
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
 		// Test fields for a Client
-		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntity.CLIENT);
+		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.CLIENT);
 
 		// Test fields for a Group
-		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntity.GROUP);
+		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.GROUP);
 	}
 
 	// Test getting client types
@@ -656,8 +656,6 @@ public class DemoTestClientService {
 		// Keep the same group ID, groupID cannot be modified
 
 		updatedGroup.setHomePhone(updatedGroup.getHomePhone() + "-22");
-		// TODO: GET Group and GET Group?fullDeatils do no return notes field. Update API may erase existent notes (see
-		// MBU-8560)
 		updatedGroup.setNotes(updatedGroup.getNotes() + updatedSuffix);
 
 		List<Address> addresses = groupExpanded.getAddresses();
@@ -688,7 +686,7 @@ public class DemoTestClientService {
 		List<GroupMember> groupMembers = new ArrayList<GroupMember>();
 		GroupMember groupMember = new GroupMember();
 		// Replace demoClient with newly created client as a group member
-		String newClientKey = clientCreated.getEncodedKey();
+		String newClientKey = (clientCreated != null) ? clientCreated.getEncodedKey() : null;
 		groupMember.setClientKey(newClientKey);
 		groupMember.setCreationDate(new Date());
 		groupMembers.add(groupMember);

@@ -43,10 +43,6 @@ public class CommentsService {
 			MambuEntityType.LOAN_PRODUCT, MambuEntityType.SAVINGS_PRODUCT, MambuEntityType.BRANCH,
 			MambuEntityType.CENTRE, MambuEntityType.USER };
 
-	public static MambuEntityType[] getSupportedEntities() {
-		return supportedEntities;
-	}
-
 	/***
 	 * Create a new service
 	 * 
@@ -119,19 +115,28 @@ public class CommentsService {
 	}
 
 	/**
+	 * Get supported entity types
+	 * 
+	 * @return all supported entities
+	 */
+	public static MambuEntityType[] getSupportedEntities() {
+		return supportedEntities;
+	}
+
+	/**
 	 * Is parent entity type supported by the Comments API
 	 * 
 	 * @param parentEntityType
 	 *            Mambu Entity type
-	 * @return
+	 * @return true if supported
 	 */
 	public static boolean isSupported(MambuEntityType parentEntityType) {
 		if (parentEntityType == null) {
 			return false;
 		}
 
-		Set<MambuEntityType> theSet = new HashSet<MambuEntityType>(Arrays.asList(supportedEntities));
-		return (theSet.contains(parentEntityType)) ? true : false;
+		Set<MambuEntityType> set = new HashSet<MambuEntityType>(Arrays.asList(supportedEntities));
+		return (set.contains(parentEntityType)) ? true : false;
 
 	}
 }

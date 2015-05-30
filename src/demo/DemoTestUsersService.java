@@ -16,7 +16,7 @@ import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.services.UsersService;
-import com.mambu.apisdk.util.MambuEntity;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.data.DataItemType;
@@ -371,7 +371,7 @@ public class DemoTestUsersService {
 		System.out.println("\nIn testUpdateDeleteCustomFields");
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
-		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntity.USER);
+		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.USER);
 
 	}
 
