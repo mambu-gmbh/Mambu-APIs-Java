@@ -6,7 +6,7 @@ import java.util.List;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.CommentsService;
-import com.mambu.apisdk.util.MambuEntity;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.core.shared.model.Comment;
 
 /**
@@ -39,12 +39,11 @@ public class DemoTestCommentsService {
 	public static void testCreateAndGetComments() throws MambuApiException {
 		System.out.println("\nIn testCreateAndGetComments");
 
-		// Getting Comments for all supported entities
 		CommentsService commentsService = MambuAPIFactory.getCommentsService();
 
-		// Iterate through supported entity types and Create a comment first and then Get all comments back
-		MambuEntity[] supportedEntities = commentsService.getSupportedEntities();
-		for (MambuEntity parentEntity : supportedEntities) {
+		// Iterate through all supported entity types and Create a comment first and then GET all comments back
+		MambuEntityType[] supportedEntities = CommentsService.getSupportedEntities();
+		for (MambuEntityType parentEntity : supportedEntities) {
 			// Get key for a parent entity. Use demo entity
 			DemoEntityParams entityParams = DemoEntityParams.getEntityParams(parentEntity);
 			String parentyKey = entityParams.getEncodedKey();
@@ -66,7 +65,7 @@ public class DemoTestCommentsService {
 			// Test GET all Comments for this parent entity
 			Integer offset = 0;
 			Integer limit = 20;
-			List<Comment> comments = commentsService.getList(parentEntity, parentyKey, offset, limit);
+			List<Comment> comments = commentsService.getComments(parentEntity, parentyKey, offset, limit);
 			// Log returned Comments
 			System.out.println("\nTotal comments returned=" + comments.size());
 			for (Comment comment : comments) {
