@@ -14,13 +14,13 @@ import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
 
 /**
- * MambuEntity class is an enum for Mambu entities supported by the API wrapper library. This class is used to specify
- * Mambu entity for an API operation
+ * MambuEntityType class is an enum for Mambu entities supported by the API wrapper library. This class is used to
+ * specify Mambu entity for an API operation
  * 
  * @author mdanilkis
  * 
  */
-public enum MambuEntity {
+public enum MambuEntityType {
 
 	// A list of entities supported by the API wrapper library. To be extended as needed
 	CLIENT(Client.class), GROUP(Group.class), LOAN_ACCOUNT(LoanAccount.class), SAVINGS_ACCOUNT(SavingsAccount.class), LOAN_PRODUCT(
@@ -30,7 +30,7 @@ public enum MambuEntity {
 
 	// Map MambuEntity enum to a corresponding Java class in Mambu model. For example, CLIENT enum is for Client.class.
 	// Java classes for MambuEntity are to be used by the {@link ApiDefintion} and {@link ServiceExecutor}
-	private MambuEntity(Class<?> clazz) {
+	private MambuEntityType(Class<?> clazz) {
 		this.entityClass = clazz;
 	}
 
