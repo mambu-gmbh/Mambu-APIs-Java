@@ -17,7 +17,7 @@ import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.util.APIData.CLOSER_TYPE;
 import com.mambu.apisdk.util.DateUtils;
-import com.mambu.apisdk.util.MambuEntity;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.CustomFieldType;
@@ -88,8 +88,11 @@ public class DemoTestLoanService {
 			testApproveLoanAccount();
 			testUndoApproveLoanAccount();
 			testApproveLoanAccount();
+
 			// Test Disburse and Undo disburse
 			testDisburseLoanAccount();
+			testLockLoanAccount(); // Available since 3.6
+			testUnlockLoanAccount(); // Available since 3.6
 			testUndoDisburseLoanAccount(); // Available since 3.9
 			testDisburseLoanAccount();
 
@@ -112,9 +115,6 @@ public class DemoTestLoanService {
 			// Products
 			testGetLoanProducts();
 			testGetLoanProductById();
-
-			testLockLoanAccount(); // Available since 3.6
-			testUnlockLoanAccount(); // Available since 3.6
 
 			testGetDocuments(); // Available since Mambu 3.6
 
@@ -487,10 +487,19 @@ public class DemoTestLoanService {
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		String accountId = NEW_LOAN_ACCOUNT_ID;
-		LoanTransaction transaction = loanService.lockLoanAccount(accountId, "some lock demo notes");
+		// Updated to return a list. See MBU-8370
+		List<LoanTransaction> transactions = loanService.lockLoanAccount(accountId, "some lock demo notes");
 
-		System.out.println("Locked account with ID " + accountId + " Transaction  " + transaction.getTransactionId()
-				+ " Type=" + transaction.getType() + "  Balance=" + transaction.getBalance());
+		if (transactions == null || transactions.size() == 0) {
+			System.out.println("No Transactions returned in response");
+			return;
+		}
+		for (LoanTransaction transaction : transactions) {
+			System.out.println("Locked account with ID " + accountId + " Transaction  "
+					+ transaction.getTransactionId() + " Type=" + transaction.getType() + "  Balance="
+					+ transaction.getBalance());
+
+		}
 	}
 
 	public static void testUnlockLoanAccount() throws MambuApiException {
@@ -498,10 +507,18 @@ public class DemoTestLoanService {
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		String accountId = NEW_LOAN_ACCOUNT_ID;
-		LoanTransaction transaction = loanService.unlockLoanAccount(accountId, "some unlock demo notes");
+		// Updated to return a list. See MBU-8370
+		List<LoanTransaction> transactions = loanService.unlockLoanAccount(accountId, "some unlock demo notes");
+		if (transactions == null || transactions.size() == 0) {
+			System.out.println("No Transactions returned in response");
+			return;
+		}
+		for (LoanTransaction transaction : transactions) {
+			System.out.println("UnLocked account with ID " + accountId + " Transaction  "
+					+ transaction.getTransactionId() + " Type=" + transaction.getType() + "  Balance="
+					+ transaction.getBalance());
+		}
 
-		System.out.println("UnLocked account with ID " + accountId + " Transaction  " + transaction.getTransactionId()
-				+ " Type=" + transaction.getType() + "  Balance=" + transaction.getBalance());
 	}
 
 	public static void testDeleteLoanAccount() throws MambuApiException {
@@ -773,7 +790,7 @@ public class DemoTestLoanService {
 		System.out.println("\nIn testUpdateDeleteCustomFields");
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
-		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntity.LOAN_ACCOUNT);
+		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.LOAN_ACCOUNT);
 
 	}
 

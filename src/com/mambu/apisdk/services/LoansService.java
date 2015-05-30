@@ -15,6 +15,7 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.DateUtils;
 import com.mambu.apisdk.util.ParamsMap;
@@ -217,16 +218,20 @@ public class LoansService {
 	 * @param accountId
 	 *            the id of the account
 	 * 
-	 * @return loan transaction
+	 * @return a list of loan transactions performed when locking account
 	 * 
 	 * @throws MambuApiException
 	 */
-	public LoanTransaction lockLoanAccount(String accountId, String notes) throws MambuApiException {
+	public List<LoanTransaction> lockLoanAccount(String accountId, String notes) throws MambuApiException {
 
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_LOCK);
 		paramsMap.addParam(NOTES, notes);
 
+		// See MBU-8370. Unlock account API now returns a list of transactions
+		ApiDefinition postAccountTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY, LoanAccount.class,
+				LoanTransaction.class);
+		postAccountTransaction.setApiReturnFormat(ApiReturnFormat.COLLECTION);
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
@@ -236,16 +241,20 @@ public class LoansService {
 	 * @param accountId
 	 *            the id of the account
 	 * 
-	 * @return loan transaction
+	 * @return a list of loan transactions performed when unlocking account
 	 * 
 	 * @throws MambuApiException
 	 */
-	public LoanTransaction unlockLoanAccount(String accountId, String notes) throws MambuApiException {
+	public List<LoanTransaction> unlockLoanAccount(String accountId, String notes) throws MambuApiException {
 
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_UNLOCK);
 		paramsMap.addParam(NOTES, notes);
 
+		// See MBU-8370. Unlock account API now returns a list of transactions
+		ApiDefinition postAccountTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY, LoanAccount.class,
+				LoanTransaction.class);
+		postAccountTransaction.setApiReturnFormat(ApiReturnFormat.COLLECTION);
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
