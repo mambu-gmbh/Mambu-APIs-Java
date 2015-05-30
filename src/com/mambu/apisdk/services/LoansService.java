@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
+import com.mambu.api.server.handler.loan.model.JSONTransactionRequest;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.LoanAccountExpanded;
@@ -19,6 +20,7 @@ import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.DateUtils;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
@@ -372,6 +374,38 @@ public class LoansService {
 
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 
+	}
+
+	/**
+	 * Disburse a loan account specifying fees to be applied when activating account
+	 * 
+	 * @param accountId
+	 *            account id
+	 * @param transactionRequest
+	 *            disburse transaction request
+	 * @return Loan Transaction
+	 * @throws MambuApiException
+	 */
+	// TODO: This method is incomplete. There seems to be no public setters for the JSONTransactionRequest.
+	// See MBU-8811 and MBU-8948. This may need to wait till MBU-8992:"Refactor API transactions to use a JSON wrapper"
+	@SuppressWarnings("unused")
+	public LoanTransaction disburseLoanAccount(String accountId, JSONTransactionRequest transactionRequest)
+			throws MambuApiException {
+		// Submit Disburse transaction using JSONTransactionRequest request
+		// Available since 3.11. See MBU-8811. Introduced to support providing fees at disbursement time
+		// Example: POST {"type":"DISBURSMENT","date":"2012-10-04","firstRepaymentDate":"2012-10-30","notes":"notes",
+		// "fees":[{encodedKey":"abc123"}, "encodedKey":"abc456","amount":"100.00" }]}
+		// https://user:pass@demo.mambu.com/api/loans/{ID}/transactions
+
+		// TODO: Not sure how to set fields in this JSONTransactionRequest object? Is this the right class for the API?
+		// There are no public setters in the exported model
+		if (true) {
+			throw new UnsupportedOperationException(
+					"Disbursing Loan Account for JSONTransactionRequest is not yet  supported");
+		}
+
+		postAccountTransaction.setContentType(ContentType.JSON);
+		return serviceExecutor.executeJson(postAccountTransaction, transactionRequest, accountId);
 	}
 
 	/***
