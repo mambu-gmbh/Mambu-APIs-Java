@@ -58,38 +58,31 @@ public class CustomFieldValueService {
 	 * @param parentEntityId
 	 *            entity id or encoded key for the parent entity
 	 * @param customFieldValue
-	 *            owned entity object
-	 * @param customFieldValueId
-	 *            the encoded key or id of the custom field value to be updated
+	 *            custom field value to be updated
 	 * 
 	 * @return true if updated successfully
 	 * @throws MambuApiException
 	 */
-	public boolean update(MambuEntityType parentEntity, String parentEntityId, CustomFieldValue customFieldValue,
-			String customFieldValueId) throws MambuApiException {
+	public boolean update(MambuEntityType parentEntity, String parentEntityId, CustomFieldValue customFieldValue)
+			throws MambuApiException {
 		// Update Custom Field Values API examples:
 		// Execute request for PATCH API to update custom field value for a Loan Account. See MBU-6661
-		// e.g. PATCH "{ "value": "10" }" /host/api/loans/accointId/custominformation/customFieldId
+		// e.g. PATCH "{ "value": "10" }" /host/api/loans/accointId/custominformation/{customFieldId}
 
 		// PATCH linked Entity value for a custom field value (see MBU-8514)
-		// PATCH '{ "linkedEntityKeyValue": "40288a13...." }'// /api/clients/abc123/custominformation/customFieldId
+		// PATCH '{ "linkedEntityKeyValue": "40288a13...." }'// /api/clients/abc123/custominformation/{customFieldId}
 
-		// Update Grouped field: PATCH '{ "value": "10" }' /api/clients/abc123/custominformation/family_members/1
+		// For Grouped field: PATCH {"value": "10"} /api/clients/abc123/custominformation/{customFieldId}/{groupNumber}
 		// See MBU-8340
 
-		if (customFieldValue == null || customFieldValueId == null) {
-			throw new IllegalArgumentException("Custom Field Value and Field ID cannot be null");
-		}
-		// For Grouped custom field group number must be added to URL request
-		Integer groupIndex = customFieldValue.getCustomFieldSetGroupIndex();
-		if (groupIndex != null) {
-			customFieldValueId = customFieldValueId.concat("/").concat(String.valueOf(groupIndex));
-		}
+		// Make custom field value id path. The id path must include group number for grouped fields
+		String customFieldIdPath = makeCustomFieldIdPath(customFieldValue);
+
 		// Make Custom Field value which contains only fields needed in API request
 		CustomFieldValue apiFieldValue = makePatchApiCustomField(customFieldValue);
 
 		// Submit API request
-		return serviceExecutor.updateOwnedEntity(parentEntity, parentEntityId, apiFieldValue, customFieldValueId);
+		return serviceExecutor.updateOwnedEntity(parentEntity, parentEntityId, apiFieldValue, customFieldIdPath);
 
 	}
 
@@ -100,23 +93,29 @@ public class CustomFieldValueService {
 	 *            Mambu entity for which custom field value is deleted. Example: MambuEntity.CLIENT, MambuEntity.BRANCH
 	 * @param parentEntityId
 	 *            entity id or encoded key for the parent entity
-	 * @param customFieldValueId
-	 *            the encoded key or id of the custom field value to be deleted
+	 * @param customFieldValue
+	 *            custom field value to be deleted
 	 * @return true if successful
 	 * @throws MambuApiException
 	 */
-	public boolean delete(MambuEntityType parentEntity, String parentEntityId, String ownedEntityId)
+	public boolean delete(MambuEntityType parentEntity, String parentEntityId, CustomFieldValue customFieldValue)
 			throws MambuApiException {
 
 		// Exammple:Execute request for DELETE API to delete custom field value for a client See MBU-6661
-		// e.g. DELETE /host/api/clients/clientId/custominformation/customFieldId
+		// e.g. DELETE /host/api/clients/clientId/custominformation/{customFieldId}
 
-		return serviceExecutor.deleteOwnedEntity(parentEntity, parentEntityId, serviceEntity, ownedEntityId);
+		// Example Delete grouped customfield value. See MBU-8340. Need to specify group number
+		// DELETE /api/clients/abc123/custominformation/{customFieldId}/{groupNumber}
+
+		// Create custom field value id. The id must include group number for grouped fields
+		String customFieldIdPath = makeCustomFieldIdPath(customFieldValue);
+
+		return serviceExecutor.deleteOwnedEntity(parentEntity, parentEntityId, serviceEntity, customFieldIdPath);
 
 	}
 
 	/**
-	 * Make Custom Field Value for a PATCH Api request. Only certain fields need to be present in the API request.
+	 * Make Custom Field Value for a PATCH API request. Only certain fields need to be present in the API request.
 	 * Specifically, "value" and "linkedEntityKeyValue"
 	 * 
 	 * @param customFieldValue
@@ -139,6 +138,32 @@ public class CustomFieldValueService {
 		apiField.setLinkedEntitySummary(null);
 
 		return apiField;
+	}
+
+	/**
+	 * Make custom filed id path for updating and deleting custom field values. Custom field id path for grouped custom
+	 * fields must include the group number of the custom field value to be deleted
+	 * 
+	 * @param customFieldValue
+	 *            custom field value to be deleted
+	 * @return custom field id path
+	 */
+	private String makeCustomFieldIdPath(CustomFieldValue customFieldValue) {
+		if (customFieldValue == null || customFieldValue.getCustomFieldId() == null) {
+			throw new IllegalArgumentException("Custom Field Value and its Field ID cannot be null");
+		}
+
+		// For non-grouped custom fields specify custom field id
+		String customFieldIdPath = customFieldValue.getCustomFieldId();
+
+		// For Grouped custom field add group number to the URL request: {custofieldId}/{groupNumber} See MBU-8340
+		Integer groupIndex = customFieldValue.getCustomFieldSetGroupIndex();
+		if (groupIndex != null) {
+			// Add group number to the path
+			customFieldIdPath = customFieldIdPath.concat("/").concat(String.valueOf(groupIndex));
+		}
+
+		return customFieldIdPath;
 	}
 
 	/**
