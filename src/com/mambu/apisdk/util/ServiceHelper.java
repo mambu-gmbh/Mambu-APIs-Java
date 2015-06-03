@@ -13,6 +13,7 @@ import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
+import com.mambu.apisdk.services.CustomFieldValueService;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.loans.shared.model.LoanAccount;
 
@@ -64,6 +65,8 @@ public class ServiceHelper {
 	/**
 	 * Validate Custom Field ID and make ParamsMap for Update Custom Field value API requests
 	 * 
+	 * @deprecated use {@link CustomFieldValueService} to update and delete custom field values
+	 * 
 	 * @param customFieldId
 	 *            the ID or the encoded key of the custom field to be updated. Must be not null and not empty
 	 * @param fieldValue
@@ -71,6 +74,7 @@ public class ServiceHelper {
 	 * 
 	 * @return params
 	 */
+	@Deprecated
 	public static ParamsMap makeParamsForUpdateCustomField(String customFieldId, String fieldValue) {
 
 		// Verify that customFieldId is not null

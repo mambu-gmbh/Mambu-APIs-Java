@@ -168,6 +168,7 @@ public class TasksService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	// TODO: add support to get Tasks for a Group when MBU-9015 is fixed
 	public List<Task> getTasks(String username, String clientId, TaskStatus taskStatus, String offset, String limit)
 			throws MambuApiException {
 

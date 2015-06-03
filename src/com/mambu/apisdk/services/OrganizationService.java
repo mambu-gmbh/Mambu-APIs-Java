@@ -8,22 +8,31 @@ import java.util.List;
 import com.google.inject.Inject;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.api.server.handler.indexratesources.model.JsonIndexRate;
+import com.mambu.api.server.handler.settings.organization.model.JSONOrganization;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
+import com.mambu.apisdk.util.GsonUtils;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
+import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.IdentificationDocumentTemplate;
+import com.mambu.core.shared.model.Address;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
+import com.mambu.core.shared.model.CustomFieldType;
 import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.core.shared.model.GeneralSettings;
 import com.mambu.core.shared.model.IndexRate;
 import com.mambu.core.shared.model.IndexRateSource;
+import com.mambu.core.shared.model.ObjectLabel;
+import com.mambu.core.shared.model.Organization;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 
@@ -55,24 +64,9 @@ public class OrganizationService {
 
 	private final static ApiDefinition getTransactionChannels = new ApiDefinition(ApiType.GET_LIST,
 			TransactionChannel.class);
-	// Update Custom Field value for a Branch
-	private final static ApiDefinition updateBranchCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
-			Branch.class, CustomFieldValue.class);
-	// Delete Custom Field for a Branch
-	private final static ApiDefinition deleteBranchCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
-			Branch.class, CustomFieldValue.class);
-	// Update Custom Field value for a Centre
-	private final static ApiDefinition updateCentreCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
-			Centre.class, CustomFieldValue.class);
-	// Delete Custom Field for a Centre
-	private final static ApiDefinition deleteCentreCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
-			Centre.class, CustomFieldValue.class);
 	// Post Index Interest Rate
 	private final static ApiDefinition postIndexInterestRate = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
 			IndexRateSource.class, IndexRate.class);
-	// Get Identification Document Templates defined for an organization. Specify endpoint directly as APIData.SETTINGS
-	private final static ApiDefinition getDocumentTemplates = new ApiDefinition(ApiType.GET_RELATED_ENTITIES,
-			APIData.SETTINGS, IdentificationDocumentTemplate.class);
 
 	/***
 	 * Create a new organization service
@@ -201,7 +195,7 @@ public class OrganizationService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public List<CustomFieldSet> getCustomFieldSets(CustomField.Type customFieldType) throws MambuApiException {
+	public List<CustomFieldSet> getCustomFieldSets(CustomFieldType customFieldType) throws MambuApiException {
 
 		ParamsMap params = null;
 		// if customFieldType is null then all types are requested
@@ -229,6 +223,10 @@ public class OrganizationService {
 	/***
 	 * Update custom field value for a Branch. This method allows to set new value for a specific custom field
 	 * 
+	 * @deprecated use
+	 *             {@link CustomFieldValueService#update(com.mambu.apisdk.util.MambuEntity, String, CustomFieldValue, String)}
+	 *             to update custom field values . This method doesn't support updating grouped and linked custom fields
+	 *             available since 3.11
 	 * @param branchId
 	 *            the encoded key or id of the Mambu Branch
 	 * @param customFieldId
@@ -238,11 +236,14 @@ public class OrganizationService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public boolean updateBranchCustomField(String branchId, String customFieldId, String fieldValue)
 			throws MambuApiException {
 		// Execute request for PATCH API to update custom field value for a Branch. See MBU-6661
 		// e.g. PATCH "{ "value": "10" }" /host/api/branches/branchId/custominformation/customFieldId
-
+		// Update Custom Field value for a Branch
+		final ApiDefinition updateBranchCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY, Branch.class,
+				CustomFieldValue.class);
 		// Make ParamsMap with JSON request for Update API
 		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
 		return serviceExecutor.execute(updateBranchCustomField, branchId, customFieldId, params);
@@ -251,6 +252,8 @@ public class OrganizationService {
 	/***
 	 * Delete custom field for a Branch
 	 * 
+	 * @deprecated use {@link CustomFieldValueService#delete(com.mambu.apisdk.util.MambuEntity, String, String)} to
+	 *             delete custom field values
 	 * @param branchId
 	 *            the encoded key or id of the Mambu Branch
 	 * @param customFieldId
@@ -258,10 +261,13 @@ public class OrganizationService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public boolean deleteBranchCustomField(String branchId, String customFieldId) throws MambuApiException {
 		// Execute request for DELETE API to delete custom field value for a Branch. See MBU-6661
 		// e.g. DELETE /host/api/branches/branchId/custominformation/customFieldId
-
+		// Delete Custom Field for a Branch
+		final ApiDefinition deleteBranchCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY, Branch.class,
+				CustomFieldValue.class);
 		return serviceExecutor.execute(deleteBranchCustomField, branchId, customFieldId, null);
 
 	}
@@ -269,6 +275,10 @@ public class OrganizationService {
 	/***
 	 * Update custom field value for a Centre. This method allows to set new value for a specific custom field
 	 * 
+	 * @deprecated use
+	 *             {@link CustomFieldValueService#update(com.mambu.apisdk.util.MambuEntity, String, CustomFieldValue, String)}
+	 *             to update custom field values . This method doesn't support updating grouped and linked custom fields
+	 *             available since 3.11
 	 * @param centreId
 	 *            the encoded key or id of the Mambu Centre for which the custom field is updated
 	 * @param customFieldId
@@ -278,10 +288,15 @@ public class OrganizationService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public boolean updateCentreCustomField(String centreId, String customFieldId, String fieldValue)
 			throws MambuApiException {
 		// Execute request for PATCH API to update custom field value for a Centre. See MBU-6661
 		// e.g. PATCH "{ "value": "10" }" /host/api/centres/centreId/custominformation/customFieldId
+
+		// Update Custom Field value for a Centre
+		final ApiDefinition updateCentreCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY, Centre.class,
+				CustomFieldValue.class);
 
 		// Make ParamsMap with JSON request for Update API
 		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
@@ -292,6 +307,8 @@ public class OrganizationService {
 	/***
 	 * Delete custom field for a Centre
 	 * 
+	 * @deprecated use {@link CustomFieldValueService#delete(com.mambu.apisdk.util.MambuEntity, String, String)} to
+	 *             delete custom field values
 	 * @param centreId
 	 *            the encoded key or id of the Mambu Centre
 	 * @param customFieldId
@@ -299,9 +316,15 @@ public class OrganizationService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public boolean deleteCentreCustomField(String centreId, String customFieldId) throws MambuApiException {
 		// Execute request for DELETE API to delete custom field for a Centre. See MBU-6661
 		// e.g. DELETE /host/api/centres/centreId/custominformation/customFieldId
+
+		// Delete Custom Field for a Centre
+		final ApiDefinition deleteCentreCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY, Centre.class,
+				CustomFieldValue.class);
+
 		return serviceExecutor.execute(deleteCentreCustomField, centreId, customFieldId, null);
 
 	}
@@ -344,6 +367,110 @@ public class OrganizationService {
 	public List<IdentificationDocumentTemplate> getIdentificationDocumentTemplates() throws MambuApiException {
 		// Example: GET /api/settings/iddocumenttemplates
 		// Available since 3.10.5. See MBU-8780
+
+		String urlPath = APIData.SETTINGS + "/" + APIData.ID_DOCUMENT_TEMPLATES;
+		ApiDefinition getDocumentTemplates = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET,
+				IdentificationDocumentTemplate.class, ApiReturnFormat.COLLECTION);
 		return serviceExecutor.execute(getDocumentTemplates);
+	}
+
+	/**
+	 * Get Organization details
+	 * 
+	 * @return Mambu organization definition details
+	 * 
+	 * @throws MambuApiException
+	 */
+	public JSONOrganization getOrganization() throws MambuApiException {
+		// GET /api/settings/organization
+		// Response example:{”name”:”Org name”,”timeZoneID":"PST",... "address":{"line1":"1st Rd.","city":"City"}
+		// Available since 3.11. See MBU-8776
+
+		// TODO: There is no Mambu model class for this JSON response. Cannot use JSONOrganization because Mambu
+		// response does not contain "organization:" prefix in front of organization fields
+		// Temporary Solution: GET as a String and create JSONOrganization Mambu model object in the wrapper
+
+		String urlPath = APIData.SETTINGS + "/" + APIData.ORGANIZATION;
+		ApiDefinition getOrganization = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET, String.class,
+				ApiReturnFormat.RESPONSE_STRING);
+
+		String jsonResponse = serviceExecutor.execute(getOrganization);
+		if (jsonResponse == null) {
+			return null;
+		}
+		// Parse as Organization and then parse the same response as JSONOrganization to get just the Address.
+		Organization organization = GsonUtils.createGson().fromJson(jsonResponse, Organization.class);
+		JSONOrganization jsonOrganization = GsonUtils.createGson().fromJson(jsonResponse, JSONOrganization.class);
+		Address address = (jsonOrganization == null) ? null : jsonOrganization.getAddress();
+		// Return as JSONOrganization
+		return new JSONOrganization(organization, address);
+	}
+
+	/**
+	 * Get organization's general settings
+	 * 
+	 * @return Mambu organization general settings
+	 * 
+	 * @throws MambuApiException
+	 */
+	public GeneralSettings getGeneralSettings() throws MambuApiException {
+		// GET /api/settings/general
+		// Available since 3.11. See MBU-8779
+
+		String urlPath = APIData.SETTINGS + "/" + APIData.GENERAL;
+		ApiDefinition getGeneralSettings = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET,
+				GeneralSettings.class, ApiReturnFormat.OBJECT);
+		return serviceExecutor.execute(getGeneralSettings);
+	}
+
+	/**
+	 * Get Object labels
+	 * 
+	 * @return a list of all object labels defined for all languages supported by Mambu
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<ObjectLabel> getObjectLabels() throws MambuApiException {
+		// GET /api/settings/labels
+		// Available since 3.11. See MBU-8778
+
+		String urlPath = APIData.SETTINGS + "/" + APIData.LABELS;
+		ApiDefinition getObjectLabels = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET, ObjectLabel.class,
+				ApiReturnFormat.COLLECTION);
+		return serviceExecutor.execute(getObjectLabels);
+	}
+
+	/**
+	 * Get Organization Logo
+	 * 
+	 * @return string with base64 encoded logo image, Example: data:image/PNG;base64,iVBORw0...
+	 * 
+	 * @throws MambuApiException
+	 */
+	public String getBrandingLogo() throws MambuApiException {
+		// GET /api/settings/branding/logo
+		// Available since 3.11. See MBU-8777
+
+		String urlPath = APIData.SETTINGS + "/" + APIData.BRANDING + "/" + APIData.LOGO;
+		ApiDefinition getLogo = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET, String.class,
+				ApiReturnFormat.OBJECT);
+		return serviceExecutor.execute(getLogo);
+	}
+
+	/**
+	 * Get Organization Icon
+	 * 
+	 * @return string with base64 encoded logo image, Example: data:image/PNG;base64,iVBORw0...
+	 * 
+	 * @throws MambuApiException
+	 */
+	public String getBrandingIcon() throws MambuApiException {
+		// GET /api/settings/branding/icon
+		// Available since 3.11. See MBU-8777
+
+		String urlPath = APIData.SETTINGS + "/" + APIData.BRANDING + "/" + APIData.ICON;
+		ApiDefinition getIcon = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET, String.class,
+				ApiReturnFormat.OBJECT);
+		return serviceExecutor.execute(getIcon);
 	}
 }

@@ -16,6 +16,7 @@ import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.core.shared.model.SearchResult;
+import com.mambu.core.shared.model.SearchType;
 
 /**
  * Service class which handles the API operations available for the Search
@@ -54,18 +55,18 @@ public class SearchService {
 	 *            the string to query
 	 * @param searchTypes
 	 *            list, in brackets,separated by comma of search types to query. E.g. [CLIENT, GROUP]. Null if searching
-	 *            for all types (defined by SearchResult.Type). The results of the query shall be limited to the
-	 *            specified types
+	 *            for all types (defined by SearchType). The results of the query shall be limited to the specified
+	 *            types
 	 * @param limit
 	 *            maximum number of results to return. If null, Mambu defaults this to 100.
 	 * 
 	 * 
-	 * @return Map<SearchResult.Type, List<SearchResult>> is returned. Empty map and/or Mambu exception if not found
+	 * @return Map<SearchType, List<SearchResult>> is returned. Empty map and/or Mambu exception if not found
 	 * 
 	 * @throws MambuApiException
 	 */
-	public Map<SearchResult.Type, List<SearchResult>> search(String query, List<SearchResult.Type> searchTypes,
-			String limit) throws MambuApiException {
+	public Map<SearchType, List<SearchResult>> search(String query, List<SearchType> searchTypes, String limit)
+			throws MambuApiException {
 
 		if (query == null) {
 			throw new IllegalArgumentException("Query must not be null");

@@ -49,7 +49,7 @@ public class APIData {
 	//
 	public static final String TRANSACTIONS = "transactions";
 	public static final String TYPE_REPAYMENT = "REPAYMENT";
-	public static final String TYPE_DISBURSMENT = "DISBURSMENT";
+	public static final String TYPE_DISBURSEMENT = "DISBURSEMENT"; // Spelling corrected in 3.11 See MBU-7004
 	public static final String DISBURSMENT_ADJUSTMENT = "DISBURSMENT_ADJUSTMENT"; // added in 3.9
 	public static final String TYPE_APPROVAL = "APPROVAL";
 	public static final String TYPE_UNDO_APPROVAL = "UNDO_APPROVAL";
@@ -97,6 +97,9 @@ public class APIData {
 	// Interest Rate Sources source API (available since 3.10)
 	public static final String INDEXRATESOURCES = "indexratesources";
 	public static final String INDEXRATES = "indexrates";
+
+	// Comments (available since 3.11)
+	public static final String COMMENTS = "comments";
 
 	// Tasks
 	public static final String TITLE = "title";
@@ -195,7 +198,18 @@ public class APIData {
 	// Api endpoint for Organisational Settings. Available since 3.10.5
 	public static String SETTINGS = "settings";
 	// Api endpoint for ID Document Templates. Available since 3.10.5
-	public static String ID_DOCUMENT_TEMPLATES = "iddocumenttemplates";
+	public static String ID_DOCUMENT_TEMPLATES = "iddocumenttemplates"; // /api/settings/iddocumenttemplates
+	// Api endpoints for organization. Available since 3.11
+	public static String ORGANIZATION = "organization"; // /api/settings/organization
+	public static String BRANDING = "branding";
+	public static String LOGO = "logo"; // /api/settings/branding/logo
+	public static String ICON = "icon"; // /api/settings/branding/icon
+	public static String LABELS = "labels"; // /api/settings/labels
+	public static String GENERAL = "general"; // /api/settings/general
+
+	// Api endpoint for Lines of Credit. Available since 3.11
+	public static String LINES_OF_CREDIT = "linesofcredit"; // /api/linesofcredit
+	public static String ACCOUNTS = "accounts"; // /api/linesofcredit/{id}/accounts
 
 	// Added to support Json object creation API
 	public static String yyyyMmddFormat = DateUtils.DATE_FORMAT;// ISO_8601_FORMAT_DATE "yyyy-MM-dd";

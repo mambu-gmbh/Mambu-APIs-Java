@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import com.mambu.accounts.shared.model.TransactionLimitType;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.customviews.model.CustomViewApiType;
 import com.mambu.apisdk.MambuAPIFactory;
@@ -15,17 +16,19 @@ import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.services.UsersService;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.data.DataItemType;
 import com.mambu.core.shared.data.DataViewType;
 import com.mambu.core.shared.model.ColumnConfiguration;
 import com.mambu.core.shared.model.CustomField;
-import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.CustomView;
 import com.mambu.core.shared.model.FieldColumn;
+import com.mambu.core.shared.model.Money;
 import com.mambu.core.shared.model.Permissions;
 import com.mambu.core.shared.model.Permissions.Permission;
+import com.mambu.core.shared.model.Role;
 import com.mambu.core.shared.model.User;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanTransaction;
@@ -177,6 +180,12 @@ public class DemoTestUsersService {
 
 		System.out.println("Can Manage All Branches=" + canManageAllBranches + "\t Can Manage Multiple Branches="
 				+ canManageMultipleBranches + "\tCan Manage Other Officers=" + canManageOtherOfficers);
+
+		// Verify Transaction Limits and User Role are returned (see MBU-7019)
+		Role userRole = user.getRole();
+		String userRoleKey = (userRole == null) ? null : userRole.getEncodedKey();
+		HashMap<TransactionLimitType, Money> transactionLimits = user.getTransactionLimits();
+		System.out.println("User Role Key=" + userRoleKey + "\tTransaction Limits=" + transactionLimits);
 	}
 
 	public static void testGetUserByUsername() throws MambuApiException {
@@ -361,75 +370,9 @@ public class DemoTestUsersService {
 	public static void testUpdateDeleteCustomFields() throws MambuApiException {
 		System.out.println("\nIn testUpdateDeleteCustomFields");
 
-		List<CustomFieldValue> customFieldValues;
-		System.out.println("\nUpdating demo User custom fields...");
-		customFieldValues = updateCustomFields();
-
-		System.out.println("\nDeleting first custom field for a demo User...");
-		deleteCustomField(customFieldValues);
+		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
+		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.USER);
 
 	}
 
-	// Private helper to Update all custom fields for a demo User
-	private static List<CustomFieldValue> updateCustomFields() throws MambuApiException {
-
-		Class<?> entityClass = User.class;
-		String entityName = entityClass.getSimpleName();
-		String entityId = demoUser.getId(); // username or user id or encoded key
-
-		// Get Current custom field values first for a Demo account
-		List<CustomFieldValue> customFieldValues = demoUser.getCustomFieldValues();
-
-		if (customFieldValues == null || customFieldValues.size() == 0) {
-			System.out.println("WARNING: No Custom fields defined for demo " + entityName + " with ID=" + entityId
-					+ ". Nothing to update");
-			return null;
-		}
-		// Update custom field values
-		UsersService usersService = MambuAPIFactory.getUsersService();
-		for (CustomFieldValue value : customFieldValues) {
-
-			String fieldId = value.getCustomField().getId(); // return null for Group, Branch, Centre, User?
-			// Create valid new value for a custom field
-			String newValue = DemoUtil.makeNewCustomFieldValue(value).getValue();
-
-			// Update Custom Field value
-			boolean updateStatus;
-			System.out.println("\nUpdating Custom Field with ID=" + fieldId + " for " + entityName + " with ID="
-					+ entityId);
-
-			updateStatus = usersService.updateUserCustomField(entityId, fieldId, newValue);
-
-			String statusMessage = (updateStatus) ? "Success" : "Failure";
-			System.out.println(statusMessage + " updating Custom Field, ID=" + fieldId + " for demo " + entityName
-					+ " with ID=" + entityId + " New value=" + newValue);
-
-		}
-
-		return customFieldValues;
-	}
-
-	// Private helper to Delete the first custom field for a demo User
-	private static void deleteCustomField(List<CustomFieldValue> customFieldValues) throws MambuApiException {
-
-		Class<?> entityClass = User.class;
-		String entityName = entityClass.getSimpleName();
-		// Note, for Users API we use username or encodedKey (not the userId)
-		String entityId = demoUser.getUsername();
-
-		if (customFieldValues == null || customFieldValues.size() == 0) {
-			System.out.println("WARNING: No Custom fields defined for demo " + entityName + " with ID=" + entityId
-					+ ". Nothing to delete");
-			return;
-		}
-		// Delete the first field on the list
-		String customFieldId = customFieldValues.get(0).getCustomField().getId();
-
-		UsersService usersService = MambuAPIFactory.getUsersService();
-		boolean deleteStatus = usersService.deleteUserCustomField(entityId, customFieldId);
-
-		String statusMessage = (deleteStatus) ? "Success" : "Failure";
-		System.out.println(statusMessage + " deleting Custom Field, ID=" + customFieldId + " for demo " + entityName
-				+ " with ID=" + entityId);
-	}
 }

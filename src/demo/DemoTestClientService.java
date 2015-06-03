@@ -16,6 +16,7 @@ import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.util.DateUtils;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.ClientState;
@@ -28,8 +29,7 @@ import com.mambu.clients.shared.model.IdentificationDocument;
 import com.mambu.core.shared.model.Address;
 import com.mambu.core.shared.model.ClientRole;
 import com.mambu.core.shared.model.ClientRolePermission;
-import com.mambu.core.shared.model.CustomField;
-import com.mambu.core.shared.model.CustomField.Type;
+import com.mambu.core.shared.model.CustomFieldType;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
@@ -292,8 +292,8 @@ public class DemoTestClientService {
 		idDocs.add(doc);
 		clExpanded.setIdDocuments(idDocs);
 		// Use helper to make test custom fields which are valid for the client's role
-		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(Type.CLIENT_INFO,
-				cientRole.getEncodedKey());
+		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(
+				CustomFieldType.CLIENT_INFO, cientRole.getEncodedKey());
 		// Add All custom fields
 		clExpanded.setCustomFieldValues(clientCustomInformation);
 
@@ -420,97 +420,12 @@ public class DemoTestClientService {
 	public static void testUpdateDeleteCustomFields() throws MambuApiException {
 		System.out.println("\nIn testUpdateDeleteCustomFields");
 
-		List<CustomFieldValue> customFieldValues;
-		System.out.println("\nUpdating demo Client custom fields...");
-		customFieldValues = updateCustomFields(Client.class);
+		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
+		// Test fields for a Client
+		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.CLIENT);
 
-		System.out.println("\nDeleting first custom field for a demo Client...");
-		deleteCustomField(Client.class, customFieldValues);
-
-		System.out.println("\n\nUpdating demo Group custom fields...");
-		customFieldValues = updateCustomFields(Group.class);
-
-		System.out.println("\nDeleting first custom field for a demo Group...");
-		deleteCustomField(Group.class, customFieldValues);
-
-	}
-
-	// Private helper to Update all custom fields for a client or group
-	private static List<CustomFieldValue> updateCustomFields(Class<?> entityClass) throws MambuApiException {
-		ClientsService clientService = MambuAPIFactory.getClientService();
-
-		String entityName = entityClass.getSimpleName();
-		boolean forClient = (entityClass.equals(Client.class)) ? true : false;
-		String entityId = (forClient) ? demoClient.getId() : demoGroup.getId();
-
-		// Get Current custom field values first. We need an entity with full details
-		List<CustomFieldValue> customFieldValues;
-		if (forClient) {
-			ClientExpanded clientExpanded = clientService.getClientDetails(entityId);
-			customFieldValues = clientExpanded.getCustomFieldValues();
-		} else {
-			GroupExpanded groupExpanded = clientService.getGroupDetails(entityId);
-			customFieldValues = groupExpanded.getCustomFieldValues();
-		}
-
-		if (customFieldValues == null || customFieldValues.size() == 0) {
-			System.out.println("WARNING: No Custom fields defined for demo " + entityName + " with ID=" + entityId
-					+ ". Nothing to update");
-			return null;
-		}
-		// Update custom field values
-		for (CustomFieldValue value : customFieldValues) {
-			// TODO: re-test getting fieldID via getCustomFieldId() for Group when MBU-6923 is fixed. Null for Group
-			String testFieldId = value.getCustomFieldId(); // returns null for Group
-
-			// Use customFieldId from the CustomField, this always works
-			CustomField field = value.getCustomField();
-			String fieldId = field.getId();
-
-			// Create valid new value for a custom field
-			String newValue = DemoUtil.makeNewCustomFieldValue(value).getValue();
-
-			// Update Custom Field value
-			boolean updateStatus;
-			System.out.println("\nUpdating Custom Field with ID=" + fieldId + " for " + entityName + " with ID="
-					+ entityId + "\tField's other ID=" + testFieldId);
-
-			updateStatus = (forClient) ? clientService.updateClientCustomField(entityId, fieldId, newValue)
-					: clientService.updateGroupCustomField(entityId, fieldId, newValue);
-
-			String statusMessage = (updateStatus) ? "Success" : "Failure";
-			System.out.println(statusMessage + " updating Custom Field, ID=" + fieldId + " for demo " + entityName
-					+ " with ID=" + entityId + " New value=" + newValue);
-
-		}
-
-		return customFieldValues;
-	}
-
-	// Private helper to Delete the first custom field for a client or group
-	private static void deleteCustomField(Class<?> entityClass, List<CustomFieldValue> customFieldValues)
-			throws MambuApiException {
-
-		String entityName = entityClass.getSimpleName();
-		boolean forClient = (entityClass.equals(Client.class)) ? true : false;
-		String entityId = (forClient) ? demoClient.getId() : demoGroup.getId();
-
-		if (customFieldValues == null || customFieldValues.size() == 0) {
-			System.out.println("WARNING: No Custom fields defined for demo " + entityName + " with ID=" + entityId
-					+ ". Nothing to delete");
-			return;
-		}
-
-		// Delete the first field on the list
-		String customFieldId = customFieldValues.get(0).getCustomField().getId();
-
-		ClientsService clientService = MambuAPIFactory.getClientService();
-		boolean deleteStatus = (forClient) ? clientService.deleteClientCustomField(entityId, customFieldId)
-				: clientService.deleteGroupCustomField(entityId, customFieldId);
-
-		String statusMessage = (deleteStatus) ? "Success" : "Failure";
-		System.out.println(statusMessage + " deleting Custom Field, ID=" + customFieldId + " for demo " + entityName
-				+ " with ID=" + entityId);
+		// Test fields for a Group
+		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.GROUP);
 	}
 
 	// Test getting client types
@@ -677,8 +592,8 @@ public class DemoTestClientService {
 		// Set Custom Fields
 
 		// Make test custom fields for our group role
-		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(Type.GROUP_INFO,
-				groupType.getEncodedKey());
+		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(
+				CustomFieldType.GROUP_INFO, groupType.getEncodedKey());
 		// Add All custom fields
 		groupDetails.setCustomFieldValues(clientCustomInformation);
 
@@ -741,8 +656,6 @@ public class DemoTestClientService {
 		// Keep the same group ID, groupID cannot be modified
 
 		updatedGroup.setHomePhone(updatedGroup.getHomePhone() + "-22");
-		// TODO: GET Group and GET Group?fullDeatils do no return notes field. Update API may erase existent notes (see
-		// MBU-8560)
 		updatedGroup.setNotes(updatedGroup.getNotes() + updatedSuffix);
 
 		List<Address> addresses = groupExpanded.getAddresses();
@@ -773,7 +686,7 @@ public class DemoTestClientService {
 		List<GroupMember> groupMembers = new ArrayList<GroupMember>();
 		GroupMember groupMember = new GroupMember();
 		// Replace demoClient with newly created client as a group member
-		String newClientKey = clientCreated.getEncodedKey();
+		String newClientKey = (clientCreated != null) ? clientCreated.getEncodedKey() : null;
 		groupMember.setClientKey(newClientKey);
 		groupMember.setCreationDate(new Date());
 		groupMembers.add(groupMember);
@@ -795,4 +708,5 @@ public class DemoTestClientService {
 		System.out.println("Group Updated. Name=" + groupExpanded.getGroup().getGroupNameWithId() + "\tName and Id="
 				+ updatedGroupExpaneded.getGroup().getGroupNameWithId());
 	}
+
 }

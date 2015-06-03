@@ -15,6 +15,7 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.DateUtils;
 import com.mambu.apisdk.util.ParamsMap;
@@ -45,7 +46,7 @@ public class LoansService {
 	private static final String NOTES = APIData.NOTES;
 	//
 	private static final String TYPE_REPAYMENT = APIData.TYPE_REPAYMENT;
-	private static final String TYPE_DISBURSMENT = APIData.TYPE_DISBURSMENT;
+	private static final String TYPE_DISBURSEMENT = APIData.TYPE_DISBURSEMENT;
 	private static final String TYPE_APPROVAL = APIData.TYPE_APPROVAL;
 	private static final String TYPE_UNDO_APPROVAL = APIData.TYPE_UNDO_APPROVAL;
 	private static final String TYPE_FEE = APIData.TYPE_FEE;
@@ -109,13 +110,6 @@ public class LoansService {
 	// Get schedule for Loan Products. GET /api/loanproducts/<ID>/schedule?loanAmount=50. Returns JSONLoanRepayments
 	private final static ApiDefinition getProductSchedule = new ApiDefinition(ApiType.GET_OWNED_ENTITY,
 			LoanProduct.class, JSONLoanRepayments.class);
-
-	// Update Custom Field value for a Loan Account. PATCH /api/loans/accointId/custominformation/customFieldId
-	private final static ApiDefinition updateAccountCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
-			LoanAccount.class, CustomFieldValue.class);
-	// Delete Custom Field for a Loan Account. DELETE /api/loans/accointId/custominformation/customFieldId
-	private final static ApiDefinition deleteAccountCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
-			LoanAccount.class, CustomFieldValue.class);
 
 	/***
 	 * Create a new loan service
@@ -224,16 +218,20 @@ public class LoansService {
 	 * @param accountId
 	 *            the id of the account
 	 * 
-	 * @return loan transaction
+	 * @return a list of loan transactions performed when locking account
 	 * 
 	 * @throws MambuApiException
 	 */
-	public LoanTransaction lockLoanAccount(String accountId, String notes) throws MambuApiException {
+	public List<LoanTransaction> lockLoanAccount(String accountId, String notes) throws MambuApiException {
 
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_LOCK);
 		paramsMap.addParam(NOTES, notes);
 
+		// See MBU-8370. Unlock account API now returns a list of transactions
+		ApiDefinition postAccountTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY, LoanAccount.class,
+				LoanTransaction.class);
+		postAccountTransaction.setApiReturnFormat(ApiReturnFormat.COLLECTION);
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
@@ -243,16 +241,20 @@ public class LoansService {
 	 * @param accountId
 	 *            the id of the account
 	 * 
-	 * @return loan transaction
+	 * @return a list of loan transactions performed when unlocking account
 	 * 
 	 * @throws MambuApiException
 	 */
-	public LoanTransaction unlockLoanAccount(String accountId, String notes) throws MambuApiException {
+	public List<LoanTransaction> unlockLoanAccount(String accountId, String notes) throws MambuApiException {
 
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_UNLOCK);
 		paramsMap.addParam(NOTES, notes);
 
+		// See MBU-8370. Unlock account API now returns a list of transactions
+		ApiDefinition postAccountTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY, LoanAccount.class,
+				LoanTransaction.class);
+		postAccountTransaction.setApiReturnFormat(ApiReturnFormat.COLLECTION);
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
@@ -360,7 +362,7 @@ public class LoansService {
 			String firstRepaymentDate, String notes, TransactionDetails transactionDetails) throws MambuApiException {
 
 		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.addParam(TYPE, TYPE_DISBURSMENT);
+		paramsMap.addParam(TYPE, TYPE_DISBURSEMENT);
 
 		// Add transactionDetails to the paramsMap
 		ServiceHelper.addAccountTransactionParams(paramsMap, amount, disbursalDate, notes, transactionDetails);
@@ -371,6 +373,8 @@ public class LoansService {
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 
 	}
+
+	// TODO: Implement MBU-8811 Disburse with activation fees when MBU-8992 is ready
 
 	/***
 	 * Undo Disburse for a loan account. If the account has multiple tranches, reverses the last tranche
@@ -791,6 +795,10 @@ public class LoansService {
 	/***
 	 * Update custom field value for a Loan Account. This method allows to set new value for a specific custom field
 	 * 
+	 * @deprecated use
+	 *             {@link CustomFieldValueService#update(com.mambu.apisdk.util.MambuEntity, String, CustomFieldValue, String)}
+	 *             to update custom field values . This method doesn't support updating grouped and linked custom fields
+	 *             available since 3.11
 	 * @param accountId
 	 *            the encoded key or id of the Mambu Loan Account for which the custom field is updated
 	 * @param customFieldId
@@ -800,10 +808,15 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public boolean updateLoanAccountCustomField(String accountId, String customFieldId, String fieldValue)
 			throws MambuApiException {
 		// Execute request for PATCH API to update custom field value for a Loan Account. See MBU-6661
 		// e.g. PATCH "{ "value": "10" }" /host/api/loans/accointId/custominformation/customFieldId
+
+		// Update Custom Field value for a Loan Account. PATCH /api/loans/accointId/custominformation/customFieldId
+		final ApiDefinition updateAccountCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY, LoanAccount.class,
+				CustomFieldValue.class);
 
 		// Make ParamsMap with JSON request for Update API
 		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
@@ -813,6 +826,9 @@ public class LoansService {
 
 	/***
 	 * Delete custom field for a Loan Account
+	 * 
+	 * @deprecated use {@link CustomFieldValueService#delete(com.mambu.apisdk.util.MambuEntity, String, String)} to
+	 *             delete custom field values
 	 * 
 	 * @param accountId
 	 *            the encoded key or id of the Mambu Loan Account
@@ -824,6 +840,10 @@ public class LoansService {
 	public boolean deleteLoanAccountCustomField(String accountId, String customFieldId) throws MambuApiException {
 		// Execute request for DELETE API to delete custom field for a Loan Account. See MBU-6661
 		// e.g. DELETE /host/api/loans/accointId/custominformation/customFieldId
+
+		// Delete Custom Field for a Loan Account. DELETE /api/loans/accointId/custominformation/customFieldId
+		final ApiDefinition deleteAccountCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
+				LoanAccount.class, CustomFieldValue.class);
 
 		return serviceExecutor.execute(deleteAccountCustomField, accountId, customFieldId, null);
 

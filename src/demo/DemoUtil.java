@@ -33,13 +33,15 @@ import com.mambu.apisdk.util.DateUtils;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
+import com.mambu.clients.shared.model.GroupExpanded;
 import com.mambu.core.shared.model.CustomField;
-import com.mambu.core.shared.model.CustomField.DataType;
+import com.mambu.core.shared.model.CustomFieldDataType;
 import com.mambu.core.shared.model.CustomFieldLink;
 import com.mambu.core.shared.model.CustomFieldLink.LinkType;
 import com.mambu.core.shared.model.CustomFieldSelection;
 import com.mambu.core.shared.model.CustomFieldSet;
 import com.mambu.core.shared.model.CustomFieldSet.Usage;
+import com.mambu.core.shared.model.CustomFieldType;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.CustomFilterConstraint;
 import com.mambu.core.shared.model.User;
@@ -237,6 +239,28 @@ public class DemoUtil {
 
 	}
 
+	// Get Demo client by ID
+	public static Client getDemoClient(String clientId) throws MambuApiException {
+		System.out.println("\nIn getDemoClient for id=" + clientId);
+
+		ClientsService clientsService = MambuAPIFactory.getClientService();
+		Client client = clientsService.getClient(clientId);
+
+		return client;
+
+	}
+
+	// Get Demo client details by ID
+	public static ClientExpanded getDemoClientDetails(String clientId) throws MambuApiException {
+		System.out.println("\nIn getDemoClient with details for id=" + clientId);
+
+		ClientsService clientsService = MambuAPIFactory.getClientService();
+		ClientExpanded client = clientsService.getClientDetails(clientId);
+
+		return client;
+
+	}
+
 	// Get Demo group
 	public static Group getDemoGroup() throws MambuApiException {
 		System.out.println("\nIn getDemoGroup");
@@ -256,7 +280,29 @@ public class DemoUtil {
 
 	}
 
-	// Get random loan product
+	// Get Demo group by ID
+	public static Group getDemoGroup(String groupId) throws MambuApiException {
+		System.out.println("\nIn getDemoGroup for id=" + groupId);
+
+		ClientsService clientsService = MambuAPIFactory.getClientService();
+		Group group = clientsService.getGroup(groupId);
+
+		return group;
+
+	}
+
+	// Get Demo group details by ID
+	public static GroupExpanded getDemoGroupDetails(String groupId) throws MambuApiException {
+		System.out.println("\nIn getDemoGroup for id=" + groupId);
+
+		ClientsService clientsService = MambuAPIFactory.getClientService();
+		GroupExpanded group = clientsService.getGroupDetails(groupId);
+
+		return group;
+
+	}
+
+	// Get random active loan product.
 	public static LoanProduct getDemoLoanProduct() throws MambuApiException {
 		System.out.println("\nIn getDemoLoanProduct");
 
@@ -264,15 +310,24 @@ public class DemoUtil {
 
 		// all products for our demo user
 		List<LoanProduct> products = service.getLoanProducts("0", "5");
-
-		if (products != null) {
-			int randomIndex = (int) (Math.random() * (products.size() - 1));
-			return products.get(randomIndex);
+		if (products == null || products.size() == 0) {
+			System.out.println("getDemoLoanProduct: no Loan products defined");
+			return null;
 		}
 
-		System.out.println("getDemoLoanProduct: no Loan products defined");
+		List<LoanProduct> activeProducts = new ArrayList<LoanProduct>();
+		for (LoanProduct product : products) {
+			if (product.isActivated()) {
+				activeProducts.add(product);
+			}
+		}
+		if (activeProducts.size() == 0) {
+			System.out.println("getDemoLoanProduct: no Active Loan products defined");
+			return null;
+		}
 
-		return null;
+		int randomIndex = (int) (Math.random() * (activeProducts.size() - 1));
+		return activeProducts.get(randomIndex);
 
 	}
 
@@ -290,21 +345,31 @@ public class DemoUtil {
 
 	}
 
-	// Get random savings product
+	// Get random active savings product
 	public static SavingsProduct getDemoSavingsProduct() throws MambuApiException {
 		System.out.println("\nIn getDemoSavingsProduct");
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
 		List<SavingsProduct> products = service.getSavingsProducts("0", "5");
 
-		if (products != null) {
-			int randomIndex = (int) (Math.random() * (products.size() - 1));
-			return products.get(randomIndex);
+		if (products == null || products.size() == 0) {
+			System.out.println("getDemoSavingsProduct: no Savings products defined");
+			return null;
+		}
+		List<SavingsProduct> activeProducts = new ArrayList<SavingsProduct>();
+		for (SavingsProduct product : products) {
+			if (product.isActivated()) {
+				activeProducts.add(product);
+			}
+		}
+		if (activeProducts.size() == 0) {
+			System.out.println("getDemoSavingsProduct: no Active Savings products defined");
+			return null;
 		}
 
-		System.out.println("getDemoSavingsProduct: no Savings products defined");
+		int randomIndex = (int) (Math.random() * (activeProducts.size() - 1));
+		return activeProducts.get(randomIndex);
 
-		return null;
 	}
 
 	// Get specific savings product by ID
@@ -328,7 +393,7 @@ public class DemoUtil {
 		LoansService service = MambuAPIFactory.getLoanService();
 		List<LoanAccount> loans = service.getLoanAccountsByBranchOfficerState(null, demoUsername, null, "0", "5");
 
-		if (loans != null) {
+		if (loans != null && loans.size() > 0) {
 			int randomIndex = (int) (Math.random() * (loans.size() - 1));
 			return loans.get(randomIndex);
 		}
@@ -359,12 +424,12 @@ public class DemoUtil {
 		List<SavingsAccount> savings = service.getSavingsAccountsByBranchOfficerState(null, demoUsername, null, "0",
 				"5");
 
-		if (savings != null) {
+		if (savings != null && savings.size() > 0) {
 			int randomIndex = (int) (Math.random() * (savings.size() - 1));
 			return savings.get(randomIndex);
 		}
 
-		System.out.println("getDemoLoanAccount: no Loan Accounts the Demo User exist");
+		System.out.println("getDemoSavingsAccount: no Savings Accounts for the Demo User exist");
 
 		return null;
 	}
@@ -383,26 +448,47 @@ public class DemoUtil {
 		return account;
 	}
 
-	// Make new value for a CustomFieldValue
+	// Make new value for a CustomFieldValue with a known CustomFieldSet
+	public static CustomFieldValue makeNewCustomFieldValue(CustomFieldSet set, CustomFieldValue value) {
+		if (value == null) {
+			return new CustomFieldValue();
+		}
+		return makeNewCustomFieldValue(set, value.getCustomField(), value);
+	}
+
+	// Make new value for a CustomFieldValue when only original value is available
 	public static CustomFieldValue makeNewCustomFieldValue(CustomFieldValue value) {
 		if (value == null) {
 			return new CustomFieldValue();
 		}
-		return makeNewCustomFieldValue(value.getCustomField(), value.getValue());
+		CustomFieldSet set = null;
+		return makeNewCustomFieldValue(set, value.getCustomField(), value);
 	}
 
 	// Helper to create a new, valid test value for a custom field value based on field's data type and initial value
-	public static CustomFieldValue makeNewCustomFieldValue(CustomField customField, String initialValue) {
+	private static CustomFieldValue makeNewCustomFieldValue(CustomFieldSet set, CustomField customField,
+			CustomFieldValue initialField) {
+
 		if (customField == null) {
 			return new CustomFieldValue();
 		}
 		String fieldId = customField.getId();
-		DataType fieldType = customField.getDataType();
+		CustomFieldDataType fieldType = customField.getDataType();
 
 		CustomFieldValue value = new CustomFieldValue();
 		value.setCustomFieldId(customField.getId());
+		// Set group index from current value
+		Integer groupIndex = (initialField == null) ? null : initialField.getCustomFieldSetGroupIndex();
+		value.setCustomFieldSetGroupIndex(groupIndex);
 
-		String newValue = null;
+		// For Grouped custom field values we need also to set Group Index. See MBU-7511
+		if (groupIndex == null && set != null && set.getUsage() == Usage.GROUPED) {
+			value.setCustomFieldSetGroupIndex(0);
+		}
+
+		String initialValue = (initialField == null) ? null : initialField.getValue();
+		String newValue = null; // custom field value
+		String linkedValue = null; // linked value
 		switchloop: switch (fieldType) {
 		case STRING:
 			// Set demo string with the current date
@@ -441,48 +527,51 @@ public class DemoUtil {
 			// return current date as new value
 			newValue = DateUtils.FORMAT.format(new Date());
 			break;
+		case CLIENT_LINK:
+			try {
+				Client client = getDemoClient();
+				linkedValue = client.getEncodedKey();
+			} catch (MambuApiException e) {
+				linkedValue = null;
+			}
+			break;
+		case GROUP_LINK:
+			try {
+				Group group = getDemoGroup();
+				linkedValue = group.getEncodedKey();
+			} catch (MambuApiException e) {
+				linkedValue = null;
+			}
+			break;
 		}
 		value.setValue(newValue);
+		value.setLinkedEntityKeyValue(linkedValue);
 		return value;
 	}
 
 	// Get custom fields of a specific type and for the specific entity
-	public static List<CustomField> getForEntityCustomFields(CustomField.Type customFieldType, String entityKey)
+	public static List<CustomField> getForEntityCustomFields(CustomFieldSet set, String entityKey)
 			throws MambuApiException {
-		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
-		List<CustomFieldSet> sets = organizationService.getCustomFieldSets(customFieldType);
-		if (sets == null || sets.size() == 0) {
-			System.out.println("No Custom Field Sets found for type=" + customFieldType);
-			return new ArrayList<CustomField>();
-		}
 
 		List<CustomField> customFields = new ArrayList<CustomField>();
-		for (CustomFieldSet set : sets) {
-			// TODO: remove this check when support for Grouped Custom fields is implemented, see MBU-7511
-			if (set.getUsage() == Usage.GROUPED) {
-				System.out.println("Skipping using set " + set.getName()
-						+ ". GROUPED sets are not supported by API yet");
-				continue;
-			}
-			// get required and default custom fields for the specified entity key
-			List<CustomField> fields = set.getCustomFields();
-			if (fields == null || fields.size() == 0) {
-				continue;
-			}
-			for (CustomField field : fields) {
-				if (!field.isAvailableForEntity(entityKey) || field.isDeactivated()) {
-					continue;
-				}
-				// Add this field
-				customFields.add(field);
-
-			}
+		// get required and default custom fields for the specified entity key
+		List<CustomField> fields = set.getCustomFields();
+		if (fields == null || fields.size() == 0) {
+			return customFields;
 		}
+		for (CustomField field : fields) {
+			if (!field.isAvailableForEntity(entityKey) || field.isDeactivated()) {
+				continue;
+			}
+			// Add this field
+			customFields.add(field);
+		}
+
 		return customFields;
 	}
 
 	// Make valid test custom field values of a specific type and for the specific entity
-	public static List<CustomFieldValue> makeForEntityCustomFieldValues(CustomField.Type customFieldType,
+	public static List<CustomFieldValue> makeForEntityCustomFieldValues(CustomFieldType customFieldType,
 			String entityKey) throws MambuApiException {
 		boolean requiredOnly = true;
 
@@ -490,25 +579,38 @@ public class DemoUtil {
 	}
 
 	// Make valid test custom field values of a specific type and for the specific entity
-	public static List<CustomFieldValue> makeForEntityCustomFieldValues(CustomField.Type customFieldType,
+	public static List<CustomFieldValue> makeForEntityCustomFieldValues(CustomFieldType customFieldType,
 			String entityKey, boolean requiredOnly) throws MambuApiException {
-		// Get all for entity custom fields
-		List<CustomField> forEntityCustomFields = getForEntityCustomFields(customFieldType, entityKey);
-		// Make custom field values for these fields with valid values
-		List<CustomFieldValue> customInformation = new ArrayList<CustomFieldValue>();
 
-		for (CustomField field : forEntityCustomFields) {
-			// return only required fields if requested so
-			if (requiredOnly && !field.isRequired(entityKey)) {
-				continue;
+		List<CustomFieldValue> customFieldValues = new ArrayList<CustomFieldValue>();
+		// Get all Custom Field sets
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+		List<CustomFieldSet> sets = organizationService.getCustomFieldSets(customFieldType);
+
+		if (sets == null || sets.size() == 0) {
+			System.out.println("No Custom Field Sets found for type=" + customFieldType);
+			return customFieldValues;
+		}
+		// Process each set
+		for (CustomFieldSet set : sets) {
+			List<CustomField> forEntityCustomFields = getForEntityCustomFields(set, entityKey);
+			List<CustomFieldValue> customInformation = new ArrayList<CustomFieldValue>();
+
+			for (CustomField field : forEntityCustomFields) {
+				// return only required fields if requested so
+				if (requiredOnly && !field.isRequired(entityKey)) {
+					continue;
+				}
+				//
+				CustomFieldValue fieldValue = makeNewCustomFieldValue(set, field, null);
+				customInformation.add(fieldValue);
+
 			}
-			//
-			CustomFieldValue fieldValue = makeNewCustomFieldValue(field, null);
-			customInformation.add(fieldValue);
+			customFieldValues.addAll(customInformation);
 
 		}
 
-		return customInformation;
+		return customFieldValues;
 
 	}
 
@@ -518,7 +620,8 @@ public class DemoUtil {
 		for (CustomFieldValue fieldValue : customFieldValues) {
 
 			System.out.println("\nCustom Field Name=" + fieldValue.getCustomField().getName() + "\tValue="
-					+ fieldValue.getValue() + "\tAmount=" + fieldValue.getAmount());
+					+ fieldValue.getValue() + "\tAmount=" + fieldValue.getAmount() + "\tLinked Entity Key="
+					+ fieldValue.getLinkedEntityKeyValue());
 			Integer groupIndex = fieldValue.getCustomFieldSetGroupIndex();
 			if (groupIndex != null) {
 				System.out.println("Group Index=" + groupIndex);
