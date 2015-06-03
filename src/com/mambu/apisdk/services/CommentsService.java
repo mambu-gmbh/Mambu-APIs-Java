@@ -55,7 +55,39 @@ public class CommentsService {
 	}
 
 	/**
-	 * Create new Comment. Only "text" field is used, other comment fields are ignored for new comments
+	 * Create new Comment
+	 * 
+	 * @param parentEntity
+	 *            MambuEntityType for which comments are retrieved. Example: MambuEntityType.CLIENT for comments owned
+	 *            by Client. Must not be null. Comments for the following entities are currently supported: Client,
+	 *            Group. LoanAccount, SavingsAccount, LoanProduct, SavingsProduct, Branch, Centre, User
+	 * @param parentEntityId
+	 *            entity id or encoded key for the parent entity. Example, ciinetId for MambuEntityType.CLIENT. Must not
+	 *            be null
+	 * @param text
+	 *            comment to post. Must not be null
+	 * @return created comment
+	 * @throws MambuApiException
+	 */
+	public Comment create(MambuEntityType parentEntity, String parentEntityId, String text) throws MambuApiException {
+		// POST {"comment:":{"text":"Posting a new comment" }} /api/centres/ABC123/comments
+		// Available since Mambu 3.11 See MBU-8609 for more details
+
+		if (text == null) {
+			throw new IllegalArgumentException("Comment cannot be null");
+		}
+		// Create Comment object
+		Comment comment = new Comment();
+		comment.setText(text);
+
+		// POST comment using JSONComment wrapper class and parse the result into Comment object
+		JSONComment jsonComment = new JSONComment(comment);
+		return serviceExecutor.createOwnedEntity(parentEntity, parentEntityId, jsonComment, Comment.class);
+	}
+
+	/**
+	 * Create new Comment using Comment object. Only "text" field is used, other comment fields are ignored for new
+	 * comments
 	 * 
 	 * @param parentEntity
 	 *            MambuEntityType for which comments are retrieved. Example: MambuEntityType.CLIENT for comments owned
@@ -65,7 +97,7 @@ public class CommentsService {
 	 *            entity id or encoded key for the parent entity. Example, ciinetId for MambuEntityType.CLIENT. Must not
 	 *            be null
 	 * @param comment
-	 *            comment to post. Must not be null
+	 *            comment to post. Must not be null. Only "text" field is used
 	 * @return created comment
 	 * @throws MambuApiException
 	 */

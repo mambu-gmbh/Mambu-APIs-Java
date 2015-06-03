@@ -84,7 +84,7 @@ public class LinesOfCreditService {
 		LineOfCreditExpanded lineOfCreditExpanded = serviceExecutor.execute(apiDefinition, lineofcreditId);
 
 		// Return as the LineOfCredit
-		return (lineOfCreditExpanded == null) ? null : lineOfCreditExpanded.getLineOfCredit();
+		return lineOfCreditExpanded.getLineOfCredit();
 	}
 
 	/***
@@ -107,10 +107,17 @@ public class LinesOfCreditService {
 		// Example: GET /api/clients/{clientId}/linesofcredit or GET /api/groups/{groupId}/linesofcredit
 		// Available since 3.11. See MBU-8413
 
-		if (customerType != MambuEntityType.CLIENT && customerType != MambuEntityType.GROUP) {
+		if (customerType == null) {
+			throw new IllegalArgumentException("Customer type cannot be null");
+		}
+		switch (customerType) {
+		case CLIENT:
+		case GROUP:
+			return serviceExecutor.getOwnedEntities(customerType, customerId, serviceEntity, offset, limit);
+		default:
 			throw new IllegalArgumentException("Lines Of Credit Supported only for Clients and Groups");
 		}
-		return serviceExecutor.getOwnedEntities(customerType, customerId, serviceEntity, offset, limit);
+
 	}
 
 	/***
