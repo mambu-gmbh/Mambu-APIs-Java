@@ -354,7 +354,13 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		// Log raising exception
 		if (LOGGER.isLoggable(Level.WARNING)) {
-			LOGGER.warning("Creating exception, error code=" + errorCode + " for url=" + urlString);
+			// Remove appKey from the URL string when logging exception
+			String urlLogString = urlString;
+			String appKeyValue = MambuAPIFactory.getApplicationKey();
+			if (appKeyValue != null) {
+				urlLogString = urlLogString.replace(appKeyValue, "...");
+			}
+			LOGGER.warning("Creating exception, error code=" + errorCode + " for url=" + urlLogString);
 		}
 		// pass to MambuApiException the content that goes with the error code
 		throw new MambuApiException(errorCode, response);

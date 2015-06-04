@@ -12,7 +12,7 @@ import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
-import com.mambu.core.shared.model.CustomField;
+import com.mambu.core.shared.model.CustomFieldType;
 
 /**
  * @author ipenciuc
@@ -132,7 +132,7 @@ public class OrganizationServiceTest extends MambuAPIServiceTest {
 	public void testGetCustomFieldSets() throws MambuApiException {
 
 		// execute
-		final CustomField.Type type = CustomField.Type.CLIENT_INFO;
+		final CustomFieldType type = CustomFieldType.CLIENT_INFO;
 		service.getCustomFieldSets(type);
 
 		// verify
