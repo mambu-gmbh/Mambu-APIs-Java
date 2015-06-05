@@ -185,7 +185,7 @@ public class DemoTestSearchService {
 			System.out.println("Returned Search Type=" + type.toString() + "  with " + items.size() + "  items:");
 
 			for (SearchResult result : items) {
-				System.out.println("   Type=" + result.getSelectionType() + " \tId=" + result.getSelectionID()
+				System.out.println("   Type=" + result.getSelectionType() + " \tId=" + result.getResultID()
 						+ "\tDisplay String=" + result.getDisplayString() + "\tDisplay Text="
 						+ result.getDisplayString() + "\tKey=" + result.getSelectionKey());
 
