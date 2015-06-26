@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,17 +15,20 @@ import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.HTTP;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -44,7 +46,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 	private URLHelper urlHelper;
 	private String encodedAuthorization;
-	private final static String UTF8_charset = StandardCharsets.UTF_8.name();
+	private final static String UTF8_charset = HTTP.UTF_8;
 	private final static String wwwFormUrlEncodedContentType = "application/x-www-form-urlencoded; charset=UTF-8";
 
 	// Added charset charset=UTF-8, MBU-4137 is now fixed
@@ -113,7 +115,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 
 		String response = "";
-
 		try {
 			switch (method) {
 			case GET:
@@ -139,7 +140,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 			LOGGER.warning("IOException: message= " + e.getMessage());
 			throw new MambuApiException(e);
 		}
-
 		return response;
 	}
 
@@ -152,7 +152,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// Get properly formatted ContentType
 		final String contentType = getFormattedContentTypeString(contentTypeFormat);
 
-		CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+		HttpParams httpParameters = new BasicHttpParams();
+		HttpClient httpClient = new DefaultHttpClient(httpParameters);
 		HttpPost httpPost = new HttpPost(urlString);
 		httpPost.setHeader("Content-Type", contentType);
 		httpPost.setHeader("Authorization", "Basic " + encodedAuthorization);
@@ -182,7 +183,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 
 		// execute
-		CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
+		HttpResponse httpResponse = httpClient.execute(httpPost);
 
 		// Process response
 		String response = processResponse(httpResponse, urlString);
@@ -200,7 +201,9 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// PATCH request is using json ContentType
 		final String contentType = jsonContentType;
 
-		CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+		HttpParams httpParameters = new BasicHttpParams();
+		HttpClient httpClient = new DefaultHttpClient(httpParameters);
+
 		// HttpPatch is available since org.apache.httpcomponents v4.2
 		HttpPatch httpPatch = new HttpPatch(urlString);
 		httpPatch.setHeader("Content-Type", contentType);
@@ -212,7 +215,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		httpPatch.setEntity(jsonEntity);
 
 		// execute
-		CloseableHttpResponse httpResponse = httpClient.execute(httpPatch);
+		HttpResponse httpResponse = httpClient.execute(httpPatch);
 
 		// Process response
 		String response = processResponse(httpResponse, urlString);
@@ -232,22 +235,23 @@ public class RequestExecutorImpl implements RequestExecutor {
 		if (params != null && params.size() > 0) {
 			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
 		}
-		CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+
+		HttpParams httpParameters = new BasicHttpParams();
+
+		HttpClient httpClient = new DefaultHttpClient(httpParameters);
+
 		HttpGet httpGet = new HttpGet(urlString);
 		// add Authorozation header
 		httpGet.setHeader("Authorization", "Basic " + encodedAuthorization);
 		// setHeader("Content-Type") not need for GET requests
 
 		// execute
-		CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
+		HttpResponse httpResponse = httpClient.execute(httpGet);
 
 		// Process response
 		String response = processResponse(httpResponse, urlString);
 
-		httpClient.close();
-
 		return response;
-
 	}
 
 	/***
@@ -265,12 +269,15 @@ public class RequestExecutorImpl implements RequestExecutor {
 			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
 		}
 
-		CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+		HttpParams httpParameters = new BasicHttpParams();
+
+		HttpClient httpClient = new DefaultHttpClient(httpParameters);
+
 		HttpDelete httpDelete = new HttpDelete(urlString);
 		httpDelete.setHeader("Authorization", "Basic " + encodedAuthorization);
 
 		// execute
-		CloseableHttpResponse httpResponse = httpClient.execute(httpDelete);
+		HttpResponse httpResponse = httpClient.execute(httpDelete);
 
 		// Process response
 		String response = processResponse(httpResponse, urlString);
@@ -315,53 +322,48 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 *            URL string for the HTTP request
 	 * @return HTTP response string
 	 */
-	private static String processResponse(CloseableHttpResponse httpResponse, String urlString) throws IOException,
+	private static String processResponse(HttpResponse httpResponse, String urlString) throws IOException,
 			MambuApiException {
 
-		try {
-			// get status
-			int status = httpResponse.getStatusLine().getStatusCode();
+		// get status
+		int status = httpResponse.getStatusLine().getStatusCode();
 
-			InputStream content = null;
-			String response = "";
+		InputStream content = null;
+		String response = "";
 
-			// Get the response Entity
-			HttpEntity entity = httpResponse.getEntity();
+		// Get the response Entity
+		HttpEntity entity = httpResponse.getEntity();
 
-			if (entity != null) {
-				content = entity.getContent();
-				if (content != null) {
-					response = readStream(content);
-				}
+		if (entity != null) {
+			content = entity.getContent();
+			if (content != null) {
+				response = readStream(content);
 			}
-
-			// Log Mambu response
-			logApiResponse(urlString, status, response);
-
-			// if status is Ok - return the response
-			if (status == HttpURLConnection.HTTP_OK || status == HttpURLConnection.HTTP_CREATED) {
-				return response;
-			}
-
-			// Set error code and throw Mambu Exception
-			Integer errorCode = status;
-
-			// Log raising exception
-			if (LOGGER.isLoggable(Level.WARNING)) {
-				// Remove appKey from the URL string when logging exception
-				String urlLogString = urlString;
-				String appKeyValue = MambuAPIFactory.getApplicationKey();
-				if (appKeyValue != null) {
-					urlLogString = urlLogString.replace(appKeyValue, "...");
-				}
-				LOGGER.warning("Creating exception, error code=" + errorCode + " for url=" + urlLogString);
-			}
-			// pass to MambuApiException the content that goes with the error code
-			throw new MambuApiException(errorCode, response);
-		} finally {
-			// Ensuring release of low level resources
-			httpResponse.close();
 		}
+
+		// Log Mambu response
+		logApiResponse(urlString, status, response);
+
+		// if status is Ok - return the response
+		if (status == HttpURLConnection.HTTP_OK || status == HttpURLConnection.HTTP_CREATED) {
+			return response;
+		}
+
+		// Set error code and throw Mambu Exception
+		Integer errorCode = status;
+
+		// Log raising exception
+		if (LOGGER.isLoggable(Level.WARNING)) {
+			// Remove appKey from the URL string when logging exception
+			String urlLogString = urlString;
+			String appKeyValue = MambuAPIFactory.getApplicationKey();
+			if (appKeyValue != null) {
+				urlLogString = urlLogString.replace(appKeyValue, "...");
+			}
+			LOGGER.warning("Creating exception, error code=" + errorCode + " for url=" + urlLogString);
+		}
+		// pass to MambuApiException the content that goes with the error code
+		throw new MambuApiException(errorCode, response);
 
 	}
 
