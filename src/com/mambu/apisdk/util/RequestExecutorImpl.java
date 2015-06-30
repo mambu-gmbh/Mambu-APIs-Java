@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,9 +27,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpParams;
-import org.apache.http.protocol.HTTP;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -46,7 +44,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 	private URLHelper urlHelper;
 	private String encodedAuthorization;
-	private final static String UTF8_charset = HTTP.UTF_8;
+	private final static String UTF8_charset = StandardCharsets.UTF_8.name();
 	private final static String wwwFormUrlEncodedContentType = "application/x-www-form-urlencoded; charset=UTF-8";
 
 	// Added charset charset=UTF-8, MBU-4137 is now fixed
@@ -114,20 +112,21 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		}
 
+		HttpClient httpClient = new DefaultHttpClient();
 		String response = "";
 		try {
 			switch (method) {
 			case GET:
-				response = executeGetRequest(urlString, params);
+				response = executeGetRequest(httpClient, urlString, params);
 				break;
 			case POST:
-				response = executePostRequest(urlString, params, contentTypeFormat);
+				response = executePostRequest(httpClient, urlString, params, contentTypeFormat);
 				break;
 			case PATCH:
-				response = executePatchRequest(urlString, params);
+				response = executePatchRequest(httpClient, urlString, params);
 				break;
 			case DELETE:
-				response = executeDeleteRequest(urlString, params);
+				response = executeDeleteRequest(httpClient, urlString, params);
 				break;
 			default:
 				throw new IllegalArgumentException("Only methods GET, POST and DELETE are supported, not "
@@ -139,6 +138,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 		} catch (IOException e) {
 			LOGGER.warning("IOException: message= " + e.getMessage());
 			throw new MambuApiException(e);
+		} finally {
+			httpClient.getConnectionManager().shutdown();
 		}
 		return response;
 	}
@@ -146,14 +147,12 @@ public class RequestExecutorImpl implements RequestExecutor {
 	/**
 	 * Executes a POST request as per the interface specification
 	 */
-	private String executePostRequest(String urlString, ParamsMap params, ContentType contentTypeFormat)
-			throws MalformedURLException, IOException, MambuApiException {
+	private String executePostRequest(HttpClient httpClient, String urlString, ParamsMap params,
+			ContentType contentTypeFormat) throws MalformedURLException, IOException, MambuApiException {
 
 		// Get properly formatted ContentType
 		final String contentType = getFormattedContentTypeString(contentTypeFormat);
 
-		HttpParams httpParameters = new BasicHttpParams();
-		HttpClient httpClient = new DefaultHttpClient(httpParameters);
 		HttpPost httpPost = new HttpPost(urlString);
 		httpPost.setHeader("Content-Type", contentType);
 		httpPost.setHeader("Authorization", "Basic " + encodedAuthorization);
@@ -195,14 +194,11 @@ public class RequestExecutorImpl implements RequestExecutor {
 	/**
 	 * Executes a PATCH request as per the interface specification
 	 */
-	private String executePatchRequest(String urlString, ParamsMap params) throws MalformedURLException, IOException,
-			MambuApiException {
+	private String executePatchRequest(HttpClient httpClient, String urlString, ParamsMap params)
+			throws MalformedURLException, IOException, MambuApiException {
 
 		// PATCH request is using json ContentType
 		final String contentType = jsonContentType;
-
-		HttpParams httpParameters = new BasicHttpParams();
-		HttpClient httpClient = new DefaultHttpClient(httpParameters);
 
 		// HttpPatch is available since org.apache.httpcomponents v4.2
 		HttpPatch httpPatch = new HttpPatch(urlString);
@@ -211,7 +207,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		// Format jsonEntity
 		StringEntity jsonEntity = makeJsonEntity(params);
-
 		httpPatch.setEntity(jsonEntity);
 
 		// execute
@@ -219,7 +214,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		// Process response
 		String response = processResponse(httpResponse, urlString);
-
 		return response;
 
 	}
@@ -229,16 +223,12 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * 
 	 * @param urlString
 	 */
-	private String executeGetRequest(String urlString, ParamsMap params) throws MalformedURLException, IOException,
-			MambuApiException {
+	private String executeGetRequest(HttpClient httpClient, String urlString, ParamsMap params)
+			throws MalformedURLException, IOException, MambuApiException {
 
 		if (params != null && params.size() > 0) {
 			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
 		}
-
-		HttpParams httpParameters = new BasicHttpParams();
-
-		HttpClient httpClient = new DefaultHttpClient(httpParameters);
 
 		HttpGet httpGet = new HttpGet(urlString);
 		// add Authorozation header
@@ -252,6 +242,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		String response = processResponse(httpResponse, urlString);
 
 		return response;
+
 	}
 
 	/***
@@ -262,16 +253,12 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * @param params
 	 *            ParamsMap with parameters
 	 */
-	private String executeDeleteRequest(String urlString, ParamsMap params) throws MalformedURLException, IOException,
-			MambuApiException {
+	private String executeDeleteRequest(HttpClient httpClient, String urlString, ParamsMap params)
+			throws MalformedURLException, IOException, MambuApiException {
 
 		if (params != null && params.size() > 0) {
 			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
 		}
-
-		HttpParams httpParameters = new BasicHttpParams();
-
-		HttpClient httpClient = new DefaultHttpClient(httpParameters);
 
 		HttpDelete httpDelete = new HttpDelete(urlString);
 		httpDelete.setHeader("Authorization", "Basic " + encodedAuthorization);
@@ -283,6 +270,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		String response = processResponse(httpResponse, urlString);
 
 		return response;
+
 	}
 
 	/**

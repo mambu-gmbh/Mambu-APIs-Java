@@ -79,6 +79,7 @@ public class SavingsServiceTest extends MambuAPIServiceTest {
 						+ "\"overdraftAmount\":0,"
 						+ "\"interestDue\":0,"
 						+ "\"feesDue\":0,"
+						+ "\"overdraftLimit\":0,"
 						+ "\"allowOverdraft\":false,"
 						+ "\"lockedBalance\":0},"
 						+ "\"customInformation\":"

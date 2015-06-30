@@ -5,11 +5,10 @@ package com.mambu.apisdk.util;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Logger;
-
-import org.apache.http.protocol.HTTP;
 
 /**
  * Utility class responsible for the creation and the formatting of a map of URL parameters. It extends
@@ -63,7 +62,7 @@ public class ParamsMap extends LinkedHashMap<String, String> {
 
 				try {
 					// URL encode values
-					encodedValue = URLEncoder.encode(value, HTTP.UTF_8);
+					encodedValue = URLEncoder.encode(value, StandardCharsets.UTF_8.name());
 
 				} catch (UnsupportedEncodingException e) {
 					// Shouldn't happen as we only use HTTP.UTF_8, but just in case...
