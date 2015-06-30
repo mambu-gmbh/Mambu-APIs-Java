@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.google.inject.Inject;
-import com.mambu.api.server.handler.customviews.model.CustomViewApiType;
+import com.mambu.api.server.handler.customviews.model.ApiViewType;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
@@ -153,7 +153,7 @@ public class UsersService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public List<CustomView> getCustomViews(String username, CustomViewApiType apiViewType) throws MambuApiException {
+	public List<CustomView> getCustomViews(String username, ApiViewType apiViewType) throws MambuApiException {
 		// GET /api/users/<USERNAME>/views
 		// Allow also for filtering for the CLIENTS/GROUPS/LOANS/DEPOSITS views (ex: GET
 		// /api/users/<USERNAME>/views?for=CLIENTS)
@@ -181,27 +181,27 @@ public class UsersService {
 	 * @throws MambuApiException
 	 */
 	public List<CustomView> getCustomViews(String userName) throws MambuApiException {
-		CustomViewApiType apiViewType = null;
+		ApiViewType apiViewType = null;
 		return getCustomViews(userName, apiViewType);
 	}
 
 	/**
-	 * Map to convert custom view's DataViewType to the CustomViewApiType (required by Custom View API)
+	 * Map to convert custom view's DataViewType to the ApiViewType (required by Custom View API)
 	 */
-	public static HashMap<DataViewType, CustomViewApiType> supportedDataViewTypes;
+	public static HashMap<DataViewType, ApiViewType> supportedDataViewTypes;
 	static {
-		supportedDataViewTypes = new HashMap<DataViewType, CustomViewApiType>();
+		supportedDataViewTypes = new HashMap<DataViewType, ApiViewType>();
 
-		supportedDataViewTypes.put(DataViewType.CLIENT, CustomViewApiType.CLIENTS);
-		supportedDataViewTypes.put(DataViewType.GROUP, CustomViewApiType.GROUPS);
+		supportedDataViewTypes.put(DataViewType.CLIENT, ApiViewType.CLIENTS);
+		supportedDataViewTypes.put(DataViewType.GROUP, ApiViewType.GROUPS);
 
-		supportedDataViewTypes.put(DataViewType.LOANS, CustomViewApiType.LOANS);
-		supportedDataViewTypes.put(DataViewType.SAVINGS, CustomViewApiType.DEPOSITS);
+		supportedDataViewTypes.put(DataViewType.LOANS, ApiViewType.LOANS);
+		supportedDataViewTypes.put(DataViewType.SAVINGS, ApiViewType.DEPOSITS);
 
-		supportedDataViewTypes.put(DataViewType.LOAN_TRANSACTIONS_LOOKUP, CustomViewApiType.LOAN_TRANSACTIONS);
-		supportedDataViewTypes.put(DataViewType.SAVINGS_TRANSACTIONS_LOOKUP, CustomViewApiType.DEPOSIT_TRANSACTIONS);
+		supportedDataViewTypes.put(DataViewType.LOAN_TRANSACTIONS_LOOKUP, ApiViewType.LOAN_TRANSACTIONS);
+		supportedDataViewTypes.put(DataViewType.SAVINGS_TRANSACTIONS_LOOKUP, ApiViewType.DEPOSIT_TRANSACTIONS);
 
-		supportedDataViewTypes.put(DataViewType.ACTIVITIES_LOOKUP, CustomViewApiType.SYSTEM_ACTIVITIES);
+		supportedDataViewTypes.put(DataViewType.ACTIVITIES_LOOKUP, ApiViewType.SYSTEM_ACTIVITIES);
 
 	}
 
