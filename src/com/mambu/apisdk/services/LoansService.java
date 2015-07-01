@@ -9,6 +9,7 @@ import java.util.List;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mambu.accounts.shared.model.TransactionDetails;
+import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -18,6 +19,7 @@ import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.DateUtils;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
@@ -548,6 +550,25 @@ public class LoansService {
 
 	}
 
+	/**
+	 * Get loan transactions by specifying filter constraints
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @return list of loan transactions matching filter constraint
+	 * @throws MambuApiException
+	 */
+	public List<LoanTransaction> getLoanTransactions(JSONFilterConstraints filterConstraints) throws MambuApiException {
+		// Available since Mambu 3.12. See MBU-8988 for more details
+		// POST {JSONFilterConstraints} /api/loans/transactions/search
+
+		ApiDefinition apiDefintition = SearchService
+				.makeApiDefinitionforSearchByFilter(MambuEntityType.LOAN_TRANSACTION);
+
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints);
+
+	}
+
 	/****
 	 * Make Repayment for a loan account
 	 * 
@@ -707,6 +728,24 @@ public class LoansService {
 			throws MambuApiException {
 		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
 		return serviceExecutor.execute(getAccountsList, params);
+
+	}
+
+	/**
+	 * Get loan accounts by specifying filter constraints
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @return list of loan accounts matching filter constraints
+	 * @throws MambuApiException
+	 */
+	public List<LoanAccount> getLoanAccounts(JSONFilterConstraints filterConstraints) throws MambuApiException {
+		// Available since Mambu 3.12. See MBU-8988 for more details
+		// POST {JSONFilterConstraints} /api/loans/search
+
+		ApiDefinition apiDefintition = SearchService.makeApiDefinitionforSearchByFilter(MambuEntityType.LOAN_ACCOUNT);
+
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints);
 
 	}
 

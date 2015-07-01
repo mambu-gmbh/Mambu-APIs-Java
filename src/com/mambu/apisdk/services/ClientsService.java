@@ -7,12 +7,14 @@ import java.util.List;
 
 import com.google.inject.Inject;
 import com.mambu.accounts.shared.model.AccountHolderType;
+import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.ServiceExecutor;
@@ -434,6 +436,24 @@ public class ClientsService {
 	}
 
 	/**
+	 * Get clients by specifying filter constraints
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @return list of clients matching filter constraint
+	 * @throws MambuApiException
+	 */
+	public List<Client> getClients(JSONFilterConstraints filterConstraints) throws MambuApiException {
+		// Available since Mambu 3.12. See MBU-8975 for more details
+		// POST {JSONFilterConstraints} /api/clients/search
+
+		ApiDefinition apiDefintition = SearchService.makeApiDefinitionforSearchByFilter(MambuEntityType.CLIENT);
+
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints);
+
+	}
+
+	/**
 	 * Requests a list of groups for a custom view, limited by offset/limit
 	 * 
 	 * @param customViewKey
@@ -451,6 +471,24 @@ public class ClientsService {
 			throws MambuApiException {
 		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
 		return serviceExecutor.execute(getGroupsList, params);
+
+	}
+
+	/**
+	 * Get groups by specifying filter constraints
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @return list of groups matching filter constraint.
+	 * @throws MambuApiException
+	 */
+	public List<Group> getGroups(JSONFilterConstraints filterConstraints) throws MambuApiException {
+		// Available since Mambu 3.12. See MBU-8987 for more details
+		// POST {JSONFilterConstraints} /api/groups/search
+
+		ApiDefinition apiDefintition = SearchService.makeApiDefinitionforSearchByFilter(MambuEntityType.GROUP);
+
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints);
 
 	}
 

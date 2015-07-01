@@ -8,12 +8,17 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.inject.Inject;
+import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.RequestExecutor.ContentType;
+import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.core.shared.model.SearchResult;
 import com.mambu.core.shared.model.SearchType;
@@ -94,4 +99,111 @@ public class SearchService {
 		return serviceExecutor.execute(searchEntitiies, paramsMap);
 
 	}
+
+	/**
+	 * Convenience method to GET Mambu entities by specifying filter constraints. This generic method can be used to
+	 * retrieve entities by filter constraints for any supported entity type. API users can also use methods specific to
+	 * each entity, for example to get clients by filter constraints use
+	 * {@link ClientsService#getClients(JSONFilterConstraints)}
+	 * 
+	 * @param searchEntityType
+	 *            Mambu entity type. Must not be null. Currently searching with filter constrains API supports the
+	 *            following entities: Clients, Groups, Loans, Savings, Loan Transactions and SavingsTransactions.
+	 * @param filterConstraints
+	 *            filter constraints applicable for the entity. Must not be null
+	 * @return list of entities of the searchEntityType matching provided filter constraints
+	 * @throws MambuApiException
+	 */
+	public <T> List<T> searchEntities(MambuEntityType searchEntityType, JSONFilterConstraints filterConstraints)
+			throws MambuApiException {
+		// Available since Mambu 3.12. See MBU-8986 for more details
+		// Example: POST {JSONFilterConstraints} /api/savings/transactions/search
+
+		ApiDefinition apiDefintition = SearchService.makeApiDefinitionforSearchByFilter(searchEntityType);
+
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints);
+
+	}
+
+	/**
+	 * Helper to create ApiDefintion for searching entities matching filter criteria
+	 * 
+	 * @param searchEntityType
+	 *            entity type for searching with filter constraints. Must not be null. Currently API supports the
+	 *            following entities: Clients, Groups, Loans, Savings, Loan Transactions and SavingsTransactions.
+	 * 
+	 *            See MBU-8986 for more details Transactions
+	 * 
+	 * @return api definition for searching entities using filter constraints
+	 */
+	public static ApiDefinition makeApiDefinitionforSearchByFilter(MambuEntityType searchEntityType) {
+
+		// See MBU-8986, MBU-8975, MBU-8987, MBU-8988, MBU-8989
+		// POST Example for searching clients. See MBU-8975.
+		// POST {"filterConstraints":[
+		// {"filterSelection":"BIRTH_DATE",
+		// "filterElement":"BETWEEN",
+		// "value":"2000-01-01",
+		// "secondValue":"2002-01-01"
+		// },
+		// { "filterSelection":"40288a134700f486014700f6074200e6",
+		// "dataFieldType":"CUSTOM",
+		// "filterElement":"EQUALS",
+		// "value":"ABC123"
+		// } ] } /api/clients/search
+
+		// Crate search URL. Example: /api/clients/search
+		String searchUrl = makeUrlForSearchWithFilter(searchEntityType);
+
+		// Specify Api definition for searching with filter constraints.
+		Class<?> returnEntityClass = searchEntityType.getEntityClass();
+		ApiDefinition apiDefintition = new ApiDefinition(searchUrl, ContentType.JSON, Method.POST, returnEntityClass,
+				ApiReturnFormat.COLLECTION);
+
+		return apiDefintition;
+
+	}
+
+	/**
+	 * Create url for searching entities using filter constraints
+	 * 
+	 * @param searchEntityType
+	 *            entity type for searching with filter constraints.
+	 * @return search url
+	 */
+	private static String makeUrlForSearchWithFilter(MambuEntityType searchEntityType) {
+
+		if (searchEntityType == null) {
+			throw new IllegalArgumentException("Search Entity must not be NULL");
+		}
+
+		String apiDelimiter = "/";
+		String entityUrl;
+		switch (searchEntityType) {
+		case CLIENT:
+			entityUrl = APIData.CLIENTS;
+			break;
+		case GROUP:
+			entityUrl = APIData.GROUPS;
+			break;
+		case LOAN_ACCOUNT:
+			entityUrl = APIData.LOANS;
+			break;
+		case SAVINGS_ACCOUNT:
+			entityUrl = APIData.SAVINGS;
+			break;
+		case LOAN_TRANSACTION:
+			entityUrl = APIData.LOANS + apiDelimiter + APIData.TRANSACTIONS; // loans/transactions"
+			break;
+		case SAVINGS_TRANSACTION:
+			entityUrl = APIData.SAVINGS + apiDelimiter + APIData.TRANSACTIONS; // savings/transactions"
+			break;
+		default:
+			throw new IllegalArgumentException("Search for Entity " + searchEntityType.name() + " is not supported");
+		}
+
+		// Add "search" to the URL, e.g. "clients/search"
+		return entityUrl + apiDelimiter + APIData.SEARCH;
+	}
+
 }

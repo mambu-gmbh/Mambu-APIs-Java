@@ -8,12 +8,14 @@ import java.util.List;
 import com.google.inject.Inject;
 import com.mambu.accounts.shared.model.Account.Type;
 import com.mambu.accounts.shared.model.TransactionDetails;
+import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
@@ -252,6 +254,26 @@ public class SavingsService {
 		// Example GET savings/transactions?viewfilter=567&offset=0&limit=100
 		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
 		return serviceExecutor.execute(getAllSavingsTransactions, params);
+	}
+
+	/**
+	 * Get savings transactions by specifying filter constraints
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @return list of savings transactions matching filter constraints
+	 * @throws MambuApiException
+	 */
+	public List<SavingsTransaction> getSavingsTransactions(JSONFilterConstraints filterConstraints)
+			throws MambuApiException {
+		// Available since Mambu 3.12. See MBU-8988 for more details
+		// POST {JSONFilterConstraints} /api/savings/transactions/search
+
+		ApiDefinition apiDefintition = SearchService
+				.makeApiDefinitionforSearchByFilter(MambuEntityType.LOAN_TRANSACTION);
+
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints);
+
 	}
 
 	/****
@@ -615,6 +637,25 @@ public class SavingsService {
 			throws MambuApiException {
 		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
 		return serviceExecutor.execute(getAccountsList, params);
+
+	}
+
+	/**
+	 * Get savings accounts by specifying filter constraints
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @return list of savings accounts matching filter constraint
+	 * @throws MambuApiException
+	 */
+	public List<SavingsAccount> getSavingsAccounts(JSONFilterConstraints filterConstraints) throws MambuApiException {
+		// Available since Mambu 3.12. See MBU-8988 for more details
+		// POST {JSONFilterConstraints} /api/savings/search
+
+		ApiDefinition apiDefintition = SearchService
+				.makeApiDefinitionforSearchByFilter(MambuEntityType.SAVINGS_ACCOUNT);
+
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints);
 
 	}
 
