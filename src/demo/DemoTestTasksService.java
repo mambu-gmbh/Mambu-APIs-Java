@@ -9,6 +9,7 @@ import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.TasksService;
 import com.mambu.clients.shared.model.Client;
+import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.OwnerType;
 import com.mambu.tasks.shared.model.Task;
@@ -24,6 +25,7 @@ public class DemoTestTasksService {
 
 	private static User demoUser;
 	private static Client demoClient;
+	private static Group demoGroup;
 	private static Task taskToUpdate;
 
 	public static void main(String[] args) {
@@ -34,14 +36,15 @@ public class DemoTestTasksService {
 			// Get demo entities needed for testing
 			demoUser = DemoUtil.getDemoUser();
 			demoClient = DemoUtil.getDemoClient();
+			demoGroup = DemoUtil.getDemoGroup("080535194");
 
-			// available since Mambu 1.11
+			// Available since Mambu 1.11
 			testCreateTaskFromEncoded();
 
-			// available since Mambu 3.3
+			// Available since Mambu 3.3
 			testCreateTaskJson();
 
-			// available since Mambu 3.3
+			// Available since Mambu 3.3. Get Tasks for a Group available since Mambu 3.12
 			testGetTasks();
 
 			// Available since Mambu 3.6
@@ -115,7 +118,8 @@ public class DemoTestTasksService {
 		System.out.println("\nIn testGetTasks");
 
 		// Get Input params
-		String clientId = demoClient.getId(); // or null;
+		String clientId = null;// demoClient.getId(); // or null;
+		String groupId = demoGroup.getId(); // or null;
 		String username = null;// demoUser.getEncodedKey(); // or getId() or getUsername() or null; See MBU-7467
 
 		TaskStatus taskStatus = TaskStatus.OPEN; // TaskStatus.OPEN or TaskStatus.COMPLETED;
@@ -125,7 +129,7 @@ public class DemoTestTasksService {
 
 		TasksService tasksService = MambuAPIFactory.getTasksService();
 
-		List<Task> tasks = tasksService.getTasks(username, clientId, taskStatus, offset, limit);
+		List<Task> tasks = tasksService.getTasks(username, clientId, groupId, taskStatus, offset, limit);
 
 		if (tasks == null) {
 			System.out.println("No tasks returned, null object");
@@ -133,7 +137,7 @@ public class DemoTestTasksService {
 		}
 
 		System.out.println("Total tasks returned=" + tasks.size() + "\tFor User=" + username + "\tFor client ID= "
-				+ clientId + "\tfor Status=" + taskStatus);
+				+ clientId + "\tFor Group ID= " + groupId + "\tfor Status=" + taskStatus);
 
 		if (tasks.size() > 0) {
 			taskToUpdate = tasks.get(0);
