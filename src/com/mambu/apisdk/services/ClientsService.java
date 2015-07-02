@@ -443,13 +443,16 @@ public class ClientsService {
 	 * @return list of clients matching filter constraint
 	 * @throws MambuApiException
 	 */
-	public List<Client> getClients(JSONFilterConstraints filterConstraints) throws MambuApiException {
+	public List<Client> getClients(JSONFilterConstraints filterConstraints, String offset, String limit)
+			throws MambuApiException {
 		// Available since Mambu 3.12. See MBU-8975 for more details
-		// POST {JSONFilterConstraints} /api/clients/search
+		// POST {JSONFilterConstraints} /api/clients/search?offset=0&limit=5
 
 		ApiDefinition apiDefintition = SearchService.makeApiDefinitionforSearchByFilter(MambuEntityType.CLIENT);
 
-		return serviceExecutor.executeJson(apiDefintition, filterConstraints);
+		// POST Filter JSON with pagination params map
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
+				ServiceHelper.makePaginationParams(offset, limit));
 
 	}
 
@@ -482,13 +485,16 @@ public class ClientsService {
 	 * @return list of groups matching filter constraint.
 	 * @throws MambuApiException
 	 */
-	public List<Group> getGroups(JSONFilterConstraints filterConstraints) throws MambuApiException {
+	public List<Group> getGroups(JSONFilterConstraints filterConstraints, String offset, String limit)
+			throws MambuApiException {
 		// Available since Mambu 3.12. See MBU-8987 for more details
-		// POST {JSONFilterConstraints} /api/groups/search
+		// POST {JSONFilterConstraints} /api/groups/search?offset=0&limit=5
 
 		ApiDefinition apiDefintition = SearchService.makeApiDefinitionforSearchByFilter(MambuEntityType.GROUP);
 
-		return serviceExecutor.executeJson(apiDefintition, filterConstraints);
+		// POST Filter JSON with pagination params map
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
+				ServiceHelper.makePaginationParams(offset, limit));
 
 	}
 

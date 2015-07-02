@@ -264,15 +264,17 @@ public class SavingsService {
 	 * @return list of savings transactions matching filter constraints
 	 * @throws MambuApiException
 	 */
-	public List<SavingsTransaction> getSavingsTransactions(JSONFilterConstraints filterConstraints)
-			throws MambuApiException {
+	public List<SavingsTransaction> getSavingsTransactions(JSONFilterConstraints filterConstraints, String offset,
+			String limit) throws MambuApiException {
 		// Available since Mambu 3.12. See MBU-8988 for more details
-		// POST {JSONFilterConstraints} /api/savings/transactions/search
+		// POST {JSONFilterConstraints} /api/savings/transactions/search?offset=0&limit=5
 
 		ApiDefinition apiDefintition = SearchService
 				.makeApiDefinitionforSearchByFilter(MambuEntityType.LOAN_TRANSACTION);
 
-		return serviceExecutor.executeJson(apiDefintition, filterConstraints);
+		// POST Filter JSON with pagination params map
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
+				ServiceHelper.makePaginationParams(offset, limit));
 
 	}
 
@@ -648,14 +650,17 @@ public class SavingsService {
 	 * @return list of savings accounts matching filter constraint
 	 * @throws MambuApiException
 	 */
-	public List<SavingsAccount> getSavingsAccounts(JSONFilterConstraints filterConstraints) throws MambuApiException {
+	public List<SavingsAccount> getSavingsAccounts(JSONFilterConstraints filterConstraints, String offset, String limit)
+			throws MambuApiException {
 		// Available since Mambu 3.12. See MBU-8988 for more details
-		// POST {JSONFilterConstraints} /api/savings/search
+		// POST {JSONFilterConstraints} /api/savings/search?offset=0&limit=5
 
 		ApiDefinition apiDefintition = SearchService
 				.makeApiDefinitionforSearchByFilter(MambuEntityType.SAVINGS_ACCOUNT);
 
-		return serviceExecutor.executeJson(apiDefintition, filterConstraints);
+		// POST Filter JSON with pagination params map
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
+				ServiceHelper.makePaginationParams(offset, limit));
 
 	}
 

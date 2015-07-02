@@ -198,9 +198,10 @@ public class DemoTestSearchService {
 	private static void testSearchEntitiesByFilter() throws MambuApiException {
 		System.out.println("\nIn testSearchEntitiesByFilter");
 
+		String offset = "0";
+		String limit = "5";
 		// Clients
 		// Test GET Clients
-		System.out.println("\nTesting Get Clients by filter:");
 		ClientsService clientsService = MambuAPIFactory.getClientService();
 
 		Client demoClient = DemoUtil.getDemoClient();
@@ -219,12 +220,12 @@ public class DemoTestSearchService {
 		constraints.add(constraint1);
 		filterConstraints.setFilterConstraints(constraints);
 
-		List<Client> clients = clientsService.getClients(filterConstraints);
+		System.out.println("\nTesting Get Clients by filter:");
+		List<Client> clients = clientsService.getClients(filterConstraints, offset, limit);
 		System.out.println("Total clients returned=" + clients.size());
 
 		// Groups
 		// Test Get Groups
-		System.out.println("\nTesting Get Groups by filter:");
 		Group demoGroup = DemoUtil.getDemoGroup();
 		constraints = new ArrayList<JSONFilterConstraint>();
 		constraint1 = new JSONFilterConstraint();
@@ -240,12 +241,13 @@ public class DemoTestSearchService {
 		constraints.add(constraint1);
 		filterConstraints.setFilterConstraints(constraints);
 
-		List<Group> groups = clientsService.getGroups(filterConstraints);
+		System.out.println("\nTesting Get Groups by filter:");
+		List<Group> groups = clientsService.getGroups(filterConstraints, offset, limit);
 		System.out.println("Total groups returned=" + groups.size());
 
 		// Loan Accounts
 		// Test Get Loan Accounts
-		System.out.println("\nTesting Get Loan Accounts by filter:");
+
 		LoanAccount demoLoanAccount = DemoUtil.getDemoLoanAccount();
 		LoansService loansService = MambuAPIFactory.getLoanService();
 		constraints = new ArrayList<JSONFilterConstraint>();
@@ -262,13 +264,13 @@ public class DemoTestSearchService {
 		constraints.add(constraint1);
 		filterConstraints.setFilterConstraints(constraints);
 
-		List<LoanAccount> loans = loansService.getLoanAccounts(filterConstraints);
+		System.out.println("\nTesting Get Loan Accounts by filter:");
+		List<LoanAccount> loans = loansService.getLoanAccounts(filterConstraints, offset, limit);
 		System.out.println("Total loans returned=" + loans.size());
 
 		// Loan Transactions
 		// Test Get Loan Transactions
 		if (loans != null && loans.size() > 0) {
-			System.out.println("\nTesting Get Loan Transactions by filter:");
 			constraints = new ArrayList<JSONFilterConstraint>();
 			constraint1 = new JSONFilterConstraint();
 
@@ -283,13 +285,13 @@ public class DemoTestSearchService {
 			constraints.add(constraint1);
 			filterConstraints.setFilterConstraints(constraints);
 
-			List<LoanTransaction> loanTransactions = loansService.getLoanTransactions(filterConstraints);
+			System.out.println("\nTesting Get Loan Transactions by filter:");
+			List<LoanTransaction> loanTransactions = loansService.getLoanTransactions(filterConstraints, offset, limit);
 			System.out.println("Total loan transactions returned=" + loanTransactions.size());
 
 		}
 		// Savings Accounts
 		// Test Get Savings Accounts
-		System.out.println("\nTesting Get Savings Accounts by filter:");
 		SavingsAccount demoSavingsAccount = DemoUtil.getDemoSavingsAccount();
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 		constraints = new ArrayList<JSONFilterConstraint>();
@@ -306,13 +308,13 @@ public class DemoTestSearchService {
 		constraints.add(constraint1);
 		filterConstraints.setFilterConstraints(constraints);
 
-		List<SavingsAccount> savings = savingsService.getSavingsAccounts(filterConstraints);
+		System.out.println("\nTesting Get Savings Accounts by filter:");
+		List<SavingsAccount> savings = savingsService.getSavingsAccounts(filterConstraints, offset, limit);
 		System.out.println("Total savings returned=" + savings.size());
 
 		// Savings Transactions
 		// Test Get Savings Transactions
 		if (savings != null && savings.size() > 0) {
-			System.out.println("\nTesting Get Savings Transactions by filter:");
 			constraints = new ArrayList<JSONFilterConstraint>();
 			constraint1 = new JSONFilterConstraint();
 
@@ -327,7 +329,9 @@ public class DemoTestSearchService {
 			constraints.add(constraint1);
 			filterConstraints.setFilterConstraints(constraints);
 
-			List<SavingsTransaction> savingsTransactions = savingsService.getSavingsTransactions(filterConstraints);
+			System.out.println("\nTesting Get Savings Transactions by filter:");
+			List<SavingsTransaction> savingsTransactions = savingsService.getSavingsTransactions(filterConstraints,
+					offset, limit);
 			System.out.println("Total Savings transactions returned=" + savingsTransactions.size());
 
 		}

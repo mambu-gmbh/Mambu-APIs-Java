@@ -20,6 +20,7 @@ import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.apisdk.util.ServiceExecutor;
+import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.core.shared.model.SearchResult;
 import com.mambu.core.shared.model.SearchType;
 
@@ -114,14 +115,16 @@ public class SearchService {
 	 * @return list of entities of the searchEntityType matching provided filter constraints
 	 * @throws MambuApiException
 	 */
-	public <T> List<T> searchEntities(MambuEntityType searchEntityType, JSONFilterConstraints filterConstraints)
-			throws MambuApiException {
-		// Available since Mambu 3.12. See MBU-8986 for more details
-		// Example: POST {JSONFilterConstraints} /api/savings/transactions/search
+	public <T> List<T> searchEntities(MambuEntityType searchEntityType, JSONFilterConstraints filterConstraints,
+			String offset, String limit) throws MambuApiException {
+		// Available since Mambu 3.12. See MBU-8986 and MBU-8975 for more details
+		// Example: POST {JSONFilterConstraints} /api/savings/transactions/search?offset=0&limit=5
 
 		ApiDefinition apiDefintition = SearchService.makeApiDefinitionforSearchByFilter(searchEntityType);
 
-		return serviceExecutor.executeJson(apiDefintition, filterConstraints);
+		// POST Filter JSON with pagination params map
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
+				ServiceHelper.makePaginationParams(offset, limit));
 
 	}
 
@@ -152,7 +155,7 @@ public class SearchService {
 		// "value":"ABC123"
 		// } ] } /api/clients/search
 
-		// Crate search URL. Example: /api/clients/search
+		// Crate search URL. Example: /api/clients/search?offset=0&limit=5
 		String searchUrl = makeUrlForSearchWithFilter(searchEntityType);
 
 		// Specify Api definition for searching with filter constraints.
@@ -203,7 +206,9 @@ public class SearchService {
 		}
 
 		// Add "search" to the URL, e.g. "clients/search"
-		return entityUrl + apiDelimiter + APIData.SEARCH;
+		entityUrl = entityUrl + apiDelimiter + APIData.SEARCH;
+		return entityUrl;
+
 	}
 
 }
