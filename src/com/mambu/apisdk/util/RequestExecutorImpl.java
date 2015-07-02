@@ -94,7 +94,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 			throws MambuApiException {
 
 		// Pagination parameters for POST with JSON are to be provided with the URL. See MBU-8975
-		urlString = URLHelper.addJsonPaginationParams(urlString, method, contentTypeFormat, params);
+		urlString = urlHelper.addJsonPaginationParams(urlString, method, contentTypeFormat, params);
 
 		// Log API Request details
 		logApiRequest(method, contentTypeFormat, urlString, params);
@@ -232,7 +232,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 			throws MalformedURLException, IOException, MambuApiException {
 
 		if (params != null && params.size() > 0) {
-			urlString = new String((URLHelper.createUrlWithParams(urlString, params)));
+			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
 		}
 
 		HttpGet httpGet = new HttpGet(urlString);
@@ -262,7 +262,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 			throws MalformedURLException, IOException, MambuApiException {
 
 		if (params != null && params.size() > 0) {
-			urlString = new String((URLHelper.createUrlWithParams(urlString, params)));
+			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
 		}
 
 		HttpDelete httpDelete = new HttpDelete(urlString);
@@ -521,7 +521,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		switch (method) {
 		case GET:
 			// For GET add params to the url as in to be sent request itself
-			urlWithParams = new String((URLHelper.createUrlWithParams(urlString, params)));
+			urlWithParams = new String((urlHelper.createUrlWithParams(urlString, params)));
 			logDetails = logDetails + urlWithParams;
 			break;
 
@@ -548,7 +548,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 			break;
 		case DELETE:
 			// For DELETE ads params to the url as in to be sent request itself
-			urlWithParams = new String((URLHelper.createUrlWithParams(urlString, params)));
+			urlWithParams = new String((urlHelper.createUrlWithParams(urlString, params)));
 			logDetails = logDetails + urlWithParams;
 			break;
 

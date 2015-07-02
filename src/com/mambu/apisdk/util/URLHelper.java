@@ -73,7 +73,7 @@ public class URLHelper {
 	 * 
 	 * @return the complete URL
 	 */
-	public static String createUrlWithParams(String urlString, ParamsMap paramsMap) {
+	public String createUrlWithParams(String urlString, ParamsMap paramsMap) {
 		if (paramsMap != null) {
 			return urlString + DELIMITER + paramsMap.getURLString();
 		} else {
@@ -97,7 +97,7 @@ public class URLHelper {
 	 *            original params map
 	 * @return URL string with pagination parameters added for POST with application/json content type
 	 */
-	public static String addJsonPaginationParams(String urlString, Method method, ContentType contentTypeFormat,
+	public String addJsonPaginationParams(String urlString, Method method, ContentType contentTypeFormat,
 			ParamsMap params) {
 		// Add only for POST with ContentType.JSON (for ContentType.WWW_FORM all params will be added to the URL)
 		if (params == null || !(method == Method.POST && contentTypeFormat == ContentType.JSON)) {
