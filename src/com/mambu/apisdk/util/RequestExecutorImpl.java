@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +26,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -44,7 +44,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 	private URLHelper urlHelper;
 	private String encodedAuthorization;
-	private final static String UTF8_charset = StandardCharsets.UTF_8.name();
+	private final static String UTF8_charset = HTTP.UTF_8;
 	private final static String wwwFormUrlEncodedContentType = "application/x-www-form-urlencoded; charset=UTF-8";
 
 	// Added charset charset=UTF-8, MBU-4137 is now fixed
