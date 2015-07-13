@@ -543,6 +543,16 @@ public class DemoUtil {
 				linkedValue = null;
 			}
 			break;
+		case USER_LINK:
+			// USER_LINK type: see MBU-8966 in 3.12
+			try {
+				User user = getDemoUser();
+				linkedValue = user.getEncodedKey();
+			} catch (MambuApiException e) {
+				linkedValue = null;
+			}
+
+			break;
 		}
 		value.setValue(newValue);
 		value.setLinkedEntityKeyValue(linkedValue);
