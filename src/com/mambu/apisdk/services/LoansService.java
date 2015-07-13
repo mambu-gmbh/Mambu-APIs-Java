@@ -25,7 +25,6 @@ import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
-import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.docs.shared.model.Document;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
@@ -835,63 +834,6 @@ public class LoansService {
 	 */
 	public List<Document> getLoanAccountDocuments(String accountId) throws MambuApiException {
 		return serviceExecutor.execute(getAccountDocuments, accountId);
-	}
-
-	/***
-	 * Update custom field value for a Loan Account. This method allows to set new value for a specific custom field
-	 * 
-	 * @deprecated use
-	 *             {@link CustomFieldValueService#update(com.mambu.apisdk.util.MambuEntity, String, CustomFieldValue, String)}
-	 *             to update custom field values . This method doesn't support updating grouped and linked custom fields
-	 *             available since 3.11
-	 * @param accountId
-	 *            the encoded key or id of the Mambu Loan Account for which the custom field is updated
-	 * @param customFieldId
-	 *            the encoded key or id of the custom field to be updated
-	 * @param fieldValue
-	 *            the new value of the custom field
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public boolean updateLoanAccountCustomField(String accountId, String customFieldId, String fieldValue)
-			throws MambuApiException {
-		// Execute request for PATCH API to update custom field value for a Loan Account. See MBU-6661
-		// e.g. PATCH "{ "value": "10" }" /host/api/loans/accointId/custominformation/customFieldId
-
-		// Update Custom Field value for a Loan Account. PATCH /api/loans/accointId/custominformation/customFieldId
-		final ApiDefinition updateAccountCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY, LoanAccount.class,
-				CustomFieldValue.class);
-
-		// Make ParamsMap with JSON request for Update API
-		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
-		return serviceExecutor.execute(updateAccountCustomField, accountId, customFieldId, params);
-
-	}
-
-	/***
-	 * Delete custom field for a Loan Account
-	 * 
-	 * @deprecated use {@link CustomFieldValueService#delete(com.mambu.apisdk.util.MambuEntity, String, String)} to
-	 *             delete custom field values
-	 * 
-	 * @param accountId
-	 *            the encoded key or id of the Mambu Loan Account
-	 * @param customFieldId
-	 *            the encoded key or id of the custom field to be deleted
-	 * 
-	 * @throws MambuApiException
-	 */
-	public boolean deleteLoanAccountCustomField(String accountId, String customFieldId) throws MambuApiException {
-		// Execute request for DELETE API to delete custom field for a Loan Account. See MBU-6661
-		// e.g. DELETE /host/api/loans/accointId/custominformation/customFieldId
-
-		// Delete Custom Field for a Loan Account. DELETE /api/loans/accointId/custominformation/customFieldId
-		final ApiDefinition deleteAccountCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
-				LoanAccount.class, CustomFieldValue.class);
-
-		return serviceExecutor.execute(deleteAccountCustomField, accountId, customFieldId, null);
-
 	}
 
 }

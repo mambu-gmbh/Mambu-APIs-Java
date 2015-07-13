@@ -25,7 +25,6 @@ import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.GroupExpanded;
 import com.mambu.clients.shared.model.GroupRoleName;
 import com.mambu.core.shared.model.ClientRole;
-import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.docs.shared.model.Document;
 
 /**
@@ -605,121 +604,6 @@ public class ClientsService {
 	 */
 	public List<Document> getGroupDocuments(String groupId) throws MambuApiException {
 		return serviceExecutor.execute(getGroupDocuments, groupId);
-	}
-
-	/***
-	 * Update custom field value for a Client. This method allows to set new value for a specific custom field
-	 * 
-	 * @deprecated use
-	 *             {@link CustomFieldValueService#update(com.mambu.apisdk.util.MambuEntity, String, CustomFieldValue, String)}
-	 *             to update custom field values . This method doesn't support updating grouped and linked custom fields
-	 *             available since 3.11
-	 * @param clientId
-	 *            the encoded key or id of the Mambu Client
-	 * @param customFieldId
-	 *            the encoded key or id of the custom field to be updated
-	 * @param fieldValue
-	 *            the new value of the custom field
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public boolean updateClientCustomField(String clientId, String customFieldId, String fieldValue)
-			throws MambuApiException {
-		// Execute request for PATCH API to update custom field value for a client. See MBU-6661
-		// e.g. PATCH "{ "value": "10" }" /host/api/clients/clientId/custominformation/customFieldId
-
-		// Update Custom Field value for a Client
-		final ApiDefinition updateClientCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY, Client.class,
-				CustomFieldValue.class);
-
-		// Make ParamsMap with JSON request for Update API
-		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
-		return serviceExecutor.execute(updateClientCustomField, clientId, customFieldId, params);
-
-	}
-
-	/***
-	 * Delete custom field for a Client
-	 * 
-	 * @deprecated use {@link CustomFieldValueService#delete(com.mambu.apisdk.util.MambuEntity, String, String)} to
-	 *             delete custom field values
-	 * @param clientId
-	 *            the encoded key or id of the Mambu Client
-	 * @param customFieldId
-	 *            the encoded key or id of the custom field to be deleted
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public boolean deleteClientCustomField(String clientId, String customFieldId) throws MambuApiException {
-		// Execute request for DELETE API to delete custom field value for a client
-		// e.g. DELETE /host/api/clients/clientId/custominformation/customFieldId
-
-		// Delete Custom Field for a Client
-		final ApiDefinition deleteClientCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY, Client.class,
-				CustomFieldValue.class);
-
-		return serviceExecutor.execute(deleteClientCustomField, clientId, customFieldId, null);
-
-	}
-
-	/***
-	 * Update custom field value for a Group. This method allows to set new value for a specific custom field
-	 * 
-	 * @deprecated use
-	 *             {@link CustomFieldValueService#update(com.mambu.apisdk.util.MambuEntity, String, CustomFieldValue, String)}
-	 *             to update custom field values . This method doesn't support updating grouped and linked custom fields
-	 *             available since 3.11
-	 * 
-	 * @param groupId
-	 *            the encoded key or id of the Mambu Group
-	 * @param customFieldId
-	 *            the encoded key or id of the custom field to be updated
-	 * @param fieldValue
-	 *            the new value of the custom field
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public boolean updateGroupCustomField(String groupId, String customFieldId, String fieldValue)
-			throws MambuApiException {
-		// Execute request for PATCH API to update custom field value for a group
-		// e.g. PATCH "{ "value": "10" }" /host/api/groups/groupId/custominformation/customFieldId
-
-		// Update Custom Field value for a Group
-		final ApiDefinition updateGroupCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY, Group.class,
-				CustomFieldValue.class);
-
-		// Make ParamsMap with JSON request for Update API
-		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
-		return serviceExecutor.execute(updateGroupCustomField, groupId, customFieldId, params);
-
-	}
-
-	/***
-	 * Delete custom field for a Group
-	 * 
-	 * @deprecated use {@link CustomFieldValueService#delete(com.mambu.apisdk.util.MambuEntity, String, String)} to
-	 *             delete custom field values
-	 * @param groupId
-	 *            the encoded key or id of the Mambu Group
-	 * @param customFieldId
-	 *            the encoded key or id of the custom field to be deleted
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public boolean deleteGroupCustomField(String groupId, String customFieldId) throws MambuApiException {
-		// Execute request for DELETE API to delete custom field for an group
-		// e.g. DELETE /host/api/groups/groupId/custominformation/customFieldId
-
-		// Delete Custom Field for a Group
-		final ApiDefinition deleteGroupCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY, Group.class,
-				CustomFieldValue.class);
-
-		return serviceExecutor.execute(deleteGroupCustomField, groupId, customFieldId, null);
-
 	}
 
 	/***
