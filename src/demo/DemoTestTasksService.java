@@ -36,7 +36,7 @@ public class DemoTestTasksService {
 			// Get demo entities needed for testing
 			demoUser = DemoUtil.getDemoUser();
 			demoClient = DemoUtil.getDemoClient();
-			demoGroup = DemoUtil.getDemoGroup("080535194");
+			demoGroup = DemoUtil.getDemoGroup();
 
 			// Available since Mambu 1.11
 			testCreateTaskFromEncoded();
