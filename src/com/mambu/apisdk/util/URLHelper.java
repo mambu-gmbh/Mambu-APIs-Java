@@ -10,6 +10,8 @@ import java.util.logging.Logger;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mambu.apisdk.model.Domain;
+import com.mambu.apisdk.util.RequestExecutor.ContentType;
+import com.mambu.apisdk.util.RequestExecutor.Method;
 
 /**
  * Helper class for operations with the URL adresses
@@ -60,6 +62,7 @@ public class URLHelper {
 		}
 
 	}
+
 	/***
 	 * Appends some params to a given URL String
 	 * 
@@ -76,5 +79,46 @@ public class URLHelper {
 		} else {
 			return urlString;
 		}
+	}
+
+	/**
+	 * Add pagination params to a given URL String for POST with application/json content type. Pagination parameters
+	 * shall be be added to the URL string. See MBU-8975. Only "offset" and "limit" parameters are added. For example,
+	 * in API call POST {JSONFilterConstraints} /api/loans/search?offset=0&limit=5
+	 * 
+	 * @param urlString
+	 *            original URL string
+	 * @param method
+	 *            method
+	 * @param contentTypeFormat
+	 *            content type format
+	 * @param params
+	 *            input parameters. If pagination parameters are added to the URL string then they are removed from the
+	 *            original params map
+	 * @return URL string with pagination parameters added for POST with application/json content type
+	 */
+	public String addJsonPaginationParams(String urlString, Method method, ContentType contentTypeFormat,
+			ParamsMap params) {
+		// Add only for POST with ContentType.JSON (for ContentType.WWW_FORM all params will be added to the URL)
+		if (params == null || !(method == Method.POST && contentTypeFormat == ContentType.JSON)) {
+			return urlString;
+		}
+
+		if (params.get(APIData.OFFSET) == null && params.get(APIData.LIMIT) == null) {
+			return urlString;
+		}
+		// Create temporary params map
+		ParamsMap paginationParams = new ParamsMap();
+		paginationParams.put(APIData.OFFSET, params.get(APIData.OFFSET));
+		paginationParams.put(APIData.LIMIT, params.get(APIData.LIMIT));
+
+		// Add offset/limit to the URL string
+		String urlWithParams = createUrlWithParams(urlString, paginationParams);
+
+		// Remove pagination params already added to the URL
+		params.remove(APIData.OFFSET);
+		params.remove(APIData.LIMIT);
+
+		return urlWithParams;
 	}
 }

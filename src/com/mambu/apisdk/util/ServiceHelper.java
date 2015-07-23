@@ -427,4 +427,31 @@ public class ServiceHelper {
 			return GsonUtils.createGson(dateTimeFormat).toJson(object, object.getClass());
 		}
 	}
+
+	/**
+	 * Convenience helper to make params map which contains only pagination parameters: offset and limit
+	 * 
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null the must be an integer greater than zero
+	 * @return
+	 */
+	public static ParamsMap makePaginationParams(String offset, String limit) {
+
+		if (offset == null && limit == null) {
+			return null;
+		}
+		// Validate pagination parameters
+		if ((offset != null && Integer.parseInt(offset) < 0) || ((limit != null && Integer.parseInt(limit) < 1))) {
+			throw new IllegalArgumentException("Invalid pagination parameters. Offset=" + offset + " Limit=" + limit);
+		}
+
+		ParamsMap params = new ParamsMap();
+		params.addParam(APIData.OFFSET, offset);
+		params.addParam(APIData.LIMIT, limit);
+
+		return params;
+
+	}
 }

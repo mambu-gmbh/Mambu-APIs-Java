@@ -31,6 +31,7 @@ import com.mambu.core.shared.model.ClientRole;
 import com.mambu.core.shared.model.ClientRolePermission;
 import com.mambu.core.shared.model.CustomFieldType;
 import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.core.shared.model.Language;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
 import com.mambu.docs.shared.model.OwnerType;
@@ -60,6 +61,7 @@ public class DemoTestClientService {
 		DemoUtil.setUp();
 
 		try {
+
 			demoUser = DemoUtil.getDemoUser();
 			demoClient = DemoUtil.getDemoClient();
 			demoGroup = DemoUtil.getDemoGroup();
@@ -254,6 +256,7 @@ public class DemoTestClientService {
 		clientIn.setMiddleName(" Middle ");
 		clientIn.setMobilePhone1("1-778-2344");
 		clientIn.setMobilePhone2("2-778-2344");
+		clientIn.setPreferredLanguage(Language.ENGLISH); // MBU-9221 in 3.12
 
 		// Birthday
 		Calendar calendar = Calendar.getInstance();
@@ -319,6 +322,7 @@ public class DemoTestClientService {
 		Client client = clientUpdated.getClient();
 		client.setFirstName(client.getFirstName() + updatedSuffix);
 		client.setLastName(client.getLastName() + updatedSuffix);
+		client.setPreferredLanguage(Language.SPANISH); // TODO: Mambu issue - Language is NOT updated
 
 		ClientExpanded clientExpandedResult = clientService.updateClient(clientUpdated);
 

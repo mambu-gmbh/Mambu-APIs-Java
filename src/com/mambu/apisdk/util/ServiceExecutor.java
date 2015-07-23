@@ -264,13 +264,15 @@ public class ServiceExecutor {
 	 *            and Document objects can be created using JSON API requests
 	 * @param objectId
 	 *            object's id (optional, could be null if not used, for example for JSON create requests)
-	 * 
+	 * @param paramsMap
+	 *            params map with additional parameters. could be null. Currently used to provided optional pagination
+	 *            params
 	 * @return object a result object, which will be an API specific object
 	 * 
 	 * @throws MambuApiException
 	 */
-	public <R, T> R executeJson(ApiDefinition apiDefinition, T object, String objectId, String relatedEntityId)
-			throws MambuApiException {
+	public <R, T> R executeJson(ApiDefinition apiDefinition, T object, String objectId, String relatedEntityId,
+			ParamsMap paramsMap) throws MambuApiException {
 
 		if (object == null) {
 			throw new IllegalArgumentException("JSON object must not be NULL");
@@ -281,7 +283,9 @@ public class ServiceExecutor {
 		final String jsonData = ServiceHelper.makeApiJson(object, dateTimeFormat);
 
 		// Add JSON string as JSON_OBJECT to the ParamsMap
-		ParamsMap paramsMap = new ParamsMap();
+		if (paramsMap == null) {
+			paramsMap = new ParamsMap();
+		}
 		paramsMap.put(APIData.JSON_OBJECT, jsonData);
 
 		// Execute this request with apiDefintion, objectId, relatedEntityId and paramsMap
@@ -305,7 +309,8 @@ public class ServiceExecutor {
 	 */
 	public <R, T> R executeJson(ApiDefinition apiDefinition, T object, String objectId) throws MambuApiException {
 		String relatedEntityId = null;
-		return executeJson(apiDefinition, object, objectId, relatedEntityId);
+		ParamsMap paramsMap = null;
+		return executeJson(apiDefinition, object, objectId, relatedEntityId, paramsMap);
 	}
 
 	/****
@@ -323,7 +328,8 @@ public class ServiceExecutor {
 	public <R, T> R executeJson(ApiDefinition apiDefinition, T object) throws MambuApiException {
 		String objectId = null;
 		String relatedEntityId = null;
-		return executeJson(apiDefinition, object, objectId, relatedEntityId);
+		ParamsMap paramsMap = null;
+		return executeJson(apiDefinition, object, objectId, relatedEntityId, paramsMap);
 	}
 
 	// // Private Helper methods ////
@@ -718,7 +724,8 @@ public class ServiceExecutor {
 		Class<?> ownedEntityClass = ownedEntity.getClass();
 
 		ApiDefinition patchEntity = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY, parentClass, ownedEntityClass);
-		return executeJson(patchEntity, ownedEntity, parentId, ownedEntityId);
+		ParamsMap paramsMap = null;
+		return executeJson(patchEntity, ownedEntity, parentId, ownedEntityId, paramsMap);
 	}
 
 	/**
