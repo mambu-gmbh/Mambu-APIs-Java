@@ -513,6 +513,10 @@ public class LoansService {
 	 *            the id of the account offset - first transaction number limit - last transaction number Note: if
 	 *            offset and limit both equal null, all transactions are returned (Note: transaction are sorted by date)
 	 * 
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * @return the list of loan account transactions
 	 * 
 	 * @throws MambuApiException
@@ -554,6 +558,10 @@ public class LoansService {
 	 * 
 	 * @param filterConstraints
 	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * @return list of loan transactions matching filter constraint
 	 * @throws MambuApiException
 	 */
@@ -667,7 +675,10 @@ public class LoansService {
 	 *            The username of the credit officer to whom the loans are assigned to
 	 * @param accountState
 	 *            The desired state of the accounts to filter on (eg: APPROVED)
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
 	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
 	 * @return the list of loan accounts matching these parameters
 	 * 
@@ -697,7 +708,10 @@ public class LoansService {
 	 *            The username of the credit officer to whom the loans are assigned to
 	 * @param accountState
 	 *            The desired state of the accounts to filter on (eg: APPROVED)
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
 	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
 	 * @return the list of loan accounts matching these parameters
 	 * 
@@ -738,6 +752,10 @@ public class LoansService {
 	 * 
 	 * @param filterConstraints
 	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * @return list of loan accounts matching filter constraints
 	 * @throws MambuApiException
 	 */
@@ -758,6 +776,10 @@ public class LoansService {
 	/***
 	 * Get a list of Loan Products
 	 * 
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * @return the List of Loan Products
 	 * 
 	 * @throws MambuApiException

@@ -260,6 +260,10 @@ public class SavingsService {
 	 * 
 	 * @param filterConstraints
 	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * @return list of savings transactions matching filter constraints
 	 * @throws MambuApiException
 	 */
@@ -269,7 +273,7 @@ public class SavingsService {
 		// POST {JSONFilterConstraints} /api/savings/transactions/search?offset=0&limit=5
 
 		ApiDefinition apiDefintition = SearchService
-				.makeApiDefinitionforSearchByFilter(MambuEntityType.LOAN_TRANSACTION);
+				.makeApiDefinitionforSearchByFilter(MambuEntityType.SAVINGS_TRANSACTION);
 
 		// POST Filter JSON with pagination params map
 		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
@@ -577,7 +581,10 @@ public class SavingsService {
 	 *            the username of the credit officer to whom the accounts are assigned to
 	 * @param accountState
 	 *            the state of the accounts to filter on (e.g: APPROVED)
-	 * 
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * @return the list of Savings accounts matching these parameters
 	 * 
 	 * @throws MambuApiException
@@ -607,6 +614,10 @@ public class SavingsService {
 	 *            the username of the credit officer to whom the accounts are assigned to
 	 * @param accountState
 	 *            the state of the accounts to filter on (e.g: APPROVED)
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
 	 * @return the list of Savings accounts matching these parameters
 	 * 
@@ -646,6 +657,10 @@ public class SavingsService {
 	 * 
 	 * @param filterConstraints
 	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * @return list of savings accounts matching filter constraint
 	 * @throws MambuApiException
 	 */
@@ -667,6 +682,10 @@ public class SavingsService {
 	/***
 	 * Get a list of Savings Products
 	 * 
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * @return the List of Savings Products
 	 * 
 	 * @throws MambuApiException

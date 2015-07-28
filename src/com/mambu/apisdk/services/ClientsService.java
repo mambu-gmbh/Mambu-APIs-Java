@@ -373,6 +373,10 @@ public class ClientsService {
 	 *            the username of the credit officer to whom the CLients are assigned to
 	 * @param clientState
 	 *            the desired state of a Client to filter on (eg: ACTIVE)
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
 	 * @return the list of Clients matching these parameters
 	 * 
@@ -401,6 +405,10 @@ public class ClientsService {
 	 *            the username of the credit officer to whom the CLients are assigned to
 	 * @param clientState
 	 *            the desired state of a Client to filter on (eg: ACTIVE)
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
 	 * @return the list of Clients matching these parameters
 	 * 
@@ -439,6 +447,11 @@ public class ClientsService {
 	 * 
 	 * @param filterConstraints
 	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * 
 	 * @return list of clients matching filter constraint
 	 * @throws MambuApiException
 	 */
@@ -481,6 +494,11 @@ public class ClientsService {
 	 * 
 	 * @param filterConstraints
 	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * 
 	 * @return list of groups matching filter constraint.
 	 * @throws MambuApiException
 	 */
@@ -541,6 +559,10 @@ public class ClientsService {
 	 *            provided then this centre must be assigned to the branchId
 	 * @param creditOfficerUserName
 	 *            the username of the credit officer to whom the Groups are assigned to
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
 	 * @return the list of Groups matching these parameters
 	 * 
@@ -566,6 +588,10 @@ public class ClientsService {
 	 *            the ID of the Group's branch
 	 * @param creditOfficerUserName
 	 *            the username of the credit officer to whom the Groups are assigned to
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
 	 * @return the list of Groups matching these parameters
 	 * 

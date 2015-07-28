@@ -112,6 +112,11 @@ public class SearchService {
 	 *            following entities: Clients, Groups, Loans, Savings, Loan Transactions and SavingsTransactions.
 	 * @param filterConstraints
 	 *            filter constraints applicable for the entity. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * 
 	 * @return list of entities of the searchEntityType matching provided filter constraints
 	 * @throws MambuApiException
 	 */
@@ -120,10 +125,10 @@ public class SearchService {
 		// Available since Mambu 3.12. See MBU-8986 and MBU-8975 for more details
 		// Example: POST {JSONFilterConstraints} /api/savings/transactions/search?offset=0&limit=5
 
-		ApiDefinition apiDefintition = SearchService.makeApiDefinitionforSearchByFilter(searchEntityType);
+		ApiDefinition apiDefinition = SearchService.makeApiDefinitionforSearchByFilter(searchEntityType);
 
 		// POST Filter JSON with pagination params map
-		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
+		return serviceExecutor.executeJson(apiDefinition, filterConstraints, null, null,
 				ServiceHelper.makePaginationParams(offset, limit));
 
 	}
