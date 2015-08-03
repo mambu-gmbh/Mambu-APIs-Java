@@ -79,24 +79,25 @@ public class DemoEntityParams {
 			throw new IllegalArgumentException("Demo entity " + mambuEntity + " is not supported");
 		}
 
+		// Get Demo entities using IDs specified in the configuration file (set requested ID to null)
 		switch (mambuEntity) {
 		case CLIENT:
-			Client client = DemoUtil.getDemoClient();
+			Client client = DemoUtil.getDemoClient(null);
 			return new DemoEntityParams(client.getFullName(), client.getEncodedKey(), client.getId());
 		case GROUP:
-			Group group = DemoUtil.getDemoGroup();
+			Group group = DemoUtil.getDemoGroup(null);
 			return new DemoEntityParams(group.getGroupName(), group.getEncodedKey(), group.getId());
 		case LOAN_ACCOUNT:
-			LoanAccount loan = DemoUtil.getDemoLoanAccount();
+			LoanAccount loan = DemoUtil.getDemoLoanAccount(null);
 			return new DemoEntityParams(loan.getName(), loan.getEncodedKey(), loan.getId());
 		case SAVINGS_ACCOUNT:
-			SavingsAccount savings = DemoUtil.getDemoSavingsAccount();
+			SavingsAccount savings = DemoUtil.getDemoSavingsAccount(null);
 			return new DemoEntityParams(savings.getName(), savings.getEncodedKey(), savings.getId());
 		case LOAN_PRODUCT:
-			LoanProduct lProduct = DemoUtil.getDemoLoanProduct();
+			LoanProduct lProduct = DemoUtil.getDemoLoanProduct(null);
 			return new DemoEntityParams(lProduct.getName(), lProduct.getEncodedKey(), lProduct.getId());
 		case SAVINGS_PRODUCT:
-			SavingsProduct sProduct = DemoUtil.getDemoSavingsProduct();
+			SavingsProduct sProduct = DemoUtil.getDemoSavingsProduct(null);
 			return new DemoEntityParams(sProduct.getName(), sProduct.getEncodedKey(), sProduct.getId());
 		case USER:
 			User user = DemoUtil.getDemoUser();
