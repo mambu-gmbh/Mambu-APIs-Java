@@ -43,9 +43,9 @@ public class DemoTestDocumentsService {
 
 		try {
 			demoUser = DemoUtil.getDemoUser();
-			demoClient = DemoUtil.getDemoClient();
-			demoLoanAccount = DemoUtil.getDemoLoanAccount();
-			demoSavingsAccount = DemoUtil.getDemoSavingsAccount();
+			demoClient = DemoUtil.getDemoClient(null);
+			demoLoanAccount = DemoUtil.getDemoLoanAccount(null);
+			demoSavingsAccount = DemoUtil.getDemoSavingsAccount(null);
 
 			testUploadDocumentFromFile();
 

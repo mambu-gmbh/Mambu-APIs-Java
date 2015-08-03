@@ -472,8 +472,7 @@ public class LoansService {
 	 * updateLoanAccount() to update custom fields for a loan account
 	 * 
 	 * @param loan
-	 *            LoanAccountExtended object containing LoanAccount. Either LoanAccount encoded key or its ID must be
-	 *            NOT null for updating account
+	 *            LoanAccount object. Either LoanAccount encoded key or its ID must be NOT null for updating account
 	 * 
 	 *            Note that only some loan terms can be updated. See MBU-7758 for details.
 	 * 
