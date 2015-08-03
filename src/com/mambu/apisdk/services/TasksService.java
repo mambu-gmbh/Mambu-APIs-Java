@@ -151,11 +151,13 @@ public class TasksService {
 	 * Get tasks based on the specified criteria, which can include clientId, username, and/or task's state
 	 * 
 	 * @param username
-	 *            username, encodedKey or user id
+	 *            username, encodedKey or user id. If usename is not null then all tasks for this user are returned
 	 * @param clientId
-	 *            client encodedKey or id
+	 *            client encodedKey or id. To get tasks for the client the clientId must not be null and the groupId and
+	 *            username must be null.
 	 * @param groupId
-	 *            group encodedKey or id
+	 *            group encodedKey or id. To get tasks for the group the groupId must not be null and the clientId and
+	 *            username must be null.
 	 * @param taskStatus
 	 *            task status
 	 * @param offset
