@@ -84,11 +84,22 @@ public class DemoUtil {
 	private static String password2 = "demo"; // demo User password for domain2
 
 	// Demo Data
-	final static String demoClientLastName = "Doe"; // Doe Chernaya
-	final static String demoClientLastName2 = "Doe"; // Doe Chernaya
-	final static String demoClientFirstName = "John"; // John Irina
-	final static String demoClientFirstName2 = "Jane"; // Jane Irina
-	final static String demoUsername = "demo"; // demo MichaelD
+	static String demoClientLastName = "Doe"; // Doe Chernaya
+	static String demoClientLastName2 = "Doe"; // Doe Chernaya
+	static String demoClientFirstName = "John"; // John Irina
+	static String demoClientFirstName2 = "Jane"; // Jane Irina
+	static String demoUsername = "demo"; // demo
+
+	static String demoClientId = null;
+	static String demoGroupId = null;
+
+	static String demoLaonAccountId = null;
+	static String demoLaonProductId = null;
+
+	static String demoSavingsAccountId = null;
+	static String demoSavingsProductId = null;
+
+	static String demoLineOfCreditId = null;
 
 	public static void setUp() {
 		// get Logging properties file
@@ -117,6 +128,9 @@ public class DemoUtil {
 			else
 				System.out.println("DemoUtil: APP KEY specified");
 
+			// Get IDs for demo entities defined in the property file
+			getDemoEntities(prop);
+
 		} catch (IOException e) {
 			System.out.println("  Exception reading config.properties file in Demo Util Service");
 			Logger.getAnonymousLogger().severe("Could not read file config.properties");
@@ -130,6 +144,67 @@ public class DemoUtil {
 		// set up App Key
 		MambuAPIFactory.setApplicationKey(appKeyValue);
 
+	}
+
+	public static final String demoLogPrefix = "DemoUtil data: ";
+
+	// Get IDs for the demo entities defined in the Properties file
+	private static void getDemoEntities(Properties properties) {
+		if (properties == null) {
+			System.out.println("Null  Properties file, cannot obtain demo data");
+			return;
+		}
+
+		// Get Properties. For domain, user and demo client we can also use hardcoded defaults if not provided
+		domain = properties.getProperty("domain", domain);
+		user = properties.getProperty("user", domain);
+		password = properties.getProperty("password", password);
+		System.out.println(demoLogPrefix + "Domain=" + domain + "\tUser=" + user);
+
+		// Get Demo User username
+		demoUsername = makeNullIfEmpty(properties.getProperty("demoUsername", demoUsername));
+
+		// Get Demo Client defines by first and last name
+		demoClientFirstName = makeNullIfEmpty(properties.getProperty("demoClientFirstName", demoClientFirstName));
+		demoClientLastName = makeNullIfEmpty(properties.getProperty("demoClientLastName", demoClientLastName));
+		System.out.println(demoLogPrefix + "Username=" + demoUsername + "\tClient First Name=" + demoClientFirstName
+				+ "\tClient Last Name=" + demoClientLastName);
+
+		// Domain 2: Get Demo Client defines by first and last name
+		demoClientFirstName2 = makeNullIfEmpty(properties.getProperty("demoClientFirstName", demoClientFirstName2));
+		demoClientLastName2 = makeNullIfEmpty(properties.getProperty("demoClientLastName", demoClientLastName2));
+
+		// Get Demo Client and Demo Group IDs
+		demoClientId = makeNullIfEmpty(properties.getProperty("demoClientId"));
+		demoGroupId = makeNullIfEmpty(properties.getProperty("demoGroupId"));
+		System.out.println(demoLogPrefix + "Client ID=" + demoClientId + "\tGroup Id=" + demoGroupId);
+
+		// Get Demo Loan and Demo Savings Product IDs
+		demoLaonAccountId = makeNullIfEmpty(properties.getProperty("demoLaonAccountId")); // account
+		demoLaonProductId = makeNullIfEmpty(properties.getProperty("demoLaonProductId")); // product
+		System.out.println(demoLogPrefix + "Loan Account ID=" + demoLaonAccountId + "\tLoan productId="
+				+ demoLaonProductId);
+
+		// Get Demo Savings Account Demo Savings Product IDs
+		demoSavingsAccountId = makeNullIfEmpty(properties.getProperty("demoSavingsAccountId")); // account
+		demoSavingsProductId = makeNullIfEmpty(properties.getProperty("demoSavingsProductId")); // product
+		System.out.println(demoLogPrefix + "Savings Account ID=" + demoSavingsAccountId + "\tSavings productId="
+				+ demoSavingsProductId);
+
+		// Get Demo Line Of Credit ID
+		demoLineOfCreditId = makeNullIfEmpty(properties.getProperty("demoLineOfCreditId"));
+		System.out.println(demoLogPrefix + "Line of Credit ID=" + demoLineOfCreditId);
+
+	}
+
+	// Helper to set properties parameter value to null if it is empty.
+	// This would allow leaving undefined properties blank in the configuration file instead of commenting them out each
+	// time
+	private static String makeNullIfEmpty(String param) {
+		if (param == null || param.trim().length() == 0) {
+			return null;
+		}
+		return param;
 	}
 
 	/**
@@ -243,6 +318,14 @@ public class DemoUtil {
 	public static Client getDemoClient(String clientId) throws MambuApiException {
 		System.out.println("\nIn getDemoClient for id=" + clientId);
 
+		// If clientId ID is null and nothing is specified in the configuration file then get by the first and last name
+		if (clientId == null && demoClientId == null) {
+			// Both are null, use a random one
+			return getDemoClient();
+
+		}
+		// Use the provided ID if it is not null, otherwise use the one defined in the configuration file
+		clientId = (clientId != null) ? clientId : demoClientId;
 		ClientsService clientsService = MambuAPIFactory.getClientService();
 		Client client = clientsService.getClient(clientId);
 
@@ -284,6 +367,14 @@ public class DemoUtil {
 	public static Group getDemoGroup(String groupId) throws MambuApiException {
 		System.out.println("\nIn getDemoGroup for id=" + groupId);
 
+		// If groupId ID is null and nothing is specified in the configuration file then get a random one
+		if (groupId == null && demoGroupId == null) {
+			// Both are null, use a random one
+			return getDemoGroup();
+
+		}
+		// Use the provided ID if it is not null, otherwise use the one defined in the configuration file
+		groupId = (groupId != null) ? groupId : demoGroupId;
 		ClientsService clientsService = MambuAPIFactory.getClientService();
 		Group group = clientsService.getGroup(groupId);
 
@@ -335,9 +426,15 @@ public class DemoUtil {
 	public static LoanProduct getDemoLoanProduct(String productId) throws MambuApiException {
 		System.out.println("\nIn getDemoLoanProduct by ID=" + productId);
 
-		if (productId == null) {
+		// If provided ID is null and nothing is specified in the configuration file then get a random one
+		if (productId == null && demoLaonProductId == null) {
+			// Both are null, use a random one
 			return getDemoLoanProduct();
+
 		}
+		// Use the provided ID if it is not null, otherwise use the one defined in the configuration file
+		productId = (productId != null) ? productId : demoLaonProductId;
+		// if not provided try using the one defined in config file
 		LoansService service = MambuAPIFactory.getLoanService();
 		LoanProduct product = service.getLoanProduct(productId);
 
@@ -376,9 +473,14 @@ public class DemoUtil {
 	public static SavingsProduct getDemoSavingsProduct(String productId) throws MambuApiException {
 		System.out.println("\nIn getDemoSavingsProduct by ID=" + productId);
 
-		if (productId == null) {
+		// If provided ID is null and nothing is specified in the configuration file then get a random one
+		if (productId == null && demoSavingsProductId == null) {
+			// Both are null, use a random one
 			return getDemoSavingsProduct();
+
 		}
+		// Use the provided ID if it is not null, otherwise use the one defined in the configuration file
+		productId = (productId != null) ? productId : demoSavingsProductId;
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
 		SavingsProduct product = service.getSavingsProduct(productId);
@@ -407,9 +509,14 @@ public class DemoUtil {
 	public static LoanAccount getDemoLoanAccount(String accountId) throws MambuApiException {
 		System.out.println("\nIn getDemoLoanAccount by ID-" + accountId);
 
-		if (accountId == null) {
+		// If provided ID is null and nothing is specified in the configuration file then get a random one
+		if (accountId == null && demoLaonAccountId == null) {
+			// Both are null, use a random one
 			return getDemoLoanAccount();
+
 		}
+		// Use the provided ID if it is not null, otherwise use the one defined in the configuration file
+		accountId = (accountId != null) ? accountId : demoLaonAccountId;
 		LoansService service = MambuAPIFactory.getLoanService();
 		LoanAccount account = service.getLoanAccountDetails(accountId);
 
@@ -437,11 +544,14 @@ public class DemoUtil {
 	// Get specific savings account by ID
 	public static SavingsAccount getDemoSavingsAccount(String accountId) throws MambuApiException {
 		System.out.println("\nIn getDemoSavingsAccount by ID=" + accountId);
-
-		if (accountId == null) {
+		// If provided ID is null and nothing is specified in the configuration file then get a random one
+		if (accountId == null && demoSavingsAccountId == null) {
+			// Both are null, use a random one
 			return getDemoSavingsAccount();
-		}
 
+		}
+		// Use the provided ID if it is not null, otherwise use the one defined in the configuration file
+		accountId = (accountId != null) ? accountId : demoSavingsAccountId;
 		SavingsService service = MambuAPIFactory.getSavingsService();
 		SavingsAccount account = service.getSavingsAccountDetails(accountId);
 
