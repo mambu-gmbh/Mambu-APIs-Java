@@ -445,48 +445,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 
 		String appKey = params.get(APPLICATION_KEY);
-		return addAppkeyValueToJson(appKey, jsonString);
-
-	}
-
-	/**
-	 * Add appKey value to the json string
-	 * 
-	 * @param appKey
-	 *            app key value
-	 * 
-	 * @param jsonString
-	 *            json string
-	 * @return jsonStringWithAppKey json string with appKey added
-	 */
-	private static String addAppkeyValueToJson(String appKey, String jsonString) {
-
-		if (appKey == null || appKey.length() == 0) {
-			return jsonString;
-		}
-
-		// First compile the following string: "{appKey":"appKeyValue",
-		// This formatted appKey string will be appended with the original json string (without the first '{')
-
-		String appKeyString = "{\"" + APPLICATION_KEY + "\":\"" + appKey + "\",";
-
-		// Check if we have the string to insert into
-		if (jsonString == null || jsonString.length() == 0) {
-			// Nothing to insert into. Return just the appKey param (surrounded by the square brackets)
-			return appKeyString.replace(',', '}');
-		}
-
-		// We need input json string without the first '{'
-		String jsonStringToAdd = jsonString.substring(1);
-
-		// Create initial String Buffer large enough to hold the resulting two strings
-		StringBuffer jsonWithAppKey = new StringBuffer(jsonStringToAdd.length() + appKeyString.length());
-
-		// Append the appkey and the the json string
-		jsonWithAppKey.append(appKeyString);
-		jsonWithAppKey.append(jsonStringToAdd);
-
-		return jsonWithAppKey.toString();
+		return ServiceHelper.addAppkeyValueToJson(appKey, jsonString);
 
 	}
 
@@ -628,15 +587,15 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		// Add appkey param (as a placeholder only)
 		String appKeyValue = MambuAPIFactory.getApplicationKey();
-		if (appKeyValue != null) {
-			appKeyValue = "...";
-		}
+		final String emptyAppKey = "...";
+
 		// Make url command required for the contentType
 		String urlParams = "";
 		switch (contentType) {
 		case WWW_FORM:
 			// Add appkey to the params
 			if (appKeyValue != null) {
+				appKeyValue = emptyAppKey;
 				urlParams = "appkey=" + appKeyValue;
 			}
 			if (params != null && params.size() > 0) {
@@ -651,7 +610,12 @@ public class RequestExecutorImpl implements RequestExecutor {
 			// Add appkey to the JSON
 			String jsonString = (params == null) ? "{}" : params.get(APIData.JSON_OBJECT);
 			if (appKeyValue != null) {
-				jsonString = addAppkeyValueToJson(appKeyValue, jsonString);
+				jsonString = ServiceHelper.addAppkeyValueToJson(appKeyValue, jsonString);
+				final String appKey = "\"" + APIData.APPLICATION_KEY + "\":\"" + appKeyValue + "\",";
+				final String logAppKey = "\"" + APIData.APPLICATION_KEY + "\":\"" + emptyAppKey + "\",";
+
+				jsonString = jsonString.replace(appKey, logAppKey);
+
 			}
 			// Add JSON to the command line
 			curlCommand = curlCommand + " -d '" + jsonString + "' ";
