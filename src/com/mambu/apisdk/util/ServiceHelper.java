@@ -17,6 +17,7 @@ import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.services.CustomFieldValueService;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.loans.shared.model.LoanAccount;
+import com.mambu.savings.shared.model.SavingsAccount;
 
 /**
  * ServiceHelper class provides helper methods for validating and building parameters and API definitions required for
@@ -313,6 +314,43 @@ public class ServiceHelper {
 
 		// Create JSON string. Format: { "loanAccount":{"loanAmount":"1000", "repaymentPeriodCount":"10"}}'
 		String json = "{\"loanAccount\":" + accountFields.toString() + "}";
+
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.put(APIData.JSON_OBJECT, json);
+
+		return paramsMap;
+	}
+
+	/**
+	 * A list of fields supported by the PATCH savings account API. Only updating OverdraftLimit is supports as of Mambu
+	 * 3.12.2. See MBU-9727
+	 */
+	private final static Set<String> modifiableSavingsAccountFields = new HashSet<String>(
+			Arrays.asList(APIData.OVERDRAFT_LIMIT));
+
+	/**
+	 * Create ParamsMap with a JSON string for the PATCH savings account API. Only fields applicable to the API are
+	 * added to the output JSON
+	 * 
+	 * @param account
+	 *            input savings account
+	 * @return params map
+	 */
+	public static ParamsMap makeParamsForSavingsTermsPatch(SavingsAccount account) {
+
+		// Verify that account is not null
+		if (account == null) {
+			throw new IllegalArgumentException("Loan Account must not be null");
+		}
+
+		// Create JSON expected by the PATCH loan account API:
+		JsonObject accountFields = makeJsonObjectForFields(account, modifiableSavingsAccountFields);
+		if (accountFields == null) {
+			return null;
+		}
+
+		// Create JSON string. Format: { "loanAccount":{"loanAmount":"1000", "repaymentPeriodCount":"10"}}'
+		String json = "{\"savingsAccount\":" + accountFields.toString() + "}";
 
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.put(APIData.JSON_OBJECT, json);

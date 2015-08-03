@@ -147,6 +147,9 @@ public class APIData {
 	public static final String PERIODIC_PAYMENT = "periodicPayment";
 	public static final String PENALTY_RATE = "penaltyRate";
 
+	// Parameters supported by SavingsAccount PATCH API
+	public static final String OVERDRAFT_LIMIT = "overdraftLimit";
+
 	public static final String DUE_FROM = "dueFrom";
 	public static final String DUE_TO = "dueTo";
 
