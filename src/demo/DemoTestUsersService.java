@@ -7,7 +7,7 @@ import java.util.List;
 
 import com.mambu.accounts.shared.model.TransactionLimitType;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
-import com.mambu.api.server.handler.customviews.model.CustomViewApiType;
+import com.mambu.api.server.handler.customviews.model.ApiViewType;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.MambuAPIServiceFactory;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -233,7 +233,7 @@ public class DemoTestUsersService {
 		UsersService usersService = serviceFactory.getUsersService();
 		String username = USER_NAME;
 
-		for (CustomViewApiType viewType : CustomViewApiType.values()) {
+		for (ApiViewType viewType : ApiViewType.values()) {
 			System.out.println("\n\nGetting Views for view type=" + viewType);
 			List<CustomView> views = usersService.getCustomViews(username, viewType);
 
@@ -278,8 +278,8 @@ public class DemoTestUsersService {
 			String offset = "0";
 			String limit = "5";
 
-			// Get CustomViewApiType for this view to determine if it is supported by API
-			CustomViewApiType viewApiType = UsersService.supportedDataViewTypes.get(viewType);
+			// Get ApiViewType for this view to determine if it is supported by API
+			ApiViewType viewApiType = UsersService.supportedDataViewTypes.get(viewType);
 			if (viewApiType == null) {
 				System.out.println("\nSkipping custom view type=" + viewType
 						+ " it is not supported by GET entities by custom view API");

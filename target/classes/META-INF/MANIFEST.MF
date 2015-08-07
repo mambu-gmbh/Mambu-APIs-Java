@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Built-By: miked
+Build-Jdk: 1.7.0_55
+Class-Path: /lib/httpclient-4.5.jar /lib/httpcore-4.4.1.jar /lib/commo
+ ns-logging-1.2.jar /lib/commons-codec-1.9.jar /lib/gson-2.3.1.jar /li
+ b/google-collect-snapshot-20080530.jar /lib/commons-io-1.3.2.jar /lib
+ /jdo-api-3.0.jar /lib/transaction-api-1.1.jar /lib/guice-3.0.jar /lib
+ /javax.inject-1.jar /lib/aopalliance-1.0.jar /lib/mockito-all-1.10.19
+ .jar /lib/gwt-user-2.7.0.jar /lib/validation-api-1.0.0.GA.jar /lib/va
+ lidation-api-1.0.0.GA-sources.jar
+Main-Class: theMainClass
+Created-By: Maven Integration for Eclipse
+

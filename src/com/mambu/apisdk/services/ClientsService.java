@@ -7,12 +7,14 @@ import java.util.List;
 
 import com.google.inject.Inject;
 import com.mambu.accounts.shared.model.AccountHolderType;
+import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.ServiceExecutor;
@@ -23,7 +25,6 @@ import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.GroupExpanded;
 import com.mambu.clients.shared.model.GroupRoleName;
 import com.mambu.core.shared.model.ClientRole;
-import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.docs.shared.model.Document;
 
 /**
@@ -372,6 +373,10 @@ public class ClientsService {
 	 *            the username of the credit officer to whom the CLients are assigned to
 	 * @param clientState
 	 *            the desired state of a Client to filter on (eg: ACTIVE)
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
 	 * @return the list of Clients matching these parameters
 	 * 
@@ -400,6 +405,10 @@ public class ClientsService {
 	 *            the username of the credit officer to whom the CLients are assigned to
 	 * @param clientState
 	 *            the desired state of a Client to filter on (eg: ACTIVE)
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
 	 * @return the list of Clients matching these parameters
 	 * 
@@ -434,6 +443,32 @@ public class ClientsService {
 	}
 
 	/**
+	 * Get clients by specifying filter constraints
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * 
+	 * @return list of clients matching filter constraint
+	 * @throws MambuApiException
+	 */
+	public List<Client> getClients(JSONFilterConstraints filterConstraints, String offset, String limit)
+			throws MambuApiException {
+		// Available since Mambu 3.12. See MBU-8975 for more details
+		// POST {JSONFilterConstraints} /api/clients/search?offset=0&limit=5
+
+		ApiDefinition apiDefintition = SearchService.makeApiDefinitionforSearchByFilter(MambuEntityType.CLIENT);
+
+		// POST Filter JSON with pagination params map
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
+				ServiceHelper.makePaginationParams(offset, limit));
+
+	}
+
+	/**
 	 * Requests a list of groups for a custom view, limited by offset/limit
 	 * 
 	 * @param customViewKey
@@ -451,6 +486,32 @@ public class ClientsService {
 			throws MambuApiException {
 		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
 		return serviceExecutor.execute(getGroupsList, params);
+
+	}
+
+	/**
+	 * Get groups by specifying filter constraints
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * 
+	 * @return list of groups matching filter constraint.
+	 * @throws MambuApiException
+	 */
+	public List<Group> getGroups(JSONFilterConstraints filterConstraints, String offset, String limit)
+			throws MambuApiException {
+		// Available since Mambu 3.12. See MBU-8987 for more details
+		// POST {JSONFilterConstraints} /api/groups/search?offset=0&limit=5
+
+		ApiDefinition apiDefintition = SearchService.makeApiDefinitionforSearchByFilter(MambuEntityType.GROUP);
+
+		// POST Filter JSON with pagination params map
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
+				ServiceHelper.makePaginationParams(offset, limit));
 
 	}
 
@@ -498,6 +559,10 @@ public class ClientsService {
 	 *            provided then this centre must be assigned to the branchId
 	 * @param creditOfficerUserName
 	 *            the username of the credit officer to whom the Groups are assigned to
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
 	 * @return the list of Groups matching these parameters
 	 * 
@@ -523,6 +588,10 @@ public class ClientsService {
 	 *            the ID of the Group's branch
 	 * @param creditOfficerUserName
 	 *            the username of the credit officer to whom the Groups are assigned to
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
 	 * @return the list of Groups matching these parameters
 	 * 
@@ -561,121 +630,6 @@ public class ClientsService {
 	 */
 	public List<Document> getGroupDocuments(String groupId) throws MambuApiException {
 		return serviceExecutor.execute(getGroupDocuments, groupId);
-	}
-
-	/***
-	 * Update custom field value for a Client. This method allows to set new value for a specific custom field
-	 * 
-	 * @deprecated use
-	 *             {@link CustomFieldValueService#update(com.mambu.apisdk.util.MambuEntity, String, CustomFieldValue, String)}
-	 *             to update custom field values . This method doesn't support updating grouped and linked custom fields
-	 *             available since 3.11
-	 * @param clientId
-	 *            the encoded key or id of the Mambu Client
-	 * @param customFieldId
-	 *            the encoded key or id of the custom field to be updated
-	 * @param fieldValue
-	 *            the new value of the custom field
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public boolean updateClientCustomField(String clientId, String customFieldId, String fieldValue)
-			throws MambuApiException {
-		// Execute request for PATCH API to update custom field value for a client. See MBU-6661
-		// e.g. PATCH "{ "value": "10" }" /host/api/clients/clientId/custominformation/customFieldId
-
-		// Update Custom Field value for a Client
-		final ApiDefinition updateClientCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY, Client.class,
-				CustomFieldValue.class);
-
-		// Make ParamsMap with JSON request for Update API
-		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
-		return serviceExecutor.execute(updateClientCustomField, clientId, customFieldId, params);
-
-	}
-
-	/***
-	 * Delete custom field for a Client
-	 * 
-	 * @deprecated use {@link CustomFieldValueService#delete(com.mambu.apisdk.util.MambuEntity, String, String)} to
-	 *             delete custom field values
-	 * @param clientId
-	 *            the encoded key or id of the Mambu Client
-	 * @param customFieldId
-	 *            the encoded key or id of the custom field to be deleted
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public boolean deleteClientCustomField(String clientId, String customFieldId) throws MambuApiException {
-		// Execute request for DELETE API to delete custom field value for a client
-		// e.g. DELETE /host/api/clients/clientId/custominformation/customFieldId
-
-		// Delete Custom Field for a Client
-		final ApiDefinition deleteClientCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY, Client.class,
-				CustomFieldValue.class);
-
-		return serviceExecutor.execute(deleteClientCustomField, clientId, customFieldId, null);
-
-	}
-
-	/***
-	 * Update custom field value for a Group. This method allows to set new value for a specific custom field
-	 * 
-	 * @deprecated use
-	 *             {@link CustomFieldValueService#update(com.mambu.apisdk.util.MambuEntity, String, CustomFieldValue, String)}
-	 *             to update custom field values . This method doesn't support updating grouped and linked custom fields
-	 *             available since 3.11
-	 * 
-	 * @param groupId
-	 *            the encoded key or id of the Mambu Group
-	 * @param customFieldId
-	 *            the encoded key or id of the custom field to be updated
-	 * @param fieldValue
-	 *            the new value of the custom field
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public boolean updateGroupCustomField(String groupId, String customFieldId, String fieldValue)
-			throws MambuApiException {
-		// Execute request for PATCH API to update custom field value for a group
-		// e.g. PATCH "{ "value": "10" }" /host/api/groups/groupId/custominformation/customFieldId
-
-		// Update Custom Field value for a Group
-		final ApiDefinition updateGroupCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY, Group.class,
-				CustomFieldValue.class);
-
-		// Make ParamsMap with JSON request for Update API
-		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
-		return serviceExecutor.execute(updateGroupCustomField, groupId, customFieldId, params);
-
-	}
-
-	/***
-	 * Delete custom field for a Group
-	 * 
-	 * @deprecated use {@link CustomFieldValueService#delete(com.mambu.apisdk.util.MambuEntity, String, String)} to
-	 *             delete custom field values
-	 * @param groupId
-	 *            the encoded key or id of the Mambu Group
-	 * @param customFieldId
-	 *            the encoded key or id of the custom field to be deleted
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public boolean deleteGroupCustomField(String groupId, String customFieldId) throws MambuApiException {
-		// Execute request for DELETE API to delete custom field for an group
-		// e.g. DELETE /host/api/groups/groupId/custominformation/customFieldId
-
-		// Delete Custom Field for a Group
-		final ApiDefinition deleteGroupCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY, Group.class,
-				CustomFieldValue.class);
-
-		return serviceExecutor.execute(deleteGroupCustomField, groupId, customFieldId, null);
-
 	}
 
 	/***

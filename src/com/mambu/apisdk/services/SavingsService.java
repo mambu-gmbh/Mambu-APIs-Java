@@ -8,18 +8,19 @@ import java.util.List;
 import com.google.inject.Inject;
 import com.mambu.accounts.shared.model.Account.Type;
 import com.mambu.accounts.shared.model.TransactionDetails;
+import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
-import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.docs.shared.model.Document;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
@@ -252,6 +253,32 @@ public class SavingsService {
 		// Example GET savings/transactions?viewfilter=567&offset=0&limit=100
 		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
 		return serviceExecutor.execute(getAllSavingsTransactions, params);
+	}
+
+	/**
+	 * Get savings transactions by specifying filter constraints
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * @return list of savings transactions matching filter constraints
+	 * @throws MambuApiException
+	 */
+	public List<SavingsTransaction> getSavingsTransactions(JSONFilterConstraints filterConstraints, String offset,
+			String limit) throws MambuApiException {
+		// Available since Mambu 3.12. See MBU-8988 for more details
+		// POST {JSONFilterConstraints} /api/savings/transactions/search?offset=0&limit=5
+
+		ApiDefinition apiDefintition = SearchService
+				.makeApiDefinitionforSearchByFilter(MambuEntityType.SAVINGS_TRANSACTION);
+
+		// POST Filter JSON with pagination params map
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
+				ServiceHelper.makePaginationParams(offset, limit));
+
 	}
 
 	/****
@@ -554,7 +581,10 @@ public class SavingsService {
 	 *            the username of the credit officer to whom the accounts are assigned to
 	 * @param accountState
 	 *            the state of the accounts to filter on (e.g: APPROVED)
-	 * 
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * @return the list of Savings accounts matching these parameters
 	 * 
 	 * @throws MambuApiException
@@ -584,6 +614,10 @@ public class SavingsService {
 	 *            the username of the credit officer to whom the accounts are assigned to
 	 * @param accountState
 	 *            the state of the accounts to filter on (e.g: APPROVED)
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
 	 * @return the list of Savings accounts matching these parameters
 	 * 
@@ -618,10 +652,40 @@ public class SavingsService {
 
 	}
 
+	/**
+	 * Get savings accounts by specifying filter constraints
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * @return list of savings accounts matching filter constraint
+	 * @throws MambuApiException
+	 */
+	public List<SavingsAccount> getSavingsAccounts(JSONFilterConstraints filterConstraints, String offset, String limit)
+			throws MambuApiException {
+		// Available since Mambu 3.12. See MBU-8988 for more details
+		// POST {JSONFilterConstraints} /api/savings/search?offset=0&limit=5
+
+		ApiDefinition apiDefintition = SearchService
+				.makeApiDefinitionforSearchByFilter(MambuEntityType.SAVINGS_ACCOUNT);
+
+		// POST Filter JSON with pagination params map
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
+				ServiceHelper.makePaginationParams(offset, limit));
+
+	}
+
 	// Savings Products
 	/***
 	 * Get a list of Savings Products
 	 * 
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
 	 * @return the List of Savings Products
 	 * 
 	 * @throws MambuApiException
@@ -716,63 +780,6 @@ public class SavingsService {
 	 */
 	public List<Document> getSavingsAccountDocuments(String accountId) throws MambuApiException {
 		return serviceExecutor.execute(getAccountDocuments, accountId);
-	}
-
-	/***
-	 * Update custom field value for a Savings Account. This method allows to set new value for a specific custom field
-	 * 
-	 * @deprecated use
-	 *             {@link CustomFieldValueService#update(com.mambu.apisdk.util.MambuEntity, String, CustomFieldValue, String)}
-	 *             to update custom field values . This method doesn't support updating grouped and linked custom fields
-	 *             available since 3.11
-	 * @param accountId
-	 *            the encoded key or id of the Mambu Savings Account for which the custom field is updated
-	 * @param customFieldId
-	 *            the encoded key or id of the custom field to be updated
-	 * @param fieldValue
-	 *            the new value of the custom field
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public boolean updateSavingsAccountCustomField(String accountId, String customFieldId, String fieldValue)
-			throws MambuApiException {
-		// Execute request for PATCH API to update custom field value for a Savings Account. See MBU-6661
-		// e.g. PATCH "{ "value": "10" }" /host/api/savings/accointId/custominformation/customFieldId
-
-		// Update Custom Field value for a Savings Account
-		final ApiDefinition updateAccountCustomField = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY,
-				SavingsAccount.class, CustomFieldValue.class);
-
-		// Make ParamsMap with JSON request for Update API
-		ParamsMap params = ServiceHelper.makeParamsForUpdateCustomField(customFieldId, fieldValue);
-		return serviceExecutor.execute(updateAccountCustomField, accountId, customFieldId, params);
-
-	}
-
-	/***
-	 * Delete custom field for a Savings Account
-	 * 
-	 * @deprecated use {@link CustomFieldValueService#delete(com.mambu.apisdk.util.MambuEntity, String, String)} to
-	 *             delete custom field values
-	 * @param accountId
-	 *            the encoded key or id of the Mambu Savings Account
-	 * @param customFieldId
-	 *            the encoded key or id of the custom field to be deleted
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public boolean deleteSavingsAccountCustomField(String accountId, String customFieldId) throws MambuApiException {
-		// Execute request for DELETE API to delete custom field for a Savings Account
-		// e.g. DELETE /host/api/savings/accointId/custominformation/customFieldId
-
-		// Delete Custom Field for a Savings Account
-		final ApiDefinition deleteAccountCustomField = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
-				SavingsAccount.class, CustomFieldValue.class);
-
-		return serviceExecutor.execute(deleteAccountCustomField, accountId, customFieldId, null);
-
 	}
 
 }

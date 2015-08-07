@@ -151,9 +151,13 @@ public class TasksService {
 	 * Get tasks based on the specified criteria, which can include clientId, username, and/or task's state
 	 * 
 	 * @param username
-	 *            username, encodedKey or user id
+	 *            username, encodedKey or user id. If usename is not null then all tasks for this user are returned
 	 * @param clientId
-	 *            client encodedKey or id
+	 *            client encodedKey or id. To get tasks for the client the clientId must not be null and the groupId and
+	 *            username must be null.
+	 * @param groupId
+	 *            group encodedKey or id. To get tasks for the group the groupId must not be null and the clientId and
+	 *            username must be null.
 	 * @param taskStatus
 	 *            task status
 	 * @param offset
@@ -168,13 +172,17 @@ public class TasksService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: add support to get Tasks for a Group when MBU-9015 is fixed
-	public List<Task> getTasks(String username, String clientId, TaskStatus taskStatus, String offset, String limit)
-			throws MambuApiException {
+	public List<Task> getTasks(String username, String clientId, String groupId, TaskStatus taskStatus, String offset,
+			String limit) throws MambuApiException {
 
+		if (clientId != null && groupId != null) {
+			throw new IllegalArgumentException("Either Client ID and Group ID must be null");
+		}
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(APIData.USERNAME, username);
 		paramsMap.addParam(APIData.CLIENT_ID, clientId);
+		paramsMap.addParam(APIData.GROUP_ID, groupId);
+
 		if (taskStatus != null) {
 			paramsMap.addParam(APIData.STATUS, taskStatus.name());
 		}
@@ -182,6 +190,49 @@ public class TasksService {
 		paramsMap.put(APIData.LIMIT, limit);
 
 		return serviceExecutor.execute(getTasks, paramsMap);
+	}
+
+	/***
+	 * Convenience method to Get tasks for a client
+	 * 
+	 * @param clientId
+	 *            client encodedKey or id
+	 * @param taskStatus
+	 *            task status
+	 * @param offset
+	 *            pagination offset
+	 * @param limit
+	 *            pagination limit
+	 * @return a list of tasks for the client
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<Task> getClientTasks(String clientId, TaskStatus taskStatus, String offset, String limit)
+			throws MambuApiException {
+
+		return getTasks(null, clientId, null, taskStatus, offset, limit);
+	}
+
+	/***
+	 * Convenience method to Get tasks for a group
+	 * 
+	 * @param groupId
+	 *            group encodedKey or id
+	 * @param taskStatus
+	 *            task status
+	 * @param offset
+	 *            pagination offset
+	 * @param limit
+	 *            pagination limit
+	 * 
+	 * @return a list of tasks for the group
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<Task> getGroupTasks(String groupId, TaskStatus taskStatus, String offset, String limit)
+			throws MambuApiException {
+
+		return getTasks(null, null, groupId, taskStatus, offset, limit);
 	}
 
 	/***
