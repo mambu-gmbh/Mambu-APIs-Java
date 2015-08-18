@@ -55,10 +55,11 @@ public class DemoTestSavingsService {
 			// Get Demo data
 			// Get demo entities needed for testing
 			final String testProductId = null; // use specific test product or null to get random product
+			//
 			final String testAccountId = null; // use specific test account or null to get random loan account
 
-			demoClient = DemoUtil.getDemoClient();
-			demoGroup = DemoUtil.getDemoGroup();
+			demoClient = DemoUtil.getDemoClient(null);
+			demoGroup = DemoUtil.getDemoGroup(null);
 			demoUser = DemoUtil.getDemoUser();
 
 			demoSavingsProduct = DemoUtil.getDemoSavingsProduct(testProductId);
@@ -73,6 +74,7 @@ public class DemoTestSavingsService {
 			testCreateSavingsAccount();
 
 			testUpdateSavingsAccount(); // Available since 3.4
+			testPatchSavingsAccountTerms(); // Available since 3.12.2
 
 			testApproveSavingsAccount();
 
@@ -426,6 +428,36 @@ public class DemoTestSavingsService {
 			}
 		}
 
+	}
+
+	// Test Patch Savings account terms API
+	public static void testPatchSavingsAccountTerms() throws MambuApiException {
+		System.out.println("\nIn testPatchSavingsAccountTerms");
+
+		SavingsAccount savingsAccount = demoSavingsAccount;
+		String productKey = savingsAccount.getProductTypeKey();
+		SavingsProduct product = DemoUtil.getDemoSavingsProduct(productKey);
+		if (!product.isAllowOverdraft()) {
+			System.out.println("WARNING: Cannot patch account: Demo Savings Account " + savingsAccount.getId()
+					+ " doesn't support Overdraft");
+		}
+
+		// As of Mambu 3.12.2 only Overdraft Limit can be updated
+		// Set new Overdraft Limit
+		BigDecimal overdraftLimit = savingsAccount.getOverdraftLimit();
+		if (overdraftLimit == null) {
+			overdraftLimit = BigDecimal.ZERO;
+		}
+		// Increase Overdraft Limit by $400 and update the account
+		BigDecimal limitIncrease = new BigDecimal(400.00f);
+		BigDecimal updatedOverdraftLimit = overdraftLimit.add(limitIncrease);
+		savingsAccount.setOverdraftLimit(updatedOverdraftLimit);
+
+		// Submit updated account to Mambu
+		SavingsService service = MambuAPIFactory.getSavingsService();
+		boolean status = service.patchSavingsAccount(savingsAccount);
+		System.out.println("Patch savings account status=" + status + "\tOriginal Limit=" + overdraftLimit
+				+ "\tNew Limit=" + updatedOverdraftLimit);
 	}
 
 	public static void testApproveSavingsAccount() throws MambuApiException {

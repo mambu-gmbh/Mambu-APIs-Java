@@ -102,7 +102,8 @@ public class SavingsService {
 			JSONSavingsAccount.class);
 	// Update Account
 	private final static ApiDefinition updateAccount = new ApiDefinition(ApiType.POST_ENTITY, JSONSavingsAccount.class);
-
+	// Patch Account. Used to update savings terms only. PATCH JSON /api/savings/savingsId
+	private final static ApiDefinition patchAccount = new ApiDefinition(ApiType.PATCH_ENTITY, SavingsAccount.class);
 	// Loan Products API requests
 	// Get Loan Product Details
 	private final static ApiDefinition getProduct = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, SavingsProduct.class);
@@ -766,6 +767,41 @@ public class SavingsService {
 		}
 
 		return serviceExecutor.executeJson(updateAccount, account, encodedKey);
+	}
+
+	/***
+	 * Update savings terms for an existent savings account This API allows updating SavingsAccount terms only. Use
+	 * updateSavingsAccount() to update custom fields for a savings account
+	 * 
+	 * @param savings
+	 *            SavingsAccount object. Either account's encoded key or its ID must be NOT null for updating account
+	 * 
+	 *            Note that only some savings terms can be updated. As of Mambu 3.12.2 only overdraftLimit field can be
+	 *            updated. See MBU-9727 for details.
+	 * 
+	 * @returns success or failure
+	 * 
+	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
+	 */
+	public boolean patchSavingsAccount(SavingsAccount savings) throws MambuApiException {
+		// Example: PATCH JSON /api/savings/{ID}
+		// See MBU-9727 for details
+		if (savings == null) {
+			throw new IllegalArgumentException("Account must not be NULL");
+		}
+
+		// The encodedKey or account Id must be not null
+		String encodedKey = savings.getEncodedKey();
+		String accountId = savings.getId();
+		if (encodedKey == null && accountId == null) {
+			throw new IllegalArgumentException("Cannot update Account, the encodedKey or ID must be NOT null");
+		}
+
+		String id = (accountId != null) ? accountId : encodedKey;
+		ParamsMap params = ServiceHelper.makeParamsForSavingsTermsPatch(savings);
+		return serviceExecutor.execute(patchAccount, id, params);
+
 	}
 
 	/***
