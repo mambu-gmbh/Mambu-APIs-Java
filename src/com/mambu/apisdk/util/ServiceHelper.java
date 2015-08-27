@@ -13,9 +13,11 @@ import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
+import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.services.CustomFieldValueService;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.loans.shared.model.LoanAccount;
+import com.mambu.savings.shared.model.SavingsAccount;
 
 /**
  * ServiceHelper class provides helper methods for validating and building parameters and API definitions required for
@@ -226,6 +228,12 @@ public class ServiceHelper {
 		// Parse modified JSONDocument with the blank content value
 		String jsonData = makeApiJson(copy);
 
+		// Add AppKey here - to avoid inserting it after the full string is made
+		String applicationKey = MambuAPIFactory.getApplicationKey();
+		if (applicationKey != null && applicationKey.length() > 0) {
+			jsonData = addAppkeyValueToJson(applicationKey, jsonData);
+		}
+
 		// Now insert back document content value into the generated JSON string
 		final String documentContent = document.getDocumentContent();
 		StringBuffer finalJson = new StringBuffer(jsonData.length() + documentContent.length());
@@ -239,6 +247,7 @@ public class ServiceHelper {
 		finalJson.insert(insertPosition, documentContent);
 
 		String documentJson = finalJson.toString();
+
 		// Add generated JSON string to the ParamsMap
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.put(APIData.JSON_OBJECT, documentJson);
@@ -305,6 +314,43 @@ public class ServiceHelper {
 
 		// Create JSON string. Format: { "loanAccount":{"loanAmount":"1000", "repaymentPeriodCount":"10"}}'
 		String json = "{\"loanAccount\":" + accountFields.toString() + "}";
+
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.put(APIData.JSON_OBJECT, json);
+
+		return paramsMap;
+	}
+
+	/**
+	 * A list of fields supported by the PATCH savings account API. Only updating OverdraftLimit is supports as of Mambu
+	 * 3.12.2. See MBU-9727
+	 */
+	private final static Set<String> modifiableSavingsAccountFields = new HashSet<String>(
+			Arrays.asList(APIData.OVERDRAFT_LIMIT));
+
+	/**
+	 * Create ParamsMap with a JSON string for the PATCH savings account API. Only fields applicable to the API are
+	 * added to the output JSON
+	 * 
+	 * @param account
+	 *            input savings account
+	 * @return params map
+	 */
+	public static ParamsMap makeParamsForSavingsTermsPatch(SavingsAccount account) {
+
+		// Verify that account is not null
+		if (account == null) {
+			throw new IllegalArgumentException("Loan Account must not be null");
+		}
+
+		// Create JSON expected by the PATCH loan account API:
+		JsonObject accountFields = makeJsonObjectForFields(account, modifiableSavingsAccountFields);
+		if (accountFields == null) {
+			return null;
+		}
+
+		// Create JSON string. Format: { "loanAccount":{"loanAmount":"1000", "repaymentPeriodCount":"10"}}'
+		String json = "{\"savingsAccount\":" + accountFields.toString() + "}";
 
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.put(APIData.JSON_OBJECT, json);
@@ -452,6 +498,56 @@ public class ServiceHelper {
 		params.addParam(APIData.LIMIT, limit);
 
 		return params;
+
+	}
+
+	/**
+	 * Add appKey value to the json string.
+	 * 
+	 * @param appKey
+	 *            app key value. Can be null
+	 * @param jsonString
+	 *            json string.
+	 * @return json string with the appKey parameter added. If the appKey parameter is already present then the
+	 *         jsonString is not modified. See MBU-3892
+	 */
+	public static String addAppkeyValueToJson(String appKey, String jsonString) {
+
+		// Example JSON request with the appKey parameter (see MBU-3892):
+		// curl -H "Content-type: application/json" -X POST -d '{ "appkey":"appKeyValue", "client": {...}'
+
+		if (appKey == null || appKey.length() == 0) {
+			return jsonString;
+		}
+
+		// First compile the following string: {"appKey":"appKeyValue",
+		String appKeyValue = APIData.APPLICATION_KEY + "\":\"" + appKey; // "appKey":"appKeyValue"
+		// This formatted appKey string will be appended with the original json string (without the first '{')
+		String appKeyString = "{\"" + appKeyValue + "\",";
+
+		// Check if we have the string to insert into
+		if (jsonString == null || jsonString.length() == 0) {
+			// Nothing to insert into. Return just the appKey param (surrounded by the square brackets)
+			return appKeyString.replace(',', '}');
+		}
+
+		// Check If the appkey is already present - do not add it again
+		if (jsonString.contains(appKeyValue)) {
+			// Appkey is already present, do not insert
+			return jsonString;
+		}
+
+		// We need input json string without the first '{'
+		String jsonStringToAdd = jsonString.substring(1);
+
+		// Create initial String Buffer large enough to hold the resulting two strings
+		StringBuffer jsonWithAppKey = new StringBuffer(jsonStringToAdd.length() + appKeyString.length());
+
+		// Append the appkey and the the json string
+		jsonWithAppKey.append(appKeyString);
+		jsonWithAppKey.append(jsonStringToAdd);
+
+		return jsonWithAppKey.toString();
 
 	}
 }

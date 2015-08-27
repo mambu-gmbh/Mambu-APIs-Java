@@ -63,8 +63,8 @@ public class DemoTestClientService {
 		try {
 
 			demoUser = DemoUtil.getDemoUser();
-			demoClient = DemoUtil.getDemoClient();
-			demoGroup = DemoUtil.getDemoGroup();
+			demoClient = DemoUtil.getDemoClient(null);
+			demoGroup = DemoUtil.getDemoGroup(null);
 
 			testCreateJsonClient();
 

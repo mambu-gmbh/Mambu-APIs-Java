@@ -68,8 +68,8 @@ public class DemoTestLoanService {
 			final String testProductId = null; // use specific test ID or null to get random product
 			final String testAccountId = null; // use specific test ID or null to get random loan account
 
-			demoClient = DemoUtil.getDemoClient();
-			demoGroup = DemoUtil.getDemoGroup();
+			demoClient = DemoUtil.getDemoClient(null);
+			demoGroup = DemoUtil.getDemoGroup(null);
 			demoUser = DemoUtil.getDemoUser();
 
 			demoProduct = DemoUtil.getDemoLoanProduct(testProductId);

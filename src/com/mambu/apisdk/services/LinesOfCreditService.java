@@ -3,6 +3,7 @@ package com.mambu.apisdk.services;
 import java.util.List;
 
 import com.google.inject.Inject;
+import com.mambu.accounts.shared.model.Account.Type;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.ApiDefinition;
@@ -12,6 +13,8 @@ import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.linesofcredit.shared.model.AccountsFromLineOfCredit;
 import com.mambu.linesofcredit.shared.model.LineOfCredit;
 import com.mambu.linesofcredit.shared.model.LineOfCreditExpanded;
+import com.mambu.loans.shared.model.LoanAccount;
+import com.mambu.savings.shared.model.SavingsAccount;
 
 /**
  * Service class which handles API operations for Lines of Credit (LoC)
@@ -26,7 +29,12 @@ import com.mambu.linesofcredit.shared.model.LineOfCreditExpanded;
  * 
  * Get all loan and savings accounts for a specific line of credit
  * 
- * * More details in MBU-8607, MBU-8413, MBU-8414, MBU-8415, MBU-8417
+ * Add accounts to lines of credit
+ * 
+ * Remove accounts from lines of credit
+ * 
+ * * More details in MBU-8607, MBU-8413, MBU-8414, MBU-8415, MBU-8417, MBU-9864, MBU-9873
+ * 
  * 
  * @author mdanilkis
  * 
@@ -177,4 +185,106 @@ public class LinesOfCreditService {
 				AccountsFromLineOfCredit.class);
 		return serviceExecutor.execute(getAccountForLoC, lineofcreditId);
 	}
+
+	/**
+	 * Add Loan Account to a line of credit
+	 * 
+	 * @param lineofcreditId
+	 *            the id or the encoded key of a Line Of Credit. Mandatory. Must not be null
+	 * @param loanAccountId
+	 *            the id or the encoded key of a Loan Account. Mandatory. Must not be null
+	 * @return added loan account
+	 */
+	public LoanAccount addLoanAccount(String lineofcreditId, String loanAccountId) throws MambuApiException {
+		// Example: POST /api/linesofcredit/{LOC_ID}/loans/{ACCOUNT_ID}
+		// Available since 3.12.2. See MBU-9864
+
+		if (loanAccountId == null) {
+			throw new IllegalArgumentException("Account ID must not be null");
+		}
+		ApiDefinition apiDefinition = new ApiDefinition(ApiType.POST_OWNED_ENTITY, LineOfCredit.class,
+				LoanAccount.class);
+
+		return serviceExecutor.execute(apiDefinition, lineofcreditId, loanAccountId, null);
+	}
+
+	/**
+	 * Add Savings Account to a line of credit
+	 * 
+	 * @param lineofcreditId
+	 *            the id or the encoded key of a Line Of Credit. Mandatory. Must not be null
+	 * @param savingsAccountId
+	 *            the id or the encoded key of a Savings Account. Mandatory. Must not be null
+	 * @return added savings account
+	 */
+	public SavingsAccount addSavingsAccount(String lineofcreditId, String savingsAccountId) throws MambuApiException {
+		// Example: POST /api/linesofcredit/{LOC_ID}/savings/{ACCOUNT_ID}
+		// Available since 3.12.2. See MBU-9864
+
+		if (savingsAccountId == null) {
+			throw new IllegalArgumentException("Account ID must not be null");
+		}
+		ApiDefinition apiDefinition = new ApiDefinition(ApiType.POST_OWNED_ENTITY, LineOfCredit.class,
+				SavingsAccount.class);
+
+		return serviceExecutor.execute(apiDefinition, lineofcreditId, savingsAccountId, null);
+	}
+
+	/**
+	 * Delete Account from a line of credit
+	 * 
+	 * @param lineofcreditId
+	 *            the id or the encoded key of a Line Of Credit. Mandatory. Must not be null
+	 * @param accountType
+	 *            account type. Must not be null
+	 * @param accountId
+	 *            the id or the encoded key of the Account. Mandatory. Must not be null
+	 * @return true if success
+	 */
+	public boolean deleteAccount(String lineofcreditId, Type accountType, String accountId) throws MambuApiException {
+
+		if (accountType == null || accountId == null) {
+			throw new IllegalArgumentException("Account Type and Account ID must not be null. Type=" + accountType
+					+ " Id=" + accountId);
+		}
+		MambuEntityType ownedEentityType = (accountType == Type.LOAN) ? MambuEntityType.LOAN_ACCOUNT
+				: MambuEntityType.SAVINGS_ACCOUNT;
+
+		return serviceExecutor.deleteOwnedEntity(MambuEntityType.LINE_OF_CREDIT, lineofcreditId, ownedEentityType,
+				accountId);
+
+	}
+
+	/**
+	 * Convenience method to Delete Loan Account from a line of credit
+	 * 
+	 * @param lineofcreditId
+	 *            the id or the encoded key of a Line Of Credit. Mandatory. Must not be null
+	 * @param loanAccountId
+	 *            the id or the encoded key of a Loan Account. Mandatory. Must not be null
+	 * @return true if success
+	 */
+	public boolean deleteLoanAccount(String lineofcreditId, String loanAccountId) throws MambuApiException {
+		// Example: DELETE /api/linesofcredit/{LOC_ID}/loans/{ACCOUNT_ID}
+		// Available since 3.12.2. See MBU-9873
+		return deleteAccount(lineofcreditId, Type.LOAN, loanAccountId);
+	}
+
+	/**
+	 * Convenience method to Delete Savings Account from a line of credit
+	 * 
+	 * @param lineofcreditId
+	 *            the id or the encoded key of a Line Of Credit. Mandatory. Must not be null
+	 * @param savingsAccountId
+	 *            the id or the encoded key of a Savings Account. Mandatory. Must not be null
+	 * @return true if success
+	 */
+	public boolean deleteSavingsAccount(String lineofcreditId, String savingsAccountId) throws MambuApiException {
+		// Example: DELETE /api/linesofcredit/{LOC_ID}/savings/{ACCOUNT_ID}
+		// Available since 3.12.2. See MBU-9873
+
+		return deleteAccount(lineofcreditId, Type.SAVINGS, savingsAccountId);
+
+	}
+
 }
