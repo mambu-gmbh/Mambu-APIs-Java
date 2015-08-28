@@ -24,6 +24,7 @@ public class APIData {
 	public static final String FULL_DETAILS = "fullDetails";
 	public static final String ACTIVE = "ACTIVE";
 	public static final String INACTIVE = "INACTIVE";
+	public static final String TRANCHES = "tranches"; // available since 3.12.3. See MBU-9996
 	// Client Types. Added in 3.9
 	public static final String CLIENT_TYPES = "clienttypes";
 	// Group Role Names. Added in 3.9
@@ -50,7 +51,9 @@ public class APIData {
 	public static final String TRANSACTIONS = "transactions";
 	public static final String TYPE_REPAYMENT = "REPAYMENT";
 	public static final String TYPE_DISBURSEMENT = "DISBURSEMENT"; // Spelling corrected in 3.11 See MBU-7004
-	public static final String DISBURSMENT_ADJUSTMENT = "DISBURSMENT_ADJUSTMENT"; // added in 3.9
+	public static final String TYPE_DISBURSMENT_ADJUSTMENT = "DISBURSMENT_ADJUSTMENT"; // added in 3.9
+	public static final String TYPE_PENALTY_ADJUSTMENT = "PENALTY_ADJUSTMENT"; // added in 3.13. See MBU-9998
+	public static final String TYPE_REQUEST_APPROVAL = "PENDING_APPROVAL"; // added in 13.3. See MBU-9814
 	public static final String TYPE_APPROVAL = "APPROVAL";
 	public static final String TYPE_UNDO_APPROVAL = "UNDO_APPROVAL";
 	public static final String TYPE_FEE = "FEE";
