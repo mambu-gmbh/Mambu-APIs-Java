@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.mambu.accountsecurity.shared.model.InvestorFund;
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -44,6 +45,8 @@ public class DemoTestRepaymentService {
 			testUpdateLoanRepaymentsSchedule(); // Available since 3.9
 
 			testGetRepaymentsDueFromTo();
+
+			testGetInvestorAccountRepayments(); // Available since 3.13
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Repayment Service");
@@ -142,6 +145,50 @@ public class DemoTestRepaymentService {
 		int totalReturned = (updatedRepayments == null) ? 0 : updatedRepayments.size();
 		System.out.println("Total Repayments returned after update=" + totalReturned);
 		// Can also see detailed update log on a Dashboard in Mambu
+
+	}
+
+	// Test getting repayments schedule for investor account.
+	public static void testGetInvestorAccountRepayments() throws MambuApiException {
+		System.out.println("\nIn testGetInvestorAccountRepayments");
+
+		// Get schedule for investor in a demo loan account
+		LoanAccount loanAccount = demoLoanAccount;
+		// Get loan account id
+		String loanId = loanAccount.getId();
+
+		// Get current funds for this account to get savings account
+		List<InvestorFund> funds = loanAccount.getFunds();
+		if (funds == null || funds.size() == 0) {
+			System.out.println("WARNING: Cannot test get repayment schedule: Loan Account " + loanId
+					+ " Has no investor funds specified");
+			return;
+		}
+
+		// Get savings account ID used for loan funding
+		String savingsId = null;
+		for (InvestorFund fund : funds) {
+			savingsId = fund.getSavingsAccountKey();
+			if (savingsId != null) {
+				break;
+			}
+		}
+		if (savingsId == null) {
+			System.out.println("WARNING: Cannot test get repayment schedule: Loan Account " + loanId
+					+ " Has no linked savings accounts specified");
+			return;
+		}
+		System.out.println("\nGetting repayment schedule for savings id=" + savingsId + " loanId=" + loanId);
+		RepaymentsService repaymentService = MambuAPIFactory.getRepaymentsService();
+		List<Repayment> repayemnts = repaymentService.getInvestorFundingRepayments(savingsId, loanId);
+
+		// Log results
+		System.out.println("Total Repayments=" + repayemnts.size());
+		if (repayemnts.size() > 0) {
+			System.out.println("First Repayment  Due date=" + repayemnts.get(0).getDueDate().toString());
+			System.out.println("Last  Repayment  Due date="
+					+ repayemnts.get(repayemnts.size() - 1).getDueDate().toString());
+		}
 
 	}
 }

@@ -11,8 +11,11 @@ import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.RequestExecutor.ContentType;
+import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.Repayment;
@@ -127,4 +130,34 @@ public class RepaymentsService {
 
 	}
 
+	/***
+	 * Get repayments schedule relative to an investor funding. Investors that are contributing with funds for
+	 * disbursing a loan account have their own schedule, where they can see what collections they expect to have for
+	 * that account.
+	 * 
+	 * @param savingsId
+	 *            the encoded key or id of the Savings Investor account linked to the loan account. Must not be NULL
+	 * 
+	 * @param loanId
+	 *            the encoded key or id of the Investor Loan account. Must not be NULL
+	 * 
+	 * @return the List of Repayments relative to an investor funding
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<Repayment> getInvestorFundingRepayments(String savingsId, String loanId) throws MambuApiException {
+
+		// Example: GET endpoint "/api/savings/{SAVINGS_ID}/funding/{LOAN_ID}/repayments
+		// Available since Mambu 3.13. See MBU-9888.
+		if (savingsId == null || loanId == null) {
+			throw new IllegalArgumentException("Savings Account ID and Loan AccounT ID  must not be NULL");
+		}
+
+		// URL path for this API has the following format: /api/savings/{SAVINGS_ID}/funding/{LOAN_ID}/repayments
+		String urlPath = APIData.SAVINGS + "/" + savingsId + "/" + APIData.FUNDING + "/" + loanId + APIData.REPAYMENTS;
+		ApiDefinition apiDefinition = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET, Repayment.class,
+				ApiReturnFormat.COLLECTION);
+
+		return serviceExecutor.execute(apiDefinition);
+	}
 }
