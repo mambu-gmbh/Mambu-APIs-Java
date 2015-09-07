@@ -65,6 +65,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 
 		custField1.setCustomFieldId(customFieldId);
 		custField1.setValue(customFieldValue);
+		custField1.setCustomFieldSetGroupIndex(null); // Set to null explicitly: since Mambu 3.13 defaults to -1
 		// Add new field to the list
 		clientCustomInformation.add(custField1);
 		// Field #2
@@ -75,6 +76,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 
 		custField2.setCustomFieldId(customFieldId);
 		custField2.setValue(customFieldValue);
+		custField2.setCustomFieldSetGroupIndex(null); // Set to null explicitly: since Mambu 3.13 defaults to -1
 		// Add new field to the list
 		clientCustomInformation.add(custField2);
 
