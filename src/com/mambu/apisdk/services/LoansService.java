@@ -9,8 +9,12 @@ import java.util.List;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mambu.accounts.shared.model.TransactionDetails;
+import com.mambu.accountsecurity.shared.model.InvestorFund;
 import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
+import com.mambu.api.server.handler.funds.model.JSONInvestorFunds;
+
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
+import com.mambu.api.server.handler.tranches.model.JSONTranches;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.LoanAccountExpanded;
@@ -112,6 +116,9 @@ public class LoansService {
 	// Update Loan Tranches. Returns updated LoanAccount. POST /api/loans/loanId/tranches
 	private final static ApiDefinition updateAccountTranches = new ApiDefinition(ApiType.POST_ENTITY_ACTION,
 			LoanAccount.class, LoanTranche.class);
+	// Update Loan Investor Funds. Returns updated LoanAccount. POST /api/loans/loanId/funds
+	private final static ApiDefinition updateAccountFunds = new ApiDefinition(ApiType.POST_ENTITY_ACTION,
+			LoanAccount.class, InvestorFund.class);
 	// Loan Products API requests
 	// Get Loan Product Details
 	private final static ApiDefinition getProduct = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LoanProduct.class);
@@ -594,18 +601,49 @@ public class LoansService {
 			tranche.setIndex(null);
 		}
 
-		// Create input JSON string in a format { "tranches":[tranche, tranche]}
-		// Create an array of tranches string first and then add "tranches:" prefix in front of it
-		String tranchesJson = ServiceHelper.makeApiJson(tranches);
-		String apiJson = "{" + APIData.TRANCHES + ":" + tranchesJson + "}";
-
-		// Add JSON string to ParamsMap
-		ParamsMap params = new ParamsMap();
-		params.addParam(APIData.JSON_OBJECT, apiJson);
+		// Create JSONTranches object to be used for JSON format { tranches":[tranche, tranche]}
+		JSONTranches jsonTranches = new JSONTranches();
+		jsonTranches.setTranches(tranches);
 
 		// Set ContentType to JSON (Update tranches API uses JSON format)
 		updateAccountTranches.setContentType(ContentType.JSON);
-		return serviceExecutor.execute(updateAccountTranches, accountId, params);
+		return serviceExecutor.executeJson(updateAccountTranches, jsonTranches, accountId);
+	}
+
+	/***
+	 * Update funds for an existent Loan Account
+	 * 
+	 * @param accountId
+	 *            the encoded key or id of the loan account. Must not be null.
+	 * @param funds
+	 *            funds to be updated. Must not be null
+	 * @return loan account with updated funds
+	 * 
+	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
+	 */
+	public LoanAccount updateLoanAccountFunds(String accountId, List<InvestorFund> funds) throws MambuApiException {
+		// Available since Mambu 3.13. See MBU-9885
+
+		// Example: POST api/loans/ABC123/funds { funds":[
+		// // edit a fund
+		// {"encodedKey": "40288a5d4f3fbac9014f3fd02745001d",
+		// "guarantorKey": "40288a5d4f273153014f2731afe40102", "savingsAccountKey":
+		// "40288a5d4f3fbac9014f3fcf822c0014","amount": "50"},
+		// add a fund
+		// {guarantorKey": "40288a5d4f273153014f2731afe40103","savingsAccountKey": "40288a5d4f3fbac9014f3fcf822c0015","amount": "100"}
+		// ]}
+
+		if (funds == null) {
+			throw new IllegalArgumentException("Funds must not be NULL");
+		}
+
+		JSONInvestorFunds ivestorFunds = new JSONInvestorFunds();
+		ivestorFunds.setFunds(funds);
+
+		// Set ContentType to JSON (Update funds API uses JSON format)
+		updateAccountFunds.setContentType(ContentType.JSON);
+		return serviceExecutor.executeJson(updateAccountFunds, ivestorFunds, accountId);
 	}
 
 	/***

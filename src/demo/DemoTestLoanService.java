@@ -14,7 +14,6 @@ import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.accountsecurity.shared.model.Guaranty;
 import com.mambu.accountsecurity.shared.model.Guaranty.GuarantyType;
 import com.mambu.accountsecurity.shared.model.InvestorFund;
-import com.mambu.api.server.handler.investorfunds.model.JSONInvestorFunds;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.LoanAccountExpanded;
@@ -92,6 +91,7 @@ public class DemoTestLoanService {
 			testApproveLoanAccount();
 			testUndoApproveLoanAccount();
 			testUpdatingAccountTranches(); // Available since 3.12.3
+			testUpdatingAccountFunds();// Available since 3.13
 			testApproveLoanAccount();
 
 			// Test Disburse and Undo disburse
@@ -158,16 +158,32 @@ public class DemoTestLoanService {
 		// See MBU-7684 As a Developer, I need to work with guarantees with custom fields
 		List<Guaranty> guarantees = loanDeatils.getGuarantees();
 		if (guarantees == null) {
+			System.out.println("Account has no guarantees defined");
 			return;
 		}
 
+		System.out.println("Logging Guarantees:");
 		for (Guaranty guaranty : guarantees) {
-			System.out.println("Gurantor type=" + guaranty.getType() + "\tAssetName=" + guaranty.getAssetName()
+			System.out.println("Guarantor type=" + guaranty.getType() + "\tAssetName=" + guaranty.getAssetName()
 					+ "\tGurantor Key=" + guaranty.getGuarantorKey() + "\tSavinsg Key="
 					+ guaranty.getSavingsAccountKey() + "\tAmount=" + guaranty.getAmount());
 
 			List<CustomFieldValue> guarantyCustomValues = guaranty.getCustomFieldValues();
 			DemoUtil.logCustomFieldValues(guarantyCustomValues, "Guarantor", guaranty.getEncodedKey());
+		}
+		// Log Investor Funds. Available since Mambu 3.13. See MBU-9887
+		List<InvestorFund> funds = loanDeatils.getFunds();
+		if (funds == null) {
+			System.out.println("Account has no fund defined");
+			return;
+		}
+		System.out.println("Logging Investor Funds:");
+		for (InvestorFund fund : funds) {
+			System.out.println("Guarantor type=" + fund.getType() + "\tGurantor Key=" + fund.getGuarantorKey()
+					+ "\tSavinsg Key=" + fund.getSavingsAccountKey() + "\tAmount=" + fund.getAmount());
+
+			List<CustomFieldValue> fundCustomValues = fund.getCustomFieldValues();
+			DemoUtil.logCustomFieldValues(fundCustomValues, "Fund", fund.getEncodedKey());
 		}
 	}
 
@@ -333,6 +349,56 @@ public class DemoTestLoanService {
 		LoanAccount result2 = loanService.updateLoanAccountTranches(accountId, nonDisbursedTranches);
 		System.out.println("Loan Tranches deleted and added for account " + accountId + " Total New Tranches="
 				+ result2.getNonDisbursedTranches().size());
+	}
+
+	// Test Updating Loan Account Funds API: modify, add, delete
+	public static void testUpdatingAccountFunds() throws MambuApiException {
+		System.out.println("\nIn testUpdatingAccountFunds");
+
+		// Use demo loan account and update tranche details
+		LoanAccount theAccount = demoLoanAccount;
+		String accountId = theAccount.getId();
+
+		// Get Loan Account Funds
+		List<InvestorFund> funds = theAccount.getFunds();
+		if (funds == null || funds.size() == 0) {
+			System.out.println("WARNING: cannot test update funds: loan account " + theAccount.getId()
+					+ " doesn't have funds");
+			return;
+		}
+
+		// Test updating existent funds first
+		for (InvestorFund fund : funds) {
+			fund.setAmount(fund.getAmount().add(new BigDecimal(50.0)));
+
+		}
+		System.out.println("\nUpdating existent funds");
+		LoansService loanService = MambuAPIFactory.getLoanService();
+		LoanAccount result = loanService.updateLoanAccountFunds(accountId, funds);
+
+		System.out.println("Loan Funds updated for account " + accountId + " Total New Funds="
+				+ result.getFunds().size());
+
+		// Test deleting and then adding funds now. Setting fund's encoded keys to null should result in these
+		// existent funds being deleted and the new ones (with the same data) created
+		List<InvestorFund> resultFunds = result.getFunds();
+		List<InvestorFund> updatedFunds = new ArrayList<>();
+		for (InvestorFund fund : resultFunds) {
+			// Create new funds as copies of the original (but without the encoded key). This would treat these funds as
+			// new ones. The original versions will be deleted
+			InvestorFund newFund = new InvestorFund();
+			// Make a copy
+			newFund.setAmount(fund.getAmount());
+			newFund.setGuarantorKey(fund.getGuarantorKey());
+			newFund.setSavingsAccountKey(fund.getSavingsAccountKey());
+			newFund.setCustomFieldValues(fund.getCustomFieldValues());
+			updatedFunds.add(newFund);
+
+		}
+		System.out.println("\nDeleting and re-creating the same funds");
+		LoanAccount result2 = loanService.updateLoanAccountFunds(accountId, updatedFunds);
+		System.out.println("Loan Funds deleted and added for account " + accountId + " Total New Funds="
+				+ result2.getFunds().size());
 	}
 
 	// / Transactions testing
@@ -809,10 +875,12 @@ public class DemoTestLoanService {
 		loanAccount.setDisbursementDate(new Date(timeNow + 3 * aDay)); // 3 days from now
 		// FirstRepaymentDate
 
-		Date firstRepaymentDate = new Date(timeNow + 4 * aDay);// 4 days form now
+		Date firstRepaymentDate = new Date(timeNow + 4 * aDay);// 4 days from now
 		// Check for fixed days product
 		ScheduleDueDatesMethod scheduleDueDatesMethod = demoProduct.getScheduleDueDatesMethod();
+		System.out.println("ScheduleDueDatesMethod=" + scheduleDueDatesMethod);
 		if (scheduleDueDatesMethod == ScheduleDueDatesMethod.FIXED_DAYS_OF_MONTH) {
+			System.out.println("Fixed day product:");
 			List<Integer> fixedDays = demoProduct.getFixedDaysOfMonth();
 			if (fixedDays != null && fixedDays.size() > 0) {
 				Calendar date = Calendar.getInstance();
@@ -823,6 +891,17 @@ public class DemoTestLoanService {
 				date.set(year, month + 1, fixedDays.get(fixedDays.size() - 1));
 				firstRepaymentDate = date.getTime();
 			}
+		}
+		// Add required offset if an INTERVAL schedule. See MBU-9730 -As a Credit Officer, I want to have an offset
+		// applied to the first repayment date
+		if (scheduleDueDatesMethod == ScheduleDueDatesMethod.INTERVAL) {
+			Integer minOffset = demoProduct.getMinFirstRepaymentDueDateOffset();
+			Integer maxOffset = demoProduct.getMaxFirstRepaymentDueDateOffset();
+			Integer offsetDays = (minOffset != null) ? minOffset : maxOffset;
+			if (offsetDays != null) {
+				firstRepaymentDate = new Date(loanAccount.getDisbursementDate().getTime() + offsetDays * aDay);
+			}
+
 		}
 		loanAccount.setFirstRepaymentDate(firstRepaymentDate);
 
@@ -885,14 +964,14 @@ public class DemoTestLoanService {
 		}
 		// Set Guarantees. Available for API since 3.9. See MBU-6528
 		ArrayList<Guaranty> guarantees = new ArrayList<Guaranty>();
-		if (demoProduct.getAllowGuarantors()) {
+		if (demoProduct.isGuarantorsEnabled()) {
 			// GuarantyType.GUARANTOR
 			Guaranty guarantySecurity = new Guaranty(GuarantyType.GUARANTOR);
 			guarantySecurity.setAmount(loanAccount.getLoanAmount());
 			guarantySecurity.setGuarantorKey(demoClient.getEncodedKey());
 			guarantees.add(guarantySecurity);
 		}
-		if (demoProduct.getAllowCollateral()) {
+		if (demoProduct.isCollateralEnabled()) {
 			// GuarantyType.ASSET
 			Guaranty guarantyAsset = new Guaranty(GuarantyType.ASSET);
 			guarantyAsset.setAssetName("Asset Name as a collateral");
