@@ -25,6 +25,9 @@ public class APIData {
 	public static final String ACTIVE = "ACTIVE";
 	public static final String INACTIVE = "INACTIVE";
 	public static final String TRANCHES = "tranches"; // available since 3.12.3. See MBU-9996
+	public static final String FUNDS = "funds"; // investor funds. available since Mambu 3.13. See MBU-9885
+	public static final String FUNDING = "funding"; // investor funding. available since Mambu 3.13. See MBU-9888
+
 	// Client Types. Added in 3.9
 	public static final String CLIENT_TYPES = "clienttypes";
 	// Group Role Names. Added in 3.9
