@@ -232,7 +232,13 @@ public class DemoUtil {
 		}
 	}
 
-	// Get Demo User
+	/**
+	 * Get Demo User entity. Returns demo user specified as the "demoUsername" parameter of the configuration file
+	 * (config.properties). Defaults to "demo"
+	 * 
+	 * @return user
+	 * @throws MambuApiException
+	 */
 	public static User getDemoUser() throws MambuApiException {
 		System.out.println("\nIn getDemoUser");
 
@@ -242,7 +248,12 @@ public class DemoUtil {
 		return user;
 	}
 
-	// Get Demo Branch with full details
+	/**
+	 * Get Demo Branch entity with full details. Returns random Mambu Branch with full details
+	 * 
+	 * @return branch with full details
+	 * @throws MambuApiException
+	 */
 	public static Branch getDemoBranch() throws MambuApiException {
 		System.out.println("\nIn getDemoBranch");
 
@@ -256,7 +267,12 @@ public class DemoUtil {
 		return orgService.getBranch(branchId);
 	}
 
-	// Get Demo Centre with full details
+	/**
+	 * Get Demo Centre entity with full details. Returns random Mambu Centre
+	 * 
+	 * @return centre
+	 * @throws MambuApiException
+	 */
 	public static Centre getDemoCentre() throws MambuApiException {
 		System.out.println("\nIn getDemoCentre");
 
@@ -271,7 +287,8 @@ public class DemoUtil {
 	}
 
 	/**
-	 * Get or Create a Demo Client of primary domain, delegate for {@link DemoUtil#getDemoClient(boolean)}
+	 * Get or Create a Demo Client of primary domain, delegate for {@link DemoUtil#getDemoClient(boolean)}. Demo client
+	 * is retrieved or created using "demoClientFirstName" and "demoClientLastName" parameters of the configuration file
 	 * 
 	 * @return
 	 * @throws MambuApiException
@@ -281,11 +298,13 @@ public class DemoUtil {
 	}
 
 	/**
-	 * Get or Create a Demo Client
+	 * Get or Create a Demo Client. Demo client is retrieved or created using parameters specified in the configuration
+	 * file: "demoClientFirstName" and "demoClientLastName" parameters are used for primary domain and
+	 * "demoClientFirstName2" and "demoClientLastName2" are used for secondary domain
 	 * 
 	 * @param secondaryDomain
 	 *            true if demo client of secondary domain is required, false for primary domain
-	 * @return
+	 * @return client
 	 * @throws MambuApiException
 	 */
 	public static Client getDemoClient(boolean secondaryDomain) throws MambuApiException {
@@ -314,7 +333,17 @@ public class DemoUtil {
 
 	}
 
-	// Get Demo client by ID
+	/**
+	 * Get Demo Client by client ID.
+	 * 
+	 * @param clientId
+	 *            client ID. Can be null. If null, then "demoClientId" parameter specified in the configuration file is
+	 *            used. If the configuration parameter is absent (or is empty) then a client specified in the
+	 *            "demoClientFirstName" and "demoClientLastName" parameters for the corresponding domain is retrieved.
+	 *            See {@link #getDemoClient(boolean)}
+	 * @return client
+	 * @throws MambuApiException
+	 */
 	public static Client getDemoClient(String clientId) throws MambuApiException {
 		System.out.println("\nIn getDemoClient for id=" + clientId);
 
@@ -333,18 +362,44 @@ public class DemoUtil {
 
 	}
 
-	// Get Demo client details by ID
+	/**
+	 * Get Demo client with full details by ID
+	 * 
+	 * @param clientId
+	 *            client ID. Can be null. If null, then "demoClientId" parameter specified in the configuration file is
+	 *            used. If the configuration parameter is absent (or is empty) then full details for a client specified
+	 *            in the "demoClientFirstName" and "demoClientLastName" parameters for the corresponding domain are
+	 *            retrieved. See {@link #getDemoClient(boolean)}
+	 * @return client
+	 * @throws MambuApiException
+	 */
 	public static ClientExpanded getDemoClientDetails(String clientId) throws MambuApiException {
 		System.out.println("\nIn getDemoClient with details for id=" + clientId);
 
 		ClientsService clientsService = MambuAPIFactory.getClientService();
+
+		// If clientId ID is null and nothing is specified in the configuration file then get by the first and last name
+		if (clientId == null && demoClientId == null) {
+			// Both are null, get client ID for the client specified by a first/last name
+			Client client = getDemoClient();
+			clientId = client.getId();
+
+		} else {
+			// Use the provided ID if it is not null, otherwise use the one defined in the configuration file
+			clientId = (clientId != null) ? clientId : demoClientId;
+		}
 		ClientExpanded client = clientsService.getClientDetails(clientId);
 
 		return client;
 
 	}
 
-	// Get Demo group
+	/**
+	 * Get Demo group. Return random group
+	 * 
+	 * @return group
+	 * @throws MambuApiException
+	 */
 	public static Group getDemoGroup() throws MambuApiException {
 		System.out.println("\nIn getDemoGroup");
 
@@ -363,7 +418,16 @@ public class DemoUtil {
 
 	}
 
-	// Get Demo group by ID
+	/**
+	 * Get Demo group by ID
+	 * 
+	 * @param groupId
+	 *            group ID. Can be null. If null, then "demoGroupId" parameter specified in the configuration file is
+	 *            used. If the configuration parameter is absent (or is empty) then random group is returned. See
+	 *            {@link #getDemoGroup())}
+	 * @return group
+	 * @throws MambuApiException
+	 */
 	public static Group getDemoGroup(String groupId) throws MambuApiException {
 		System.out.println("\nIn getDemoGroup for id=" + groupId);
 
@@ -382,18 +446,42 @@ public class DemoUtil {
 
 	}
 
-	// Get Demo group details by ID
+	/**
+	 * Get Demo group with full details by ID
+	 * 
+	 * @param groupId
+	 *            groupId ID. Can be null. If null, then "demoGroupId" parameter specified in the configuration file is
+	 *            used. If the configuration parameter is absent (or is empty) then full details for a random group are
+	 *            retrieved. See {@link #getDemoGroup())}
+	 * @return group
+	 * @throws MambuApiException
+	 */
 	public static GroupExpanded getDemoGroupDetails(String groupId) throws MambuApiException {
 		System.out.println("\nIn getDemoGroup for id=" + groupId);
 
 		ClientsService clientsService = MambuAPIFactory.getClientService();
+		// If groupId ID is null and nothing is specified in the configuration file then get a random one
+		if (groupId == null && demoGroupId == null) {
+			// Both are null, use a random ID
+			Group group = getDemoGroup();
+			groupId = group.getId();
+
+		} else {
+			// One of them is not null. Use specified groupId if it is not not null, otherwise use demoGroupId
+			groupId = (groupId != null) ? groupId : demoGroupId;
+		}
 		GroupExpanded group = clientsService.getGroupDetails(groupId);
 
 		return group;
 
 	}
 
-	// Get random active loan product.
+	/**
+	 * Get random active loan product
+	 * 
+	 * @return loan product
+	 * @throws MambuApiException
+	 */
 	public static LoanProduct getDemoLoanProduct() throws MambuApiException {
 		System.out.println("\nIn getDemoLoanProduct");
 
@@ -422,7 +510,16 @@ public class DemoUtil {
 
 	}
 
-	// Get specific loan product by ID
+	/**
+	 * Get loan product by ID
+	 * 
+	 * @param productId
+	 *            product id. Can be null. If null, then "demoLaonProductId" parameter specified in the configuration
+	 *            file is used. If the configuration parameter is absent (or is empty) then random loan product is
+	 *            retrieved. See {@link #getDemoLoanProduct())}
+	 * @return
+	 * @throws MambuApiException
+	 */
 	public static LoanProduct getDemoLoanProduct(String productId) throws MambuApiException {
 		System.out.println("\nIn getDemoLoanProduct by ID=" + productId);
 
@@ -442,7 +539,12 @@ public class DemoUtil {
 
 	}
 
-	// Get random active savings product
+	/**
+	 * Get random active savings product
+	 * 
+	 * @return savings product
+	 * @throws MambuApiException
+	 */
 	public static SavingsProduct getDemoSavingsProduct() throws MambuApiException {
 		System.out.println("\nIn getDemoSavingsProduct");
 
@@ -469,7 +571,16 @@ public class DemoUtil {
 
 	}
 
-	// Get specific savings product by ID
+	/**
+	 * Get savings product by ID
+	 * 
+	 * @param productId
+	 *            product id. Can be null. If null, then "demoSavingsProductId" parameter specified in the configuration
+	 *            file is used. If the configuration parameter is absent (or is empty) then random savings product is
+	 *            retrieved. See {@link #getDemoSavingsProduct())}
+	 * @return savings product
+	 * @throws MambuApiException
+	 */
 	public static SavingsProduct getDemoSavingsProduct(String productId) throws MambuApiException {
 		System.out.println("\nIn getDemoSavingsProduct by ID=" + productId);
 
@@ -488,7 +599,12 @@ public class DemoUtil {
 		return product;
 	}
 
-	// Get random loan account
+	/**
+	 * Get random loan account
+	 * 
+	 * @return loan account
+	 * @throws MambuApiException
+	 */
 	public static LoanAccount getDemoLoanAccount() throws MambuApiException {
 		System.out.println("\nIn getDemoLoanAccount");
 
@@ -505,7 +621,16 @@ public class DemoUtil {
 		return null;
 	}
 
-	// Get specific loan account by ID
+	/**
+	 * Get loan account by ID
+	 * 
+	 * @param accountId
+	 *            account ID. Can be null. If null, then "demoLaonAccountId" parameter specified in the configuration
+	 *            file is used. If the configuration parameter is absent (or is empty) then random loan account is
+	 *            retrieved. See {@link #getDemoLoanAccount())}
+	 * @return loan account
+	 * @throws MambuApiException
+	 */
 	public static LoanAccount getDemoLoanAccount(String accountId) throws MambuApiException {
 		System.out.println("\nIn getDemoLoanAccount by ID-" + accountId);
 
@@ -523,7 +648,12 @@ public class DemoUtil {
 		return account;
 	}
 
-	// Get random savings product
+	/**
+	 * Get random savings account
+	 * 
+	 * @return savings account
+	 * @throws MambuApiException
+	 */
 	public static SavingsAccount getDemoSavingsAccount() throws MambuApiException {
 		System.out.println("\nIn getDemoSavingsAccount");
 
@@ -541,7 +671,16 @@ public class DemoUtil {
 		return null;
 	}
 
-	// Get specific savings account by ID
+	/**
+	 * Get savings account by ID
+	 * 
+	 * @param accountId
+	 *            account ID. Can be null. If null, then "demoSavingsAccountId" parameter specified in the configuration
+	 *            file is used. If the configuration parameter is absent (or is empty) then random savings account is
+	 *            retrieved. See {@link #getDemoSavingsAccount())}
+	 * @return
+	 * @throws MambuApiException
+	 */
 	public static SavingsAccount getDemoSavingsAccount(String accountId) throws MambuApiException {
 		System.out.println("\nIn getDemoSavingsAccount by ID=" + accountId);
 		// If provided ID is null and nothing is specified in the configuration file then get a random one
@@ -558,7 +697,15 @@ public class DemoUtil {
 		return account;
 	}
 
-	// Make new value for a CustomFieldValue with a known CustomFieldSet
+	/**
+	 * Make new value for a CustomFieldValue with a known Custom Field Set
+	 * 
+	 * @param set
+	 *            custom field set
+	 * @param value
+	 *            custom field value
+	 * @return new custom field value
+	 */
 	public static CustomFieldValue makeNewCustomFieldValue(CustomFieldSet set, CustomFieldValue value) {
 		if (value == null) {
 			return new CustomFieldValue();
@@ -566,7 +713,13 @@ public class DemoUtil {
 		return makeNewCustomFieldValue(set, value.getCustomField(), value);
 	}
 
-	// Make new value for a CustomFieldValue when only original value is available
+	/**
+	 * Make new value for an existent Custom Field Value
+	 * 
+	 * @param value
+	 *            custom field value
+	 * @return new custom field value
+	 */
 	public static CustomFieldValue makeNewCustomFieldValue(CustomFieldValue value) {
 		if (value == null) {
 			return new CustomFieldValue();
@@ -575,7 +728,17 @@ public class DemoUtil {
 		return makeNewCustomFieldValue(set, value.getCustomField(), value);
 	}
 
-	// Helper to create a new, valid test value for a custom field value based on field's data type and initial value
+	/**
+	 * Helper to create a new valid custom field value based on field's data type from an existent custom field value
+	 * 
+	 * @param set
+	 *            custom field set
+	 * @param customField
+	 *            custom field
+	 * @param initialField
+	 *            initial custom field value
+	 * @return custom field value
+	 */
 	private static CustomFieldValue makeNewCustomFieldValue(CustomFieldSet set, CustomField customField,
 			CustomFieldValue initialField) {
 
@@ -669,7 +832,16 @@ public class DemoUtil {
 		return value;
 	}
 
-	// Get custom fields of a specific type and for the specific entity
+	/**
+	 * Get custom fields of a specific type and for the specific entity type
+	 * 
+	 * @param set
+	 *            custom field set
+	 * @param entityKey
+	 *            entity key for the applicable custom fields
+	 * @return active fields from the custom field set applicable to the specified entityKey
+	 * @throws MambuApiException
+	 */
 	public static List<CustomField> getForEntityCustomFields(CustomFieldSet set, String entityKey)
 			throws MambuApiException {
 
@@ -690,7 +862,17 @@ public class DemoUtil {
 		return customFields;
 	}
 
-	// Make valid test custom field values of a specific type and for the specific entity
+	/**
+	 * Make valid test custom field values of a specific type and for the specific entity. Delegate for
+	 * {@link DemoUtil#makeForEntityCustomFieldValues(CustomFieldType, String, boolean)}
+	 * 
+	 * @param customFieldType
+	 *            custom fields type
+	 * @param entityKey
+	 *            entity key
+	 * @return a list of custom field values with field values set according to the custom field's data type
+	 * @throws MambuApiException
+	 */
 	public static List<CustomFieldValue> makeForEntityCustomFieldValues(CustomFieldType customFieldType,
 			String entityKey) throws MambuApiException {
 		boolean requiredOnly = true;
@@ -698,7 +880,18 @@ public class DemoUtil {
 		return makeForEntityCustomFieldValues(customFieldType, entityKey, requiredOnly);
 	}
 
-	// Make valid test custom field values of a specific type and for the specific entity
+	/**
+	 * Make valid test custom field values of a specific type and for the specific entity
+	 * 
+	 * @param customFieldType
+	 *            custom fields type
+	 * @param entityKey
+	 *            entity key
+	 * @param requiredOnly
+	 *            boolean indicating if only required fields should be returned
+	 * @return a list of custom field values with values set according to the custom field's data type
+	 * @throws MambuApiException
+	 */
 	public static List<CustomFieldValue> makeForEntityCustomFieldValues(CustomFieldType customFieldType,
 			String entityKey, boolean requiredOnly) throws MambuApiException {
 
@@ -734,7 +927,16 @@ public class DemoUtil {
 
 	}
 
-	// Helper to log custom field values
+	/**
+	 * Helper to log custom field values
+	 * 
+	 * @param customFieldValues
+	 *            a list of custom field values
+	 * @param name
+	 *            entity name
+	 * @param entityId
+	 *            entity id
+	 */
 	public static void logCustomFieldValues(List<CustomFieldValue> customFieldValues, String name, String entityId) {
 		System.out.println("\nCustom Field Values for entity " + name + " with id=" + entityId);
 		for (CustomFieldValue fieldValue : customFieldValues) {
@@ -753,7 +955,12 @@ public class DemoUtil {
 		}
 	}
 
-	// Helper to Log Custom Field set details
+	/**
+	 * Helper to Log Custom Field Set details
+	 * 
+	 * @param set
+	 *            custom fields set
+	 */
 	public static void logCustomFieldSet(CustomFieldSet set) {
 		List<CustomField> customFields = set.getCustomFields();
 		System.out.println("\nSet Name=" + set.getName() + "\tType=" + set.getType().toString() + "  Total Fields="
@@ -764,7 +971,13 @@ public class DemoUtil {
 		}
 	}
 
-	// Helper to Log CustomField - return field id for any existent active field
+	/**
+	 * Helper to Log a Custom Field. Returns field id if the field is active. Otherwise, returns null
+	 * 
+	 * @param field
+	 *            custom field
+	 * @return field id for one of the active fields or null if not an active field
+	 */
 	public static String logCustomField(CustomField field) {
 		if (field == null) {
 			return null;
@@ -824,7 +1037,12 @@ public class DemoUtil {
 
 	}
 
-	// Get valid Transaction channel for testing account transactions
+	/**
+	 * Get random Transaction channel
+	 * 
+	 * @return transaction channel
+	 * @throws MambuApiException
+	 */
 	public static TransactionChannel getDemoTransactionChannel() throws MambuApiException {
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
@@ -838,7 +1056,13 @@ public class DemoUtil {
 		return transactionChannels.get(randomIndex);
 	}
 
-	// Helper to make valid TransactionDetails object for testing account transactions
+	/**
+	 * Helper to make valid TransactionDetails object for testing account transactions. This method retrieves random
+	 * transaction channel and creates TransactionDetails with the fields applicable to the channel
+	 * 
+	 * @return Transaction Details
+	 * @throws MambuApiException
+	 */
 	public static TransactionDetails makeDemoTransactionDetails() throws MambuApiException {
 
 		TransactionChannel channel = getDemoTransactionChannel();
@@ -885,7 +1109,13 @@ public class DemoUtil {
 		return transactionDetails;
 	}
 
-	// Helper to encode File into base64 string
+	/**
+	 * Helper to encode File into base64 string
+	 * 
+	 * @param absolutePath
+	 *            file's absolute path
+	 * @return
+	 */
 	public static String encodeFileIntoBase64String(String absolutePath) {
 		final String methodName = "encodeFileIntoBase64String";
 
@@ -935,7 +1165,13 @@ public class DemoUtil {
 
 	}
 
-	// Helper to decode Base64 string into bytes
+	/**
+	 * Helper to decode Base64 string into byte array
+	 * 
+	 * @param inputStringBase64
+	 *            base64 string
+	 * @return byte array
+	 */
 	public static byte[] decodeBase64IntoBytes(String inputStringBase64) {
 		System.out.println("\nIn decodeBase64IntoBytes");
 		if (inputStringBase64 == null) {
@@ -956,7 +1192,14 @@ public class DemoUtil {
 
 	}
 
-	// Helper to Create BufferedImage file from the input Base64 encoded string
+	/**
+	 * Helper to Create BufferedImage file from the input Base64 encoded string
+	 * 
+	 * @param inputStringBase64
+	 *            base64 string
+	 * @return buffered image
+	 * @throws IOException
+	 */
 	public static BufferedImage decodeBase64(String inputStringBase64) throws IOException {
 		System.out.println("\nIn decodeBase64");
 
