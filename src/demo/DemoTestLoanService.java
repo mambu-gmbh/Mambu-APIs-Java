@@ -496,7 +496,9 @@ public class DemoTestLoanService {
 				// would return an exception
 				try {
 					String reversalNotes = "Reversed " + originalTransactionType + " by Demo API";
-					LoanTransaction reversed = loanService.reverseLoanTransaction(transaction, reversalNotes);
+					String originalTransactionId = String.valueOf(transaction.getTransactionId());
+					LoanTransaction reversed = loanService.reverseLoanTransaction(demoLoanAccount.getId(),
+							originalTransactionType, originalTransactionId, reversalNotes);
 
 					System.out.println("Reversed Transaction " + transaction.getType() + "\tReversed Amount="
 							+ reversed.getAmount().toString() + "\tBalance =" + reversed.getBalance().toString()
@@ -529,7 +531,7 @@ public class DemoTestLoanService {
 		String date = null; // "2012-11-23";
 		String notes = "repayment notes from API";
 
-		String accountId = NEW_LOAN_ACCOUNT_ID;
+		String accountId = demoLoanAccount.getId();
 
 		// Make demo transactionDetails with the valid channel fields
 		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
@@ -873,37 +875,6 @@ public class DemoTestLoanService {
 		long timeNow = new Date().getTime();
 		long aDay = 24 * 60 * 60 * 1000; // 1 day in msecs
 		loanAccount.setDisbursementDate(new Date(timeNow + 3 * aDay)); // 3 days from now
-		// FirstRepaymentDate
-
-		Date firstRepaymentDate = new Date(timeNow + 4 * aDay);// 4 days from now
-		// Check for fixed days product
-		ScheduleDueDatesMethod scheduleDueDatesMethod = demoProduct.getScheduleDueDatesMethod();
-		System.out.println("ScheduleDueDatesMethod=" + scheduleDueDatesMethod);
-		if (scheduleDueDatesMethod == ScheduleDueDatesMethod.FIXED_DAYS_OF_MONTH) {
-			System.out.println("Fixed day product:");
-			List<Integer> fixedDays = demoProduct.getFixedDaysOfMonth();
-			if (fixedDays != null && fixedDays.size() > 0) {
-				Calendar date = Calendar.getInstance();
-				int year = date.get(Calendar.YEAR);
-				int month = date.get(Calendar.MONTH);
-				date.clear();
-				date.setTimeZone(TimeZone.getTimeZone("UTC"));
-				date.set(year, month + 1, fixedDays.get(fixedDays.size() - 1));
-				firstRepaymentDate = date.getTime();
-			}
-		}
-		// Add required offset if an INTERVAL schedule. See MBU-9730 -As a Credit Officer, I want to have an offset
-		// applied to the first repayment date
-		if (scheduleDueDatesMethod == ScheduleDueDatesMethod.INTERVAL) {
-			Integer minOffset = demoProduct.getMinFirstRepaymentDueDateOffset();
-			Integer maxOffset = demoProduct.getMaxFirstRepaymentDueDateOffset();
-			Integer offsetDays = (minOffset != null) ? minOffset : maxOffset;
-			if (offsetDays != null) {
-				firstRepaymentDate = new Date(loanAccount.getDisbursementDate().getTime() + offsetDays * aDay);
-			}
-
-		}
-		loanAccount.setFirstRepaymentDate(firstRepaymentDate);
 
 		// Tranches
 		Integer maxTranches = demoProduct.getMaxNumberOfDisbursementTranches();
@@ -985,6 +956,10 @@ public class DemoTestLoanService {
 		loanAccount.setExpectedDisbursementDate(loanAccount.getDisbursementDate());
 		loanAccount.setDisbursementDate(null);
 
+		// Set first repayment date
+		Date firstRepaymentDate = makeFirstRepaymentDate(loanAccount, demoProduct);
+		loanAccount.setFirstRepaymentDate(firstRepaymentDate);
+
 		loanAccount.setNotes("Created by DemoTest on " + new Date());
 		return loanAccount;
 
@@ -1042,6 +1017,101 @@ public class DemoTestLoanService {
 				}
 			}
 		}
+
+	}
+
+	// Create first repayment date considering its ScheduleDueDatesMethod and product restrictions, like a definition
+	// for a minimum allowed first repayments date offset or the fixed days repayments
+	// See MBU-9730 -As a Credit Officer, I want to have an offset applied to the first repayment date
+	private static Date makeFirstRepaymentDate(LoanAccount account, LoanProduct product) {
+		if (account == null || product == null) {
+			return null;
+		}
+		Date disbDate = account.getExpectedDisbursementDate();
+		if (disbDate == null) {
+			return new Date();
+		}
+		long aDay = 24 * 60 * 60 * 1000; // 1 day in msecs
+		Date firstRepaymentDate = new Date(disbDate.getTime() + 4 * aDay); // default to 4 days from disbursement date
+
+		// Set the first repayment date depending on product's ScheduleDueDatesMethod
+		ScheduleDueDatesMethod scheduleDueDatesMethod = product.getScheduleDueDatesMethod();
+		if (scheduleDueDatesMethod == ScheduleDueDatesMethod.FIXED_DAYS_OF_MONTH) {
+			// For fixed days product set to one of the allowed days
+			System.out.println("Fixed day product:");
+			List<Integer> fixedDays = demoProduct.getFixedDaysOfMonth();
+			if (fixedDays != null && fixedDays.size() > 0) {
+				Calendar date = Calendar.getInstance();
+				int year = date.get(Calendar.YEAR);
+				int month = date.get(Calendar.MONTH);
+				date.clear();
+				date.setTimeZone(TimeZone.getTimeZone("UTC"));
+				date.set(year, month + 1, fixedDays.get(fixedDays.size() - 1));
+				firstRepaymentDate = date.getTime();
+			}
+			return firstRepaymentDate;
+		}
+
+		if (scheduleDueDatesMethod == ScheduleDueDatesMethod.INTERVAL) {
+			// For INTERVAL due dates product check for the allowed minimum offset time
+
+			Integer repaymentPeriodCount = account.getRepaymentPeriodCount();
+			RepaymentPeriodUnit unit = account.getRepaymentPeriodUnit();
+			if (unit == null || repaymentPeriodCount == null) {
+				return null;
+			}
+
+			// get minimum offset
+			Integer minOffsetDays = product.getMinFirstRepaymentDueDateOffset();
+			System.out.println("INTERVAL schedule due dates product. Min offset=" + minOffsetDays
+					+ " RepaymentPeriodUnit=" + unit + " repaymentPeriodCount=" + repaymentPeriodCount);
+
+			if (minOffsetDays == null) {
+				// if no offset to 4 days in a future
+				return firstRepaymentDate;
+			}
+
+			// Create UTC disbursement date with day, month year only
+			Calendar disbDateCal = Calendar.getInstance();
+			disbDateCal.setTime(disbDate);
+			int day = disbDateCal.get(Calendar.DAY_OF_MONTH);
+			int year = disbDateCal.get(Calendar.YEAR);
+			int month = disbDateCal.get(Calendar.MONTH);
+			disbDateCal.clear();
+			disbDateCal.setTimeZone(TimeZone.getTimeZone("UTC"));
+			disbDateCal.set(year, month, day);
+
+			// Create calendar for firstRepaymDate and set to be equal disbursement date
+			Calendar firstRepaymDateCal = Calendar.getInstance();
+			firstRepaymDateCal.clear();
+			firstRepaymDateCal.setTimeZone(TimeZone.getTimeZone("UTC"));
+			firstRepaymDateCal.setTime(disbDateCal.getTime());
+
+			// Calculate the first expected repayment date without the offset
+			switch (unit) {
+			case DAYS:
+				firstRepaymDateCal.add(Calendar.DAY_OF_MONTH, repaymentPeriodCount);
+				break;
+			case MONTHS:
+				firstRepaymDateCal.add(Calendar.MONTH, repaymentPeriodCount);
+				break;
+			case WEEKS:
+				firstRepaymDateCal.add(Calendar.DAY_OF_MONTH, (repaymentPeriodCount * 7));
+				break;
+			case YEARS:
+				firstRepaymDateCal.add(Calendar.YEAR, repaymentPeriodCount);
+				break;
+			}
+			// Add minimum offset in days
+			firstRepaymDateCal.add(Calendar.DAY_OF_MONTH, 1 + minOffsetDays);
+			// Get firstRepaymentDate
+			firstRepaymentDate = firstRepaymDateCal.getTime();
+			System.out.println("ExpDisb=" + disbDate + "\tMin Offset=" + minOffsetDays + "\trepaymentPeriodCount="
+					+ repaymentPeriodCount + "\tunit=" + unit + "\tfirstRepaymentDate=" + firstRepaymentDate);
+			return firstRepaymentDate;
+		}
+
+		return firstRepaymentDate;
 
 	}
 }
