@@ -55,7 +55,6 @@ public class DemoTestSavingsService {
 			// Get Demo data
 			// Get demo entities needed for testing
 			final String testProductId = null; // use specific test product or null to get random product
-			//
 			final String testAccountId = null; // use specific test account or null to get random loan account
 
 			demoClient = DemoUtil.getDemoClient(null);
@@ -440,6 +439,7 @@ public class DemoTestSavingsService {
 		if (!product.isAllowOverdraft()) {
 			System.out.println("WARNING: Cannot patch account: Demo Savings Account " + savingsAccount.getId()
 					+ " doesn't support Overdraft");
+			return;
 		}
 
 		// As of Mambu 3.12.2 only Overdraft Limit can be updated
@@ -574,6 +574,23 @@ public class DemoTestSavingsService {
 		AccountHolderType holderType = (isForClient) ? AccountHolderType.CLIENT : AccountHolderType.GROUP;
 		savingsAccount.setAccountHolderKey(holderKey);
 		savingsAccount.setAccountHolderType(holderType);
+
+		// Set Interest rate. required since Mambu 3.13. See MBU-9806
+		InterestRateSettings rateSettings = demoSavingsProduct.getInterestRateSettings();
+		if (rateSettings == null) {
+			rateSettings = new InterestRateSettings();
+		}
+		BigDecimal defInterestRate = rateSettings.getDefaultInterestRate();
+		BigDecimal minInterestRate = rateSettings.getMinInterestRate();
+		BigDecimal maxInterestRate = rateSettings.getMaxInterestRate();
+		BigDecimal interestRate = defInterestRate;
+		interestRate = (interestRate != null) ? interestRate : minInterestRate;
+		interestRate = (interestRate != null) ? interestRate : maxInterestRate;
+		if (interestRate == null) {
+			interestRate = new BigDecimal(3.5f);
+		}
+		savingsAccount.setInterestRate(interestRate);
+
 		// Max Withdrawal
 		Money maxWidthdrawlAmount = demoSavingsProduct.getMaxWidthdrawlAmount();
 		if (maxWidthdrawlAmount == null) {
