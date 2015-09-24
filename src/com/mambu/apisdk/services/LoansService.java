@@ -12,7 +12,6 @@ import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.accountsecurity.shared.model.InvestorFund;
 import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
 import com.mambu.api.server.handler.funds.model.JSONInvestorFunds;
-
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
 import com.mambu.api.server.handler.tranches.model.JSONTranches;
 import com.mambu.apisdk.MambuAPIService;
@@ -1068,20 +1067,21 @@ public class LoansService {
 			throw new IllegalArgumentException("Original Transaction cannot be null");
 		}
 		// Get original transaction Key from the original transaction. Either encoded key or transaction id can be used
-		String transactionKey = originalTransaction.getEncodedKey();
-		if (transactionKey == null || transactionKey.isEmpty()) {
-			// Try getting the id
-			long transId = originalTransaction.getTransactionId();
-			if (transId == 0) {
+		String transactionId = String.valueOf(originalTransaction.getTransactionId());
+		if (transactionId == null || transactionId.isEmpty()) {
+			// If no ID, try getting the encoded key.
+			String transactionKey = originalTransaction.getEncodedKey();
+			if (transactionKey == null) {
 				throw new IllegalArgumentException(
-						"Original Transaction must have either the encoded key or id not null or empty");
+						"Original Transaction must have either the encoded key or id not null and not empty");
 			}
-			transactionKey = String.valueOf(transId);
+			// Use encoded key
+			transactionId = transactionKey;
 		}
 		// Get account id and original transaction type from the original transaction
 		String accountId = originalTransaction.getParentAccountKey();
 		LoanTransactionType transactionType = originalTransaction.getType();
 
-		return reverseLoanTransaction(accountId, transactionType, transactionKey, notes);
+		return reverseLoanTransaction(accountId, transactionType, transactionId, notes);
 	}
 }
