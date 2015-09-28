@@ -764,8 +764,17 @@ public class DemoUtil {
 		String linkedValue = null; // linked value
 		switchloop: switch (fieldType) {
 		case STRING:
-			// Set demo string with the current date
-			newValue = "Updated by API on " + new Date().toString();
+			// Consider field's validation pattern, if defined. See MBU-8973
+			String pattern = customField.getValidationPattern();
+			if (pattern != null && pattern.length() > 0) {
+				newValue = new String(pattern);
+				newValue = newValue.replaceAll("@", "A");
+				newValue = newValue.replaceAll("#", "1");
+				newValue = newValue.replaceAll("\\$", "B");
+			} else {
+				// Set demo string with the current date
+				newValue = "Updated by API on " + new Date().toString();
+			}
 			break;
 		case NUMBER:
 			// Increase current numeric value by 10
