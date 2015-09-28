@@ -452,6 +452,11 @@ public class DemoTestSavingsService {
 		BigDecimal limitIncrease = new BigDecimal(400.00f);
 		BigDecimal updatedOverdraftLimit = overdraftLimit.add(limitIncrease);
 		savingsAccount.setOverdraftLimit(updatedOverdraftLimit);
+		// Make sure it's still within the allowed limit
+		BigDecimal maxOverdraftLimit = product.getMaxOverdraftLimit();
+		if (maxOverdraftLimit != null) {
+			updatedOverdraftLimit = updatedOverdraftLimit.min(maxOverdraftLimit);
+		}
 
 		// Submit updated account to Mambu
 		SavingsService service = MambuAPIFactory.getSavingsService();
@@ -580,14 +585,18 @@ public class DemoTestSavingsService {
 		if (rateSettings == null) {
 			rateSettings = new InterestRateSettings();
 		}
-		BigDecimal defInterestRate = rateSettings.getDefaultInterestRate();
-		BigDecimal minInterestRate = rateSettings.getMinInterestRate();
-		BigDecimal maxInterestRate = rateSettings.getMaxInterestRate();
-		BigDecimal interestRate = defInterestRate;
-		interestRate = (interestRate != null) ? interestRate : minInterestRate;
-		interestRate = (interestRate != null) ? interestRate : maxInterestRate;
-		if (interestRate == null) {
-			interestRate = new BigDecimal(3.5f);
+		BigDecimal interestRate = null;
+		// Set interest rate only if it is paid into the account
+		if (demoSavingsProduct.isInterestPaidIntoAccount()) {
+			BigDecimal defInterestRate = rateSettings.getDefaultInterestRate();
+			BigDecimal minInterestRate = rateSettings.getMinInterestRate();
+			BigDecimal maxInterestRate = rateSettings.getMaxInterestRate();
+			interestRate = defInterestRate;
+			interestRate = (interestRate != null) ? interestRate : minInterestRate;
+			interestRate = (interestRate != null) ? interestRate : maxInterestRate;
+			if (interestRate == null) {
+				interestRate = new BigDecimal(3.5f);
+			}
 		}
 		savingsAccount.setInterestRate(interestRate);
 
