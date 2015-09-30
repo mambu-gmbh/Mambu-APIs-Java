@@ -6,6 +6,7 @@ import java.util.Map;
 import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.accounting.shared.model.GLJournalEntry;
 import com.mambu.accounts.shared.model.TransactionChannel;
+import com.mambu.accountsecurity.shared.model.InvestorFund;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.coments.model.JSONComment;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
@@ -43,6 +44,7 @@ import com.mambu.linesofcredit.shared.model.LineOfCredit;
 import com.mambu.linesofcredit.shared.model.LineOfCreditExpanded;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
+import com.mambu.loans.shared.model.LoanTranche;
 import com.mambu.loans.shared.model.LoanTransaction;
 import com.mambu.loans.shared.model.Repayment;
 import com.mambu.organization.shared.model.Branch;
@@ -538,6 +540,8 @@ public class ApiDefinition {
 		apiEndPointsMap.put(LineOfCredit.class, APIData.LINES_OF_CREDIT);
 		apiEndPointsMap.put(LineOfCreditExpanded.class, APIData.LINES_OF_CREDIT);
 		apiEndPointsMap.put(AccountsFromLineOfCredit.class, APIData.ACCOUNTS);
+		apiEndPointsMap.put(LoanTranche.class, APIData.TRANCHES);
+		apiEndPointsMap.put(InvestorFund.class, APIData.FUNDS); // "funds" api end point
 
 	}
 

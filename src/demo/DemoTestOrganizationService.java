@@ -22,6 +22,9 @@ import com.mambu.core.shared.model.GeneralSettings;
 import com.mambu.core.shared.model.IndexRate;
 import com.mambu.core.shared.model.ObjectLabel;
 import com.mambu.core.shared.model.Organization;
+import com.mambu.core.shared.model.Role;
+import com.mambu.core.shared.model.UsageRights;
+import com.mambu.core.shared.model.User;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 
@@ -37,7 +40,7 @@ public class DemoTestOrganizationService {
 	private static String CENTRE_ID;
 	private static String CUSTOM_FIELD_ID;
 
-	private static Branch demoBranch;
+	private static User demoUser;
 	private static Centre demoCentre;
 
 	public static void main(String[] args) {
@@ -45,8 +48,7 @@ public class DemoTestOrganizationService {
 		DemoUtil.setUp();
 
 		try {
-			DemoUtil.getDemoUser();
-			demoBranch = DemoUtil.getDemoBranch();
+			demoUser = DemoUtil.getDemoUser();
 			demoCentre = DemoUtil.getDemoCentre();
 
 			testGetOrganizationDetails();// Available since 3.11
@@ -285,6 +287,22 @@ public class DemoTestOrganizationService {
 			int channelFieldsCount = (fields == null) ? 0 : fields.size();
 			System.out.println("Channel Name=" + channel.getName() + "\tId=" + channel.getId() + "\tTotal Fields="
 					+ channelFieldsCount);
+
+			// Transaction channels also have UsageRights since Mambu 3.13. See MBU-9562
+			String demoUserRoleKey = (demoUser.getRole() == null) ? null : demoUser.getRole().getEncodedKey();
+			UsageRights rights = channel.getUsageRights();
+			if (rights != null) {
+				List<Role> roles = rights.getRoles();
+				int totalRoles = (roles == null) ? 0 : roles.size();
+				System.out.println("Is Accessible By All Users=" + rights.isAccessibleByAllUsers() + "\tTotal Roles="
+						+ totalRoles + "\tDemo User Role Key=" + demoUserRoleKey);
+				if (roles != null) {
+					for (Role role : roles) {
+						System.out.println("For Role Key=" + role.getEncodedKey());
+					}
+				}
+
+			}
 			System.out.println();
 			for (ChannelField field : fields) {
 				System.out.println("Field Name=" + field.name() + " ");

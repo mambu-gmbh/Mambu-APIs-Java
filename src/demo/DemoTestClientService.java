@@ -324,6 +324,16 @@ public class DemoTestClientService {
 		client.setLastName(client.getLastName() + updatedSuffix);
 		client.setPreferredLanguage(Language.SPANISH); // TODO: Mambu issue - Language is NOT updated
 
+		// Test updating custom fields too
+		List<CustomFieldValue> customFields = clientCreated.getCustomFieldValues();
+		List<CustomFieldValue> updatedFields = new ArrayList<CustomFieldValue>();
+		if (customFields != null) {
+			for (CustomFieldValue value : customFields) {
+				value = DemoUtil.makeNewCustomFieldValue(value);
+				updatedFields.add(value);
+			}
+		}
+		clientUpdated.setCustomFieldValues(updatedFields);
 		ClientExpanded clientExpandedResult = clientService.updateClient(clientUpdated);
 
 		System.out.println("Client Update OK, ID=" + clientExpandedResult.getClient().getId() + "\tLastName="
