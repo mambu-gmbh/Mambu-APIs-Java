@@ -474,7 +474,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// Log Method and URL.
 		// Log params if applicable
 		// Log Json for Json requests
-		String logDetails = "\n" + method.name() + " with URL=";
+		String logDetails = method.name() + " with URL=";
 		String jsonString = null;
 		String urlWithParams = null;
 		switch (method) {
@@ -720,7 +720,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 			}
 
 			// Log API response Status and the Response string
-			LOGGER.info("\nResponse Status=" + status + "\nResponse message=" + response);
+			LOGGER.info("Response Status=" + status + "\nResponse message=" + response);
 		}
 
 	}

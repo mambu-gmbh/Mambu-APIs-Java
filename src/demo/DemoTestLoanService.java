@@ -340,10 +340,9 @@ public class DemoTestLoanService {
 		// Test deleting and then adding tranches now. Setting tranche's encoded key to null should result in all
 		// existent tranches being deleted and the new ones (with the same data) created
 		for (LoanTranche tranche : nonDisbursedTranches) {
-			// Set all encoded key's to null. This would treat these tranches as new ones
+			// Set all encoded keys to null. This would treat these tranches as new ones
 			// The original versions will be deleted
 			tranche.setEncodedKey(null);
-			tranche.setIndex(null);
 		}
 		System.out.println("\nDeleting and re-creating the same tranches");
 		LoanAccount result2 = loanService.updateLoanAccountTranches(accountId, nonDisbursedTranches);
@@ -425,7 +424,7 @@ public class DemoTestLoanService {
 			// c) the backdate is also not needed for disbursing with tranches
 			amount = null;
 			disbursalDate = null;
-			// If not the first tranche - set amount to null
+			// If not the first tranche - set the firstRepaymentDate to null
 			if (account.getDisbursedTranches() != null && account.getDisbursedTranches().size() > 0) {
 				firstRepaymentDate = null;
 			}
@@ -1036,7 +1035,11 @@ public class DemoTestLoanService {
 
 		// Set the first repayment date depending on product's ScheduleDueDatesMethod
 		ScheduleDueDatesMethod scheduleDueDatesMethod = product.getScheduleDueDatesMethod();
-		if (scheduleDueDatesMethod == ScheduleDueDatesMethod.FIXED_DAYS_OF_MONTH) {
+		if (scheduleDueDatesMethod == null) {
+			return firstRepaymentDate;
+		}
+		switch (scheduleDueDatesMethod) {
+		case FIXED_DAYS_OF_MONTH:
 			// For fixed days product set to one of the allowed days
 			System.out.println("Fixed day product:");
 			List<Integer> fixedDays = demoProduct.getFixedDaysOfMonth();
@@ -1050,11 +1053,8 @@ public class DemoTestLoanService {
 				firstRepaymentDate = date.getTime();
 			}
 			return firstRepaymentDate;
-		}
-
-		if (scheduleDueDatesMethod == ScheduleDueDatesMethod.INTERVAL) {
+		case INTERVAL:
 			// For INTERVAL due dates product check for the allowed minimum offset time
-
 			Integer repaymentPeriodCount = account.getRepaymentPeriodCount();
 			RepaymentPeriodUnit unit = account.getRepaymentPeriodUnit();
 			if (unit == null || repaymentPeriodCount == null) {
@@ -1070,7 +1070,7 @@ public class DemoTestLoanService {
 				// if no offset to 4 days in a future
 				return firstRepaymentDate;
 			}
-
+			
 			// Create UTC disbursement date with day, month year only
 			Calendar disbDateCal = Calendar.getInstance();
 			disbDateCal.setTime(disbDate);
@@ -1081,7 +1081,7 @@ public class DemoTestLoanService {
 			disbDateCal.setTimeZone(TimeZone.getTimeZone("UTC"));
 			disbDateCal.set(year, month, day);
 
-			// Create calendar for firstRepaymDate and set to be equal disbursement date
+			// Create calendar for firstRepaymDate and set it to be equal to the disbursement date
 			Calendar firstRepaymDateCal = Calendar.getInstance();
 			firstRepaymDateCal.clear();
 			firstRepaymDateCal.setTimeZone(TimeZone.getTimeZone("UTC"));

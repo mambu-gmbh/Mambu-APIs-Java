@@ -572,9 +572,10 @@ public class LoansService {
 	 * @param accountId
 	 *            the encoded key or id of the loan account. Must not be null.
 	 * @param tranches
-	 *            tranches to be updated. Must not be null. Disbursed tranches cannot be changed or deleted. Tranches
-	 *            that have the "encodedKey" field are edited and the ones that don't have a key will be created.
-	 *            Tranches that are not specified in the call will be deleted
+	 *            tranches for a loan account. Must not be null. Existent tranches with a valid "encodedKey" field will
+	 *            be updated. Tranches with null "encodedKey" are treated as new tranches and will be created. Tranches
+	 *            that are not specified in the call will be deleted. Already disbursed tranches cannot be changed or
+	 *            deleted, they can be omitted when updating tranches.
 	 * @return loan account with updated tranches
 	 * 
 	 * @throws MambuApiException

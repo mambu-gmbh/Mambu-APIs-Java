@@ -155,7 +155,8 @@ public class RepaymentsService {
 		}
 
 		// URL path for this API has the following format: /api/savings/{SAVINGS_ID}/funding/{LOAN_ID}/repayments
-		String urlPath = APIData.SAVINGS + "/" + savingsId + "/" + APIData.FUNDING + "/" + loanId + APIData.REPAYMENTS;
+		String urlPath = APIData.SAVINGS + "/" + savingsId + "/" + APIData.FUNDING + "/" + loanId + "/"
+				+ APIData.REPAYMENTS;
 		ApiDefinition apiDefinition = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET, Repayment.class,
 				ApiReturnFormat.COLLECTION);
 
