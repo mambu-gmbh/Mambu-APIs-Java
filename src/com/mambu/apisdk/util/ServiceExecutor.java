@@ -7,6 +7,8 @@ import java.util.Map;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
+import com.mambu.accounting.shared.model.GLAccount;
+import com.mambu.accounting.shared.model.GLJournalEntry;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
@@ -529,6 +531,12 @@ public class ServiceExecutor {
 		}.getType());
 		// Lines of Credit
 		collectionTypesMap.put(LineOfCredit.class, new TypeToken<List<LineOfCredit>>() {
+		}.getType());
+		// GLJournalEntry
+		collectionTypesMap.put(GLJournalEntry.class, new TypeToken<List<GLJournalEntry>>() {
+		}.getType());
+		// GLAccount
+		collectionTypesMap.put(GLAccount.class, new TypeToken<List<GLAccount>>() {
 		}.getType());
 	}
 
