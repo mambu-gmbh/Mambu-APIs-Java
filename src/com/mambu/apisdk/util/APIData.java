@@ -220,6 +220,9 @@ public class APIData {
 	public static String LINES_OF_CREDIT = "linesofcredit"; // /api/linesofcredit
 	public static String ACCOUNTS = "accounts"; // /api/linesofcredit/{id}/accounts
 
+	// Use Roles API
+	public static String USER_ROLES = "userroles"; // api/userroles
+
 	// Added to support Json object creation API
 	public static String yyyyMmddFormat = DateUtils.DATE_FORMAT;// ISO_8601_FORMAT_DATE "yyyy-MM-dd";
 	public static String JSON_OBJECT = "JSON";

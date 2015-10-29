@@ -33,6 +33,7 @@ import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
 import com.mambu.core.shared.model.CustomView;
 import com.mambu.core.shared.model.ObjectLabel;
+import com.mambu.core.shared.model.Role;
 import com.mambu.core.shared.model.SearchResult;
 import com.mambu.core.shared.model.SearchType;
 import com.mambu.core.shared.model.User;
@@ -537,6 +538,9 @@ public class ServiceExecutor {
 		}.getType());
 		// GLAccount
 		collectionTypesMap.put(GLAccount.class, new TypeToken<List<GLAccount>>() {
+		}.getType());
+		// Role
+		collectionTypesMap.put(Role.class, new TypeToken<List<Role>>() {
 		}.getType());
 	}
 

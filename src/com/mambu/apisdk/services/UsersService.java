@@ -14,6 +14,7 @@ import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.core.shared.data.DataViewType;
 import com.mambu.core.shared.model.CustomView;
+import com.mambu.core.shared.model.Role;
 import com.mambu.core.shared.model.User;
 
 /**
@@ -36,6 +37,8 @@ public class UsersService {
 	private final static ApiDefinition getUser = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, User.class);
 	private final static ApiDefinition getCustomViews = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, User.class,
 			CustomView.class);
+	private final static ApiDefinition getUserRoles = new ApiDefinition(ApiType.GET_LIST, Role.class);
+	private final static ApiDefinition getUserRole = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, Role.class);
 
 	/***
 	 * Create a new users service
@@ -201,6 +204,33 @@ public class UsersService {
 
 		supportedDataViewTypes.put(DataViewType.ACTIVITIES_LOOKUP, ApiViewType.SYSTEM_ACTIVITIES);
 
+	}
+
+	/**
+	 * Get user roles
+	 * 
+	 * @return list of all User Roles
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<Role> getUserRoles() throws MambuApiException {
+		// GET /api/userroles
+		// See MBU-9263
+		return serviceExecutor.execute(getUserRoles);
+	}
+
+	/**
+	 * Get user role by a role key
+	 * 
+	 * @param roleKey
+	 *            the encoded key of the user role
+	 * @return user Role
+	 * @throws MambuApiException
+	 */
+	public Role getUserRole(String roleKey) throws MambuApiException {
+		// GET /api/userroles/{KEY}
+		// See MBU-9263
+		return serviceExecutor.execute(getUserRole, roleKey);
 	}
 
 }

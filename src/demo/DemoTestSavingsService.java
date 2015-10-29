@@ -65,8 +65,15 @@ public class DemoTestSavingsService {
 			demoSavingsAccount = DemoUtil.getDemoSavingsAccount(testAccountId);
 			SAVINGS_ACCOUNT_ID = demoSavingsAccount.getId();
 
+			System.out.println("**DemoProduct for product name=" + demoSavingsProduct.getName() + " id="
+					+ demoSavingsProduct.getId());
+
 			testCreateSavingsAccount();
 
+			testPatchSavingsAccountTerms();
+
+			if (true)
+				return;
 			testCloseSavingsAccount(); // Available since 3.4
 			testDeleteSavingsAccount(); // Available since 3.4
 
@@ -433,36 +440,147 @@ public class DemoTestSavingsService {
 	public static void testPatchSavingsAccountTerms() throws MambuApiException {
 		System.out.println("\nIn testPatchSavingsAccountTerms");
 
+		// See MBU-10447 for a list of fields that can be updated (as of Mambu 3.14)
 		SavingsAccount savingsAccount = demoSavingsAccount;
 		String productKey = savingsAccount.getProductTypeKey();
 		SavingsProduct product = DemoUtil.getDemoSavingsProduct(productKey);
-		if (!product.isAllowOverdraft()) {
-			System.out.println("WARNING: Cannot patch account: Demo Savings Account " + savingsAccount.getId()
-					+ " doesn't support Overdraft");
-			return;
+		SavingsType productType = product.getProductType();
+		System.out.println("\tProduct=" + product.getName() + "\tType=" + productType + "\tId=" + product.getId());
+
+		// Update account
+		InterestRateSettings overdraftRateSettings = product.getOverdraftInterestRateSettings();
+		InterestRateSource overdraftRateSource = (overdraftRateSettings == null) ? null : overdraftRateSettings
+				.getInterestRateSource();
+
+		// Update overdraft fields
+		if (product.isAllowOverdraft() && overdraftRateSource != null) {
+			// get MaxInterestRat to limit our test changes
+			BigDecimal maxOverdraftRate = overdraftRateSettings.getMaxInterestRate();
+			final BigDecimal rateIncrease = new BigDecimal(0.5f);
+			final BigDecimal limitIncrease = new BigDecimal(400.00f);
+
+			switch (overdraftRateSource) {
+			case FIXED_INTEREST_RATE:
+				// Set new Overdraft Limit
+				BigDecimal overdraftLimit = savingsAccount.getOverdraftLimit();
+				if (overdraftLimit == null) {
+					overdraftLimit = BigDecimal.ZERO;
+				}
+				// Increase Overdraft Limit by $400 and update the account
+				BigDecimal updatedOverdraftLimit = overdraftLimit.add(limitIncrease);
+				BigDecimal maxOverdraftLimit = demoSavingsProduct.getMaxOverdraftLimit();
+				if (maxOverdraftLimit != null) {
+					updatedOverdraftLimit = updatedOverdraftLimit.min(maxOverdraftLimit);
+
+				}
+
+				// Set new Overdraft Limit
+				System.out.println("New Overdraft Limit=" + updatedOverdraftLimit);
+				savingsAccount.setOverdraftLimit(updatedOverdraftLimit);
+				// Modify Interest Rate
+				BigDecimal interestRate = savingsAccount.getOverdraftInterestRate();
+				// Increase by 0.5
+				if (interestRate == null) {
+					interestRate = BigDecimal.ZERO;
+				}
+				interestRate = interestRate.add(rateIncrease);
+				if (maxOverdraftRate != null) {
+					interestRate = interestRate.min(maxOverdraftRate);
+				}
+
+				// Set new Overdraft Rate
+				System.out.println("New Overdraft Rate=" + interestRate);
+				savingsAccount.setOverdraftInterestRate(interestRate);
+				break;
+			case INDEX_INTEREST_RATE:
+				// OverdraftInterestSpread
+				BigDecimal rateSpread = savingsAccount.getOverdraftInterestSpread();
+				if (rateSpread == null) {
+					rateSpread = BigDecimal.ZERO;
+				}
+				rateSpread = rateSpread.add(rateIncrease);
+				if (rateSpread.compareTo(maxOverdraftRate) == 1) {
+					rateSpread = maxOverdraftRate;
+				}
+				// Set new Overdraft Interest Spread
+				System.out.println("New Overdraft Interest Spread=" + rateSpread);
+				savingsAccount.setOverdraftInterestSpread(rateSpread);
+				break;
+			}
+			// Modify also Overdraft ExpiryDate
+			savingsAccount.setOverdraftExpiryDate(new Date());
+		} else {
+			// Set overdraftLimit to null. Mmabu's default is "0" and this causes PATCH API to fail
+			savingsAccount.setOverdraftLimit(null);
 		}
 
-		// As of Mambu 3.12.2 only Overdraft Limit can be updated
-		// Set new Overdraft Limit
-		BigDecimal overdraftLimit = savingsAccount.getOverdraftLimit();
-		if (overdraftLimit == null) {
-			overdraftLimit = BigDecimal.ZERO;
+		// interestRate. If the product has Interest Paid into Account checked
+		if (product.isInterestPaidIntoAccount() && product.getInterestRateSettings() != null) {
+			InterestRateSettings rateSettings = product.getInterestRateSettings();
+			BigDecimal maxRate = rateSettings.getMaxInterestRate();
+			BigDecimal rate = savingsAccount.getInterestRate();
+			if (rate == null) {
+				rate = BigDecimal.ZERO;
+			}
+			BigDecimal rateIncrease = new BigDecimal(0.55f);
+			rate = rate.add(rateIncrease);
+			if (maxRate != null) {
+				rate = rate.min(maxRate);
+			}
+			// Set new Interest Rate
+			System.out.println("New Interest rate=" + rate);
+			savingsAccount.setInterestRate(rate);
+
 		}
-		// Increase Overdraft Limit by $400 and update the account
-		BigDecimal limitIncrease = new BigDecimal(400.00f);
-		BigDecimal updatedOverdraftLimit = overdraftLimit.add(limitIncrease);
-		savingsAccount.setOverdraftLimit(updatedOverdraftLimit);
-		// Make sure it's still within the allowed limit
-		BigDecimal maxOverdraftLimit = product.getMaxOverdraftLimit();
-		if (maxOverdraftLimit != null) {
-			updatedOverdraftLimit = updatedOverdraftLimit.min(maxOverdraftLimit);
+		// Modify MaxWidthdrawalAmount
+		final BigDecimal increaseMaxWithdrawl = new BigDecimal(50.00f);
+		Money currentMaxWidthdrawlAmount = savingsAccount.getMaxWidthdrawlAmount();
+		if (currentMaxWidthdrawlAmount == null) {
+			currentMaxWidthdrawlAmount = Money.zero();
+		}
+		currentMaxWidthdrawlAmount = currentMaxWidthdrawlAmount.add(increaseMaxWithdrawl);
+		Money maxProductWidthdrawlAmount = product.getMaxWidthdrawlAmount();
+		if (maxProductWidthdrawlAmount != null) {
+			// Add $550 to current
+			currentMaxWidthdrawlAmount = currentMaxWidthdrawlAmount.min(maxProductWidthdrawlAmount);
+
+		}
+		// Set new MaxWidthdrawalAmount
+		System.out.println("New  MaxWidthdrawalAmount=" + currentMaxWidthdrawlAmount);
+		savingsAccount.setMaxWidthdrawlAmount(currentMaxWidthdrawlAmount);
+
+		// Modify RecommendedDepositAmount. Can be set only for Current Accounts, Savings Accounts and Savings Plans
+		if (productType == SavingsType.CURRENT_ACCOUNT || productType == SavingsType.SAVINGS_PLAN) {
+			// Update recommendedDepositAmount
+			Money recAmount = savingsAccount.getRecommendedDepositAmount();
+			final Money addRecommened = new Money(200.00f);
+			if (recAmount == null) {
+				recAmount = addRecommened;
+			} else {
+				recAmount = recAmount.add(addRecommened);
+			}
+			System.out.println("New  RecommendedDepositAmount=" + recAmount);
+			savingsAccount.setRecommendedDepositAmount(recAmount);
+
 		}
 
+		// targetAmount
+		if (productType == SavingsType.SAVINGS_PLAN) {
+			final Money targetAmountIncrease = new Money(1000.00f);
+			Money targetAmount = savingsAccount.getTargetAmount();
+			if (targetAmount == null) {
+				targetAmount = targetAmountIncrease;
+			} else {
+				targetAmount = targetAmount.add(targetAmountIncrease);
+			}
+			System.out.println("New Target Amount=" + targetAmount);
+			savingsAccount.setTargetAmount(targetAmount);
+
+		}
 		// Submit updated account to Mambu
 		SavingsService service = MambuAPIFactory.getSavingsService();
 		boolean status = service.patchSavingsAccount(savingsAccount);
-		System.out.println("Patch savings account status=" + status + "\tOriginal Limit=" + overdraftLimit
-				+ "\tNew Limit=" + updatedOverdraftLimit);
+		System.out.println("Patched savings account status=" + status);
 	}
 
 	public static void testApproveSavingsAccount() throws MambuApiException {
@@ -565,13 +683,13 @@ public class DemoTestSavingsService {
 					+ demoSavingsProduct.getName() + " id=" + demoSavingsProduct.getId());
 		}
 		SavingsAccount savingsAccount = new SavingsAccount();
-		savingsAccount.setId(null);
-
+		final long time = new Date().getTime();
+		savingsAccount.setId("API-" + time);
+		savingsAccount.setName(demoSavingsProduct.getName());
 		savingsAccount.setProductTypeKey(demoSavingsProduct.getEncodedKey());
+
 		SavingsType savingsType = demoSavingsProduct.getProductType();
 		savingsAccount.setAccountType(savingsType);
-
-		savingsAccount.setName(apiTestNamePrefix + new Date().getTime());
 		savingsAccount.setAccountState(AccountState.PENDING_APPROVAL);
 
 		boolean isForClient = demoSavingsProduct.isForIndividuals();

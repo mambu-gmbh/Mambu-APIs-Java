@@ -35,6 +35,7 @@ import com.mambu.core.shared.model.IndexRate;
 import com.mambu.core.shared.model.IndexRateSource;
 import com.mambu.core.shared.model.ObjectLabel;
 import com.mambu.core.shared.model.Organization;
+import com.mambu.core.shared.model.Role;
 import com.mambu.core.shared.model.SearchResult;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
@@ -542,6 +543,7 @@ public class ApiDefinition {
 		apiEndPointsMap.put(AccountsFromLineOfCredit.class, APIData.ACCOUNTS);
 		apiEndPointsMap.put(LoanTranche.class, APIData.TRANCHES);
 		apiEndPointsMap.put(InvestorFund.class, APIData.FUNDS); // "funds" api end point
+		apiEndPointsMap.put(Role.class, APIData.USER_ROLES); // "userroles" api end point
 
 	}
 
