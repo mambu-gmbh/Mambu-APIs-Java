@@ -75,6 +75,9 @@ public class DemoTestUsersService {
 			// Available since 3.8
 			testUpdateDeleteCustomFields();
 
+			List<Role> userRoles = testGetAllUserRoles(); // Available since 3.14
+			testGetAllUserRoleDetails(userRoles); // Available since 3.14
+
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Users Service");
 			System.out.println("Error code=" + e.getErrorCode());
@@ -375,4 +378,38 @@ public class DemoTestUsersService {
 
 	}
 
+	// Test getting all user roles. Return all user roles
+	public static List<Role> testGetAllUserRoles() throws MambuApiException {
+		System.out.println("\nIn testGetAllUserRoles");
+
+		UsersService usersService = MambuAPIFactory.getUsersService();
+		List<Role> userRoles = usersService.getUserRoles();
+
+		System.out.println("Total users roles=" + userRoles.size());
+		for (Role role : userRoles) {
+			System.out.println("\tKey=" + role.getEncodedKey() + "\tName=" + role.getName());
+		}
+		System.out.println();
+
+		return userRoles;
+	}
+
+	// Test get full Role details by role key
+	public static void testGetAllUserRoleDetails(List<Role> userRoles) throws MambuApiException {
+		System.out.println("\nIn testGetAllUserRole");
+
+		if (userRoles == null || userRoles.size() == 0) {
+			System.out.println("WARNING: cannot test GET user role, no roles available");
+			return;
+		}
+		UsersService usersService = MambuAPIFactory.getUsersService();
+		// Get random user role key from a list of available roles
+		int roleIndex = (int) Math.random() * (userRoles.size() - 1);
+		String roleKey = userRoles.get(roleIndex).getEncodedKey();
+		// Get full role details
+		Role userRole = usersService.getUserRole(roleKey);
+		System.out.println("\tKey=" + userRole.getEncodedKey() + "\tName=" + userRole.getName() + "\n\tPermissions="
+				+ userRole.getPermissions().getPermissionSet());
+
+	}
 }
