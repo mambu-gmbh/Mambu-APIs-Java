@@ -756,7 +756,7 @@ public class DemoTestLoanService {
 		if (products.size() > 0) {
 			for (LoanProduct product : products) {
 				System.out.println("Product=" + product.getName() + "  Id=" + product.getId() + "  Key="
-						+ product.getEncodedKey() + " Loan Type=" + product.getLoanType().name());
+						+ product.getEncodedKey() + " Product Type=" + product.getLoanProductType());
 			}
 		}
 
@@ -770,8 +770,8 @@ public class DemoTestLoanService {
 
 		LoanProduct product = loanService.getLoanProduct(productId);
 
-		System.out.println("Product=" + product.getName() + "  Id=" + product.getId() + " Loan Type="
-				+ product.getLoanType().name());
+		System.out.println("Product=" + product.getName() + "  Id=" + product.getId() + " Product Type="
+				+ product.getLoanProductType());
 
 	}
 
