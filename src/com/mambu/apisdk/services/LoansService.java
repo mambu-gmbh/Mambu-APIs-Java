@@ -60,6 +60,7 @@ public class LoansService {
 	private static final String TYPE_FEE = APIData.TYPE_FEE;
 	private static final String TYPE_LOCK = APIData.TYPE_LOCK;
 	private static final String TYPE_UNLOCK = APIData.TYPE_UNLOCK;
+	private static final String TYPE_WRITE_OFF = APIData.TYPE_WRITE_OFF;
 	private static final String TYPE_DISBURSMENT_ADJUSTMENT = APIData.TYPE_DISBURSMENT_ADJUSTMENT;
 	private static final String TYPE_PENALTY_ADJUSTMENT = APIData.TYPE_PENALTY_ADJUSTMENT;
 	private static final String ORIGINAL_TRANSACTION_ID = APIData.ORIGINAL_TRANSACTION_ID;
@@ -189,7 +190,8 @@ public class LoansService {
 	 * 
 	 * @param accountId
 	 *            the id of the account
-	 * 
+	 * @param notes
+	 *            transaction notes
 	 * @return loanAccount
 	 * 
 	 *         Note: The account object in the response doesn't contain custom fields
@@ -234,7 +236,8 @@ public class LoansService {
 	 * 
 	 * @param accountId
 	 *            the id of the account
-	 * 
+	 * @param notes
+	 *            transaction notes
 	 * @return loanAccount
 	 * 
 	 *         Note: The account object in the response doesn't contain custom fields
@@ -256,7 +259,8 @@ public class LoansService {
 	 * 
 	 * @param accountId
 	 *            the id of the account
-	 * 
+	 * @param notes
+	 *            transaction notes
 	 * @return a list of loan transactions performed when locking account
 	 * 
 	 * @throws MambuApiException
@@ -279,7 +283,8 @@ public class LoansService {
 	 * 
 	 * @param accountId
 	 *            the id of the account
-	 * 
+	 * @param notes
+	 *            transaction notes
 	 * @return a list of loan transactions performed when unlocking account
 	 * 
 	 * @throws MambuApiException
@@ -294,6 +299,26 @@ public class LoansService {
 		ApiDefinition postAccountTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY, LoanAccount.class,
 				LoanTransaction.class);
 		postAccountTransaction.setApiReturnFormat(ApiReturnFormat.COLLECTION);
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
+	}
+
+	/****
+	 * Write of loan account
+	 * 
+	 * @param accountId
+	 *            the encoded key or id of the account. Must not be null
+	 * @param notes
+	 *            transaction notes
+	 * @return loan transaction
+	 * @throws MambuApiException
+	 */
+	public LoanTransaction writeOffLoanAccount(String accountId, String notes) throws MambuApiException {
+		// POST "type=WRITE_OFF" /api/loans/{ID}/transactions
+		// See MBU-10423
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, TYPE_WRITE_OFF);
+		paramsMap.addParam(NOTES, notes);
+
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
@@ -396,10 +421,10 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: Disbursements for Loans with tranches is NOT supported. See MBU-7214 (issue is closed as Incomplete)
 	public LoanTransaction disburseLoanAccount(String accountId, String amount, String disbursalDate,
 			String firstRepaymentDate, String notes, TransactionDetails transactionDetails) throws MambuApiException {
 
+		// Disbursing loan account with tranches is available since Mambu 3.13. See MBU-10045
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_DISBURSEMENT);
 

@@ -36,6 +36,7 @@ import com.mambu.loans.shared.model.GracePeriodType;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanAccount.RepaymentPeriodUnit;
 import com.mambu.loans.shared.model.LoanProduct;
+import com.mambu.loans.shared.model.LoanProductType;
 import com.mambu.loans.shared.model.LoanTranche;
 import com.mambu.loans.shared.model.LoanTransaction;
 import com.mambu.loans.shared.model.LoanTransactionType;
@@ -113,6 +114,7 @@ public class DemoTestLoanService {
 			testApplyFeeToLoanAccount();
 			testApplyInterestToLoanAccount(); // Available since 3.1
 			testRepayLoanAccount();
+			testWriteOffLoanAccount(); // Available since 3.14
 
 			// transactions
 			List<LoanTransaction> transactions = testGetLoanAccountTransactions();
@@ -450,6 +452,19 @@ public class DemoTestLoanService {
 		String notes = "Undo disbursement via Demo API";
 		LoanTransaction transaction = loanService.undoDisburseLoanAccount(accountId, notes);
 		System.out.println("\nOK Undo Loan Disbursement for account=" + accountId + "\tTransaction Id="
+				+ transaction.getTransactionId());
+
+	}
+
+	// Test writing off loan account
+	public static void testWriteOffLoanAccount() throws MambuApiException {
+		System.out.println("\nIn testWriteOffLoanAccount");
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+		String accountId = NEW_LOAN_ACCOUNT_ID;
+		String notes = "Write off account via Demo API";
+		LoanTransaction transaction = loanService.writeOffLoanAccount(accountId, notes);
+		System.out.println("\nOK Write Off for account=" + accountId + "\tTransaction Id="
 				+ transaction.getTransactionId());
 
 	}
@@ -812,7 +827,7 @@ public class DemoTestLoanService {
 					+ " id=" + demoProduct.getId());
 		}
 		LoanAccount loanAccount = new LoanAccount();
-
+		LoanProductType productType = demoProduct.getLoanProductType();
 		// Set params to be consistent with the demo product (to be accepted by the GET product schedule API and create
 		// loan
 		final long time = new Date().getTime();
@@ -878,9 +893,8 @@ public class DemoTestLoanService {
 		long aDay = 24 * 60 * 60 * 1000; // 1 day in msecs
 		loanAccount.setDisbursementDate(new Date(timeNow + 3 * aDay)); // 3 days from now
 
-		// Tranches
-		Integer maxTranches = demoProduct.getMaxNumberOfDisbursementTranches();
-		if (maxTranches != null && maxTranches > 1) {
+		// Tranches;
+		if (productType == LoanProductType.TRANCHED_LOAN) {
 			LoanTranche tranche = new LoanTranche(loanAccount.getLoanAmount(), loanAccount.getDisbursementDate());
 			loanAccount.setDisbursementDate(null);
 			ArrayList<LoanTranche> tanches = new ArrayList<LoanTranche>();
