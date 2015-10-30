@@ -815,9 +815,12 @@ public class DemoTestLoanService {
 
 		// Set params to be consistent with the demo product (to be accepted by the GET product schedule API and create
 		// loan
-		loanAccount.setId(null);
-		loanAccount.setLoanName(apiTestLoanNamePrefix + new Date().getTime());
+		final long time = new Date().getTime();
+		loanAccount.setId("API-" + time); // specifying ID is supported in 3.14
+		loanAccount.setLoanName(demoProduct.getName());
 		loanAccount.setProductTypeKey(demoProduct.getEncodedKey());
+		// Set PrincipalPaymentSettings from product: needed for Revolving Credit products since 3.14
+		loanAccount.setPrincipalPaymentSettings(demoProduct.getPrincipalPaymentSettings());
 
 		boolean isForClient = demoProduct.isForIndividuals();
 		String holderKey = (isForClient) ? demoClient.getEncodedKey() : demoGroup.getEncodedKey();
@@ -881,6 +884,7 @@ public class DemoTestLoanService {
 			LoanTranche tranche = new LoanTranche(loanAccount.getLoanAmount(), loanAccount.getDisbursementDate());
 			loanAccount.setDisbursementDate(null);
 			ArrayList<LoanTranche> tanches = new ArrayList<LoanTranche>();
+			tranche.setIndex(null); // index must by null. Default is zero
 			tanches.add(tranche);
 			loanAccount.setTranches(tanches);
 		}
@@ -953,6 +957,9 @@ public class DemoTestLoanService {
 		loanAccount.setGuarantees(guarantees);
 
 		loanAccount.setExpectedDisbursementDate(loanAccount.getDisbursementDate());
+		if (loanAccount.getExpectedDisbursementDate() == null) {
+			loanAccount.setExpectedDisbursementDate(new Date());
+		}
 		loanAccount.setDisbursementDate(null);
 
 		// Set first repayment date
@@ -1070,7 +1077,7 @@ public class DemoTestLoanService {
 				// if no offset to 4 days in a future
 				return firstRepaymentDate;
 			}
-			
+
 			// Create UTC disbursement date with day, month year only
 			Calendar disbDateCal = Calendar.getInstance();
 			disbDateCal.setTime(disbDate);
