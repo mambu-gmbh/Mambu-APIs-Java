@@ -111,7 +111,8 @@ public class SearchService {
 	 *            Mambu entity type. Must not be null. Currently searching with filter constrains API supports the
 	 *            following entities: Clients, Groups, Loans, Savings, Loan Transactions and SavingsTransactions.
 	 * @param filterConstraints
-	 *            filter constraints applicable for the entity. Must not be null
+	 *            JSONFilterConstraints object defining an array of applicable filter constraints and an optional sort
+	 *            order. Must not be null
 	 * @param offset
 	 *            pagination offset. If not null it must be an integer greater or equal to zero
 	 * @param limit
@@ -122,8 +123,14 @@ public class SearchService {
 	 */
 	public <T> List<T> searchEntities(MambuEntityType searchEntityType, JSONFilterConstraints filterConstraints,
 			String offset, String limit) throws MambuApiException {
-		// Available since Mambu 3.12. See MBU-8986 and MBU-8975 for more details
-		// Example: POST {JSONFilterConstraints} /api/savings/transactions/search?offset=0&limit=5
+		// Available since Mambu 3.12. See MBU-8986, MBU-8975
+		// Specifying the sort order is available since Mambu 3.14. See MBU-10444
+		// POST {JSONFilterConstraints} /api/savings/transactions/search?offset=0&limit=5
+
+		// Example:: POST /api/loans/search {
+		// "filterConstraints":[{"filterSelection":"CREATION_DATE", "filterElement":"BETWEEN", "value":"2000-01-01",
+		// "secondValue":"2072-01-01", "dataItemType":"CLIENT" }],
+		// "sortDetails":{"sortingColumn":"ACCOUNT_ID", "sortingOrder":"ASCENDING", "dataItemType":"LOANS"}}
 
 		ApiDefinition apiDefinition = SearchService.makeApiDefinitionforSearchByFilter(searchEntityType);
 

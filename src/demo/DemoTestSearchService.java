@@ -12,6 +12,7 @@ import com.mambu.accounting.shared.column.TransactionsDataField;
 import com.mambu.accounts.shared.model.AccountState;
 import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraint;
 import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
+import com.mambu.api.server.handler.core.dynamicsearch.model.JSONSortDetails;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.ClientsService;
@@ -19,6 +20,7 @@ import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.services.SearchService;
 import com.mambu.apisdk.util.DateUtils;
+import com.mambu.clients.shared.data.ClientsDataField;
 import com.mambu.clients.shared.data.GroupsDataField;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
@@ -26,6 +28,7 @@ import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.data.DataFieldType;
 import com.mambu.core.shared.data.DataItemType;
 import com.mambu.core.shared.data.FilterElement;
+import com.mambu.core.shared.data.SortingOrder;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.SearchResult;
 import com.mambu.core.shared.model.SearchType;
@@ -139,7 +142,7 @@ public class DemoTestSearchService {
 		String query = "Map";
 		String limit = "100";
 
-		List<SearchType> searchTypes = Arrays.asList(SearchType.USER, SearchType.BRANCH, SearchType.CENTRE); // or null
+		List<SearchType> searchTypes = Arrays.asList(SearchType.USER); // or null
 
 		Date d1 = new Date();
 
@@ -205,7 +208,7 @@ public class DemoTestSearchService {
 
 		String offset = "0";
 		String limit = "5";
-		JSONFilterConstraints filterConstraints = new JSONFilterConstraints();
+
 		List<JSONFilterConstraint> constraints = new ArrayList<JSONFilterConstraint>();
 		JSONFilterConstraint constraint1 = new JSONFilterConstraint();
 
@@ -216,6 +219,7 @@ public class DemoTestSearchService {
 		Client demoClient = DemoUtil.getDemoClient();
 		ClientExpanded clientDetails = DemoUtil.getDemoClientDetails(demoClient.getEncodedKey());
 		List<CustomFieldValue> customFields = clientDetails.getCustomFieldValues();
+		JSONFilterConstraints filterConstraints;
 		if (customFields != null && customFields.size() > 0) {
 			CustomFieldValue fieldValue = customFields.get(0);
 
@@ -227,7 +231,16 @@ public class DemoTestSearchService {
 			constraint1.setSecondValue(null);
 
 			constraints.add(constraint1);
+
+			filterConstraints = new JSONFilterConstraints();
 			filterConstraints.setFilterConstraints(constraints);
+
+			// Add sorting order. See MBU-10444. Available since 3.14
+			// "sortDetails":{"sortingColumn":"BIRTHDATE", "sortingOrder":"DESCENDING"}
+			JSONSortDetails sortDetails = new JSONSortDetails();
+			sortDetails.setSortingColumn(ClientsDataField.BIRTHDATE.name());
+			sortDetails.setSortingOrder(SortingOrder.DESCENDING.name());
+			filterConstraints.setSortDetails(sortDetails);
 
 			System.out.println("\nTesting Get Clients by filter:");
 			List<Client> clients = clientsService.getClients(filterConstraints, offset, limit);
@@ -251,6 +264,7 @@ public class DemoTestSearchService {
 		constraint1.setSecondValue(null);
 
 		constraints.add(constraint1);
+		filterConstraints = new JSONFilterConstraints();
 		filterConstraints.setFilterConstraints(constraints);
 
 		System.out.println("\nTesting Get Groups by filter:");
@@ -261,6 +275,7 @@ public class DemoTestSearchService {
 		// Test Get Loan Accounts by account ID's first char and account state
 		LoanAccount demoLoanAccount = DemoUtil.getDemoLoanAccount();
 		LoansService loansService = MambuAPIFactory.getLoanService();
+		;
 		constraints = new ArrayList<JSONFilterConstraint>();
 		constraint1 = new JSONFilterConstraint();
 
@@ -277,12 +292,12 @@ public class DemoTestSearchService {
 		JSONFilterConstraint constraint2 = new JSONFilterConstraint();
 		constraint2.setDataFieldType(DataFieldType.NATIVE.name());
 		constraint2.setFilterSelection(LoansDataField.ACCOUNT_STATE.name());
-		constraint2.setFilterElement(FilterElement.DIFFERENT_THAN.name());
+		constraint2.setFilterElement(FilterElement.EQUALS.name());
 		constraint2.setValue(AccountState.ACTIVE.name());
 		constraint2.setSecondValue(null);
 
 		constraints.add(constraint2);
-
+		filterConstraints = new JSONFilterConstraints();
 		filterConstraints.setFilterConstraints(constraints);
 
 		System.out.println("\nTesting Get Loan Accounts by filter:");
@@ -299,12 +314,31 @@ public class DemoTestSearchService {
 			constraint1.setDataFieldType(DataFieldType.NATIVE.name());
 			constraint1.setDataItemType(DataItemType.LOAN_TRANSACTION.name());
 			constraint1.setFilterSelection(TransactionsDataField.PARENT_ACCOUNT_ID.name());
-			constraint1.setFilterElement(FilterElement.EQUALS.name());
+			constraint1.setFilterElement(FilterElement.STARTS_WITH.name());
 			constraint1.setValue(loans.get(0).getId());
 			constraint1.setSecondValue(null);
 
 			constraints.add(constraint1);
+
+			// Test specifying filter entities based on Another Entity criteria. See MBU-8985. Available since 3.12
+			// Add Filter for Loan Transactions to filter by Client ID
+			// Example: filterSelection":"ID","filterElement":"EQUALS","dataItemType":"CLIENT","value":"197495342"
+			constraint2 = new JSONFilterConstraint();
+			constraint2.setDataItemType(DataItemType.CLIENT.name());
+			constraint2.setFilterSelection(ClientsDataField.ID.name());
+			constraint2.setFilterElement(FilterElement.EQUALS.name());
+			constraint2.setValue(clientDetails.getId());
+			constraints.add(constraint2);
+
+			filterConstraints = new JSONFilterConstraints();
 			filterConstraints.setFilterConstraints(constraints);
+
+			// Add sorting order. See MBU-10444. Available since 3.14
+			// "sortDetails":{"sortingColumn":"AMOUNT", "sortingOrder":"ASCENDING"}
+			JSONSortDetails sortDetails = new JSONSortDetails();
+			sortDetails.setSortingColumn(TransactionsDataField.AMOUNT.name());
+			sortDetails.setSortingOrder(SortingOrder.ASCENDING.name());
+			filterConstraints.setSortDetails(sortDetails);
 
 			System.out.println("\nTesting Get Loan Transactions by filter:");
 			List<LoanTransaction> loanTransactions = loansService.getLoanTransactions(filterConstraints, offset, limit);
@@ -334,6 +368,7 @@ public class DemoTestSearchService {
 
 		constraints.add(constraint1);
 
+		filterConstraints = new JSONFilterConstraints();
 		filterConstraints.setFilterConstraints(constraints);
 
 		System.out.println("\nTesting Get Savings Accounts by filter:");
@@ -355,6 +390,7 @@ public class DemoTestSearchService {
 			constraint1.setSecondValue(null);
 
 			constraints.add(constraint1);
+			filterConstraints = new JSONFilterConstraints();
 			filterConstraints.setFilterConstraints(constraints);
 
 			System.out.println("\nTesting Get Savings Transactions by filter:");
