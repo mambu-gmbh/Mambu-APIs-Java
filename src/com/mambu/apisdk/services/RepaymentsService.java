@@ -112,17 +112,19 @@ public class RepaymentsService {
 	 *            the encoded key or id of the Mambu Loan Account for which repayments are updated
 	 * @param repayments
 	 *            a list of still unpaid repayments to be updated. Paid installments can be posted, but no changes will
-	 *            be performed on them. The following repayment fields are considered for update: principal, interest,
-	 *            fees, penalties, due amounts and due date from the repayments that get posted
+	 *            be performed on them. The encoded key of the repayment is mandatory. The following repayment fields
+	 *            are considered for update: principal, interest, fees, penalties, due amounts and due date from the
+	 *            repayments that get posted. For Revolving Credit Loans loans only due date is a considered for update
+	 *            (other fields, if present, must remain unchanged)
 	 * 
-	 *            See MBU-6813 and MBU-10245 for more details
+	 *            See MBU-6813, MBU-10245 and MBU-10546 for more details
 	 * 
 	 * @return updated repayments
 	 * @throws MambuApiException
 	 */
 	public List<Repayment> updateLoanRepaymentsSchedule(String accountId, JSONLoanRepayments repayments)
 			throws MambuApiException {
-		// Available since Mambu 3.9. See MBU-6813
+		// Available since Mambu 3.9. See MBU-6813. For Revolving Credit product available since 3.14. See MBU-10546
 		// Available for fixed loans, when the account is in Pending/Partial state since 3.13. See MBU-10245
 		// API example: PATCH -d JSONLoanRepayments_object /api/loans/loan_id/repayments. Returns list of Repayments
 		// This API accepts JSON requests with the dates in "yyyy-MM-dd" format only
