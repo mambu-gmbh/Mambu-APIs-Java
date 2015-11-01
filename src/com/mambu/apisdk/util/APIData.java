@@ -142,7 +142,7 @@ public class APIData {
 	// Parameters supported by the loan product schedule API (MBU-6789) and loan terms patch API (MBU-7758)
 	public static final String LOAN_AMOUNT = "loanAmount";
 	public static final String ANTICIPATE_DISBURSEMENT = "anticipatedDisbursement";
-	public static final String EXPECTED_DISBURSEMENT = "expectedDisbursementDate";
+	public static final String EXPECTED_DISBURSEMENT_DATE = "expectedDisbursementDate";
 	// "firstRepaymentDate" - is already defined as FIRST_REPAYMENT_DATE
 	public static final String INTEREST_RATE = "interestRate";
 	public static final String INTEREST_RATE_SPREAD = "interestSpread";
@@ -156,6 +156,12 @@ public class APIData {
 
 	// Parameters supported by SavingsAccount PATCH API
 	public static final String OVERDRAFT_LIMIT = "overdraftLimit";
+	public static final String OVERDRAFT_INTEREST_RATE = "overdraftInterestRate";
+	public static final String OVERDRAFT_SPREAD = "overdraftInterestSpread";
+	public static final String OVERDRAFT_EXPIRY_DATE = "overdraftExpiryDate";
+	public static final String MAX_WITHDRAWAL_AMOUNT = "maxWidthdrawlAmount";
+	public static final String RECOMMENDED_DEPOSIT_AMOUNT = "recommendedDepositAmount";
+	public static final String TARGET_AMOUNT = "targetAmount";
 
 	public static final String DUE_FROM = "dueFrom";
 	public static final String DUE_TO = "dueTo";

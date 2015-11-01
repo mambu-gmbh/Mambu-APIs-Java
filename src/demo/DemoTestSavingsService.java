@@ -1,6 +1,7 @@
 package demo;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 
@@ -69,11 +70,6 @@ public class DemoTestSavingsService {
 					+ demoSavingsProduct.getId());
 
 			testCreateSavingsAccount();
-
-			testPatchSavingsAccountTerms();
-
-			if (true)
-				return;
 			testCloseSavingsAccount(); // Available since 3.4
 			testDeleteSavingsAccount(); // Available since 3.4
 
@@ -462,45 +458,37 @@ public class DemoTestSavingsService {
 			switch (overdraftRateSource) {
 			case FIXED_INTEREST_RATE:
 				// Set new Overdraft Limit
-				BigDecimal overdraftLimit = savingsAccount.getOverdraftLimit();
-				if (overdraftLimit == null) {
-					overdraftLimit = BigDecimal.ZERO;
-				}
-				// Increase Overdraft Limit by $400 and update the account
-				BigDecimal updatedOverdraftLimit = overdraftLimit.add(limitIncrease);
+				BigDecimal overdraftLimit = savingsAccount.getOverdraftLimit() != null ? savingsAccount
+						.getOverdraftLimit() : BigDecimal.ZERO;
+				// Increase by the test amount and limit to the max allowed
+				BigDecimal updatedOverdraftLimit = overdraftLimit.add(limitIncrease).setScale(2, RoundingMode.DOWN);
 				BigDecimal maxOverdraftLimit = demoSavingsProduct.getMaxOverdraftLimit();
 				if (maxOverdraftLimit != null) {
 					updatedOverdraftLimit = updatedOverdraftLimit.min(maxOverdraftLimit);
-
 				}
-
 				// Set new Overdraft Limit
 				System.out.println("New Overdraft Limit=" + updatedOverdraftLimit);
 				savingsAccount.setOverdraftLimit(updatedOverdraftLimit);
 				// Modify Interest Rate
-				BigDecimal interestRate = savingsAccount.getOverdraftInterestRate();
-				// Increase by 0.5
-				if (interestRate == null) {
-					interestRate = BigDecimal.ZERO;
-				}
-				interestRate = interestRate.add(rateIncrease);
+				BigDecimal overdraftInterestRate = savingsAccount.getOverdraftInterestRate() != null ? savingsAccount
+						.getOverdraftInterestRate() : BigDecimal.ZERO;
+				// Increase by the test amount and limit to the max allowed
+				overdraftInterestRate = overdraftInterestRate.add(rateIncrease).setScale(2, RoundingMode.DOWN);
 				if (maxOverdraftRate != null) {
-					interestRate = interestRate.min(maxOverdraftRate);
+					overdraftInterestRate = overdraftInterestRate.min(maxOverdraftRate);
 				}
-
 				// Set new Overdraft Rate
-				System.out.println("New Overdraft Rate=" + interestRate);
-				savingsAccount.setOverdraftInterestRate(interestRate);
+				System.out.println("New Overdraft Rate=" + overdraftInterestRate);
+				savingsAccount.setOverdraftInterestRate(overdraftInterestRate);
 				break;
 			case INDEX_INTEREST_RATE:
 				// OverdraftInterestSpread
-				BigDecimal rateSpread = savingsAccount.getOverdraftInterestSpread();
-				if (rateSpread == null) {
-					rateSpread = BigDecimal.ZERO;
-				}
-				rateSpread = rateSpread.add(rateIncrease);
-				if (rateSpread.compareTo(maxOverdraftRate) == 1) {
-					rateSpread = maxOverdraftRate;
+				BigDecimal rateSpread = savingsAccount.getOverdraftInterestSpread() != null ? savingsAccount
+						.getOverdraftInterestSpread() : BigDecimal.ZERO;
+				// Increase by the test amount and limit to the max allowed
+				rateSpread = rateSpread.add(rateIncrease).setScale(2, RoundingMode.DOWN);
+				if (maxOverdraftRate != null) {
+					rateSpread = rateSpread.min(maxOverdraftRate);
 				}
 				// Set new Overdraft Interest Spread
 				System.out.println("New Overdraft Interest Spread=" + rateSpread);
@@ -517,13 +505,12 @@ public class DemoTestSavingsService {
 		// interestRate. If the product has Interest Paid into Account checked
 		if (product.isInterestPaidIntoAccount() && product.getInterestRateSettings() != null) {
 			InterestRateSettings rateSettings = product.getInterestRateSettings();
+			BigDecimal rate = savingsAccount.getInterestRate() != null ? savingsAccount.getInterestRate()
+					: BigDecimal.ZERO;
+			// Increase by the test amount and limit to the max allowed
+			BigDecimal rateIncrease = new BigDecimal(0.55);
+			rate = rate.add(rateIncrease).setScale(2, RoundingMode.DOWN);
 			BigDecimal maxRate = rateSettings.getMaxInterestRate();
-			BigDecimal rate = savingsAccount.getInterestRate();
-			if (rate == null) {
-				rate = BigDecimal.ZERO;
-			}
-			BigDecimal rateIncrease = new BigDecimal(0.55f);
-			rate = rate.add(rateIncrease);
 			if (maxRate != null) {
 				rate = rate.min(maxRate);
 			}
@@ -534,14 +521,12 @@ public class DemoTestSavingsService {
 		}
 		// Modify MaxWidthdrawalAmount
 		final BigDecimal increaseMaxWithdrawl = new BigDecimal(50.00f);
-		Money currentMaxWidthdrawlAmount = savingsAccount.getMaxWidthdrawlAmount();
-		if (currentMaxWidthdrawlAmount == null) {
-			currentMaxWidthdrawlAmount = Money.zero();
-		}
+		Money currentMaxWidthdrawlAmount = savingsAccount.getMaxWidthdrawlAmount() != null ? savingsAccount
+				.getMaxWidthdrawlAmount() : Money.zero();
+		// Increase by the test amount and limit to the max allowed
 		currentMaxWidthdrawlAmount = currentMaxWidthdrawlAmount.add(increaseMaxWithdrawl);
 		Money maxProductWidthdrawlAmount = product.getMaxWidthdrawlAmount();
 		if (maxProductWidthdrawlAmount != null) {
-			// Add $550 to current
 			currentMaxWidthdrawlAmount = currentMaxWidthdrawlAmount.min(maxProductWidthdrawlAmount);
 
 		}
@@ -557,21 +542,20 @@ public class DemoTestSavingsService {
 			if (recAmount == null) {
 				recAmount = addRecommened;
 			} else {
-				recAmount = recAmount.add(addRecommened);
+				recAmount = recAmount.add(addRecommened).setScale(2, RoundingMode.DOWN);
 			}
 			System.out.println("New  RecommendedDepositAmount=" + recAmount);
 			savingsAccount.setRecommendedDepositAmount(recAmount);
 
 		}
-
-		// targetAmount
+		// Update targetAmount
 		if (productType == SavingsType.SAVINGS_PLAN) {
 			final Money targetAmountIncrease = new Money(1000.00f);
 			Money targetAmount = savingsAccount.getTargetAmount();
 			if (targetAmount == null) {
 				targetAmount = targetAmountIncrease;
 			} else {
-				targetAmount = targetAmount.add(targetAmountIncrease);
+				targetAmount = targetAmount.add(targetAmountIncrease).setScale(2, RoundingMode.DOWN);
 			}
 			System.out.println("New Target Amount=" + targetAmount);
 			savingsAccount.setTargetAmount(targetAmount);

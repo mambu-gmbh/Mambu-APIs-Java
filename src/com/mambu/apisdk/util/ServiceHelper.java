@@ -287,7 +287,7 @@ public class ServiceHelper {
 	 */
 	private final static Set<String> modifiableLoanAccountFields = new HashSet<String>(Arrays.asList(
 			APIData.LOAN_AMOUNT, APIData.INTEREST_RATE, APIData.INTEREST_RATE_SPREAD, APIData.REPAYMENT_INSTALLMENTS,
-			APIData.REPAYMENT_PERIOD_COUNT, APIData.REPAYMENT_PERIOD_UNIT, APIData.EXPECTED_DISBURSEMENT,
+			APIData.REPAYMENT_PERIOD_COUNT, APIData.REPAYMENT_PERIOD_UNIT, APIData.EXPECTED_DISBURSEMENT_DATE,
 			APIData.FIRST_REPAYMENT_DATE, APIData.GRACE_PERIOD, APIData.PRNICIPAL_REPAYMENT_INTERVAL,
 			APIData.PENALTY_RATE, APIData.PERIODIC_PAYMENT));
 
@@ -322,11 +322,13 @@ public class ServiceHelper {
 	}
 
 	/**
-	 * A list of fields supported by the PATCH savings account API. Only updating OverdraftLimit is supports as of Mambu
-	 * 3.12.2. See MBU-9727
+	 * A list of fields supported by the PATCH savings account API. See MBU-10447 for a list of fields supported in 3.14
+	 * 
 	 */
-	private final static Set<String> modifiableSavingsAccountFields = new HashSet<String>(
-			Arrays.asList(APIData.OVERDRAFT_LIMIT));
+	private final static Set<String> modifiableSavingsAccountFields = new HashSet<String>(Arrays.asList(
+			APIData.INTEREST_RATE, APIData.INTEREST_RATE_SPREAD, APIData.MAX_WITHDRAWAL_AMOUNT,
+			APIData.RECOMMENDED_DEPOSIT_AMOUNT, APIData.TARGET_AMOUNT, APIData.OVERDRAFT_INTEREST_RATE,
+			APIData.OVERDRAFT_LIMIT, APIData.OVERDRAFT_EXPIRY_DATE));
 
 	/**
 	 * Create ParamsMap with a JSON string for the PATCH savings account API. Only fields applicable to the API are
@@ -363,8 +365,8 @@ public class ServiceHelper {
 	 */
 	private final static Set<String> loanSchedulePreviewFields = new HashSet<String>(Arrays.asList(APIData.LOAN_AMOUNT,
 			APIData.INTEREST_RATE, APIData.REPAYMENT_INSTALLMENTS, APIData.REPAYMENT_PERIOD_COUNT,
-			APIData.REPAYMENT_PERIOD_UNIT, APIData.FIRST_REPAYMENT_DATE, APIData.GRACE_PERIOD,
-			APIData.PRNICIPAL_REPAYMENT_INTERVAL, APIData.PERIODIC_PAYMENT));
+			APIData.REPAYMENT_PERIOD_UNIT, APIData.EXPECTED_DISBURSEMENT_DATE, APIData.FIRST_REPAYMENT_DATE,
+			APIData.GRACE_PERIOD, APIData.PRNICIPAL_REPAYMENT_INTERVAL, APIData.PERIODIC_PAYMENT));
 
 	/**
 	 * Create ParamsMap with a map of fields for the GET loan schedule for the product API. Only fields applicable to
@@ -390,7 +392,17 @@ public class ServiceHelper {
 		Type type = new TypeToken<ParamsMap>() {
 		}.getType();
 		ParamsMap params = GsonUtils.createGson().fromJson(loanTermsObject.toString(), type);
-
+		if (params == null || params.size() == 0) {
+			return params;
+		}
+		// Mambu API expects "anticipatedDisbursement" parameter in place of "expectedDisbursementDate" loan field when
+		// getting loan account schedule. See MBU-6789
+		// Send expectedDisbursementdate value as APIData.ANTICIPATE_DISBURSEMENT parameter
+		String expectedDisbursement = params.get(APIData.EXPECTED_DISBURSEMENT_DATE);
+		if (expectedDisbursement != null) {
+			params.remove(APIData.EXPECTED_DISBURSEMENT_DATE);
+			params.put(APIData.ANTICIPATE_DISBURSEMENT, expectedDisbursement);
+		}
 		return params;
 
 	}

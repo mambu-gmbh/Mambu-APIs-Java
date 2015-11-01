@@ -776,8 +776,11 @@ public class SavingsService {
 	 * @param savings
 	 *            SavingsAccount object. Either account's encoded key or its ID must be NOT null for updating account
 	 * 
-	 *            Note that only some savings terms can be updated. As of Mambu 3.12.2 only overdraftLimit field can be
-	 *            updated. See MBU-9727 for details.
+	 *            Note that only some savings terms can be updated. As of Mambu 3.14 the following fields can be
+	 *            updated: interestRate, maxWidthdrawlAmount, recommendedDepositAmount, targetAmount,
+	 *            overdraftInterestSpread, overdraftLimit, overdraftExpiryDate.
+	 * 
+	 *            See MBU-10447 for more details
 	 * 
 	 * @returns success or failure
 	 * 
@@ -786,7 +789,7 @@ public class SavingsService {
 	 */
 	public boolean patchSavingsAccount(SavingsAccount savings) throws MambuApiException {
 		// Example: PATCH JSON /api/savings/{ID}
-		// See MBU-9727 for details
+		// See MBU-10447 for details
 		if (savings == null) {
 			throw new IllegalArgumentException("Account must not be NULL");
 		}
