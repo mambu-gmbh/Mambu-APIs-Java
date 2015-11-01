@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import com.mambu.accounting.shared.model.GLAccountingRule;
 import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.accounts.shared.model.AccountState;
 import com.mambu.accounts.shared.model.InterestRateSource;
@@ -62,71 +63,111 @@ public class DemoTestLoanService {
 
 	private static LoanAccountExpanded newAccount;
 
+	private static String methodName = null; // print method name on exception
+
 	public static void main(String[] args) {
 
 		DemoUtil.setUp();
 
 		try {
 			// Get demo entities needed for testing
-			final String testProductId = null; // use specific test ID or null to get random product
+			// Use specific product ID or null to get random product. If set to "ALL" then test for all product types
+			final String testProductId = DemoUtil.demoLaonProductId;
 			final String testAccountId = null; // use specific test ID or null to get random loan account
 
 			demoClient = DemoUtil.getDemoClient(null);
 			demoGroup = DemoUtil.getDemoGroup(null);
 			demoUser = DemoUtil.getDemoUser();
 
-			demoProduct = DemoUtil.getDemoLoanProduct(testProductId);
 			demoLoanAccount = DemoUtil.getDemoLoanAccount(testAccountId);
 
-			testCreateJsonAccount();
-			testUpdateLoanAccount();
+			LoanProductType productTypes[];
+			boolean productTypesTesting;
+			// If demoLaonProductId configuration set to ALL then test all available product types
+			if (testProductId != null && testProductId.equals(DemoUtil.allProductTypes)) {
+				productTypesTesting = true;
+				// Run tests for all products types, selecting random active product ID of each type once
+				productTypes = LoanProductType.values();
+			} else {
+				// Use demoLaonProductId configuration: a specific product ID (if not null) or a random product (if
+				// null)
+				productTypesTesting = false;
+				LoanProduct testProduct = DemoUtil.getDemoLoanProduct(testProductId);
+				// Set test product types to the demoLaonProductId's type only
+				productTypes = new LoanProductType[] { testProduct.getLoanProductType() };
+			}
 
-			// Test Reject transactions first
-			testPatchLoanAccountTerms(); // Available since 3.9.3
-			testCloseLoanAccount(); // Available since 3.3
-			testDeleteLoanAccount();
+			// Run tests for all required product types
+			for (LoanProductType productType : productTypes) {
+				System.out.println("\n*** Product Type=" + productType + " ***");
 
-			testCreateJsonAccount();
+				// Get random product of a specific type or a product for a specific product id
+				demoProduct = (productTypesTesting) ? DemoUtil.getDemoLoanProduct(productType) : DemoUtil
+						.getDemoLoanProduct(testProductId);
 
-			testRequestApprovalLoanAccount(); // Available since 3.13
-			testApproveLoanAccount();
-			testUndoApproveLoanAccount();
-			testUpdatingAccountTranches(); // Available since 3.12.3
-			testUpdatingAccountFunds();// Available since 3.13
-			testApproveLoanAccount();
+				if (demoProduct == null) {
+					continue;
+				}
+				System.out.println("Product Id=" + demoProduct.getId() + " Name=" + demoProduct.getName() + " ***");
 
-			// Test Disburse and Undo disburse
-			testDisburseLoanAccount();
-			testLockLoanAccount(); // Available since 3.6
-			testUnlockLoanAccount(); // Available since 3.6
-			testUndoDisburseLoanAccount(); // Available since 3.9
-			testDisburseLoanAccount();
+				try {
+					testCreateJsonAccount();
+					testUpdateLoanAccount();
 
-			testGetLoanProductSchedule(); // Available since 3.9
+					// Test Reject transactions first
+					testPatchLoanAccountTerms(); // Available since 3.9.3
+					testCloseLoanAccount(); // Available since 3.3
+					testDeleteLoanAccount();
 
-			testGetLoanAccount();
-			testGetLoanAccountDetails();
-			testGetLoanAccountsByBranchCentreOfficerState();
+					testCreateJsonAccount();
 
-			testGetLoanAccountsForClient();
-			testGetLoanAccountsForGroup();
+					testRequestApprovalLoanAccount(); // Available since 3.13
+					testApproveLoanAccount();
+					testUndoApproveLoanAccount();
+					testUpdatingAccountTranches(); // Available since 3.12.3
+					testUpdatingAccountFunds();// Available since 3.13
+					testApproveLoanAccount();
 
-			testApplyFeeToLoanAccount();
-			testApplyInterestToLoanAccount(); // Available since 3.1
-			testRepayLoanAccount();
-			testWriteOffLoanAccount(); // Available since 3.14
+					// Test Disburse and Undo disburse
+					testDisburseLoanAccount();
+					testLockLoanAccount(); // Available since 3.6
+					testUnlockLoanAccount(); // Available since 3.6
+					testUndoDisburseLoanAccount(); // Available since 3.9
+					testDisburseLoanAccount();
 
-			// transactions
-			List<LoanTransaction> transactions = testGetLoanAccountTransactions();
-			testReverseLoanAccountTransactions(transactions); // Available since Mambu 3.13 for PENALTY_APPLIED reversal
+					testGetLoanProductSchedule(); // Available since 3.9
 
-			// Products
-			testGetLoanProducts();
-			testGetLoanProductById();
+					testGetLoanAccount();
+					testGetLoanAccountDetails();
+					testGetLoanAccountsByBranchCentreOfficerState();
 
-			testGetDocuments(); // Available since Mambu 3.6
+					testGetLoanAccountsForClient();
+					testGetLoanAccountsForGroup();
 
-			testUpdateDeleteCustomFields(); // Available since 3.8
+					testApplyFeeToLoanAccount();
+					testApplyInterestToLoanAccount(); // Available since 3.1
+					testRepayLoanAccount();
+					testWriteOffLoanAccount(); // Available since 3.14
+
+					// transactions
+					List<LoanTransaction> transactions = testGetLoanAccountTransactions();
+					testReverseLoanAccountTransactions(transactions); // Available since Mambu 3.13 for PENALTY_APPLIED
+																		// reversal
+
+					// Products
+					testGetLoanProducts();
+					testGetLoanProductById();
+
+					testGetDocuments(); // Available since Mambu 3.6
+
+					testUpdateDeleteCustomFields(); // Available since 3.8
+
+				} catch (MambuApiException e) {
+					System.out.println("*** Exception *** " + methodName + " " + e.getMessage());
+					System.out.println("Product Type=" + demoProduct.getLoanProductType() + "\tID="
+							+ demoProduct.getId() + "\tName=" + demoProduct.getName());
+				}
+			}
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Loan Service");
@@ -137,7 +178,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testGetLoanAccount() throws MambuApiException {
-		System.out.println("\nIn testGetLoanAccount");
+		System.out.println(methodName = "\nIn testGetLoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		String accountId = NEW_LOAN_ACCOUNT_ID; // LOAN_ACCOUNT_ID NEW_LOAN_ACCOUNT_ID
@@ -147,7 +188,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testGetLoanAccountDetails() throws MambuApiException {
-		System.out.println("\nIn testGetLoanAccountDetails");
+		System.out.println(methodName = "\nIn testGetLoanAccountDetails");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		String accountId = demoLoanAccount.getId();
@@ -191,7 +232,7 @@ public class DemoTestLoanService {
 
 	// Create Loan Account
 	public static void testCreateJsonAccount() throws MambuApiException {
-		System.out.println("\nIn testCreateJsonAccount");
+		System.out.println(methodName = "\nIn testCreateJsonAccount");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
@@ -231,7 +272,7 @@ public class DemoTestLoanService {
 
 	// Update Loan account
 	public static void testUpdateLoanAccount() throws MambuApiException {
-		System.out.println("\nIn testUpdateLoanAccount");
+		System.out.println(methodName = "\nIn testUpdateLoanAccount");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
@@ -268,7 +309,7 @@ public class DemoTestLoanService {
 
 	// Test Patch Loan account terms API.
 	public static void testPatchLoanAccountTerms() throws MambuApiException {
-		System.out.println("\nIn testPatchLoanAccountTerms");
+		System.out.println(methodName = "\nIn testPatchLoanAccountTerms");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
@@ -304,7 +345,7 @@ public class DemoTestLoanService {
 
 	// Test Updating Loan Account Tranches API: modify, add, delete
 	public static void testUpdatingAccountTranches() throws MambuApiException {
-		System.out.println("\nIn testUpdatingAccountTranches");
+		System.out.println(methodName = "\nIn testUpdatingAccountTranches");
 
 		// Use demo loan account and update tranche details
 		LoanAccount theAccount = demoLoanAccount;
@@ -354,7 +395,7 @@ public class DemoTestLoanService {
 
 	// Test Updating Loan Account Funds API: modify, add, delete
 	public static void testUpdatingAccountFunds() throws MambuApiException {
-		System.out.println("\nIn testUpdatingAccountFunds");
+		System.out.println(methodName = "\nIn testUpdatingAccountFunds");
 
 		// Use demo loan account and update tranche details
 		LoanAccount theAccount = demoLoanAccount;
@@ -404,7 +445,7 @@ public class DemoTestLoanService {
 
 	// / Transactions testing
 	public static void testDisburseLoanAccount() throws MambuApiException {
-		System.out.println("\nIn test Disburse LoanAccount");
+		System.out.println(methodName = "\nIn test Disburse LoanAccount");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		if (newAccount == null || newAccount.getLoanAccount() == null) {
@@ -445,7 +486,7 @@ public class DemoTestLoanService {
 
 	// Test undo disbursement transaction
 	public static void testUndoDisburseLoanAccount() throws MambuApiException {
-		System.out.println("\nIn testUndoDisburseLoanAccount");
+		System.out.println(methodName = "\nIn testUndoDisburseLoanAccount");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		String accountId = NEW_LOAN_ACCOUNT_ID;
@@ -458,7 +499,7 @@ public class DemoTestLoanService {
 
 	// Test writing off loan account
 	public static void testWriteOffLoanAccount() throws MambuApiException {
-		System.out.println("\nIn testWriteOffLoanAccount");
+		System.out.println(methodName = "\nIn testWriteOffLoanAccount");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		String accountId = NEW_LOAN_ACCOUNT_ID;
@@ -470,7 +511,7 @@ public class DemoTestLoanService {
 	}
 
 	public static List<LoanTransaction> testGetLoanAccountTransactions() throws MambuApiException {
-		System.out.println("\nIn testGetLoanAccount Transactions");
+		System.out.println(methodName = "\nIn testGetLoanAccount Transactions");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		String offest = "0";
 		String limit = "8";
@@ -489,7 +530,7 @@ public class DemoTestLoanService {
 
 	// Test Reversing loan transactions. Available since 3.13 for PENALTY_APPLIED transaction. See MBU-9998
 	public static void testReverseLoanAccountTransactions(List<LoanTransaction> transactions) throws MambuApiException {
-		System.out.println("\nIn testReverseLoanAccountTransactions");
+		System.out.println(methodName = "\nIn testReverseLoanAccountTransactions");
 
 		if (transactions == null || transactions.size() == 0) {
 			System.out.println("WARNING: no transactions available to test transactions reversal");
@@ -535,7 +576,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testRepayLoanAccount() throws MambuApiException {
-		System.out.println("\nIn test Repay LoanAccount");
+		System.out.println(methodName = "\nIn test Repay LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		Money repaymentAmount = demoLoanAccount.getDueAmount(RepaymentAllocationElement.PRINCIPAL);
 		if (repaymentAmount == null || repaymentAmount.isNegativeOrZero()) {
@@ -557,7 +598,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testApplyFeeToLoanAccount() throws MambuApiException {
-		System.out.println("\nIn test Applying Fee to a Loan Account");
+		System.out.println(methodName = "\nIn test Applying Fee to a Loan Account");
 
 		// API supports applying fee only for products with 'Allow Arbitrary Fees" setting
 		if (!demoProduct.getAllowArbitraryFees()) {
@@ -579,7 +620,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testApplyInterestToLoanAccount() throws MambuApiException {
-		System.out.println("\nIn test Applying Interest to a Loan Account");
+		System.out.println(methodName = "\nIn test Applying Interest to a Loan Account");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
@@ -594,7 +635,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testGetLoanAccountsByBranchCentreOfficerState() throws MambuApiException {
-		System.out.println("\nIn testGetLoanAccountsByBranchCentreOfficerState");
+		System.out.println(methodName = "\nIn testGetLoanAccountsByBranchCentreOfficerState");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
@@ -619,7 +660,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testGetLoanAccountsForClient() throws MambuApiException {
-		System.out.println("\nIn testGetLoan Accounts ForClient");
+		System.out.println(methodName = "\nIn testGetLoan Accounts ForClient");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		String clientId = demoClient.getId();
 		List<LoanAccount> loanAccounts = loanService.getLoanAccountsForClient(clientId);
@@ -633,7 +674,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testGetLoanAccountsForGroup() throws MambuApiException {
-		System.out.println("\nIn testGetLoanAccounts ForGroup");
+		System.out.println(methodName = "\nIn testGetLoanAccounts ForGroup");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		String groupId = demoGroup.getId();
 		List<LoanAccount> loanAccounts = loanService.getLoanAccountsForGroup(groupId);
@@ -653,7 +694,7 @@ public class DemoTestLoanService {
 
 	// Test request loan account approval - this changes account state from Partial Application to Pending Approval
 	public static void testRequestApprovalLoanAccount() throws MambuApiException {
-		System.out.println("\nIn testRequestApprovalLoanAccount");
+		System.out.println(methodName = "\nIn testRequestApprovalLoanAccount");
 
 		// Check if the account is in PARTIAL_APPLICATION state
 		if (newAccount == null || newAccount.getLoanAccount() == null
@@ -673,7 +714,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testApproveLoanAccount() throws MambuApiException {
-		System.out.println("\nIn test Approve LoanAccount");
+		System.out.println(methodName = "\nIn test Approve LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		LoanAccount account = loanService.approveLoanAccount(NEW_LOAN_ACCOUNT_ID, "some demo notes");
@@ -683,7 +724,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testCloseLoanAccount() throws MambuApiException {
-		System.out.println("\nIn test Close LoanAccount");
+		System.out.println(methodName = "\nIn test Close LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		// CLose as REJECT or WITHDRAW
@@ -696,7 +737,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testUndoApproveLoanAccount() throws MambuApiException {
-		System.out.println("\nIn test Undo Approve LoanAccount");
+		System.out.println(methodName = "\nIn test Undo Approve LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		final String accountId = NEW_LOAN_ACCOUNT_ID;
@@ -707,7 +748,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testLockLoanAccount() throws MambuApiException {
-		System.out.println("\nIn test Lock LoanAccount");
+		System.out.println(methodName = "\nIn test Lock LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		String accountId = NEW_LOAN_ACCOUNT_ID;
@@ -727,7 +768,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testUnlockLoanAccount() throws MambuApiException {
-		System.out.println("\nIn test Unlock LoanAccount");
+		System.out.println(methodName = "\nIn test Unlock LoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		String accountId = NEW_LOAN_ACCOUNT_ID;
@@ -746,7 +787,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testDeleteLoanAccount() throws MambuApiException {
-		System.out.println("\nIn testDeleteLoanAccount");
+		System.out.println(methodName = "\nIn testDeleteLoanAccount");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		String loanAccountId = NEW_LOAN_ACCOUNT_ID;
@@ -757,8 +798,8 @@ public class DemoTestLoanService {
 	}
 
 	// Loan Products
-	public static void testGetLoanProducts() throws MambuApiException {
-		System.out.println("\nIn testGetLoanProducts");
+	public static List<LoanProduct> testGetLoanProducts() throws MambuApiException {
+		System.out.println(methodName = "\nIn testGetLoanProducts");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		String offset = "0";
@@ -770,28 +811,35 @@ public class DemoTestLoanService {
 
 		if (products.size() > 0) {
 			for (LoanProduct product : products) {
-				System.out.println("Product=" + product.getName() + "  Id=" + product.getId() + "  Key="
-						+ product.getEncodedKey() + " Product Type=" + product.getLoanProductType());
+				List<GLAccountingRule> accountingRules = product.getGlProductRules();
+				int totalAccountingRules = accountingRules == null ? 0 : accountingRules.size();
+				System.out.println("Product=" + product.getName() + "\tId=" + product.getId() + "\tKey="
+						+ product.getEncodedKey() + "\tProduct Type=" + product.getLoanProductType() + "\tRules="
+						+ totalAccountingRules);
 			}
 		}
+
+		return products;
 
 	}
 
 	public static void testGetLoanProductById() throws MambuApiException {
-		System.out.println("\nIn testGetLoanProductById");
+		System.out.println(methodName = "\nIn testGetLoanProductById");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		String productId = demoProduct.getId();
 
 		LoanProduct product = loanService.getLoanProduct(productId);
-
-		System.out.println("Product=" + product.getName() + "  Id=" + product.getId() + " Product Type="
-				+ product.getLoanProductType());
+		List<GLAccountingRule> accountingRules = product.getGlProductRules();
+		// Log also the count for accounting rules. Available since 3.14, See MBU-10422
+		int totalAccountingRules = accountingRules == null ? 0 : accountingRules.size();
+		System.out.println("Product=" + product.getName() + "\tId=" + product.getId() + "\tProduct Type="
+				+ product.getLoanProductType() + "\tAccountingRules=" + totalAccountingRules);
 
 	}
 
 	public static void testGetLoanProductSchedule() throws MambuApiException {
-		System.out.println("\nIn testGetLoanProductSchedule");
+		System.out.println(methodName = "\nIn testGetLoanProductSchedule");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		String productId = demoProduct.getId();
@@ -986,7 +1034,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testGetDocuments() throws MambuApiException {
-		System.out.println("\nIn testGetDocuments");
+		System.out.println(methodName = "\nIn testGetDocuments");
 
 		LoanAccount account = DemoUtil.getDemoLoanAccount();
 		String accountId = account.getId();
@@ -1003,7 +1051,7 @@ public class DemoTestLoanService {
 
 	// Update Custom Field values for the Loan Account and delete the first available custom field
 	public static void testUpdateDeleteCustomFields() throws MambuApiException {
-		System.out.println("\nIn testUpdateDeleteCustomFields");
+		System.out.println(methodName = "\nIn testUpdateDeleteCustomFields");
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
 		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.LOAN_ACCOUNT);
@@ -1012,7 +1060,7 @@ public class DemoTestLoanService {
 
 	// Internal clean up routine. Can be used to delete non-disbursed accounts created by these demo test runs
 	public static void deleteTestAPILoanAccounts() throws MambuApiException {
-		System.out.println("\nIn deleteTestAPILoanAccounts");
+		System.out.println(methodName = "\nIn deleteTestAPILoanAccounts");
 		System.out.println("**  Deleting all Test Loan Accounts for Client =" + demoClient.getFullNameWithId() + " **");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		List<LoanAccount> accounts = loanService.getLoanAccountsForClient(demoClient.getId());

@@ -47,6 +47,7 @@ public class DemoTestSavingsService {
 	private static SavingsAccount demoSavingsAccount;
 
 	private static JSONSavingsAccount newAccount;
+	private static String methodName = null; // print method name on exception
 
 	public static void main(String[] args) {
 
@@ -55,66 +56,103 @@ public class DemoTestSavingsService {
 		try {
 			// Get Demo data
 			// Get demo entities needed for testing
-			final String testProductId = null; // use specific test product or null to get random product
+			// Use specific product ID or null to get random product. If set to "ALL" then test for all product types
+			final String testProductId = DemoUtil.demoSavingsProductId;
 			final String testAccountId = null; // use specific test account or null to get random loan account
 
 			demoClient = DemoUtil.getDemoClient(null);
 			demoGroup = DemoUtil.getDemoGroup(null);
 			demoUser = DemoUtil.getDemoUser();
 
-			demoSavingsProduct = DemoUtil.getDemoSavingsProduct(testProductId);
 			demoSavingsAccount = DemoUtil.getDemoSavingsAccount(testAccountId);
 			SAVINGS_ACCOUNT_ID = demoSavingsAccount.getId();
 
-			System.out.println("**DemoProduct for product name=" + demoSavingsProduct.getName() + " id="
-					+ demoSavingsProduct.getId());
+			SavingsType productTypes[];
+			boolean productTypesTesting;
+			// If demoSavingsProductId configuration set to ALL then test all available product types
+			if (testProductId != null && testProductId.equals(DemoUtil.allProductTypes)) {
+				productTypesTesting = true;
+				// Run tests for all products types, selecting random active product ID of each type once
+				productTypes = SavingsType.values();
+			} else {
+				// Use demoSavingsProductId configuration: a specific product ID (if not null) or a random product (if
+				// null)
+				productTypesTesting = false;
+				SavingsProduct testProduct = DemoUtil.getDemoSavingsProduct(testProductId);
+				// Set test product types to the demoSavingsProductId type only
+				productTypes = new SavingsType[] { testProduct.getProductType() };
+			}
 
-			testCreateSavingsAccount();
-			testCloseSavingsAccount(); // Available since 3.4
-			testDeleteSavingsAccount(); // Available since 3.4
+			// Run tests for all required product types
+			for (SavingsType productType : productTypes) {
+				System.out.println("\n*** Product Type=" + productType + " ***");
 
-			testCreateSavingsAccount();
+				// Get random product of a specific type or a product for a specific product id
+				demoSavingsProduct = (productTypesTesting) ? DemoUtil.getDemoSavingsProduct(productType) : DemoUtil
+						.getDemoSavingsProduct(testProductId);
 
-			testUpdateSavingsAccount(); // Available since 3.4
-			testPatchSavingsAccountTerms(); // Available since 3.12.2
+				if (demoSavingsProduct == null) {
+					continue;
+				}
+				System.out.println("Product Id=" + demoSavingsProduct.getId() + " Name=" + demoSavingsProduct.getName()
+						+ " ***");
 
-			testApproveSavingsAccount();
+				try {
 
-			testUndoApproveSavingsAccount(); // Available since 3.5
-			testApproveSavingsAccount(); // Available since 3.5
+					testCreateSavingsAccount();
+					testPatchSavingsAccountTerms(); // Available since 3.12.2
+					testCloseSavingsAccount(); // Available since 3.4
+					testDeleteSavingsAccount(); // Available since 3.4
 
-			testGetSavingsAccount();
-			testGetSavingsAccountDetails();
+					testCreateSavingsAccount();
 
-			testGetSavingsAccountsByBranchCentreOfficerState();
+					testUpdateSavingsAccount(); // Available since 3.4
+					testPatchSavingsAccountTerms(); // Available since 3.12.2
 
-			testGetSavingsAccountsForClient();
+					testApproveSavingsAccount();
 
-			// Test deposit and reversal transactions
-			SavingsTransaction deposiTransaction = testDepositToSavingsAccount();
-			testReverseSavingsAccountTransaction(deposiTransaction); // Available since 3.10
-			testDepositToSavingsAccount(); // Make another deposit after reversal to continue testing
+					testUndoApproveSavingsAccount(); // Available since 3.5
+					testApproveSavingsAccount(); // Available since 3.5
 
-			// Test withdrawal and reversal transactions
-			SavingsTransaction withdrawalTransaction = testWithdrawalFromSavingsAccount();
-			testReverseSavingsAccountTransaction(withdrawalTransaction); // Available since 3.10
+					testGetSavingsAccount();
+					testGetSavingsAccountDetails();
 
-			// Test transfer and reversal transactions
-			SavingsTransaction transferTransaction = testTransferFromSavingsAccount();
-			testReverseSavingsAccountTransaction(transferTransaction);
+					testGetSavingsAccountsByBranchCentreOfficerState();
 
-			testApplyFeeToSavingsAccount(); // Available since 3.6
+					testGetSavingsAccountsForClient();
 
-			testGetSavingsAccountTransactions();
+					// Test deposit and reversal transactions
+					SavingsTransaction deposiTransaction = testDepositToSavingsAccount();
+					testReverseSavingsAccountTransaction(deposiTransaction); // Available since 3.10
+					testDepositToSavingsAccount(); // Make another deposit after reversal to continue testing
 
-			testGetSavingsAccountsForGroup();
+					// Test withdrawal and reversal transactions
+					SavingsTransaction withdrawalTransaction = testWithdrawalFromSavingsAccount();
+					testReverseSavingsAccountTransaction(withdrawalTransaction); // Available since 3.10
 
-			testGetSavingsProducts();
-			testGetSavingsProductById();
+					// Test transfer and reversal transactions
+					SavingsTransaction transferTransaction = testTransferFromSavingsAccount();
+					testReverseSavingsAccountTransaction(transferTransaction);
 
-			testGetDocuments();// Available since 3.6
+					testApplyFeeToSavingsAccount(); // Available since 3.6
 
-			testUpdateDeleteCustomFields(); // Available since 3.8
+					testGetSavingsAccountTransactions();
+
+					testGetSavingsAccountsForGroup();
+
+					testGetSavingsProducts();
+					testGetSavingsProductById();
+
+					testGetDocuments();// Available since 3.6
+
+					testUpdateDeleteCustomFields(); // Available since 3.8
+
+				} catch (MambuApiException e) {
+					System.out.println("*** Exception *** " + methodName + " " + e.getMessage());
+					System.out.println("Product Type=" + demoSavingsProduct.getProductType() + "\tID="
+							+ demoSavingsProduct.getId() + "\tName=" + demoSavingsProduct.getName());
+				}
+			}
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Savings Service");
@@ -125,7 +163,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testGetSavingsAccount() throws MambuApiException {
-		System.out.println("\nIn testGetSavingsAccount");
+		System.out.println(methodName = "\nIn testGetSavingsAccount");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
@@ -136,7 +174,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testGetSavingsAccountDetails() throws MambuApiException {
-		System.out.println("\nIn testGetSavingsAccount with Details");
+		System.out.println(methodName = "\nIn testGetSavingsAccount with Details");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
@@ -147,7 +185,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testGetSavingsAccountsForClient() throws MambuApiException {
-		System.out.println("\nIn testGetSavingsAccountsFor Client");
+		System.out.println(methodName = "\nIn testGetSavingsAccountsFor Client");
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
 		String clientid = demoClient.getId();
@@ -162,7 +200,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testGetSavingsAccountsForGroup() throws MambuApiException {
-		System.out.println("\nIn testGetSavingsAccountsFor Group");
+		System.out.println(methodName = "\nIn testGetSavingsAccountsFor Group");
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
 		List<SavingsAccount> savingsAccounts = savingsService.getSavingsAccountsForGroup(demoGroup.getId());
@@ -177,7 +215,7 @@ public class DemoTestSavingsService {
 
 	// Get All Transaction
 	public static void testGetSavingsAccountTransactions() throws MambuApiException {
-		System.out.println("\nIn testGetSavingsAccountTransactions");
+		System.out.println(methodName = "\nIn testGetSavingsAccountTransactions");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
@@ -193,7 +231,7 @@ public class DemoTestSavingsService {
 
 	// Make Withdrawal
 	public static SavingsTransaction testWithdrawalFromSavingsAccount() throws MambuApiException {
-		System.out.println("\nIn testWithdrawalFromSavingsAccount");
+		System.out.println(methodName = "\nIn testWithdrawalFromSavingsAccount");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 		String amount = "93.55";
@@ -215,7 +253,7 @@ public class DemoTestSavingsService {
 
 	// Deposit
 	public static SavingsTransaction testDepositToSavingsAccount() throws MambuApiException {
-		System.out.println("\nIn testDepositToSavingsAccount");
+		System.out.println(methodName = "\nIn testDepositToSavingsAccount");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 		String amount = "150.00";
@@ -235,7 +273,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static SavingsTransaction testTransferFromSavingsAccount() throws MambuApiException {
-		System.out.println("\nIn testTransferFromSavingsAccount");
+		System.out.println(methodName = "\nIn testTransferFromSavingsAccount");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
@@ -257,7 +295,7 @@ public class DemoTestSavingsService {
 
 	// Test Reversing savings transaction. Available since 3.10 for Deposit, Withdrawal and Transfer transactions
 	public static void testReverseSavingsAccountTransaction(SavingsTransaction transaction) throws MambuApiException {
-		System.out.println("\nIn testReverseSavingsAccountTransaction");
+		System.out.println(methodName = "\nIn testReverseSavingsAccountTransaction");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
@@ -271,7 +309,7 @@ public class DemoTestSavingsService {
 
 	// Apply Arbitrary Fee. Available since 3.6
 	public static void testApplyFeeToSavingsAccount() throws MambuApiException {
-		System.out.println("\nIn testApplyFeeToSavingsAccount");
+		System.out.println(methodName = "\nIn testApplyFeeToSavingsAccount");
 
 		// API supports applying fee only for products with 'Allow Arbitrary Fees" setting
 		if (!demoSavingsProduct.getAllowArbitraryFees()) {
@@ -294,7 +332,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testGetSavingsAccountsByBranchCentreOfficerState() throws MambuApiException {
-		System.out.println("\nIn testGetSavingsAccountsByBranchCentreOfficerState");
+		System.out.println(methodName = "\nIn testGetSavingsAccountsByBranchCentreOfficerState");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
@@ -323,7 +361,7 @@ public class DemoTestSavingsService {
 
 	// Savings Products
 	public static void testGetSavingsProducts() throws MambuApiException {
-		System.out.println("\nIn testGetSavingsProducts");
+		System.out.println(methodName = "\nIn testGetSavingsProducts");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
@@ -344,7 +382,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testGetSavingsProductById() throws MambuApiException {
-		System.out.println("\nIn testGetSavingsProductById");
+		System.out.println(methodName = "\nIn testGetSavingsProductById");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
@@ -358,7 +396,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testCreateSavingsAccount() throws MambuApiException {
-		System.out.println("\nIn testCreateSavingsAccount");
+		System.out.println(methodName = "\nIn testCreateSavingsAccount");
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
 
@@ -395,7 +433,7 @@ public class DemoTestSavingsService {
 
 	// Update Loan account
 	public static void testUpdateSavingsAccount() throws MambuApiException {
-		System.out.println("\nIn testUpdateSavingsAccount");
+		System.out.println(methodName = "\nIn testUpdateSavingsAccount");
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
 
@@ -434,7 +472,7 @@ public class DemoTestSavingsService {
 
 	// Test Patch Savings account terms API
 	public static void testPatchSavingsAccountTerms() throws MambuApiException {
-		System.out.println("\nIn testPatchSavingsAccountTerms");
+		System.out.println(methodName = "\nIn testPatchSavingsAccountTerms");
 
 		// See MBU-10447 for a list of fields that can be updated (as of Mambu 3.14)
 		SavingsAccount savingsAccount = demoSavingsAccount;
@@ -568,7 +606,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testApproveSavingsAccount() throws MambuApiException {
-		System.out.println("\nIn test Approve Savings Account");
+		System.out.println(methodName = "\nIn test Approve Savings Account");
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
 
@@ -593,7 +631,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testUndoApproveSavingsAccount() throws MambuApiException {
-		System.out.println("\nIn test Undo Approve Savings Account");
+		System.out.println(methodName = "\nIn test Undo Approve Savings Account");
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
 		String accountId = SAVINGS_ACCOUNT_ID;
@@ -606,7 +644,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testDeleteSavingsAccount() throws MambuApiException {
-		System.out.println("\nIn test Delete Savings Account");
+		System.out.println(methodName = "\nIn test Delete Savings Account");
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
 
@@ -618,7 +656,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testCloseSavingsAccount() throws MambuApiException {
-		System.out.println("\nIn test Close Savings Account");
+		System.out.println(methodName = "\nIn test Close Savings Account");
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
 
@@ -634,7 +672,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testGetDocuments() throws MambuApiException {
-		System.out.println("\nIn testGetDocuments");
+		System.out.println(methodName = "\nIn testGetDocuments");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
@@ -648,7 +686,7 @@ public class DemoTestSavingsService {
 
 	// Update Custom Field values for the Savings Account and delete the first available custom field
 	public static void testUpdateDeleteCustomFields() throws MambuApiException {
-		System.out.println("\nIn testUpdateDeleteCustomFields");
+		System.out.println(methodName = "\nIn testUpdateDeleteCustomFields");
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
 		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.SAVINGS_ACCOUNT);
@@ -770,7 +808,7 @@ public class DemoTestSavingsService {
 
 	// Internal clean up routine. Can be used to delete non-active accounts created by these demo test runs
 	public static void deleteTestAPISavingsAccounts() throws MambuApiException {
-		System.out.println("\nIn deleteTestAPISavingsAccounts");
+		System.out.println(methodName = "\nIn deleteTestAPISavingsAccounts");
 		System.out.println("**  Deleting all Test Savings Accounts for Client =" + demoClient.getFullNameWithId()
 				+ " **");
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();

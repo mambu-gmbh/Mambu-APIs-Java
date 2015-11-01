@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.LogManager;
@@ -47,10 +48,12 @@ import com.mambu.core.shared.model.CustomFilterConstraint;
 import com.mambu.core.shared.model.User;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
+import com.mambu.loans.shared.model.LoanProductType;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
+import com.mambu.savings.shared.model.SavingsType;
 
 /**
  * Helper class to be used with Demo programs. It defines and handles:
@@ -95,6 +98,11 @@ public class DemoUtil {
 
 	static String demoLaonAccountId = null;
 	static String demoLaonProductId = null;
+	// set demo product ID to "ALL_TYPES" to run tests for all product types
+	public static final String allProductTypes = "ALL_TYPES";
+	// Maintain static Map of Product Type to a list of products of this type
+	static HashMap<LoanProductType, List<LoanProduct>> loansProductsMap;
+	static HashMap<SavingsType, List<SavingsProduct>> savingsProductsMap;
 
 	static String demoSavingsAccountId = null;
 	static String demoSavingsProductId = null;
@@ -144,6 +152,12 @@ public class DemoUtil {
 		// set up App Key
 		MambuAPIFactory.setApplicationKey(appKeyValue);
 
+		initData();
+	}
+
+	private static void initData() {
+		loansProductsMap = null;
+		savingsProductsMap = null;
 	}
 
 	public static final String demoLogPrefix = "DemoUtil data: ";
@@ -177,18 +191,18 @@ public class DemoUtil {
 		// Get Demo Client and Demo Group IDs
 		demoClientId = makeNullIfEmpty(properties.getProperty("demoClientId"));
 		demoGroupId = makeNullIfEmpty(properties.getProperty("demoGroupId"));
-		System.out.println(demoLogPrefix + "Client ID=" + demoClientId + "\tGroup Id=" + demoGroupId);
+		System.out.println(demoLogPrefix + "Client ID=" + demoClientId + "\tGroup ID=" + demoGroupId);
 
 		// Get Demo Loan and Demo Savings Product IDs
 		demoLaonAccountId = makeNullIfEmpty(properties.getProperty("demoLaonAccountId")); // account
 		demoLaonProductId = makeNullIfEmpty(properties.getProperty("demoLaonProductId")); // product
-		System.out.println(demoLogPrefix + "Loan Account ID=" + demoLaonAccountId + "\tLoan productId="
+		System.out.println(demoLogPrefix + "Loan Account ID=" + demoLaonAccountId + "\tLoan Product ID="
 				+ demoLaonProductId);
 
 		// Get Demo Savings Account Demo Savings Product IDs
 		demoSavingsAccountId = makeNullIfEmpty(properties.getProperty("demoSavingsAccountId")); // account
 		demoSavingsProductId = makeNullIfEmpty(properties.getProperty("demoSavingsProductId")); // product
-		System.out.println(demoLogPrefix + "Savings Account ID=" + demoSavingsAccountId + "\tSavings productId="
+		System.out.println(demoLogPrefix + "Savings Account ID=" + demoSavingsAccountId + "\tSavings Product ID="
 				+ demoSavingsProductId);
 
 		// Get Demo Line Of Credit ID
@@ -536,6 +550,112 @@ public class DemoUtil {
 		LoanProduct product = service.getLoanProduct(productId);
 
 		return product;
+
+	}
+
+	/**
+	 * Get Demo Loan Product
+	 * 
+	 * @param productType
+	 *            product type
+	 * @return random product of the specified type
+	 * @throws MambuApiException
+	 */
+	public static LoanProduct getDemoLoanProduct(LoanProductType productType) throws MambuApiException {
+		if (productType == null) {
+			return null;
+		}
+		if (loansProductsMap == null) {
+			loansProductsMap = makeLoanProductsMap();
+		}
+
+		List<LoanProduct> products = loansProductsMap.get(productType);
+		if (products == null || products.size() == 0) {
+			System.out.println("WARNING: No active Loan products found for product Type=" + productType);
+			return null;
+		}
+		int randomIndex = (int) (Math.random() * (products.size() - 1));
+		return products.get(randomIndex);
+
+	}
+
+	// Make a map of LoanProductType to a list of active Loan Products of this type
+	private static HashMap<LoanProductType, List<LoanProduct>> makeLoanProductsMap() throws MambuApiException {
+
+		HashMap<LoanProductType, List<LoanProduct>> productsMap = new HashMap<>();
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+		List<LoanProduct> products = loanService.getLoanProducts("0", "500");
+		if (products == null || products.size() == 0) {
+			System.out.println("WARNING: No Loan products defined");
+			return productsMap;
+		}
+		for (LoanProduct product : products) {
+			if (!product.isActivated()) {
+				continue;
+			}
+			LoanProductType productType = product.getLoanProductType();
+			List<LoanProduct> thisTypeProducts = productsMap.get(productType);
+			if (thisTypeProducts == null) {
+				thisTypeProducts = new ArrayList<>();
+				productsMap.put(productType, thisTypeProducts);
+			}
+			thisTypeProducts.add(product);
+		}
+		return productsMap;
+
+	}
+
+	/**
+	 * Get Demo Savings Product
+	 * 
+	 * @param productType
+	 *            product type
+	 * @return random product of the specified type
+	 * @throws MambuApiException
+	 */
+	public static SavingsProduct getDemoSavingsProduct(SavingsType productType) throws MambuApiException {
+		if (productType == null) {
+			return null;
+		}
+		if (savingsProductsMap == null) {
+			savingsProductsMap = makeSavingsProductsMap();
+		}
+
+		List<SavingsProduct> products = savingsProductsMap.get(productType);
+		if (products == null || products.size() == 0) {
+			System.out.println("WARNING: No active Savings products found for product Type=" + productType);
+			return null;
+		}
+		int randomIndex = (int) (Math.random() * (products.size() - 1));
+		return products.get(randomIndex);
+
+	}
+
+	// Make a map of SavingsType to a list of active Savings Products of this type
+	private static HashMap<SavingsType, List<SavingsProduct>> makeSavingsProductsMap() throws MambuApiException {
+
+		HashMap<SavingsType, List<SavingsProduct>> productsMap = new HashMap<>();
+
+		SavingsService service = MambuAPIFactory.getSavingsService();
+		List<SavingsProduct> products = service.getSavingsProducts("0", "500");
+		if (products == null || products.size() == 0) {
+			System.out.println("WARNING: No Savings products defined");
+			return productsMap;
+		}
+		for (SavingsProduct product : products) {
+			if (!product.isActivated()) {
+				continue;
+			}
+			SavingsType productType = product.getProductType();
+			List<SavingsProduct> thisTypeProducts = productsMap.get(productType);
+			if (thisTypeProducts == null) {
+				thisTypeProducts = new ArrayList<>();
+				productsMap.put(productType, thisTypeProducts);
+			}
+			thisTypeProducts.add(product);
+		}
+		return productsMap;
 
 	}
 

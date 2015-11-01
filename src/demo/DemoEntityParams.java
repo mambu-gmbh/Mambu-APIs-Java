@@ -80,6 +80,7 @@ public class DemoEntityParams {
 		}
 
 		// Get Demo entities using IDs specified in the configuration file (set requested ID to null)
+		String nullId = null; // define null not to distinguish between methods with the same # of params
 		switch (mambuEntity) {
 		case CLIENT:
 			Client client = DemoUtil.getDemoClient(null);
@@ -94,10 +95,10 @@ public class DemoEntityParams {
 			SavingsAccount savings = DemoUtil.getDemoSavingsAccount(null);
 			return new DemoEntityParams(savings.getName(), savings.getEncodedKey(), savings.getId());
 		case LOAN_PRODUCT:
-			LoanProduct lProduct = DemoUtil.getDemoLoanProduct(null);
+			LoanProduct lProduct = DemoUtil.getDemoLoanProduct(nullId);
 			return new DemoEntityParams(lProduct.getName(), lProduct.getEncodedKey(), lProduct.getId());
 		case SAVINGS_PRODUCT:
-			SavingsProduct sProduct = DemoUtil.getDemoSavingsProduct(null);
+			SavingsProduct sProduct = DemoUtil.getDemoSavingsProduct(nullId);
 			return new DemoEntityParams(sProduct.getName(), sProduct.getEncodedKey(), sProduct.getId());
 		case USER:
 			User user = DemoUtil.getDemoUser();
