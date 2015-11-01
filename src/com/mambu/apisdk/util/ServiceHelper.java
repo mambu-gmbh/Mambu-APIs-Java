@@ -14,8 +14,6 @@ import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIFactory;
-import com.mambu.apisdk.services.CustomFieldValueService;
-import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.savings.shared.model.SavingsAccount;
 
@@ -59,48 +57,6 @@ public class ServiceHelper {
 		params.addParam(APIData.VIEW_FILTER, customViewKey);
 		params.addParam(APIData.OFFSET, offset);
 		params.addParam(APIData.LIMIT, limit);
-
-		return params;
-
-	}
-
-	/**
-	 * Validate Custom Field ID and make ParamsMap for Update Custom Field value API requests
-	 * 
-	 * @deprecated use {@link CustomFieldValueService} to update and delete custom field values
-	 * 
-	 * @param customFieldId
-	 *            the ID or the encoded key of the custom field to be updated. Must be not null and not empty
-	 * @param fieldValue
-	 *            the new value of the custom field
-	 * 
-	 * @return params
-	 */
-	@Deprecated
-	public static ParamsMap makeParamsForUpdateCustomField(String customFieldId, String fieldValue) {
-
-		// Verify that customFieldId is not null
-		if (customFieldId == null || customFieldId.trim().isEmpty()) {
-			throw new IllegalArgumentException("Custom Field ID must not be null or empty");
-		}
-
-		// Create JSON string to be used in the PATCH request
-		// The JSON string for this API must have the following format: {"value":"newFieldValue"}. See MBU-6661
-
-		// Make CustomFieldValue object to create this JSON
-		CustomFieldValue customFieldValue = new CustomFieldValue();
-		customFieldValue.setValue(fieldValue);
-
-		// Set all other parameters to null, they are not needed in this JSON
-		customFieldValue.setCustomField(null);
-		customFieldValue.setToBeDeleted(null);
-		customFieldValue.setIndexInList(null);
-		customFieldValue.setAmount(null);
-
-		final String patchJson = GsonUtils.createGson().toJson(customFieldValue, CustomFieldValue.class);
-
-		ParamsMap params = new ParamsMap();
-		params.put(APIData.JSON_OBJECT, patchJson);
 
 		return params;
 

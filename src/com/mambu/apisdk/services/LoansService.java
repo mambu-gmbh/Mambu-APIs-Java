@@ -443,26 +443,6 @@ public class LoansService {
 	/***
 	 * Undo Disburse for a loan account. If the account has multiple tranches, reverses the last tranche
 	 * 
-	 * @deprecated use {@link #undoDisburseLoanAccount(String, String)} to provide "undo notes" parameter
-	 * 
-	 * @param accountId
-	 *            account encoded key or id. Must not be null
-	 * @return Loan Transaction
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public LoanTransaction undoDisburseLoanAccount(String accountId) throws MambuApiException {
-		// Example POST "type=DISBURSMENT_ADJUSTMENT" /api/loans/{id}/transactions/
-		// Available since Mambu 3.9. See MBU-7189
-
-		String notes = null;
-		return undoDisburseLoanAccount(accountId, notes);
-	}
-
-	/***
-	 * Undo Disburse for a loan account. If the account has multiple tranches, reverses the last tranche
-	 * 
 	 * @param accountId
 	 *            account encoded key or id. Must not be null
 	 * @param notes
