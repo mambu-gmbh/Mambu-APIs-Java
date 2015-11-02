@@ -12,6 +12,7 @@ import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstrain
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.services.CustomViewsService.CustomViewResultType;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
@@ -238,6 +239,11 @@ public class SavingsService {
 	/**
 	 * Requests a list of savings transactions for a custom view, limited by offset/limit
 	 * 
+	 * 
+	 * @deprecated. Starting with 3.14 use the new method with branch/centre/officer filters, see {@link
+	 *              CustomViewsService.#getCustomViewEntities(com.mambu.apisdk.util.MambuEntityType, boolean, String,
+	 *              String, String, String, String, String)}
+	 * 
 	 * @param customViewKey
 	 *            the key of the Custom View to filter savings transactions
 	 * @param offset
@@ -249,10 +255,18 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<SavingsTransaction> getSavingsTransactionsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		// Example GET savings/transactions?viewfilter=567&offset=0&limit=100
-		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+
+		String branchId = null;
+		String centreId = null;
+		String creditOfficerName = null;
+		CustomViewResultType resultType = CustomViewResultType.BASIC;
+
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
+				centreId, creditOfficerName, offset, limit);
 		return serviceExecutor.execute(getAllSavingsTransactions, params);
 	}
 
@@ -635,6 +649,11 @@ public class SavingsService {
 	/**
 	 * Requests a list of savings accounts for a custom view, limited by offset/limit only
 	 * 
+	 * 
+	 * @deprecated. Starting with 3.14 use the new method with branch/centre/officer filters, see {@link
+	 *              CustomViewsService.#getCustomViewEntities(com.mambu.apisdk.util.MambuEntityType, boolean, String,
+	 *              String, String, String, String, String)}
+	 * 
 	 * @param customViewKey
 	 *            the key of the Custom View to filter savings accounts
 	 * @param offset
@@ -646,9 +665,16 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<SavingsAccount> getSavingsAccountsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
-		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+		String branchId = null;
+		String centreId = null;
+		String creditOfficerName = null;
+		CustomViewResultType resultType = CustomViewResultType.BASIC;
+
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
+				centreId, creditOfficerName, offset, limit);
 		return serviceExecutor.execute(getAccountsList, params);
 
 	}

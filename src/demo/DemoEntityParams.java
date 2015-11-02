@@ -80,7 +80,7 @@ public class DemoEntityParams {
 		}
 
 		// Get Demo entities using IDs specified in the configuration file (set requested ID to null)
-		String nullId = null; // define null not to distinguish between methods with the same # of params
+		String nullId = null; // define null to distinguish between methods with the same # of params
 		switch (mambuEntity) {
 		case CLIENT:
 			Client client = DemoUtil.getDemoClient(null);

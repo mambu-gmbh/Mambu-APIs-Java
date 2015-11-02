@@ -548,7 +548,7 @@ public class ApiDefinition {
 	}
 
 	// Get an Api endpoint for a Mambu class
-	private String getApiEndPoint(Class<?> entityClass) {
+	public static String getApiEndPoint(Class<?> entityClass) {
 
 		if (entityClass == null) {
 			throw new IllegalArgumentException("Entity Class cannot be NULL");

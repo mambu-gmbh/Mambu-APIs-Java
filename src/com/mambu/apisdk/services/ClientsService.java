@@ -11,6 +11,7 @@ import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstrain
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.services.CustomViewsService.CustomViewResultType;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
@@ -424,6 +425,10 @@ public class ClientsService {
 	/**
 	 * Requests a list of clients for a custom view, limited by offset/limit
 	 * 
+	 * @deprecated. Starting with 3.14 use the new method with branch/centre/officer filters, see {@link
+	 *              CustomViewsService.#getCustomViewEntities(com.mambu.apisdk.util.MambuEntityType, boolean, String,
+	 *              String, String, String, String, String)}
+	 * 
 	 * @param customViewKey
 	 *            the id of the Custom View to filter clients
 	 * @param offset
@@ -435,9 +440,17 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<Client> getClientsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
-		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+
+		String branchId = null;
+		String centreId = null;
+		String creditOfficerName = null;
+		CustomViewResultType resultType = CustomViewResultType.BASIC;
+
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
+				centreId, creditOfficerName, offset, limit);
 		return serviceExecutor.execute(getClientsList, params);
 
 	}
@@ -471,6 +484,10 @@ public class ClientsService {
 	/**
 	 * Requests a list of groups for a custom view, limited by offset/limit
 	 * 
+	 * @deprecated. Starting with 3.14 use the new method with branch/centre/officer filters, see {@link
+	 *              CustomViewsService.#getCustomViewEntities(com.mambu.apisdk.util.MambuEntityType, boolean, String,
+	 *              String, String, String, String, String)}
+	 * 
 	 * @param customViewKey
 	 *            the key of the Custom View to filter groups
 	 * @param offset
@@ -482,9 +499,16 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<Group> getGroupsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
-		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+		String branchId = null;
+		String centreId = null;
+		String creditOfficerName = null;
+		CustomViewResultType resultType = CustomViewResultType.BASIC;
+
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
+				centreId, creditOfficerName, offset, limit);
 		return serviceExecutor.execute(getGroupsList, params);
 
 	}

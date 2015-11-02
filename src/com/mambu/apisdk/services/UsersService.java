@@ -207,6 +207,21 @@ public class UsersService {
 	}
 
 	/**
+	 * Helper to get ApiViewType for a DataViewType
+	 * 
+	 * @param dataViewType
+	 *            data view type
+	 * @return Api View Type
+	 */
+	public static ApiViewType getApiViewType(DataViewType dataViewType) {
+		if (dataViewType == null || !supportedDataViewTypes.containsKey(dataViewType)) {
+			return null;
+		}
+
+		return supportedDataViewTypes.get(dataViewType);
+	}
+
+	/**
 	 * Get user roles
 	 * 
 	 * @return list of all User Roles

@@ -1,5 +1,6 @@
 package com.mambu.apisdk.util;
 
+import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.core.shared.model.Comment;
@@ -28,7 +29,8 @@ public enum MambuEntityType {
 	CLIENT(Client.class), GROUP(Group.class), LOAN_ACCOUNT(LoanAccount.class), SAVINGS_ACCOUNT(SavingsAccount.class), LOAN_PRODUCT(
 			LoanProduct.class), SAVINGS_PRODUCT(SavingsProduct.class), LOAN_TRANSACTION(LoanTransaction.class), SAVINGS_TRANSACTION(
 			SavingsTransaction.class), BRANCH(Branch.class), CENTRE(Centre.class), USER(User.class), COMMENT(
-			Comment.class), CUSTOM_FIELD_VALUE(CustomFieldValue.class), LINE_OF_CREDIT(LineOfCredit.class);
+			Comment.class), CUSTOM_FIELD_VALUE(CustomFieldValue.class), LINE_OF_CREDIT(LineOfCredit.class), ACTIVITY(
+			JSONActivity.class);
 
 	// Map MambuEntity enum to a corresponding Java class in Mambu model. For example, CLIENT enum is for Client.class.
 	// Java classes for MambuEntity are to be used by the {@link ApiDefintion} and {@link ServiceExecutor}
