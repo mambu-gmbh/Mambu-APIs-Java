@@ -1014,6 +1014,9 @@ public class LoansService {
 	/***
 	 * Get all documents for a specific Loan Account
 	 * 
+	 * @deprecated Starting from 3.14 use
+	 *             {@link DocumentsService#getDocuments(MambuEntityType, String, Integer, Integer)}. This methods
+	 *             supports pagination parameters
 	 * @param accountId
 	 *            the encoded key or id of the loan account for which attached documents are to be retrieved
 	 * 

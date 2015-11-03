@@ -631,6 +631,9 @@ public class ClientsService {
 	/***
 	 * Get all documents for a specific Client
 	 * 
+	 * @deprecated Starting from 3.14 use
+	 *             {@link DocumentsService#getDocuments(MambuEntityType, String, Integer, Integer)}. This methods
+	 *             supports pagination parameters
 	 * @param clientId
 	 *            the encoded key or id of the Mambu client for which attached documents are to be retrieved
 	 * 
@@ -645,6 +648,9 @@ public class ClientsService {
 	/***
 	 * Get all documents for a specific Group
 	 * 
+	 * @deprecated Starting from 3.14 use
+	 *             {@link DocumentsService#getDocuments(MambuEntityType, String, Integer, Integer)}. This methods
+	 *             supports pagination parameters
 	 * @param groupId
 	 *            the encoded key or id of the Mambu group for which attached documents are to be retrieved
 	 * 

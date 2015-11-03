@@ -18,6 +18,7 @@ import com.mambu.accountsecurity.shared.model.InvestorFund;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.LoanAccountExpanded;
+import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.util.APIData.CLOSER_TYPE;
 import com.mambu.apisdk.util.DateUtils;
@@ -1039,9 +1040,11 @@ public class DemoTestLoanService {
 		LoanAccount account = DemoUtil.getDemoLoanAccount();
 		String accountId = account.getId();
 
-		LoansService loanService = MambuAPIFactory.getLoanService();
-
-		List<Document> documents = loanService.getLoanAccountDocuments(accountId);
+		Integer offset = 0;
+		Integer limit = 5;
+		DocumentsService documentsService = MambuAPIFactory.getDocumentsService();
+		List<Document> documents = documentsService
+				.getDocuments(MambuEntityType.LOAN_ACCOUNT, accountId, offset, limit);
 
 		// Log returned documents using DemoTestDocumentsService helper
 		System.out.println("Documents returned for a Loan Account with ID=" + accountId);

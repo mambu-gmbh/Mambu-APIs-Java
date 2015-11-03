@@ -13,6 +13,7 @@ import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.MambuEntityType;
@@ -674,9 +675,11 @@ public class DemoTestSavingsService {
 	public static void testGetDocuments() throws MambuApiException {
 		System.out.println(methodName = "\nIn testGetDocuments");
 
-		SavingsService savingsService = MambuAPIFactory.getSavingsService();
-
-		List<Document> documents = savingsService.getSavingsAccountDocuments(demoSavingsAccount.getId());
+		Integer offset = 0;
+		Integer limit = 5;
+		DocumentsService documentsService = MambuAPIFactory.getDocumentsService();
+		List<Document> documents = documentsService.getDocuments(MambuEntityType.SAVINGS_ACCOUNT,
+				demoSavingsAccount.getId(), offset, limit);
 
 		// Log returned documents using DemoTestDocumentsService helper
 		System.out.println("Documents returned for a Savings Account with ID=" + demoSavingsAccount.getId());

@@ -80,25 +80,24 @@ public class DemoEntityParams {
 		}
 
 		// Get Demo entities using IDs specified in the configuration file (set requested ID to null)
-		String nullId = null; // define null to distinguish between methods with the same # of params
 		switch (mambuEntity) {
 		case CLIENT:
-			Client client = DemoUtil.getDemoClient(null);
+			Client client = DemoUtil.getDemoClient(DemoUtil.demoClientId);
 			return new DemoEntityParams(client.getFullName(), client.getEncodedKey(), client.getId());
 		case GROUP:
-			Group group = DemoUtil.getDemoGroup(null);
+			Group group = DemoUtil.getDemoGroup(DemoUtil.demoGroupId);
 			return new DemoEntityParams(group.getGroupName(), group.getEncodedKey(), group.getId());
 		case LOAN_ACCOUNT:
-			LoanAccount loan = DemoUtil.getDemoLoanAccount(null);
+			LoanAccount loan = DemoUtil.getDemoLoanAccount(DemoUtil.demoLaonAccountId);
 			return new DemoEntityParams(loan.getName(), loan.getEncodedKey(), loan.getId());
 		case SAVINGS_ACCOUNT:
-			SavingsAccount savings = DemoUtil.getDemoSavingsAccount(null);
+			SavingsAccount savings = DemoUtil.getDemoSavingsAccount((DemoUtil.demoSavingsAccountId));
 			return new DemoEntityParams(savings.getName(), savings.getEncodedKey(), savings.getId());
 		case LOAN_PRODUCT:
-			LoanProduct lProduct = DemoUtil.getDemoLoanProduct(nullId);
+			LoanProduct lProduct = DemoUtil.getDemoLoanProduct((DemoUtil.demoLaonProductId));
 			return new DemoEntityParams(lProduct.getName(), lProduct.getEncodedKey(), lProduct.getId());
 		case SAVINGS_PRODUCT:
-			SavingsProduct sProduct = DemoUtil.getDemoSavingsProduct(nullId);
+			SavingsProduct sProduct = DemoUtil.getDemoSavingsProduct(DemoUtil.demoSavingsProductId);
 			return new DemoEntityParams(sProduct.getName(), sProduct.getEncodedKey(), sProduct.getId());
 		case USER:
 			User user = DemoUtil.getDemoUser();
