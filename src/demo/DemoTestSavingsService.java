@@ -75,6 +75,7 @@ public class DemoTestSavingsService {
 				productTypesTesting = true;
 				// Run tests for all products types, selecting random active product ID of each type once
 				productTypes = SavingsType.values();
+				System.out.println("Testing all Product Types =" + productTypes.length);
 			} else {
 				// Use demoSavingsProductId configuration: a specific product ID (if not null) or a random product (if
 				// null)
@@ -101,7 +102,6 @@ public class DemoTestSavingsService {
 				try {
 
 					testCreateSavingsAccount();
-					testPatchSavingsAccountTerms(); // Available since 3.12.2
 					testCloseSavingsAccount(); // Available since 3.4
 					testDeleteSavingsAccount(); // Available since 3.4
 
@@ -432,7 +432,7 @@ public class DemoTestSavingsService {
 		}
 	}
 
-	// Update Loan account
+	// Update Savings account
 	public static void testUpdateSavingsAccount() throws MambuApiException {
 		System.out.println(methodName = "\nIn testUpdateSavingsAccount");
 
@@ -462,7 +462,7 @@ public class DemoTestSavingsService {
 		List<CustomFieldValue> updatedCustomFields = updatedAccountResult.getCustomInformation();
 
 		if (updatedCustomFields != null) {
-			System.out.println("Custom Fields for Loan Account\n");
+			System.out.println("Custom Fields for Savings Account\n");
 			for (CustomFieldValue value : updatedCustomFields) {
 				System.out.println("CustomField Key=" + value.getCustomFieldKey() + "\tValue=" + value.getValue());
 
@@ -476,7 +476,7 @@ public class DemoTestSavingsService {
 		System.out.println(methodName = "\nIn testPatchSavingsAccountTerms");
 
 		// See MBU-10447 for a list of fields that can be updated (as of Mambu 3.14)
-		SavingsAccount savingsAccount = demoSavingsAccount;
+		SavingsAccount savingsAccount = newAccount.getSavingsAccount();
 		String productKey = savingsAccount.getProductTypeKey();
 		SavingsProduct product = DemoUtil.getDemoSavingsProduct(productKey);
 		SavingsType productType = product.getProductType();
@@ -586,6 +586,11 @@ public class DemoTestSavingsService {
 			System.out.println("New  RecommendedDepositAmount=" + recAmount);
 			savingsAccount.setRecommendedDepositAmount(recAmount);
 
+		} else {
+			// May need to clear Recommended Deposit Amount: the createAccount() API currently allows it to be specified
+			// even when not applicable for INVESTOR_ACCOUNT product type
+			Money nullAmount = null;
+			savingsAccount.setRecommendedDepositAmount(nullAmount);
 		}
 		// Update targetAmount
 		if (productType == SavingsType.SAVINGS_PLAN) {
@@ -696,7 +701,7 @@ public class DemoTestSavingsService {
 
 	}
 
-	private static final String apiTestNamePrefix = "API Test Savings ";
+	private static final String apiTestIdPrefix = "API-";
 
 	// Create demo savings account with parameters consistent with the demo product
 	private static SavingsAccount makeSavingsAccountForDemoProduct() {
@@ -709,7 +714,7 @@ public class DemoTestSavingsService {
 		}
 		SavingsAccount savingsAccount = new SavingsAccount();
 		final long time = new Date().getTime();
-		savingsAccount.setId("API-" + time);
+		savingsAccount.setId(apiTestIdPrefix + time); // Can set ID field since 3.13.1. See MBU-10574
 		savingsAccount.setName(demoSavingsProduct.getName());
 		savingsAccount.setProductTypeKey(demoSavingsProduct.getEncodedKey());
 
@@ -748,10 +753,11 @@ public class DemoTestSavingsService {
 		if (maxWidthdrawlAmount == null) {
 			maxWidthdrawlAmount = new Money(300.00);
 		}
-		// Max deposit
 		savingsAccount.setMaxWidthdrawlAmount(maxWidthdrawlAmount);
+		// Recommended Deposit. Not available for FIXED_DEPOSIT and INVESTOR_ACCOUNT products
 		Money recommendedDepositAmount = demoSavingsProduct.getRecommendedDepositAmount();
-		if (recommendedDepositAmount == null && savingsType != SavingsType.FIXED_DEPOSIT) {
+		if (recommendedDepositAmount == null && savingsType != SavingsType.FIXED_DEPOSIT
+				&& savingsType != SavingsType.INVESTOR_ACCOUNT) {
 			recommendedDepositAmount = new Money(400.00);
 		}
 		savingsAccount.setRecommendedDepositAmount(recommendedDepositAmount);
@@ -822,10 +828,10 @@ public class DemoTestSavingsService {
 		}
 		for (SavingsAccount account : accounts) {
 			String name = account.getName();
-			if (name.contains(apiTestNamePrefix)) {
+			String id = account.getId();
+			if (id.startsWith(apiTestIdPrefix)) {
 				AccountState state = account.getAccountState();
 				if (state == AccountState.PENDING_APPROVAL || state == AccountState.APPROVED) {
-					String id = account.getId();
 					System.out.println("Deleting savings account " + name + " ID=" + id);
 					try {
 						savingsService.deleteSavingsAccount(id);

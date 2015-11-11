@@ -812,11 +812,8 @@ public class DemoTestLoanService {
 
 		if (products.size() > 0) {
 			for (LoanProduct product : products) {
-				List<GLAccountingRule> accountingRules = product.getGlProductRules();
-				int totalAccountingRules = accountingRules == null ? 0 : accountingRules.size();
 				System.out.println("Product=" + product.getName() + "\tId=" + product.getId() + "\tKey="
-						+ product.getEncodedKey() + "\tProduct Type=" + product.getLoanProductType() + "\tRules="
-						+ totalAccountingRules);
+						+ product.getEncodedKey() + "\tProduct Type=" + product.getLoanProductType());
 			}
 		}
 
@@ -864,7 +861,7 @@ public class DemoTestLoanService {
 				+ lastRepayment.getTotalDue());
 	}
 
-	private static final String apiTestLoanNamePrefix = "API Test Loan ";
+	private static final String apiTestIdPrefix = "API-";
 
 	// Create demo loan account with parameters consistent with the demo product
 	private static LoanAccount makeLoanAccountForDemoProduct() {
@@ -880,7 +877,7 @@ public class DemoTestLoanService {
 		// Set params to be consistent with the demo product (to be accepted by the GET product schedule API and create
 		// loan
 		final long time = new Date().getTime();
-		loanAccount.setId("API-" + time); // specifying ID is supported in 3.14
+		loanAccount.setId(apiTestIdPrefix + time); // specifying ID is supported in 3.14
 		loanAccount.setLoanName(demoProduct.getName());
 		loanAccount.setProductTypeKey(demoProduct.getEncodedKey());
 		// Set PrincipalPaymentSettings from product: needed for Revolving Credit products since 3.14
@@ -1073,11 +1070,11 @@ public class DemoTestLoanService {
 		}
 		for (LoanAccount account : accounts) {
 			String name = account.getLoanName();
-			if (name.contains(apiTestLoanNamePrefix)) {
+			String id = account.getId();
+			if (id.startsWith(apiTestIdPrefix)) {
 				AccountState state = account.getAccountState();
 				if (state == AccountState.PARTIAL_APPLICATION || state == AccountState.PENDING_APPROVAL
 						|| state == AccountState.APPROVED) {
-					String id = account.getId();
 					System.out.println("Deleting loan account " + name + " ID=" + id);
 					try {
 						loanService.deleteLoanAccount(id);
