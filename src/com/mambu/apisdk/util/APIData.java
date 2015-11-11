@@ -185,6 +185,11 @@ public class APIData {
 	// API's endpoint
 	public static String DOCUMENTS = "documents";
 
+	// Document Template API
+	public static String TEMPLATES = "templates"; // /api/loans/{LOAN_ID}/templates/
+	public static String START_DATE = "startDate";
+	public static String END_DATE = "endDate";
+
 	// API endpoints for uploading client profile picture and signature. Available since 3.9
 	public static String PROFILE_PICTURE = "PROFILE_PICTURE";
 	public static String SIGNATURE = "SIGNATURE";

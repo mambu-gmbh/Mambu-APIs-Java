@@ -9,6 +9,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.accounting.shared.model.GLJournalEntry;
+import com.mambu.accounts.shared.model.DocumentTemplate;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
@@ -527,6 +528,9 @@ public class ServiceExecutor {
 		collectionTypesMap.put(IdentificationDocumentTemplate.class,
 				new TypeToken<List<IdentificationDocumentTemplate>>() {
 				}.getType());
+		// DocuementTemplate
+		collectionTypesMap.put(DocumentTemplate.class, new TypeToken<List<DocumentTemplate>>() {
+		}.getType());
 		// Object Labels
 		collectionTypesMap.put(ObjectLabel.class, new TypeToken<List<ObjectLabel>>() {
 		}.getType());

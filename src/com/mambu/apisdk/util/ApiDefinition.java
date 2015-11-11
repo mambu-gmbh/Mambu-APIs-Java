@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.accounting.shared.model.GLJournalEntry;
+import com.mambu.accounts.shared.model.DocumentTemplate;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.accountsecurity.shared.model.InvestorFund;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
@@ -533,6 +534,8 @@ public class ApiDefinition {
 		apiEndPointsMap.put(JSONComment.class, APIData.COMMENTS);
 		// Identification Document Template
 		apiEndPointsMap.put(IdentificationDocumentTemplate.class, APIData.ID_DOCUMENT_TEMPLATES);
+		// Document Template
+		apiEndPointsMap.put(DocumentTemplate.class, APIData.TEMPLATES);
 		// Organization
 		apiEndPointsMap.put(Organization.class, APIData.ORGANIZATION);
 		apiEndPointsMap.put(GeneralSettings.class, APIData.GENERAL);
