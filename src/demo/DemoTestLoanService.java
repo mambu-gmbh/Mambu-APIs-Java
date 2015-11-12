@@ -2,6 +2,7 @@ package demo;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -948,18 +949,36 @@ public class DemoTestLoanService {
 			tanches.add(tranche);
 			loanAccount.setTranches(tanches);
 		}
-		// RepaymentPeriodCount
-		Integer defRepPeriodCount = demoProduct.getDefaultRepaymentPeriodCount();
-		if (defRepPeriodCount == null) {
-			defRepPeriodCount = 30;
+
+		// Since 3.14, Fixed Days can be set at the account level, overwriting product settings. See MBU-10205
+		// Set RepaymentPeriodCount and RepaymentPeriodUnit and FixedDays
+		ScheduleDueDatesMethod scheduleDueDatesMethod = demoProduct.getScheduleDueDatesMethod();
+		// Set all to null and then set only the applicable params
+		loanAccount.setRepaymentPeriodCount(null);
+		loanAccount.setRepaymentPeriodUnit(null);
+		loanAccount.setFixedDaysOfMonth(null);
+		switch (scheduleDueDatesMethod) {
+		case FIXED_DAYS_OF_MONTH:
+			// Set fixed days
+			List<Integer> fixedDays = Arrays.asList(2, 18);
+			loanAccount.setFixedDaysOfMonth(new ArrayList<>(fixedDays));
+			break;
+		case INTERVAL:
+			// Set RepaymentPeriodCount and RepaymentPeriodUnit
+			Integer defRepPeriodCount = demoProduct.getDefaultRepaymentPeriodCount();
+			if (defRepPeriodCount == null) {
+				defRepPeriodCount = 30;
+			}
+			loanAccount.setRepaymentPeriodCount(defRepPeriodCount);
+			// RepaymentPeriodUnit
+			RepaymentPeriodUnit units = demoProduct.getRepaymentPeriodUnit();
+			if (units == null) {
+				units = RepaymentPeriodUnit.DAYS;
+			}
+			loanAccount.setRepaymentPeriodUnit(units);
+			break;
 		}
-		loanAccount.setRepaymentPeriodCount(defRepPeriodCount);
-		// RepaymentPeriodUnit
-		RepaymentPeriodUnit units = demoProduct.getRepaymentPeriodUnit();
-		if (units == null) {
-			units = RepaymentPeriodUnit.DAYS;
-		}
-		loanAccount.setRepaymentPeriodUnit(units);
+
 		// RepaymentInstallments
 		Integer repaymentInsatllments = demoProduct.getDefaultNumInstallments();
 		if (repaymentInsatllments == null) {
@@ -1111,7 +1130,8 @@ public class DemoTestLoanService {
 		case FIXED_DAYS_OF_MONTH:
 			// For fixed days product set to one of the allowed days
 			System.out.println("Fixed day product:");
-			List<Integer> fixedDays = demoProduct.getFixedDaysOfMonth();
+			// Since 3.14 Fixed Days are defined at the account level. See MBU-10205 and MBU-10802
+			List<Integer> fixedDays = account.getFixedDaysOfMonth();
 			if (fixedDays != null && fixedDays.size() > 0) {
 				Calendar date = Calendar.getInstance();
 				int year = date.get(Calendar.YEAR);

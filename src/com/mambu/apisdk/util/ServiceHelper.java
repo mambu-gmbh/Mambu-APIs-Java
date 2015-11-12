@@ -288,12 +288,13 @@ public class ServiceHelper {
 	}
 
 	/**
-	 * A list of fields supported by get loan schedule preview API. See MBU-6789 and MBU-7676
+	 * A list of fields supported by get loan schedule preview API. See MBU-6789, MBU-7676 and MBU-10802.
 	 */
 	private final static Set<String> loanSchedulePreviewFields = new HashSet<String>(Arrays.asList(APIData.LOAN_AMOUNT,
 			APIData.INTEREST_RATE, APIData.REPAYMENT_INSTALLMENTS, APIData.REPAYMENT_PERIOD_COUNT,
 			APIData.REPAYMENT_PERIOD_UNIT, APIData.EXPECTED_DISBURSEMENT_DATE, APIData.FIRST_REPAYMENT_DATE,
-			APIData.GRACE_PERIOD, APIData.PRNICIPAL_REPAYMENT_INTERVAL, APIData.PERIODIC_PAYMENT));
+			APIData.GRACE_PERIOD, APIData.PRNICIPAL_REPAYMENT_INTERVAL, APIData.PERIODIC_PAYMENT,
+			APIData.FIXED_DAYS_OF_MONTH));
 
 	/**
 	 * Create ParamsMap with a map of fields for the GET loan schedule for the product API. Only fields applicable to

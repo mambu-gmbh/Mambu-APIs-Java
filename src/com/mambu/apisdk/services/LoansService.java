@@ -984,9 +984,9 @@ public class LoansService {
 	 * 
 	 *            Only the following loan account parameters are currently supported: loanAmount (mandatory),
 	 *            anticipatedDisbursement, firstRepaymentDate, interestRate, repaymentInstallments, gracePeriod,
-	 *            repaymentPeriodUnit, repaymentPeriodCount, principalRepaymentInterval
+	 *            repaymentPeriodUnit, repaymentPeriodCount, principalRepaymentInterval, fixedDaysOfMonth
 	 * 
-	 *            See MBU-6789 and MBU-7676 for more details
+	 *            See MBU-6789, MBU-7676 and MBU-10802 for more details
 	 * 
 	 * @return the List of Repayments
 	 * 
@@ -994,6 +994,7 @@ public class LoansService {
 	 */
 	public List<Repayment> getLoanProductSchedule(String productId, LoanAccount account) throws MambuApiException {
 		// E.g. GET /api/loanproducts/{ID}/schedule?loanAmount=1250&anticipatedDisbursement=2015-02-10&interestRate=4
+		// E.g. GET /api/loanproducts/{ID}/schedule?loanAmount=1250&fixedDaysOfMonth=2,10,20
 
 		if (account == null) {
 			throw new IllegalArgumentException("Loan Account cannot be null");

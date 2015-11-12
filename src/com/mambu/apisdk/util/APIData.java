@@ -157,6 +157,7 @@ public class APIData {
 	public static final String PRNICIPAL_REPAYMENT_INTERVAL = "principalRepaymentInterval";
 	public static final String PERIODIC_PAYMENT = "periodicPayment";
 	public static final String PENALTY_RATE = "penaltyRate";
+	public static final String FIXED_DAYS_OF_MONTH = "fixedDaysOfMonth"; // supported since 3.14. See MBU-10802
 
 	// Parameters supported by SavingsAccount PATCH API
 	public static final String OVERDRAFT_LIMIT = "overdraftLimit";
