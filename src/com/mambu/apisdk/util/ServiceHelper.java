@@ -315,6 +315,21 @@ public class ServiceHelper {
 		// Loan schedule API uses URL encoded params, so the dates should be in "yyyy-MM-dd" date format
 		JsonObject loanTermsObject = makeJsonObjectForFields(account, loanSchedulePreviewFields, APIData.yyyyMmddFormat);
 
+		// FIXED_DAYS_OF_MONTH field is an Integer array with the data in the format [2,15]. But for this url-encoded
+		// API it needs to be converted into a string with no array square brackets: Mambu expects it in this format:
+		// "fixedDaysOfMonth"="2,15" See MBU-10802.
+		// Get an array and convert it into a string with no square brackets
+		JsonElement fixedDaysElement = loanTermsObject.get(APIData.FIXED_DAYS_OF_MONTH);
+		if (fixedDaysElement != null && fixedDaysElement.isJsonArray()
+				&& fixedDaysElement.getAsJsonArray().toString().length() >= 2) {
+			String arrayData = fixedDaysElement.getAsJsonArray().toString();
+			arrayData = arrayData.substring(1, arrayData.length() - 1); // remove surrounding []
+			// Replace the original value with the data part only
+			loanTermsObject.remove(APIData.FIXED_DAYS_OF_MONTH);
+			if (arrayData.length() > 0) {
+				loanTermsObject.addProperty(APIData.FIXED_DAYS_OF_MONTH, arrayData);
+			}
+		}
 		// For this GET API we need to create params map with all individual params separately
 		// Convert Json object with the applicable fields into a ParamsMap.
 		Type type = new TypeToken<ParamsMap>() {
