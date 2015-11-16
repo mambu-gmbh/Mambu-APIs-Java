@@ -62,6 +62,7 @@ public class DemoTestSearchService {
 			testSearchUsersBranchesCentres();
 
 			testSearchGlAccounts();
+			testSearchLinesOfCredit(); // Available since Mambu 3.14
 			testTypesCombinations();
 
 			testSearchEntitiesByFilter(); // Available since Mambu 3.12
@@ -181,18 +182,35 @@ public class DemoTestSearchService {
 
 	}
 
+	// Test Search for Lines of Credit. Lines of Credit can be searched by ID. Available since 3.14. See MBU-10579
+	public static void testSearchLinesOfCredit() throws MambuApiException {
+		System.out.println("\nIn testSearchLinesOfCredit");
+		SearchService searchService = MambuAPIFactory.getSearchService();
+
+		// Lines of Credit can be searched by ID
+		String query = "M";
+		String limit = "5";
+		// Test with SearchType.LINE_OF_CREDIT
+		List<SearchType> searchTypes = Arrays.asList(SearchType.LINE_OF_CREDIT);
+		Map<SearchType, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
+
+		System.out.println("Search Lines of Credit for query=" + query + "\tReturned=" + results.size());
+
+		// Log detailed results
+		logSearchResults(results);
+
+	}
+
 	public static void testTypesCombinations() throws MambuApiException {
 		System.out.println("\nIn testTypesCombinations");
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
-		String query = "Бо"; // Russian Бо // \u00c1 Spanish A == UTF8 hex = c3 81
+		String query = "A"; // Russian Бо // \u00c1 Spanish A == UTF8 hex = c3 81
 		String limit = "100";
 
-		// Use different Search Types combinations as needed
-		// List<Type> searchTypes = Arrays.asList(Type.CLIENT, Type.GROUP, Type.LOAN_ACCOUNT, Type.SAVINGS_ACCOUNT,
-		// Type.USER, Type.CENTRE); // or null
-		List<SearchType> searchTypes = Arrays.asList(SearchType.CLIENT);
+		// Test all possible Search Types combinations
+		List<SearchType> searchTypes = Arrays.asList(SearchType.values()); // or null
 		Map<SearchType, List<SearchResult>> results = searchService.search(query, searchTypes, limit);
 
 		if (results != null)
