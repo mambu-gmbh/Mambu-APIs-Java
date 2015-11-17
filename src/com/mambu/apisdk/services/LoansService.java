@@ -406,9 +406,10 @@ public class LoansService {
 	 * Disburse a loan account with a given disbursal date and some extra transaction details
 	 * 
 	 * @param accountId
-	 *            account ID
+	 *            account ID. Must not be null
 	 * @param amount
-	 *            disbursement amount
+	 *            disbursement amount. Loan amount can be null for all loan product types except REVOLVING_CREDIT. See
+	 *            MBU-1054
 	 * @param disbursalDate
 	 *            disbursement date
 	 * @param firstRepaymentDate
@@ -426,6 +427,7 @@ public class LoansService {
 			String firstRepaymentDate, String notes, TransactionDetails transactionDetails) throws MambuApiException {
 
 		// Disbursing loan account with tranches is available since Mambu 3.13. See MBU-10045
+		// Disbursing Revolving Credit loans is available since Mambu 3.14 . See MBU-10547
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_DISBURSEMENT);
 
@@ -512,8 +514,8 @@ public class LoansService {
 	 * updating LoanAccount with details. As of Mambu 3.4 only custom fields can be updated.
 	 * 
 	 * @param loan
-	 *            LoanAccountExtended object containing LoanAccount. LoanAccount encodedKey must be NOT null for account
-	 *            update
+	 *            LoanAccountExtended object containing LoanAccount. LoanAccount encodedKey or id must be NOT null for
+	 *            account update
 	 * 
 	 * @return updated object containing both the LoanAccount and its CustomInformation fields
 	 * 
@@ -526,9 +528,9 @@ public class LoansService {
 		}
 
 		LoanAccount inputAccount = loan.getLoanAccount();
-		String encodedKey = inputAccount.getEncodedKey();
+		String encodedKey = inputAccount.getEncodedKey() != null ? inputAccount.getEncodedKey() : inputAccount.getId();
 		if (encodedKey == null) {
-			throw new IllegalArgumentException("Cannot update Account, the encoded key must be NOT null");
+			throw new IllegalArgumentException("Cannot update Account: the encoded key or id must NOT be null");
 		}
 
 		return serviceExecutor.executeJson(updateAccount, loan, encodedKey);
@@ -978,13 +980,15 @@ public class LoansService {
 	 * Get repayment schedule preview for a Loan Product
 	 * 
 	 * @param productId
-	 *            the id of the loan product
+	 *            the id of the loan product. Must not be null.
 	 * @param account
 	 *            loan account containing parameters for determining loan schedule
 	 * 
 	 *            Only the following loan account parameters are currently supported: loanAmount (mandatory),
 	 *            anticipatedDisbursement, firstRepaymentDate, interestRate, repaymentInstallments, gracePeriod,
 	 *            repaymentPeriodUnit, repaymentPeriodCount, principalRepaymentInterval, fixedDaysOfMonth
+	 * 
+	 *            Loan repayment schedule preview is not available for Revolving Credit products. See MBU-10545
 	 * 
 	 *            See MBU-6789, MBU-7676 and MBU-10802 for more details
 	 * 
