@@ -25,6 +25,7 @@ import com.mambu.core.shared.model.InterestRateSettings;
 import com.mambu.core.shared.model.Money;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
+import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
 import com.mambu.savings.shared.model.SavingsTransaction;
@@ -111,6 +112,7 @@ public class DemoTestSavingsService {
 					testPatchSavingsAccountTerms(); // Available since 3.12.2
 
 					testApproveSavingsAccount();
+					testGetFundedLoanAccounts(); // Available since 3.14
 
 					testUndoApproveSavingsAccount(); // Available since 3.5
 					testApproveSavingsAccount(); // Available since 3.5
@@ -198,6 +200,27 @@ public class DemoTestSavingsService {
 			System.out.print(account.getName() + " ");
 		}
 		System.out.println();
+	}
+
+	// Test getting all loan accounts funded by a deposit investor account
+	public static void testGetFundedLoanAccounts() throws MambuApiException {
+		System.out.println(methodName = "\nIn testGetFundedLoanAccounts");
+		SavingsService savingsService = MambuAPIFactory.getSavingsService();
+
+		String savingsId = demoSavingsAccount.getId();
+
+		// This API call can succeed only if the test account is of SavingsType.INVESTOR_ACCOUNT type
+		try {
+			List<LoanAccount> fundedAccounts = savingsService.getFundedLoanAccounts(savingsId);
+			System.out.println("Total Funded accounts=" + fundedAccounts.size() + " for Savings ID=" + savingsId);
+			for (LoanAccount account : fundedAccounts) {
+				System.out.print("\tFunded Loan Account: " + account.getName() + " " + account.getId());
+			}
+			System.out.println();
+		} catch (MambuApiException e) {
+			System.out.println("*** Exception *** " + methodName + " " + e.getMessage());
+
+		}
 	}
 
 	public static void testGetSavingsAccountsForGroup() throws MambuApiException {
@@ -720,7 +743,7 @@ public class DemoTestSavingsService {
 
 		SavingsType savingsType = demoSavingsProduct.getProductType();
 		savingsAccount.setAccountType(savingsType);
-		savingsAccount.setAccountState(AccountState.PENDING_APPROVAL);
+		savingsAccount.setAccountState(AccountState.PENDING_APPROVAL); // AccountState must be set explicitly since 3.14
 
 		boolean isForClient = demoSavingsProduct.isForIndividuals();
 		String holderKey = (isForClient) ? demoClient.getEncodedKey() : demoGroup.getEncodedKey();

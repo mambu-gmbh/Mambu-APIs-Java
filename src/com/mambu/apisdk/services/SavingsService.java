@@ -15,14 +15,18 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.CustomViewsService.CustomViewResultType;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.RequestExecutor.ContentType;
+import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.docs.shared.model.Document;
+import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
 import com.mambu.savings.shared.model.SavingsTransaction;
@@ -772,8 +776,8 @@ public class SavingsService {
 	 * 
 	 * 
 	 * @param savingsAccount
-	 *            JSONSavingsAccount object containing SavingsAccount. SavingsAccount encodedKey must be NOT null for
-	 *            account update
+	 *            JSONSavingsAccount object containing SavingsAccount. SavingsAccount encodedKey or id must be NOT null
+	 *            for account update
 	 * 
 	 * @return savingsAccount
 	 * 
@@ -787,9 +791,9 @@ public class SavingsService {
 		}
 
 		SavingsAccount inputAccount = account.getSavingsAccount();
-		String encodedKey = inputAccount.getEncodedKey();
+		String encodedKey = inputAccount.getEncodedKey() != null ? inputAccount.getEncodedKey() : inputAccount.getId();
 		if (encodedKey == null) {
-			throw new IllegalArgumentException("Cannot update  Account, the encoded key must be NOT null");
+			throw new IllegalArgumentException("Cannot update Account: the encoded key or id must NOT be null");
 		}
 
 		return serviceExecutor.executeJson(updateAccount, account, encodedKey);
@@ -830,6 +834,28 @@ public class SavingsService {
 		String id = (accountId != null) ? accountId : encodedKey;
 		ParamsMap params = ServiceHelper.makeParamsForSavingsTermsPatch(savings);
 		return serviceExecutor.execute(patchAccount, id, params);
+
+	}
+
+	/**
+	 * Get all loan accounts funded by a deposit investor account
+	 * 
+	 * @param savingsId
+	 *            encoded key or an id of an investor funding savings account. Must not be null
+	 * @return all loan accounts funded by the deposit account
+	 * @throws MambuApiException
+	 */
+	public List<LoanAccount> getFundedLoanAccounts(String savingsId) throws MambuApiException {
+		// Example: GET /api/savings/{SAVINGS_ID}/funding
+		// Available since Mambu 3.14. See MBU-10905
+
+		if (savingsId == null) {
+			throw new IllegalArgumentException("Savings Account ID must not be null");
+		}
+		String urlPath = APIData.SAVINGS + "/" + savingsId + "/" + APIData.FUNDING;
+		ApiDefinition apiDefinition = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET, LoanAccount.class,
+				ApiReturnFormat.COLLECTION);
+		return serviceExecutor.execute(apiDefinition, savingsId);
 
 	}
 
