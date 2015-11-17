@@ -22,12 +22,11 @@ public class CustomViewsService {
 	// Service helper
 	protected ServiceExecutor serviceExecutor;
 
-	// Custom Views API supports three types of returned values
-	// See MBU-10842
+	// Custom Views API supports two types of returned values
+	// See MBU-10842. Note: a third result type (COLUMNS) will be added in future releases
 	public enum CustomViewResultType {
 		BASIC, // returns entities without any extra details
 		FULL_DETAILS, // returns entities with full details
-		COLUMNS // returns only the columns from the custom view
 	}
 
 	// Specify Mambu entities supported by the Custom View Value API: Client, Group. LoanAccount, SavingsAccount,
@@ -93,46 +92,6 @@ public class CustomViewsService {
 	}
 
 	/**
-	 * Get configured columns for a Custom View
-	 * 
-	 * @param viewApiType
-	 *            api view type. Example, ApiViewType.LOANS, or ApiViewType.CLIENTS
-	 * @param customViewKey
-	 *            the encoded key for the custom view
-	 * @param branchId
-	 *            branch id. Optional filter parameter
-	 * @param centreId
-	 *            centre id. Optional filter parameter
-	 * @param creditOfficerName
-	 *            credit officer name. Optional filter parameter
-	 * @param offset
-	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * @param limit
-	 *            pagination limit. If not null it must be an integer greater than zero
-	 * @return columns for the custom view
-	 * @throws MambuApiException
-	 */
-	// TODO: Confirm the return class when MBU-10842 is complete. Is this an array of Strings?
-	public String getCustomViewColumns(ApiViewType apiViewType, String customViewKey, String branchId, String centreId,
-			String creditOfficerName, String offset, String limit) throws MambuApiException {
-
-		// Example: GET /api/loans?viewfilter=123&resultType=COLUMNS&branchId=branch_01
-		// See MBU-4607
-		// Branch, Centre and Officer name filter parameters are available since Mambu 3.14. MBU-7042
-		// The resultType parameter is available since Mambu 3.14. See MBU-10842
-		final CustomViewResultType resultType = CustomViewResultType.COLUMNS;
-		ApiDefinition apiDefinition = makeApiDefintion(apiViewType, resultType);
-
-		// Create params map with all filtering parameters
-		ParamsMap params = makeParamsForGetByCustomView(customViewKey, resultType, branchId, centreId,
-				creditOfficerName, offset, limit);
-		// TODO: return null until MBU-10842 is complete
-
-		return serviceExecutor.execute(apiDefinition, params);
-
-	}
-
-	/**
 	 * Make ParamsMap for GET Mambu entities for a custom view API requests
 	 * 
 	 * @param customViewKey
@@ -174,10 +133,6 @@ public class CustomViewsService {
 				break;
 			case FULL_DETAILS:
 				params.put(APIData.RESULT_TYPE, APIData.FULL_DETAILS);
-				break;
-			case COLUMNS:
-				params.put(APIData.RESULT_TYPE, APIData.COLUMNS);
-				break;
 			}
 		}
 		// Add supported filter parameters
@@ -242,10 +197,7 @@ public class CustomViewsService {
 				throw new IllegalArgumentException("Full Details entities are not supported for " + forEntity);
 			}
 			break;
-		case COLUMNS:
-			resultClass = String.class; // TODO: return Class for COLUMNS to be confirmed
-			returnFormat = ApiReturnFormat.RESPONSE_STRING;
-			break;
+
 		}
 
 		// Create API Definition

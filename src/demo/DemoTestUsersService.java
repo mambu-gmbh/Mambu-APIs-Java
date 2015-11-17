@@ -319,11 +319,6 @@ public class DemoTestUsersService {
 								viewkey, branchId, centreId, creditOfficerName, offset, limit);
 						System.out.println("Client Details=" + clientsExpanded.size() + "  for View=" + viewName);
 						break;
-					case COLUMNS:
-						String viewRows = service.getCustomViewColumns(apiViewType, viewkey, branchId, centreId,
-								creditOfficerName, offset, limit);
-						System.out.println("Columns OK  for View=" + viewName);
-						break;
 					}
 					break;
 				case GROUPS:
@@ -340,11 +335,6 @@ public class DemoTestUsersService {
 								viewkey, branchId, centreId, creditOfficerName, offset, limit);
 						System.out.println("Group Details=" + groupsExpanded.size() + "  for View=" + viewName);
 						break;
-					case COLUMNS:
-						String viewRows = service.getCustomViewColumns(apiViewType, viewkey, branchId, centreId,
-								creditOfficerName, offset, limit);
-						System.out.println("Columns OK  for View=" + viewName);
-						break;
 					}
 					break;
 				case LOANS:
@@ -360,12 +350,6 @@ public class DemoTestUsersService {
 						List<LoanAccountExpanded> loansExpanded = service.getCustomViewEntities(apiViewType,
 								fullDetails, viewkey, branchId, centreId, creditOfficerName, offset, limit);
 						System.out.println("Loan Details=" + loansExpanded.size() + "  for View=" + viewName);
-						break;
-					case COLUMNS:
-						String viewRows = service.getCustomViewColumns(apiViewType, viewkey, branchId, centreId,
-								creditOfficerName, offset, limit);
-						System.out.println("Columns OK for View=" + viewName);
-						break;
 					}
 					break;
 				case DEPOSITS:
@@ -382,11 +366,6 @@ public class DemoTestUsersService {
 								fullDetails, viewkey, branchId, centreId, creditOfficerName, offset, limit);
 						System.out.println("Savings Details=" + savingsExpanded.size() + "  for View=" + viewName);
 						break;
-					case COLUMNS:
-						String viewRows = service.getCustomViewColumns(apiViewType, viewkey, branchId, centreId,
-								creditOfficerName, offset, limit);
-						System.out.println("Columns OK for View=" + viewName);
-						break;
 					}
 					break;
 				case LOAN_TRANSACTIONS:
@@ -399,11 +378,6 @@ public class DemoTestUsersService {
 						break;
 					case FULL_DETAILS:
 						System.out.println("No Details type for " + apiViewType);
-						break;
-					case COLUMNS:
-						String viewRows = service.getCustomViewColumns(apiViewType, viewkey, branchId, centreId,
-								creditOfficerName, offset, limit);
-						System.out.println("Columns OK for View=" + viewName);
 						break;
 					}
 					break;
@@ -418,11 +392,6 @@ public class DemoTestUsersService {
 					case FULL_DETAILS:
 						System.out.println("No Details type for " + apiViewType);
 						break;
-					case COLUMNS:
-						String viewRows = service.getCustomViewColumns(apiViewType, viewkey, branchId, centreId,
-								creditOfficerName, offset, limit);
-						System.out.println("Columns OK for View=" + viewName);
-						break;
 					}
 					break;
 				case SYSTEM_ACTIVITIES:
@@ -435,11 +404,6 @@ public class DemoTestUsersService {
 						break;
 					case FULL_DETAILS:
 						System.out.println("No Details type for " + apiViewType);
-						break;
-					case COLUMNS:
-						String viewRows = service.getCustomViewColumns(apiViewType, viewkey, branchId, centreId,
-								creditOfficerName, offset, limit);
-						System.out.println("Columns OK for View=" + viewName);
 						break;
 					}
 					break;
