@@ -240,6 +240,10 @@ public class APIData {
 	// Use Roles API
 	public static String USER_ROLES = "userroles"; // api/userroles
 
+	// Notification Messages Search API
+	public static String NOTIFICATIONS = "notifications";
+	public static String MESSAGES = "messages"; // /api/notifications/messages/search. Available since 3.14
+
 	// Added to support Json object creation API
 	public static String yyyyMmddFormat = DateUtils.DATE_FORMAT;// ISO_8601_FORMAT_DATE "yyyy-MM-dd";
 	public static String JSON_OBJECT = "JSON";

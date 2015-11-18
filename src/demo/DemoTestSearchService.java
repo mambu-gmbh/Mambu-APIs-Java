@@ -35,6 +35,9 @@ import com.mambu.core.shared.model.SearchType;
 import com.mambu.loans.shared.data.LoansDataField;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanTransaction;
+import com.mambu.notifications.shared.model.NotificationMessage;
+import com.mambu.notifications.shared.model.NotificationMessageDataField;
+import com.mambu.notifications.shared.model.TemplateTrigger;
 import com.mambu.savings.shared.data.SavingsDataField;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsTransaction;
@@ -66,6 +69,8 @@ public class DemoTestSearchService {
 			testTypesCombinations();
 
 			testSearchEntitiesByFilter(); // Available since Mambu 3.12
+
+			testSearchNotificationMessages(); // Available since Mambu 3.14
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Search Service");
@@ -418,6 +423,41 @@ public class DemoTestSearchService {
 
 		} else {
 			System.out.println("Warning: Cannot test savings transactions: no savings accounts returned");
+		}
+	}
+
+	// Test Search Notification Messages by on the Fly filter API
+	private static void testSearchNotificationMessages() throws MambuApiException {
+		System.out.println("\nIn testSearchNotificationMessages");
+
+		// Create Filter Constraints
+		ArrayList<JSONFilterConstraint> constraints = new ArrayList<JSONFilterConstraint>();
+		JSONFilterConstraint constraint1 = new JSONFilterConstraint();
+
+		// Specify Filter to get Notification messages. See MBU-10646 for details on available filters
+		constraint1.setDataFieldType(DataFieldType.NATIVE.name());
+		constraint1.setFilterSelection(NotificationMessageDataField.EVENT.name());
+		constraint1.setFilterElement(FilterElement.EQUALS.name());
+		constraint1.setValue(TemplateTrigger.LOAN_CREATED.name());
+
+		constraints.add(constraint1);
+
+		// Create JSONFilterConstraints with these constraints
+		JSONFilterConstraints filterConstraints = new JSONFilterConstraints();
+		filterConstraints.setFilterConstraints(constraints);
+
+		SearchService searchService = MambuAPIFactory.getSearchService();
+
+		String offset = "0";
+		String limit = "5";
+		// Execute API
+		List<NotificationMessage> notificationMessages = searchService.getNotificationMessages(filterConstraints,
+				offset, limit);
+
+		System.out.println("Total Notification messages=" + notificationMessages.size());
+		for (NotificationMessage message : notificationMessages) {
+			System.out.println("\tID=" + message.getId() + "\tType=" + message.getType() + "\tDestination="
+					+ message.getDestination());
 		}
 	}
 

@@ -45,6 +45,7 @@ import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
 import com.mambu.loans.shared.model.LoanTransaction;
 import com.mambu.loans.shared.model.Repayment;
+import com.mambu.notifications.shared.model.NotificationMessage;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 import com.mambu.savings.shared.model.SavingsAccount;
@@ -545,6 +546,9 @@ public class ServiceExecutor {
 		}.getType());
 		// Role
 		collectionTypesMap.put(Role.class, new TypeToken<List<Role>>() {
+		}.getType());
+		// NotificationMessage
+		collectionTypesMap.put(NotificationMessage.class, new TypeToken<List<NotificationMessage>>() {
 		}.getType());
 	}
 

@@ -12,6 +12,7 @@ import com.mambu.linesofcredit.shared.model.LineOfCredit;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
 import com.mambu.loans.shared.model.LoanTransaction;
+import com.mambu.notifications.shared.model.NotificationMessage;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 import com.mambu.savings.shared.model.SavingsAccount;
@@ -32,7 +33,8 @@ public enum MambuEntityType {
 			LoanProduct.class), SAVINGS_PRODUCT(SavingsProduct.class), LOAN_TRANSACTION(LoanTransaction.class), SAVINGS_TRANSACTION(
 			SavingsTransaction.class), BRANCH(Branch.class), CENTRE(Centre.class), USER(User.class), COMMENT(
 			Comment.class), CUSTOM_FIELD_VALUE(CustomFieldValue.class), LINE_OF_CREDIT(LineOfCredit.class), ACTIVITY(
-			JSONActivity.class), DOCUMENT(Document.class), DOCUMENT_TEMPLATE(DocumentTemplate.class);
+			JSONActivity.class), DOCUMENT(Document.class),  NOTIFICATION_MESSAGE(
+			NotificationMessage.class);
 
 	// Map MambuEntity enum to a corresponding Java class in Mambu model. For example, CLIENT enum is for Client.class.
 	// Java classes for MambuEntity are to be used by the {@link ApiDefintion} and {@link ServiceExecutor}
