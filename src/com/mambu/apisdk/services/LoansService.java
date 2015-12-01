@@ -622,7 +622,7 @@ public class LoansService {
 	 * Update funds for an existent Loan Account
 	 * 
 	 * @param accountId
-	 *            the encoded key or id of the loan account. Must not be null.
+	 *            the encoded key or id of the loan account. Account must not yet be disbursed. Must not be null.
 	 * @param funds
 	 *            funds to be updated. Must not be null
 	 * @return loan account with updated funds
@@ -631,7 +631,7 @@ public class LoansService {
 	 * @throws IllegalArgumentException
 	 */
 	public LoanAccount updateLoanAccountFunds(String accountId, List<InvestorFund> funds) throws MambuApiException {
-		// Available since Mambu 3.13. See MBU-9885
+		// Available since Mambu 3.13. See MBU-9885. MBU-11017 and MBU-11014
 
 		// Example: POST api/loans/ABC123/funds { funds":[
 		// // edit a fund
