@@ -61,11 +61,13 @@ public class DocumentTemplatesService {
 	 * @param templateKey
 	 *            template encoded key. Should be a valid product document template encoded key. Must not be null
 	 * @param startDate
-	 *            Start date. Mandatory for product documents that "Include Transactions History". Can only be specified
-	 *            for documents that "Include Transactions History". Must be less or equal to endDate
+	 *            Start date. Mandatory for product documents that "Include Transactions History" (i.e. documents of
+	 *            DocumentTemplateType.ACCOUNT_WITH_TRANSACTIONS type) and can be only specified for documents of this
+	 *            type. If specified, must be less or equal to endDate
 	 * @param endDate
-	 *            End date. Mandatory for product documents that "Include Transactions History". Can only be specified
-	 *            for documents that "Include Transactions History"
+	 *            End date. Mandatory for product documents that "Include Transactions History" (i.e. documents of
+	 *            DocumentTemplateType.ACCOUNT_WITH_TRANSACTIONS type) and can be only specified for documents of this
+	 *            type.
 	 * @return populated HTML template for the loan account
 	 * 
 	 * @throws MambuApiException
@@ -87,11 +89,13 @@ public class DocumentTemplatesService {
 	 * @param templateKey
 	 *            template encoded key. Should be a valid product document template encoded key. Must not be null
 	 * @param startDate
-	 *            Start date. Mandatory for product documents that "Include Transactions History". Can only be specified
-	 *            for documents that "Include Transactions History". Must be less or equal to endDate
+	 *            Start date. Mandatory for product documents that "Include Transactions History" (i.e. documents of
+	 *            DocumentTemplateType.ACCOUNT_WITH_TRANSACTIONS type) and can be only specified for documents of this
+	 *            type. If specified, must be less or equal to endDate
 	 * @param endDate
-	 *            End date. Mandatory for product documents that "Include Transactions History". Can only be specified
-	 *            for documents that "Include Transactions History"
+	 *            End date. Mandatory for product documents that "Include Transactions History".(i.e. documents of
+	 *            DocumentTemplateType.ACCOUNT_WITH_TRANSACTIONS type) and can be only specified for documents of this
+	 *            type.
 	 * @return populated HTML template for the savings account
 	 * 
 	 * @throws MambuApiException

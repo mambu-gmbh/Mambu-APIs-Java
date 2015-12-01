@@ -60,8 +60,7 @@ public class DemoTestDocumentTemplatesService {
 		String accountId = loanAccount.getId();
 		System.out.println("Testing Loan with Id=" + accountId);
 		// Get product for the account. Test Product should have some templates defined
-		// TODO: Mambu issue: currently GET product details does NOT return templates. See comments for MBU-10632
-		LoanProduct loanProduct = DemoUtil.getDemoLoanProduct(DemoUtil.demoLaonProductId);
+		LoanProduct loanProduct = DemoUtil.getDemoLoanProduct(loanAccount.getProductTypeKey());
 
 		// Get transaction to test
 		LoansService loanService = MambuAPIFactory.getLoanService();
@@ -129,10 +128,6 @@ public class DemoTestDocumentTemplatesService {
 		System.out.println("Testing " + accountType + "\tId=" + accountId + "\tTransaction Id=" + transactionId);
 		DocumentTemplatesService service = MambuAPIFactory.getDocumentTemplatesService();
 
-		// test params
-		String startDate = "2015-07-30";
-		String endDate = DateUtils.format(new Date());
-
 		// Test getting documents for the available templates
 		for (DocumentTemplate template : templates) {
 			String templateKey = template.getEncodedKey();
@@ -140,6 +135,14 @@ public class DemoTestDocumentTemplatesService {
 			String templateName = template.getName();
 			System.out.println("\nTemplate Type=" + type + "\tKey=" + templateKey + "\tName=" + templateName);
 			String htmlResponse = null;
+
+			// Set "startDate" and "endDate" parameters: they are applicable only to
+			// DocumentTemplateType.ACCOUNT_WITH_TRANSACTIONS type
+			final long thirtyDays = 30 * 86400000L; // 30 days
+			Date now = new Date();
+			String endDate = type == DocumentTemplateType.ACCOUNT_WITH_TRANSACTIONS ? DateUtils.format(now) : null;
+			String startDate = endDate != null ? DateUtils.format(new Date(now.getTime() - thirtyDays)) : null;
+
 			// Execute API calls. Log and continue testing if there is an exception
 			try {
 				switch (type) {
@@ -185,6 +188,5 @@ public class DemoTestDocumentTemplatesService {
 				continue;
 			}
 		}
-
 	}
 }
