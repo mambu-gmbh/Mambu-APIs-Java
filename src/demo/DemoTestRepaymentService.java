@@ -102,18 +102,23 @@ public class DemoTestRepaymentService {
 		System.out.println("Account " + LOAN_ACCOUNT_ID + " has " + repayemnts.size() + " repayments");
 
 		List<Repayment> modifiedRepayments = new ArrayList<Repayment>();
-		final long fiveDays = 5 * 24 * 60 * 60 * 1000; // 5 days
+		final long fiveDays = 5 * 24 * 60 * 60 * 1000L; // 5 days
 		int minusOrPlusOne = -1; // indicator to increase or t decrease repayment amount
 		final int maxRepaymentsToUpdate = 4; // Maximum number to update
 		int i = 0;
+		Date now = new Date();
 		for (Repayment repayment : repayemnts) {
 			// Fully paid repayments cannot be modified
 			if (repayment.wasFullyPaid()) {
 				continue;
 			}
+
 			// Modify some repayment fields
 			// Add 5 days to due date
 			Date dueDate = repayment.getDueDate();
+			if (dueDate.before(now)) {
+				continue;
+			}
 			repayment.setDueDate(new Date(dueDate.getTime() + fiveDays));
 			// Modify amounts
 			Money changeAmount = new Money(5.00);
