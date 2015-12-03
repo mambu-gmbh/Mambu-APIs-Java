@@ -690,6 +690,8 @@ public class DemoTestClientService {
 
 		updatedAddresses.add(updatedAddress);
 		groupExpanded.setAddresses(updatedAddresses);
+		// TODO: Mambu 3.14 returns an exception when updating Groups with an existent address. See MBU-11214
+		groupExpanded.setAddresses(null); // for now clear address for testing, otherwise updating group wouldn't work
 
 		List<CustomFieldValue> customFields = groupExpanded.getCustomFieldValues();
 		List<CustomFieldValue> updatedFields = new ArrayList<CustomFieldValue>();
