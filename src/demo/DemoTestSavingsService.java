@@ -151,7 +151,7 @@ public class DemoTestSavingsService {
 					testUpdateDeleteCustomFields(); // Available since 3.8
 
 				} catch (MambuApiException e) {
-					System.out.println("*** Exception *** " + methodName + " " + e.getMessage());
+					DemoUtil.logException(methodName, e);
 					System.out.println("Product Type=" + demoSavingsProduct.getProductType() + "\tID="
 							+ demoSavingsProduct.getId() + "\tName=" + demoSavingsProduct.getName());
 				}
@@ -218,7 +218,7 @@ public class DemoTestSavingsService {
 			}
 			System.out.println();
 		} catch (MambuApiException e) {
-			System.out.println("*** Exception *** " + methodName + " " + e.getMessage());
+			DemoUtil.logException(methodName, e);
 
 		}
 	}
@@ -298,22 +298,28 @@ public class DemoTestSavingsService {
 
 	public static SavingsTransaction testTransferFromSavingsAccount() throws MambuApiException {
 		System.out.println(methodName = "\nIn testTransferFromSavingsAccount");
+		SavingsTransaction transaction = null;
 
-		SavingsService savingsService = MambuAPIFactory.getSavingsService();
+		// use try and catch to continue: valid API test transfer transactions often fail on business validation rules
+		try {
+			SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
-		String destinationAccountKey = DemoUtil.getDemoLoanAccount().getId();
+			String destinationAccountKey = DemoUtil.getDemoLoanAccount().getId();
 
-		String amount = "20.50";
-		String notes = "Transfer notes from API";
+			String amount = "20.50";
+			String notes = "Transfer notes from API";
 
-		Account.Type destinationAccountType = Account.Type.LOAN;
-		SavingsTransaction transaction = savingsService.makeTransfer(SAVINGS_ACCOUNT_ID, destinationAccountKey,
-				destinationAccountType, amount, notes);
+			Account.Type destinationAccountType = Account.Type.LOAN;
+			transaction = savingsService.makeTransfer(SAVINGS_ACCOUNT_ID, destinationAccountKey,
+					destinationAccountType, amount, notes);
 
-		System.out.println("Transfer From account:" + SAVINGS_ACCOUNT_ID + "   To account id=" + destinationAccountKey
-				+ " Amount=" + transaction.getAmount().toString() + " Transac Id=" + transaction.getTransactionId()
-				+ "\tBalance=" + transaction.getBalance());
+			System.out.println("Transfer From account:" + SAVINGS_ACCOUNT_ID + "   To account id="
+					+ destinationAccountKey + " Amount=" + transaction.getAmount().toString() + " Transac Id="
+					+ transaction.getTransactionId() + "\tBalance=" + transaction.getBalance());
 
+		} catch (MambuApiException e) {
+			DemoUtil.logException(methodName, e);
+		}
 		return transaction;
 	}
 
@@ -321,6 +327,10 @@ public class DemoTestSavingsService {
 	public static void testReverseSavingsAccountTransaction(SavingsTransaction transaction) throws MambuApiException {
 		System.out.println(methodName = "\nIn testReverseSavingsAccountTransaction");
 
+		if (transaction == null) {
+			System.out.println("WARNING: cannot reverse null transaction");
+			return;
+		}
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
 		String notes = "Reversed by Demo API";

@@ -91,10 +91,10 @@ public class DemoEntityParams {
 			LoanAccount loan = DemoUtil.getDemoLoanAccount(DemoUtil.demoLaonAccountId);
 			return new DemoEntityParams(loan.getName(), loan.getEncodedKey(), loan.getId());
 		case SAVINGS_ACCOUNT:
-			SavingsAccount savings = DemoUtil.getDemoSavingsAccount((DemoUtil.demoSavingsAccountId));
+			SavingsAccount savings = DemoUtil.getDemoSavingsAccount(DemoUtil.demoSavingsAccountId);
 			return new DemoEntityParams(savings.getName(), savings.getEncodedKey(), savings.getId());
 		case LOAN_PRODUCT:
-			LoanProduct lProduct = DemoUtil.getDemoLoanProduct((DemoUtil.demoLaonProductId));
+			LoanProduct lProduct = DemoUtil.getDemoLoanProduct(DemoUtil.demoLaonProductId);
 			return new DemoEntityParams(lProduct.getName(), lProduct.getEncodedKey(), lProduct.getId());
 		case SAVINGS_PRODUCT:
 			SavingsProduct sProduct = DemoUtil.getDemoSavingsProduct(DemoUtil.demoSavingsProductId);

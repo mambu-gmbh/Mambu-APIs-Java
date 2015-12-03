@@ -8,10 +8,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
+import java.util.TimeZone;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -108,6 +110,8 @@ public class DemoUtil {
 	static String demoSavingsProductId = null;
 
 	static String demoLineOfCreditId = null;
+
+	public static String exceptionLogPrefix = "*** Exception *** ";
 
 	public static void setUp() {
 		// get Logging properties file
@@ -543,9 +547,15 @@ public class DemoUtil {
 			return getDemoLoanProduct();
 
 		}
+
 		// Use the provided ID if it is not null, otherwise use the one defined in the configuration file
 		productId = (productId != null) ? productId : demoLaonProductId;
-		// if not provided try using the one defined in config file
+		// Check if the product ID is our reserved "All_Types" ID
+		if (productId.equalsIgnoreCase(allProductTypes)) {
+			// no specific product ID is available in the configuration file
+			// Both are null, use a random one
+			return getDemoLoanProduct();
+		}
 		LoansService service = MambuAPIFactory.getLoanService();
 		LoanProduct product = service.getLoanProduct(productId);
 
@@ -712,7 +722,12 @@ public class DemoUtil {
 		}
 		// Use the provided ID if it is not null, otherwise use the one defined in the configuration file
 		productId = (productId != null) ? productId : demoSavingsProductId;
-
+		// Check if the product ID is our reserved "All_Types" ID
+		if (productId.equalsIgnoreCase(allProductTypes)) {
+			// no specific product ID is available in the configuration file
+			// Both are null, use a random one
+			return getDemoSavingsProduct();
+		}
 		SavingsService service = MambuAPIFactory.getSavingsService();
 		SavingsProduct product = service.getSavingsProduct(productId);
 
@@ -1342,6 +1357,39 @@ public class DemoUtil {
 		// Create BufferedImage
 		BufferedImage image = ImageIO.read(new ByteArrayInputStream(decodedBytes));
 		return image;
+	}
+
+	/**
+	 * Create a Calendar for a UTC midnight date corresponding to the current local date
+	 * 
+	 * @return UTC midnight date
+	 */
+	public static Calendar getCalendarForMidnightUTC() {
+		Calendar date = Calendar.getInstance();
+		date.set(date.get(Calendar.YEAR), date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+		date.setTimeZone(TimeZone.getTimeZone("UTC"));
+		return date;
+	}
+
+	/**
+	 * Create a Date as a UTC midnight date corresponding to the current local date
+	 * 
+	 * @return UTC midnight date
+	 */
+	public static Date getAsMidnightUTC() {
+		return getCalendarForMidnightUTC().getTime();
+
+	}
+
+	/**
+	 * Log exception message using a standard pattern for ease of retrieving of exception messages
+	 */
+
+	public static void logException(String methodName, MambuApiException exception) {
+		if (exception == null) {
+			return;
+		}
+		System.out.println(exceptionLogPrefix + " " + methodName + " Message: " + exception.getMessage());
 	}
 
 }
