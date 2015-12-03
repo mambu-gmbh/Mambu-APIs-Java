@@ -76,7 +76,6 @@ public class DemoTestLoanService {
 			// Use specific product ID or null to get random product. If set to "ALL" then test for all product types
 			final String testProductId = DemoUtil.demoLaonProductId;
 			final String testAccountId = null; // use specific test ID or null to get random loan account
-
 			demoClient = DemoUtil.getDemoClient(null);
 			demoGroup = DemoUtil.getDemoGroup(null);
 			demoUser = DemoUtil.getDemoUser();
@@ -165,7 +164,7 @@ public class DemoTestLoanService {
 					testUpdateDeleteCustomFields(); // Available since 3.8
 
 				} catch (MambuApiException e) {
-					System.out.println("*** Exception *** " + methodName + " " + e.getMessage());
+					DemoUtil.logException(methodName, e);
 					System.out.println("Product Type=" + demoProduct.getLoanProductType() + "\tID="
 							+ demoProduct.getId() + "\tName=" + demoProduct.getName());
 				}
@@ -319,8 +318,8 @@ public class DemoTestLoanService {
 		LoanAccount theAccount = newAccount.getLoanAccount();
 		// Create new account with only the terms to be patched
 		LoanAccount account = new LoanAccount();
-		account.setId(theAccount.getId());
-		account.setEncodedKey(theAccount.getEncodedKey()); // encoded key is needed for patching
+		account.setId(theAccount.getId()); // set the ID, the encoded key cannot be set with 3.14 model
+
 		// Set fields to be updated. Update some account terms
 		account.setLoanAmount(theAccount.getLoanAmount()); // loanAmount
 		if (demoProduct.getInterestRateSettings().getInterestRateSource() == InterestRateSource.FIXED_INTEREST_RATE) {
@@ -350,7 +349,7 @@ public class DemoTestLoanService {
 		System.out.println(methodName = "\nIn testUpdatingAccountTranches");
 
 		// Use demo loan account and update tranche details
-		LoanAccount theAccount = demoLoanAccount;
+		LoanAccount theAccount = newAccount.getLoanAccount();
 		String accountId = theAccount.getId();
 
 		// Get Loan Account Tranches
@@ -367,12 +366,23 @@ public class DemoTestLoanService {
 					+ " doesn't have any non-disbursed tranches");
 			return;
 		}
+		List<LoanTranche> disbursedTranches = theAccount.getDisbursedTranches();
+		boolean hasDisbursedTranches = disbursedTranches != null && disbursedTranches.size() > 0;
 		// Test updating tranches first
-		Date trancheDate = new Date();
-		long fiveDays = 5 * 24 * 60 * 60 * 1000; // 5 days in msecs
+		Date trancheDate = DemoUtil.getAsMidnightUTC();
+		long fiveDays = 5 * 24 * 60 * 60 * 1000L; // 5 days in msecs
+		int i = 0;
+		Date firstRepaymentDate = theAccount.getFirstRepaymentDate();
 		for (LoanTranche tranche : nonDisbursedTranches) {
-			trancheDate = new Date(trancheDate.getTime() + fiveDays); // make tranche dates to be 5 days apart
+			trancheDate = new Date(trancheDate.getTime() + i * fiveDays); // make tranche dates to be some days apart
+			// The first tranche cannot have expected disbursement date after the first repayment date
+			if (!hasDisbursedTranches && firstRepaymentDate != null && i == 0) {
+				if (trancheDate.after(firstRepaymentDate)) {
+					trancheDate = firstRepaymentDate;
+				}
+			}
 			tranche.setExpectedDisbursementDate(trancheDate);
+			i++;
 
 		}
 		System.out.println("\nUpdating existent tranches");
@@ -400,7 +410,7 @@ public class DemoTestLoanService {
 		System.out.println(methodName = "\nIn testUpdatingAccountFunds");
 
 		// Use demo loan account and update tranche details
-		LoanAccount theAccount = demoLoanAccount;
+		LoanAccount theAccount = newAccount.getLoanAccount();
 		String accountId = theAccount.getId();
 
 		// Get Loan Account Funds
@@ -452,35 +462,79 @@ public class DemoTestLoanService {
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		if (newAccount == null || newAccount.getLoanAccount() == null) {
 			System.out.println("\nThere is no account to disburse");
-			return;
 		}
-
-		String amount = newAccount.getLoanAccount().getLoanAmount().toPlainString();
-		String accountId = NEW_LOAN_ACCOUNT_ID;
-		String disbursalDate = DateUtils.format(new Date());
-		String firstRepaymentDate = DateUtils.format(new Date());
-
+		// LoanAccount account = newAccount.getLoanAccount();
 		LoanAccount account = newAccount.getLoanAccount();
-		// Support for disbursing loan account with tranches is available since Mambu 3.13. See MBU-10045
-		if (account.hasTranches()) {
-			// For loan account with tranches in Mambu 3.13):
+
+		String accountId = account.getId();
+		Date disbursementDate = DemoUtil.getAsMidnightUTC();
+		// Make First Repayment Date
+		Date firstRepaymentDate = makeFirstRepaymentDate(account, demoProduct, true);
+
+		// Since 3.14, the disbursement amount must be specified only for Revolving Credit products and can be null for
+		// others. See MBU-10547 and MBU-11058
+		String amount = null;
+		LoanProductType productType = demoProduct.getLoanProductType();
+		switch (productType) {
+		case DYNAMIC_TERM_LOAN:
+		case FIXED_TERM_LOAN:
+		case PAYMENT_PLAN:
+			// Amount can be null
+			amount = null;
+			break;
+		case TRANCHED_LOAN:
+			// For loan account with tranches in Mambu 3.13. See MBU-10045
 			// a) Amount must be null.
 			// b) Only the first tranche can have firstRepaymentDate
 			// c) the backdate is also not needed for disbursing with tranches
 			amount = null;
-			disbursalDate = null;
+			disbursementDate = null;
+			// Check if we have ny tranches to disburse
+			List<LoanTranche> nonDisbursedTranches = account.getNonDisbursedTranches();
+			if (nonDisbursedTranches == null || nonDisbursedTranches.size() == 0) {
+				System.out.println("WARNING: Cannot test disburse: Loan  " + account.getId()
+						+ " has non disbursed tranches");
+				return;
+			}
+			// Check if we the disburse time is not in a future
+			Date expectedTrancheDisbDate = nonDisbursedTranches.get(0).getExpectedDisbursementDate();
+			Date now = new Date();
+			if (expectedTrancheDisbDate.after(now)) {
+				System.out.println("WARNING: cannot disburse tranche. Its ExpectedDisbursementDate="
+						+ expectedTrancheDisbDate);
+				return;
+			}
 			// If not the first tranche - set the firstRepaymentDate to null
 			if (account.getDisbursedTranches() != null && account.getDisbursedTranches().size() > 0) {
 				firstRepaymentDate = null;
+			} else {
+				// First tranche. Can optionally set the first repayment date
+				if (firstRepaymentDate != null && firstRepaymentDate.before(expectedTrancheDisbDate)) {
+					long fiveDays = 5 * 24 * 60 * 60 * 1000L;
+					firstRepaymentDate = new Date(firstRepaymentDate.getTime() + fiveDays);
+				}
 			}
-
+			break;
+		case REVOLVING_CREDIT:
+			// Amount is mandatory for Revolving Credit loans. See MBU-10547
+			amount = account.getLoanAmount().toPlainString();
+			// First repayment date should be specified only for the first disbursement (when transitioning from
+			// Approved to Active state)
+			if (account.getAccountState() != AccountState.APPROVED) {
+				firstRepaymentDate = null;
+			}
+			break;
 		}
+		// Create params for API
+		String disbursementDateParam = DateUtils.format(disbursementDate);
+		String firstRepaymentDateParam = DateUtils.format(firstRepaymentDate);
+		System.out.println("Disbursement=" + disbursementDateParam + "\tFirstRepaymentDate=" + firstRepaymentDateParam);
 		String notes = "Disbursed loan for testing";
 
 		// Make demo transactionDetails with the valid channel fields
 		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
-		LoanTransaction transaction = loanService.disburseLoanAccount(accountId, amount, disbursalDate,
-				firstRepaymentDate, notes, transactionDetails);
+		LoanTransaction transaction = loanService.disburseLoanAccount(accountId, amount, disbursementDateParam,
+				firstRepaymentDateParam, notes, transactionDetails);
 
 		System.out.println("\nLoan for Disbursement with Details: Transaction Id=" + transaction.getTransactionId()
 				+ " amount=" + transaction.getAmount().toString());
@@ -562,8 +616,7 @@ public class DemoTestLoanService {
 							+ "Transaction Type=" + reversed.getType() + "\tAccount key="
 							+ reversed.getParentAccountKey());
 				} catch (MambuApiException e) {
-					System.out.println("Reversing Transaction " + transaction.getType() + " returned exception"
-							+ e.getMessage());
+					DemoUtil.logException(methodName, e);
 					continue;
 				}
 				break;
@@ -578,7 +631,7 @@ public class DemoTestLoanService {
 	}
 
 	public static void testRepayLoanAccount() throws MambuApiException {
-		System.out.println(methodName = "\nIn test Repay LoanAccount");
+		System.out.println(methodName = "\nIn testRepayLoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		Money repaymentAmount = demoLoanAccount.getDueAmount(RepaymentAllocationElement.PRINCIPAL);
 		if (repaymentAmount == null || repaymentAmount.isNegativeOrZero()) {
@@ -588,7 +641,7 @@ public class DemoTestLoanService {
 		String date = null; // "2012-11-23";
 		String notes = "repayment notes from API";
 
-		String accountId = demoLoanAccount.getId();
+		String accountId = NEW_LOAN_ACCOUNT_ID;
 
 		// Make demo transactionDetails with the valid channel fields
 		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
@@ -608,9 +661,13 @@ public class DemoTestLoanService {
 					+ " doesn't allow Arbitrary Fees. Use other product to test applyFee API");
 			return;
 		}
+		LoanProductType productType = demoProduct.getLoanProductType();
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		String amount = "10";
-		String repaymentNumber = "10";
+		// repayment number parameter is needed only for FIXED_TERM_LOAN and PAYMENT_PLAN products
+		boolean needRepaymentNumber = productType == LoanProductType.FIXED_TERM_LOAN
+				|| productType == LoanProductType.PAYMENT_PLAN;
+		String repaymentNumber = needRepaymentNumber ? "3" : null;
 		String accountId = NEW_LOAN_ACCOUNT_ID;
 		String notes = "Notes for applying fee to a loan";
 
@@ -629,11 +686,13 @@ public class DemoTestLoanService {
 		String accountId = demoLoanAccount.getId();
 		Date date = new Date();
 		String notes = "Notes for applying interest to a loan";
+		try {
+			LoanTransaction transaction = loanService.applyInterestToLoanAccount(accountId, date, notes);
+			System.out.println("Transaction. ID= " + transaction.getTransactionId().toString()
+					+ "\tTransaction Amount=" + transaction.getAmount().toString());
+		} catch (MambuApiException e) {
 
-		LoanTransaction transaction = loanService.applyInterestToLoanAccount(accountId, date, notes);
-
-		System.out.println("Loan Interest response= " + transaction.getTransactionId().toString()
-				+ "\tTransaction Amount=" + transaction.getAmount().toString());
+		}
 	}
 
 	public static void testGetLoanAccountsByBranchCentreOfficerState() throws MambuApiException {
@@ -670,7 +729,7 @@ public class DemoTestLoanService {
 		System.out.println("Got loan accounts for the client with the " + clientId + " id, Total="
 				+ loanAccounts.size());
 		for (LoanAccount account : loanAccounts) {
-			System.out.print(account.getLoanName() + " ");
+			System.out.println(account.getLoanName());
 		}
 		System.out.println();
 	}
@@ -839,11 +898,34 @@ public class DemoTestLoanService {
 
 	public static void testGetLoanProductSchedule() throws MambuApiException {
 		System.out.println(methodName = "\nIn testGetLoanProductSchedule");
+
+		if (demoProduct.getLoanProductType() == LoanProductType.REVOLVING_CREDIT) {
+			System.out.println("WARNING: Schedule preview is not supported for REVOLVING_CREDIT products");
+			return;
+		}
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		String productId = demoProduct.getId();
 
 		LoanAccount loanAccount = makeLoanAccountForDemoProduct();
+
+		// First repayment date is sent in the GET Product Schedule API as a parameter in "yyyy-MM-dd" format
+		// The Gson will format this using local time zone, sending incorrect data to Mambu for non UTC time zones
+		// Need to adjust it for local time zone
+		Date firstRepaymentDate = loanAccount.getFirstRepaymentDate();
+		if (firstRepaymentDate != null) {
+			long firstRepaymentTime = firstRepaymentDate.getTime();
+			firstRepaymentDate = new Date(firstRepaymentTime - TimeZone.getDefault().getOffset(firstRepaymentTime));
+			loanAccount.setFirstRepaymentDate(firstRepaymentDate);
+		}
+		// The same for expected disbursement date parameter
+		Date expectedDisbursementDate = loanAccount.getExpectedDisbursementDate();
+		if (expectedDisbursementDate != null) {
+			long expectedDisbursemenTime = expectedDisbursementDate.getTime();
+			expectedDisbursementDate = new Date(expectedDisbursemenTime
+					- TimeZone.getDefault().getOffset(expectedDisbursemenTime));
+			loanAccount.setExpectedDisbursementDate(expectedDisbursementDate);
+		}
 
 		// Get the repayment schedule for these loan params
 		List<Repayment> repayments = loanService.getLoanProductSchedule(productId, loanAccount);
@@ -936,13 +1018,12 @@ public class DemoTestLoanService {
 
 		// DisbursementDate
 		// Set dates 3-4 days into the future
-		long timeNow = new Date().getTime();
-		long aDay = 24 * 60 * 60 * 1000; // 1 day in msecs
-		loanAccount.setDisbursementDate(new Date(timeNow + 3 * aDay)); // 3 days from now
-
+		Date now = DemoUtil.getAsMidnightUTC();
+		long aDay = 24 * 60 * 60 * 1000L; // 1 day in msecs
+		loanAccount.setDisbursementDate(new Date(now.getTime() + 3 * aDay)); // 3 days from now
 		// Tranches;
 		if (productType == LoanProductType.TRANCHED_LOAN) {
-			LoanTranche tranche = new LoanTranche(loanAccount.getLoanAmount(), loanAccount.getDisbursementDate());
+			LoanTranche tranche = new LoanTranche(loanAccount.getLoanAmount(), now);
 			loanAccount.setDisbursementDate(null);
 			ArrayList<LoanTranche> tanches = new ArrayList<LoanTranche>();
 			tranche.setIndex(null); // index must by null. Default is zero
@@ -981,7 +1062,12 @@ public class DemoTestLoanService {
 
 		// RepaymentInstallments
 		Integer repaymentInsatllments = demoProduct.getDefaultNumInstallments();
-		if (repaymentInsatllments == null) {
+		repaymentInsatllments = repaymentInsatllments == null ? demoProduct.getMinNumInstallments()
+				: repaymentInsatllments;
+		repaymentInsatllments = repaymentInsatllments == null ? demoProduct.getMaxNumInstallments()
+				: repaymentInsatllments;
+		// # of RepaymentInsatllments is not applicable to REVOLVING_CREDIT
+		if (repaymentInsatllments == null && productType != LoanProductType.REVOLVING_CREDIT) {
 			repaymentInsatllments = 10;
 		}
 		loanAccount.setRepaymentInstallments(repaymentInsatllments);
@@ -1042,7 +1128,7 @@ public class DemoTestLoanService {
 		loanAccount.setDisbursementDate(null);
 
 		// Set first repayment date
-		Date firstRepaymentDate = makeFirstRepaymentDate(loanAccount, demoProduct);
+		Date firstRepaymentDate = makeFirstRepaymentDate(loanAccount, demoProduct, false);
 		loanAccount.setFirstRepaymentDate(firstRepaymentDate);
 
 		loanAccount.setNotes("Created by DemoTest on " + new Date());
@@ -1092,9 +1178,16 @@ public class DemoTestLoanService {
 			String id = account.getId();
 			if (id.startsWith(apiTestIdPrefix)) {
 				AccountState state = account.getAccountState();
+
 				if (state == AccountState.PARTIAL_APPLICATION || state == AccountState.PENDING_APPROVAL
-						|| state == AccountState.APPROVED) {
+						|| state == AccountState.APPROVED || state == AccountState.ACTIVE
+						|| state == AccountState.ACTIVE_IN_ARREARS) {
 					System.out.println("Deleting loan account " + name + " ID=" + id);
+					try {
+						loanService.undoDisburseLoanAccount(id, "Undo by API deletion");
+					} catch (MambuApiException e) {
+						System.out.println("Account " + id + " is NOT un-disbursed. Exception=" + e.getMessage());
+					}
 					try {
 						loanService.deleteLoanAccount(id);
 					} catch (MambuApiException e) {
@@ -1107,10 +1200,22 @@ public class DemoTestLoanService {
 
 	}
 
-	// Create first repayment date considering its ScheduleDueDatesMethod and product restrictions, like a definition
-	// for a minimum allowed first repayments date offset or the fixed days repayments
-	// See MBU-9730 -As a Credit Officer, I want to have an offset applied to the first repayment date
-	private static Date makeFirstRepaymentDate(LoanAccount account, LoanProduct product) {
+	/**
+	 * Make test first repayment date consistent with product settings. Create first repayment date considering its
+	 * ScheduleDueDatesMethod and product restrictions, like a definition for a minimum allowed first repayments date
+	 * offset or the fixed days repayments.
+	 * 
+	 * See MBU-9730 -As a Credit Officer, I want to have an offset applied to the first repayment date
+	 * 
+	 * @param account
+	 *            loan account
+	 * @param product
+	 *            loan product
+	 * @param isLocalMidnight
+	 *            true if setting first repayment date to be local midnight. return as UTC midnight date otherwise
+	 * @return first repayment date
+	 */
+	private static Date makeFirstRepaymentDate(LoanAccount account, LoanProduct product, boolean isLocalMidnight) {
 		if (account == null || product == null) {
 			return null;
 		}
@@ -1118,7 +1223,7 @@ public class DemoTestLoanService {
 		if (disbDate == null) {
 			return new Date();
 		}
-		long aDay = 24 * 60 * 60 * 1000; // 1 day in msecs
+		long aDay = 24 * 60 * 60 * 1000L; // 1 day in msecs
 		Date firstRepaymentDate = new Date(disbDate.getTime() + 4 * aDay); // default to 4 days from disbursement date
 
 		// Set the first repayment date depending on product's ScheduleDueDatesMethod
@@ -1128,18 +1233,26 @@ public class DemoTestLoanService {
 		}
 		switch (scheduleDueDatesMethod) {
 		case FIXED_DAYS_OF_MONTH:
-			// For fixed days product set to one of the allowed days
-			System.out.println("Fixed day product:");
 			// Since 3.14 Fixed Days are defined at the account level. See MBU-10205 and MBU-10802
 			List<Integer> fixedDays = account.getFixedDaysOfMonth();
+
+			// For fixed days product set to one of the allowed days
+			System.out.println("Fixed day product:" + fixedDays);
 			if (fixedDays != null && fixedDays.size() > 0) {
 				Calendar date = Calendar.getInstance();
 				int year = date.get(Calendar.YEAR);
 				int month = date.get(Calendar.MONTH);
 				date.clear();
 				date.setTimeZone(TimeZone.getTimeZone("UTC"));
-				date.set(year, month + 1, fixedDays.get(fixedDays.size() - 1));
+				int fixedDay = fixedDays.get(fixedDays.size() - 1);
+				date.set(year, month + 1, fixedDay);
 				firstRepaymentDate = date.getTime();
+			}
+			// When sent in "yyyy-MM-dd" format, the GMT midnight date will be formatted into using local time zone.
+			// Need to preserve the day, especially for fixed day products
+			if (isLocalMidnight) {
+				firstRepaymentDate = new Date(firstRepaymentDate.getTime()
+						- TimeZone.getDefault().getOffset(firstRepaymentDate.getTime()));
 			}
 			return firstRepaymentDate;
 		case INTERVAL:
@@ -1162,7 +1275,6 @@ public class DemoTestLoanService {
 
 			// Create UTC disbursement date with day, month year only
 			Calendar disbDateCal = Calendar.getInstance();
-			disbDateCal.setTime(disbDate);
 			int day = disbDateCal.get(Calendar.DAY_OF_MONTH);
 			int year = disbDateCal.get(Calendar.YEAR);
 			int month = disbDateCal.get(Calendar.MONTH);
@@ -1195,8 +1307,6 @@ public class DemoTestLoanService {
 			firstRepaymDateCal.add(Calendar.DAY_OF_MONTH, 1 + minOffsetDays);
 			// Get firstRepaymentDate
 			firstRepaymentDate = firstRepaymDateCal.getTime();
-			System.out.println("ExpDisb=" + disbDate + "\tMin Offset=" + minOffsetDays + "\trepaymentPeriodCount="
-					+ repaymentPeriodCount + "\tunit=" + unit + "\tfirstRepaymentDate=" + firstRepaymentDate);
 			return firstRepaymentDate;
 		}
 
