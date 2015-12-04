@@ -57,7 +57,7 @@ public class DemoTestAccountingService {
 		for (GLAccountType accountType : GLAccountType.values()) {
 			// Get GL Account
 			System.out.println("Getting GLAccount by GLAccountType=" + accountType);
-			List<GLAccount> gLAccounts = service.getGLAccount(accountType);
+			List<GLAccount> gLAccounts = service.getGLAccounts(accountType);
 			if (gLAccounts == null) {
 				System.out.println("NULL GLAccounts for " + accountType);
 				continue;

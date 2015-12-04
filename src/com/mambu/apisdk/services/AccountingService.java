@@ -99,7 +99,7 @@ public class AccountingService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public List<GLAccount> getGLAccount(GLAccountType accountType) throws MambuApiException {
+	public List<GLAccount> getGLAccounts(GLAccountType accountType) throws MambuApiException {
 		// Example GET /api/glaccount?type=ASSET
 		// See MBU-1543.
 
