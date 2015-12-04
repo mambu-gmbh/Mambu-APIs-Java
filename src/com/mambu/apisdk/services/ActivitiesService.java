@@ -143,10 +143,6 @@ public class ActivitiesService {
 	/**
 	 * Requests a list of activities for a custom view, limited by offset/limit
 	 * 
-	 * @deprecated. Starting with 3.14 use the new method with branch/centre/officer filters, see {@link
-	 *              CustomViewsService.#getCustomViewEntities(com.mambu.apisdk.util.MambuEntityType, boolean, String,
-	 *              String, String, String, String, String)}
-	 * 
 	 * @param customViewKey
 	 *            the key of the Custom View to filter system activities
 	 * @param offset
@@ -158,7 +154,6 @@ public class ActivitiesService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@Deprecated
 	public List<JSONActivity> getActivitiesByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 

@@ -682,10 +682,6 @@ public class LoansService {
 	/**
 	 * Requests a list of loan transactions for a custom view, limited by offset/limit
 	 * 
-	 * @deprecated. Starting with 3.14 use the new method with branch/centre/officer filters, see {@link
-	 *              CustomViewsService.#getCustomViewEntities(com.mambu.apisdk.util.MambuEntityType, boolean, String,
-	 *              String, String, String, String, String)}
-	 * 
 	 * @param customViewKey
 	 *            the key of the Custom View to filter loan transactions
 	 * @param offset
@@ -697,7 +693,6 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@Deprecated
 	public List<LoanTransaction> getLoanTransactionsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		// Example GET loan/transactions?viewfilter=123&offset=0&limit=100
@@ -888,10 +883,6 @@ public class LoansService {
 	/**
 	 * Requests a list of loan accounts for a custom view, limited by offset/limit
 	 * 
-	 * @deprecated. Starting with 3.14 use the new method with branch/centre/officer filters, see {@link
-	 *              CustomViewsService.#getCustomViewEntities(com.mambu.apisdk.util.MambuEntityType, boolean, String,
-	 *              String, String, String, String, String)}
-	 * 
 	 * @param customViewKey
 	 *            the key of the Custom View to filter loan accounts
 	 * @param offset
@@ -903,7 +894,6 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@Deprecated
 	public List<LoanAccount> getLoanAccountsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		String branchId = null;

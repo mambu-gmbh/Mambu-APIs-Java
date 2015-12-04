@@ -61,12 +61,6 @@ public class CustomViewsService {
 	 * @param fullDetails
 	 *            boolean indicating if entities with fullDetails shall be returned. Applicable to Clients, Groups, Loan
 	 *            Accounts and Savings Accounts
-	 * @param branchId
-	 *            branch id. Optional filter parameter
-	 * @param centreId
-	 *            centre id. Optional filter parameter
-	 * @param creditOfficerName
-	 *            credit officer name. Optional filter parameter
 	 * @param offset
 	 *            pagination offset. If not null it must be an integer greater or equal to zero
 	 * @param limit
@@ -74,16 +68,22 @@ public class CustomViewsService {
 	 * @return a list of entities for the custom view
 	 * @throws MambuApiException
 	 */
+	// TODO: implement with branch/centre/officer filter parameters when MBU-7042 is dine in Mambu 4.0
 	public <T> List<T> getCustomViewEntities(ApiViewType apiViewType, boolean fullDetails, String customViewKey,
-			String branchId, String centreId, String creditOfficerName, String offset, String limit)
-			throws MambuApiException {
-		// Example GET /api/clients?viewfilter=123&offset=0&limit=100&branchId=Berlin&resultType=FULL_DETAILS
-		// See MBU-4607, MBU-10842 and MBU-7042
+			String offset, String limit) throws MambuApiException {
+		// Example GET /api/clients?viewfilter=123&offset=0&limit=100&resultType=FULL_DETAILS
+		// See MBU-4607, MBU-10842
 
 		CustomViewResultType resultType = fullDetails ? CustomViewResultType.FULL_DETAILS : CustomViewResultType.BASIC;
 		ApiDefinition apiDefinition = makeApiDefintion(apiViewType, resultType);
 
 		// Create params map with all filtering parameters
+
+		// Branch Id, Centre ID, and Credit officer name filer params are not applicable until Mambu 4.0
+		// See MBU-7042
+		String branchId = null;
+		String centreId = null;
+		String creditOfficerName = null;
 		ParamsMap params = makeParamsForGetByCustomView(customViewKey, resultType, branchId, centreId,
 				creditOfficerName, offset, limit);
 

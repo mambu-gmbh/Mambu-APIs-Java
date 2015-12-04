@@ -271,10 +271,7 @@ public class DemoTestUsersService {
 		}
 		System.out.println("Getting entities for " + views.size() + " views");
 
-		// Specify Filter params. See MBU-7042
-		String branchId = demoUser.getAssignedBranchKey();
-		String centreId = demoUser.getAssignedCentreKey();
-		String creditOfficerName = demoUser.getUsername();
+		// TODO: add Branch/CreditOfficer filter parameters when MBU-7042 is done in 4.0
 		String offset = "0";
 		String limit = "5";
 
@@ -309,14 +306,14 @@ public class DemoTestUsersService {
 					case BASIC:
 						fullDetails = false;
 
-						List<Client> clients = service.getCustomViewEntities(apiViewType, fullDetails, viewkey,
-								branchId, centreId, creditOfficerName, offset, limit);
+						List<Client> clients = service.getCustomViewEntities(apiViewType, fullDetails, viewkey, offset,
+								limit);
 						System.out.println("Clients=" + clients.size() + "  for View=" + viewName);
 						break;
 					case FULL_DETAILS:
 						fullDetails = true;
 						List<ClientExpanded> clientsExpanded = service.getCustomViewEntities(apiViewType, fullDetails,
-								viewkey, branchId, centreId, creditOfficerName, offset, limit);
+								viewkey, offset, limit);
 						System.out.println("Client Details=" + clientsExpanded.size() + "  for View=" + viewName);
 						break;
 					}
@@ -325,14 +322,14 @@ public class DemoTestUsersService {
 					switch (resultType) {
 					case BASIC:
 						fullDetails = false;
-						List<Group> groups = service.getCustomViewEntities(apiViewType, fullDetails, viewkey, branchId,
-								centreId, creditOfficerName, offset, limit);
+						List<Group> groups = service.getCustomViewEntities(apiViewType, fullDetails, viewkey, offset,
+								limit);
 						System.out.println("Groups=" + groups.size() + "  for View=" + viewName);
 						break;
 					case FULL_DETAILS:
 						fullDetails = true;
 						List<GroupExpanded> groupsExpanded = service.getCustomViewEntities(apiViewType, fullDetails,
-								viewkey, branchId, centreId, creditOfficerName, offset, limit);
+								viewkey, offset, limit);
 						System.out.println("Group Details=" + groupsExpanded.size() + "  for View=" + viewName);
 						break;
 					}
@@ -342,13 +339,13 @@ public class DemoTestUsersService {
 					case BASIC:
 						fullDetails = false;
 						List<LoanAccount> loans = service.getCustomViewEntities(apiViewType, fullDetails, viewkey,
-								branchId, centreId, creditOfficerName, offset, limit);
+								offset, limit);
 						System.out.println("Loans=" + loans.size() + "  for View=" + viewName);
 						break;
 					case FULL_DETAILS:
 						fullDetails = true;
 						List<LoanAccountExpanded> loansExpanded = service.getCustomViewEntities(apiViewType,
-								fullDetails, viewkey, branchId, centreId, creditOfficerName, offset, limit);
+								fullDetails, viewkey, offset, limit);
 						System.out.println("Loan Details=" + loansExpanded.size() + "  for View=" + viewName);
 					}
 					break;
@@ -357,13 +354,13 @@ public class DemoTestUsersService {
 					case BASIC:
 						fullDetails = false;
 						List<SavingsAccount> savings = service.getCustomViewEntities(apiViewType, fullDetails, viewkey,
-								branchId, centreId, creditOfficerName, offset, limit);
+								offset, limit);
 						System.out.println("Savings=" + savings.size() + "  for View=" + viewName);
 						break;
 					case FULL_DETAILS:
 						fullDetails = true;
 						List<JSONSavingsAccount> savingsExpanded = service.getCustomViewEntities(apiViewType,
-								fullDetails, viewkey, branchId, centreId, creditOfficerName, offset, limit);
+								fullDetails, viewkey, offset, limit);
 						System.out.println("Savings Details=" + savingsExpanded.size() + "  for View=" + viewName);
 						break;
 					}
@@ -373,7 +370,7 @@ public class DemoTestUsersService {
 					case BASIC:
 						fullDetails = false;
 						List<LoanTransaction> transactions = service.getCustomViewEntities(apiViewType, fullDetails,
-								viewkey, branchId, centreId, creditOfficerName, offset, limit);
+								viewkey, offset, limit);
 						System.out.println("Loan Transactions=" + transactions.size() + " for View=" + viewName);
 						break;
 					case FULL_DETAILS:
@@ -386,7 +383,7 @@ public class DemoTestUsersService {
 					case BASIC:
 						fullDetails = false;
 						List<SavingsTransaction> transactions = service.getCustomViewEntities(apiViewType, fullDetails,
-								viewkey, branchId, centreId, creditOfficerName, offset, limit);
+								viewkey, offset, limit);
 						System.out.println("Savings Transactions=" + transactions.size() + " for View=" + viewName);
 						break;
 					case FULL_DETAILS:
@@ -399,7 +396,7 @@ public class DemoTestUsersService {
 					case BASIC:
 						fullDetails = false;
 						List<JSONActivity> activities = service.getCustomViewEntities(apiViewType, fullDetails,
-								viewkey, branchId, centreId, creditOfficerName, offset, limit);
+								viewkey, offset, limit);
 						System.out.println("Activities=" + activities.size() + " for View=" + viewName);
 						break;
 					case FULL_DETAILS:

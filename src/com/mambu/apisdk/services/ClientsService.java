@@ -425,10 +425,6 @@ public class ClientsService {
 	/**
 	 * Requests a list of clients for a custom view, limited by offset/limit
 	 * 
-	 * @deprecated. Starting with 3.14 use the new method with branch/centre/officer filters, see {@link
-	 *              CustomViewsService.#getCustomViewEntities(com.mambu.apisdk.util.MambuEntityType, boolean, String,
-	 *              String, String, String, String, String)}
-	 * 
 	 * @param customViewKey
 	 *            the id of the Custom View to filter clients
 	 * @param offset
@@ -440,7 +436,6 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@Deprecated
 	public List<Client> getClientsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 
@@ -484,10 +479,6 @@ public class ClientsService {
 	/**
 	 * Requests a list of groups for a custom view, limited by offset/limit
 	 * 
-	 * @deprecated. Starting with 3.14 use the new method with branch/centre/officer filters, see {@link
-	 *              CustomViewsService.#getCustomViewEntities(com.mambu.apisdk.util.MambuEntityType, boolean, String,
-	 *              String, String, String, String, String)}
-	 * 
 	 * @param customViewKey
 	 *            the key of the Custom View to filter groups
 	 * @param offset
@@ -499,7 +490,6 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@Deprecated
 	public List<Group> getGroupsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		String branchId = null;

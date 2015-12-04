@@ -243,11 +243,6 @@ public class SavingsService {
 	/**
 	 * Requests a list of savings transactions for a custom view, limited by offset/limit
 	 * 
-	 * 
-	 * @deprecated. Starting with 3.14 use the new method with branch/centre/officer filters, see {@link
-	 *              CustomViewsService.#getCustomViewEntities(com.mambu.apisdk.util.MambuEntityType, boolean, String,
-	 *              String, String, String, String, String)}
-	 * 
 	 * @param customViewKey
 	 *            the key of the Custom View to filter savings transactions
 	 * @param offset
@@ -259,7 +254,6 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@Deprecated
 	public List<SavingsTransaction> getSavingsTransactionsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		// Example GET savings/transactions?viewfilter=567&offset=0&limit=100
@@ -653,11 +647,6 @@ public class SavingsService {
 	/**
 	 * Requests a list of savings accounts for a custom view, limited by offset/limit only
 	 * 
-	 * 
-	 * @deprecated. Starting with 3.14 use the new method with branch/centre/officer filters, see {@link
-	 *              CustomViewsService.#getCustomViewEntities(com.mambu.apisdk.util.MambuEntityType, boolean, String,
-	 *              String, String, String, String, String)}
-	 * 
 	 * @param customViewKey
 	 *            the key of the Custom View to filter savings accounts
 	 * @param offset
@@ -669,7 +658,6 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	@Deprecated
 	public List<SavingsAccount> getSavingsAccountsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		String branchId = null;
