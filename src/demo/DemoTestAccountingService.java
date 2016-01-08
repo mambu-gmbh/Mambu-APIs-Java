@@ -1,5 +1,6 @@
 package demo;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -71,6 +72,7 @@ public class DemoTestAccountingService {
 						+ gLAccount.getType() + "\tBalance" + gLAccount.getBalance());
 			}
 		}
+		System.out.println("Overall Total GLAccounts=" + allGlAccounts.size());
 		return allGlAccounts;
 	}
 
@@ -86,7 +88,7 @@ public class DemoTestAccountingService {
 
 		Date toDate = new Date();
 		int forNumberOfDays = 60;
-		long forMsecInterval = 1000 * 60 * 60 * 24 * forNumberOfDays;
+		long forMsecInterval = 1000L * 60 * 60 * 24 * forNumberOfDays;
 		// From forNumberOfDays ago
 		Date fromDate = new Date(new Date().getTime() - forMsecInterval);
 
@@ -103,27 +105,52 @@ public class DemoTestAccountingService {
 
 	}
 
-	// Test posting GLJournalEntries
+	// Test posting GLJournalEntries. Need at least three(3) test GL Accounts for this test
 	public static void testPostGLJournalEntries(List<GLAccount> allAccounts) throws MambuApiException {
 		System.out.println("\nIn testPostGLJournalEntries");
 
-		if (allAccounts == null || allAccounts.size() < 2) {
-			System.out.println("No GLAccounts to test POST GLJournalEntries");
+		final int needTestGlAccounts = 3;
+		if (allAccounts == null || allAccounts.size() < needTestGlAccounts) {
+			int totalAccounts = allAccounts == null ? 0 : allAccounts.size();
+			System.out.println("WARNING: Not enough GLAccounts. Need " + needTestGlAccounts + " Have " + totalAccounts);
 			return;
 		}
-		AccountingService service = MambuAPIFactory.getAccountingService();
 
+		AccountingService service = MambuAPIFactory.getAccountingService();
+		// Create Debit/Credit transaction entries
 		List<ApiGLJournalEntry> entries = new ArrayList<>();
 		GLAccount account1 = allAccounts.get(0);
 		GLAccount account2 = allAccounts.get(1);
-		ApiGLJournalEntry entry1 = new ApiGLJournalEntry(account1.getGlCode(), EntryType.DEBIT, "500.00");
-		ApiGLJournalEntry entry2 = new ApiGLJournalEntry(account2.getGlCode(), EntryType.CREDIT, "500.00");
+		GLAccount account3 = allAccounts.get(2);
+
+		// Add one debit and one matching credit transaction
+		BigDecimal amount = new BigDecimal("500.00");
+		ApiGLJournalEntry entry1 = new ApiGLJournalEntry(account1.getGlCode(), EntryType.DEBIT, amount);
+		ApiGLJournalEntry entry1a = new ApiGLJournalEntry(account2.getGlCode(), EntryType.CREDIT, amount);
 		entries.add(entry1);
+		entries.add(entry1a);
+		// Add one debit and two matching credit transactions
+		BigDecimal halfAmount = amount.divide(new BigDecimal(2)); // credit half of debit amount to each of two accounts
+		ApiGLJournalEntry entry2 = new ApiGLJournalEntry(account2.getGlCode(), EntryType.DEBIT, amount);
+		ApiGLJournalEntry entry2a = new ApiGLJournalEntry(account1.getGlCode(), EntryType.CREDIT, halfAmount);
+		ApiGLJournalEntry entry2b = new ApiGLJournalEntry(account3.getGlCode(), EntryType.CREDIT, halfAmount);
 		entries.add(entry2);
+		entries.add(entry2a);
+		entries.add(entry2b);
+		// Add two debit and one matching credit transaction
+		ApiGLJournalEntry entry3a = new ApiGLJournalEntry(account3.getGlCode(), EntryType.DEBIT, halfAmount);
+		ApiGLJournalEntry entry3b = new ApiGLJournalEntry(account1.getGlCode(), EntryType.DEBIT, halfAmount);
+		ApiGLJournalEntry entry3 = new ApiGLJournalEntry(account2.getGlCode(), EntryType.CREDIT, amount);
+		entries.add(entry3a);
+		entries.add(entry3b);
+		entries.add(entry3);
+
+		// Specify Date and Branch Id
 		String date = DateUtils.format(new Date());
 		String branchId = demoBranch.getId();
+		// POST entries
 		List<GLJournalEntry> gLJournalEntries = service.postGLJournalEntries(entries, branchId, date, "API entry");
-		System.out.println("Total GLJournalEntry=" + gLJournalEntries.size());
+		System.out.println("Total GLJournalEntries Created=" + gLJournalEntries.size());
 
 		// Log output
 		for (GLJournalEntry entry : gLJournalEntries) {

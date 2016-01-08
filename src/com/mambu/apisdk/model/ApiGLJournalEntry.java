@@ -1,5 +1,7 @@
 package com.mambu.apisdk.model;
 
+import java.math.BigDecimal;
+
 import com.mambu.accounting.shared.model.EntryType;
 
 /**
@@ -12,9 +14,9 @@ import com.mambu.accounting.shared.model.EntryType;
 public class ApiGLJournalEntry {
 	private String glCode; // account's GL code
 	private EntryType entryType; // transaction entry type
-	private String amount; // transaction amount
+	private BigDecimal amount; // transaction amount
 
-	public ApiGLJournalEntry(String glCode, EntryType entryType, String amount) {
+	public ApiGLJournalEntry(String glCode, EntryType entryType, BigDecimal amount) {
 		this.glCode = glCode;
 		this.entryType = entryType;
 		this.amount = amount;
@@ -28,7 +30,7 @@ public class ApiGLJournalEntry {
 		this.entryType = entryType;
 	}
 
-	public void setAmount(String amount) {
+	public void setAmount(BigDecimal amount) {
 		this.amount = amount;
 	}
 
@@ -40,7 +42,7 @@ public class ApiGLJournalEntry {
 		return entryType;
 	}
 
-	public String getAmount() {
+	public BigDecimal getAmount() {
 		return amount;
 	}
 }

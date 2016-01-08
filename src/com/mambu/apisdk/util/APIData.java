@@ -123,6 +123,11 @@ public class APIData {
 	// Accounting API
 	public static final String GLACCOUNTS = "glaccounts";
 	public static final String GLJOURNALENTRIES = "gljournalentries";
+	// Parameters for posting GL Journal Entries. See MBU-1737. Available since 2.2
+	public static String DEBIT_ACCOUNT = "debitAccount";
+	public static String DEBIT_AMOUNT = "debitAmount";
+	public static String CREDIT_ACCOUNT = "creditAccount";
+	public static String CREDIT_AMOUNT = "creditAmount";
 
 	// Intelligence API
 	public static final String INDICATORS = "indicators";

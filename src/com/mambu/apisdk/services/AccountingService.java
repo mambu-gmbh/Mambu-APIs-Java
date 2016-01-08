@@ -3,6 +3,7 @@
  */
 package com.mambu.apisdk.services;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -135,14 +136,36 @@ public class AccountingService {
 	}
 
 	/**
-	 * Returns all GLJournalEntries of a specific date-range
+	 * Returns all GLJournalEntries of a specific date-range for all branches and using default limits
 	 * 
-	 * @param branchId
-	 *            branch Id
+	 * @deprecated Starting with 3.14 use method supporting branch ID and offset and limit parameters
+	 *             {@link #getGLJournalEntries(String, Date, Date, int, int)}
+	 * 
 	 * @param fromDate
-	 *            range starting from. Must not be null
+	 *            range starting from
 	 * @param toDate
-	 *            range ending at. Must not be null
+	 *            range ending at
+	 * 
+	 * @return a List of GLJournalEntries
+	 * 
+	 * @throws MambuApiException
+	 *             in case of an error
+	 */
+	@Deprecated
+	public List<GLJournalEntry> getGLJournalEntries(Date fromDate, Date toDate) throws MambuApiException {
+		return (getGLJournalEntries(null, fromDate, toDate, -1, -1));
+	}
+
+	/**
+	 * Returns all GLJournalEntries of a specific date-range for all branches
+	 * 
+	 * @deprecated Starting with 3.14 use method supporting branch ID parameter
+	 *             {@link #getGLJournalEntries(String, Date, Date, int, int)}
+	 * 
+	 * @param fromDate
+	 *            range starting from
+	 * @param toDate
+	 *            range ending at
 	 * @param offset
 	 *            offset to start pagination
 	 * @param limit
@@ -153,8 +176,34 @@ public class AccountingService {
 	 * @throws MambuApiException
 	 *             in case of an error
 	 */
-	public List<GLJournalEntry> getGLJournalEntries(String branchID, Date fromDate, Date toDate, int offset, int limit)
+	@Deprecated
+	public List<GLJournalEntry> getGLJournalEntries(Date fromDate, Date toDate, int offset, int limit)
 			throws MambuApiException {
+
+		return getGLJournalEntries(null, fromDate, toDate, offset, limit);
+	}
+
+	/**
+	 * Returns all GLJournalEntries of a specific date-range
+	 * 
+	 * @param branchId
+	 *            branch Id
+	 * @param fromDate
+	 *            range starting from. Must not be null
+	 * @param toDate
+	 *            range ending at. Must not be null
+	 * @param offset
+	 *            offset to start pagination. If null, the default value of 0 (zero) will be used.
+	 * @param limit
+	 *            page-size. If null, the default value of 50 (fifty) will be used.
+	 * 
+	 * @return a List of GLJournalEntries
+	 * 
+	 * @throws MambuApiException
+	 *             in case of an error
+	 */
+	public List<GLJournalEntry> getGLJournalEntries(String branchID, Date fromDate, Date toDate, Integer offset,
+			Integer limit) throws MambuApiException {
 		// GET /api/gljournalentries?from=1875-05-20&to=1875-05-25&branchID=ABC123&offset=50&limit=50
 		// See MBU-1736
 		if (fromDate == null || toDate == null) {
@@ -165,17 +214,15 @@ public class AccountingService {
 		params.put(APIData.BRANCH_ID, branchID);
 		params.put(APIData.FROM, DateUtils.FORMAT.format(fromDate));
 		params.put(APIData.TO, DateUtils.FORMAT.format(toDate));
-		params.put(APIData.OFFSET, Integer.toString(offset));
-		params.put(APIData.LIMIT, Integer.toString(limit));
+		if (offset != null) {
+			params.put(APIData.OFFSET, Integer.toString(offset));
+		}
+		if (limit != null) {
+			params.put(APIData.LIMIT, Integer.toString(limit));
+		}
 
 		return serviceExecutor.execute(getGLJournalEntries, params);
 	}
-
-	// Params definitions for posting GL Journal Entries. See MBU-1737
-	private static String debitAccountParam = "debitAccount";
-	private static String debitAmountParam = "debitAmount";
-	private static String creditAccountParam = "creditAccount";
-	private static String creditAmountParam = "creditAmount";
 
 	/**
 	 * Post GL Journal Entries
@@ -196,22 +243,24 @@ public class AccountingService {
 	 */
 	public List<GLJournalEntry> postGLJournalEntries(List<ApiGLJournalEntry> entries, String branchId, String date,
 			String notes) throws MambuApiException {
-		// POST
-		// api/gljournalentries/branchId=b01&date=2012-02-05&debitAccount1=1003&debitAmount1=-0.05&creditAccount1=1003&creditAmount1=-0.05"
+		// POST "branchId=2&date=2010-02-03&debitAccount1=100001&debitAmount1=30&creditAccount1=100002&creditAmount1=30"
+		// /api/gljournalentries
 		// See MBU-1737
-		if (entries == null || entries.size() == 0) {
-			throw new IllegalArgumentException("At least one entry is required");
+
+		if (entries == null || entries.size() < 2) {
+			throw new IllegalArgumentException("At least one debit and one credit entry is required");
 		}
 		if (date == null) {
 			throw new IllegalArgumentException("Date must not be null");
 		}
 
 		ParamsMap params = new ParamsMap();
-		int index = 0;
+		int debitIndex = 1;
+		int creditIndex = 1;
 		for (ApiGLJournalEntry entry : entries) {
 			String glCode = entry.getGlCode();
 			EntryType entryType = entry.getEntryType();
-			String amount = entry.getAmount();
+			BigDecimal amount = entry.getAmount();
 			if (glCode == null || entryType == null || amount == null) {
 				throw new IllegalArgumentException("GlCode " + glCode + " EntryType=" + entryType + " and Amount="
 						+ amount + " must not be null");
@@ -221,16 +270,19 @@ public class AccountingService {
 			String amountParam = null;
 			switch (entryType) {
 			case DEBIT:
-				accountParam = debitAccountParam + index;
-				amountParam = debitAmountParam + index;
+				accountParam = APIData.DEBIT_ACCOUNT + debitIndex;
+				amountParam = APIData.DEBIT_AMOUNT + debitIndex;
+				debitIndex++;
 				break;
 			case CREDIT:
-				accountParam = creditAccountParam + index;
-				amountParam = creditAmountParam + index;
+				accountParam = APIData.CREDIT_ACCOUNT + creditIndex;
+				amountParam = APIData.CREDIT_AMOUNT + creditIndex;
+				creditIndex++;
 				break;
 			}
 			params.put(accountParam, glCode);
-			params.put(amountParam, amount);
+			params.put(amountParam, String.valueOf(amount.doubleValue()));
+
 		}
 		// Add date, barnchId, and notes
 		params.put(APIData.DATE, date);
