@@ -1,22 +1,21 @@
 package demo;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.services.DocumentsService;
-import com.mambu.apisdk.services.LoansService;
-import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.util.APIData.IMAGE_SIZE_TYPE;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
 import com.mambu.docs.shared.model.OwnerType;
 import com.mambu.loans.shared.model.LoanAccount;
-import com.mambu.savings.shared.model.SavingsAccount;
 
 /**
  * Test class to show example usage of the documents api calls
@@ -29,13 +28,8 @@ public class DemoTestDocumentsService {
 	private static User demoUser;
 	private static Client demoClient;
 	private static LoanAccount demoLoanAccount;
-	private static SavingsAccount demoSavingsAccount;
 
 	private static String UPLOADED_DOCUMENT_KEY;
-
-	private static String CLIENT_DOCUMENT_ID;
-	private static String LOAN_DOCUMENT_ID;
-	private static String SAVAINGS_DOCUMENT_ID;
 
 	public static void main(String[] args) {
 
@@ -43,9 +37,8 @@ public class DemoTestDocumentsService {
 
 		try {
 			demoUser = DemoUtil.getDemoUser();
-			demoClient = DemoUtil.getDemoClient(null);
-			demoLoanAccount = DemoUtil.getDemoLoanAccount(null);
-			demoSavingsAccount = DemoUtil.getDemoSavingsAccount(null);
+			demoClient = DemoUtil.getDemoClient(DemoUtil.demoClientId);
+			demoLoanAccount = DemoUtil.getDemoLoanAccount(DemoUtil.demoLaonAccountId);
 
 			testUploadDocumentFromFile();
 
@@ -54,9 +47,11 @@ public class DemoTestDocumentsService {
 			testGetImage();
 
 			// Available since 3.6
-			testGetDocuments();
+			// Test Get documents
+			Map<MambuEntityType, List<Document>> docsMap = testGetDocuments();
 
-			testGetDocument();
+			// Test Get document file
+			testGetDocument(docsMap);
 
 			testDeleteDocument();
 
@@ -68,6 +63,11 @@ public class DemoTestDocumentsService {
 
 	}
 
+	/**
+	 * Test upload document. Document content is hardcoded
+	 * 
+	 * @throws MambuApiException
+	 */
 	public static void testUploadDocument() throws MambuApiException {
 
 		System.out.println("\nIn testUploadDocument");
@@ -100,6 +100,11 @@ public class DemoTestDocumentsService {
 				+ "\tHolder Key=" + documentResponse.getDocumentHolderKey());
 	}
 
+	/**
+	 * Test upload document. Document is retrieved from a file
+	 * 
+	 * @throws MambuApiException
+	 */
 	public static void testUploadDocumentFromFile() throws MambuApiException {
 		System.out.println("\nIn testUploadDocumentFromFile");
 
@@ -154,7 +159,11 @@ public class DemoTestDocumentsService {
 				+ documentResponse.getName() + " Document Holder Key=" + documentResponse.getDocumentHolderKey());
 	}
 
-	//
+	/**
+	 * Test GET image API
+	 * 
+	 * @throws MambuApiException
+	 */
 	public static void testGetImage() throws MambuApiException {
 		System.out.println("\nIn testGetImage");
 
@@ -180,57 +189,54 @@ public class DemoTestDocumentsService {
 
 	}
 
-	public static void testGetDocuments() throws MambuApiException {
+	/**
+	 * Test getting documents for all supported entities,
+	 * 
+	 * @return a map of entity type to a list if retrieved documents for this type. To be used in subsequent GET
+	 *         Document details tests
+	 * @throws MambuApiException
+	 */
+	public static Map<MambuEntityType, List<Document>> testGetDocuments() throws MambuApiException {
 		System.out.println("\nIn testGetDocuments");
 
-		List<Document> documents;
+		MambuEntityType[] supportedEntityTypes = DocumentsService.getSupportedEntities();
 
-		// Get documents for a demo Client
-		ClientsService clientService = MambuAPIFactory.getClientService();
-		documents = clientService.getClientDocuments(demoClient.getId());
+		Map<MambuEntityType, List<Document>> docsMap = new HashMap<>();
 
-		// Log the results
-		System.out.println("\nDocuments for a Client with ID=" + demoClient.getId());
-		logDocuments(documents);
-		// Save the first doc ID for subsequent getDocument() tests
-		if (documents != null && documents.size() > 0) {
-			CLIENT_DOCUMENT_ID = documents.get(0).getEncodedKey();
+		final Integer offset = 0;
+		final Integer limit = 5;
+		for (MambuEntityType entityType : supportedEntityTypes) {
+			DemoEntityParams entityParams = DemoEntityParams.getEntityParams(entityType);
+			String entityKey = entityParams.getId();
+			System.out.println("\nGetting Documents for " + entityType + "\tKey=" + entityKey);
+			DocumentsService documentsService = MambuAPIFactory.getDocumentsService();
+			List<Document> documents = documentsService.getDocuments(entityType, entityKey, offset, limit);
+			docsMap.put(entityType, documents);
+			// Log the results
+			logDocuments(documents);
 		}
 
-		// Get documents for a demo Loan Account
-		LoansService loansService = MambuAPIFactory.getLoanService();
-		documents = loansService.getLoanAccountDocuments(demoLoanAccount.getId());
-
-		// Log the results
-		System.out.println("\nDocuments for a Loan Account with ID=" + demoLoanAccount.getId());
-		logDocuments(documents);
-		// Save the first doc ID for subsequent getDocument() tests
-		if (documents != null && documents.size() > 0) {
-			LOAN_DOCUMENT_ID = documents.get(0).getEncodedKey();
-		}
-
-		// Get documents for a demo Savings Account
-		SavingsService savingsService = MambuAPIFactory.getSavingsService();
-		documents = savingsService.getSavingsAccountDocuments(demoSavingsAccount.getId());
-
-		// Log the results
-		System.out.println("\nDocuments for a Savings Account with ID=" + demoSavingsAccount.getId());
-		logDocuments(documents);
-		// Save the first doc ID for subsequent getDocument() tests
-		if (documents != null && documents.size() > 0) {
-			SAVAINGS_DOCUMENT_ID = documents.get(0).getEncodedKey();
-		}
+		return docsMap;
 
 	}
 
-	public static void testGetDocument() throws MambuApiException {
+	/**
+	 * Test get document details
+	 * 
+	 * @param docsMap
+	 *            a map of previously retrieved documents
+	 * @throws MambuApiException
+	 */
+	public static void testGetDocument(Map<MambuEntityType, List<Document>> docsMap) throws MambuApiException {
 		System.out.println("\nIn testGetDocument");
 
 		DocumentsService documentsService = MambuAPIFactory.getDocumentsService();
 		String document;
 
 		// Get document details for a client
-		if (CLIENT_DOCUMENT_ID != null) {
+		List<Document> clientDocs = docsMap.get(MambuEntityType.CLIENT);
+		if (clientDocs != null && clientDocs.size() > 0) {
+			String CLIENT_DOCUMENT_ID = clientDocs.get(0).getEncodedKey();
 			System.out.println("\nDocument Details for a Client document with ID=" + CLIENT_DOCUMENT_ID);
 			document = documentsService.getDocument(CLIENT_DOCUMENT_ID);
 			logDocumentContent(document);
@@ -239,7 +245,9 @@ public class DemoTestDocumentsService {
 		}
 
 		// Get document details for a Loan Account
-		if (LOAN_DOCUMENT_ID != null) {
+		List<Document> loanDocs = docsMap.get(MambuEntityType.LOAN_ACCOUNT);
+		if (loanDocs != null && loanDocs.size() > 0) {
+			String LOAN_DOCUMENT_ID = loanDocs.get(0).getEncodedKey();
 			System.out.println("\nDocument Details for a Loan document with ID=" + LOAN_DOCUMENT_ID);
 			document = documentsService.getDocument(LOAN_DOCUMENT_ID);
 			logDocumentContent(document);
@@ -248,7 +256,9 @@ public class DemoTestDocumentsService {
 		}
 
 		// Get document details for a Savings Account
-		if (SAVAINGS_DOCUMENT_ID != null) {
+		List<Document> savingsDocs = docsMap.get(MambuEntityType.SAVINGS_ACCOUNT);
+		if (savingsDocs != null && savingsDocs.size() > 0) {
+			String SAVAINGS_DOCUMENT_ID = savingsDocs.get(0).getEncodedKey();
 			System.out.println("\nDocument Details for a Savings document with ID=" + SAVAINGS_DOCUMENT_ID);
 			document = documentsService.getDocument(SAVAINGS_DOCUMENT_ID);
 			logDocumentContent(document);
@@ -258,17 +268,30 @@ public class DemoTestDocumentsService {
 
 	}
 
+	/**
+	 * Test Delete document. Document uploaded in a test above is deleted
+	 * 
+	 * @throws MambuApiException
+	 */
 	public static void testDeleteDocument() throws MambuApiException {
 		System.out.println("\nIn testDeleteDocument");
 
 		String documentId = UPLOADED_DOCUMENT_KEY;
+		if (documentId == null) {
+			System.out.println("WARNING: cannot test Delete. document ID is NULL");
+			return;
+		}
 		DocumentsService documentsService = MambuAPIFactory.getDocumentsService();
 		boolean deletionStatus = documentsService.deleteDocument(documentId);
 		System.out.println("Deleted Document ID=" + documentId + "\tStatus=" + deletionStatus);
 
 	}
 
-	// Log returned Documents
+	/**
+	 * Log details for retrieved documents
+	 * 
+	 * @param documents
+	 */
 	public static void logDocuments(List<Document> documents) {
 		if (documents == null) {
 			System.out.println("Null Documents input");
@@ -285,7 +308,12 @@ public class DemoTestDocumentsService {
 		}
 	}
 
-	// Log details for the returned Document
+	/**
+	 * Log details for the returned Document
+	 * 
+	 * @param doc
+	 *            document
+	 */
 	public static void logDocument(Document doc) {
 		if (doc == null) {
 			System.out.println("\nNULL Document returned");
@@ -297,7 +325,12 @@ public class DemoTestDocumentsService {
 
 	}
 
-	// Log details for the encoded document content
+	/**
+	 * Helper to Log brief details for the encoded document content
+	 * 
+	 * @param content
+	 *            document content
+	 */
 	private static void logDocumentContent(String content) {
 
 		if (content == null) {

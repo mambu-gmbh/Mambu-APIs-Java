@@ -13,9 +13,11 @@ import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
+import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIFactory;
-import com.mambu.apisdk.services.CustomFieldValueService;
-import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.apisdk.model.LoanAccountExpanded;
+import com.mambu.clients.shared.model.ClientExpanded;
+import com.mambu.clients.shared.model.GroupExpanded;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.savings.shared.model.SavingsAccount;
 
@@ -30,81 +32,6 @@ import com.mambu.savings.shared.model.SavingsAccount;
  * 
  */
 public class ServiceHelper {
-
-	/**
-	 * Validate Input params and make ParamsMap for GET Mambu entities for a custom view API requests
-	 * 
-	 * @param customViewKey
-	 *            the encoded key of the Custom View to filter entities
-	 * @param offset
-	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * @param limit
-	 *            pagination limit. If not null the must be an integer greater than zero
-	 * 
-	 * @return params
-	 */
-	// TODO: when MBU-7042 is fixed - add additional branchId, centreId and centreId filtering params
-	public static ParamsMap makeParamsForGetByCustomView(String customViewKey, String offset, String limit) {
-
-		// Verify that the customViewKey is not null or empty
-		if (customViewKey == null || customViewKey.trim().isEmpty()) {
-			throw new IllegalArgumentException("customViewKey must not be null or empty");
-		}
-		// Validate pagination parameters
-		if ((offset != null && Integer.parseInt(offset) < 0) || ((limit != null && Integer.parseInt(limit) < 1))) {
-			throw new IllegalArgumentException("Invalid pagination parameters");
-		}
-
-		ParamsMap params = new ParamsMap();
-		params.addParam(APIData.VIEW_FILTER, customViewKey);
-		params.addParam(APIData.OFFSET, offset);
-		params.addParam(APIData.LIMIT, limit);
-
-		return params;
-
-	}
-
-	/**
-	 * Validate Custom Field ID and make ParamsMap for Update Custom Field value API requests
-	 * 
-	 * @deprecated use {@link CustomFieldValueService} to update and delete custom field values
-	 * 
-	 * @param customFieldId
-	 *            the ID or the encoded key of the custom field to be updated. Must be not null and not empty
-	 * @param fieldValue
-	 *            the new value of the custom field
-	 * 
-	 * @return params
-	 */
-	@Deprecated
-	public static ParamsMap makeParamsForUpdateCustomField(String customFieldId, String fieldValue) {
-
-		// Verify that customFieldId is not null
-		if (customFieldId == null || customFieldId.trim().isEmpty()) {
-			throw new IllegalArgumentException("Custom Field ID must not be null or empty");
-		}
-
-		// Create JSON string to be used in the PATCH request
-		// The JSON string for this API must have the following format: {"value":"newFieldValue"}. See MBU-6661
-
-		// Make CustomFieldValue object to create this JSON
-		CustomFieldValue customFieldValue = new CustomFieldValue();
-		customFieldValue.setValue(fieldValue);
-
-		// Set all other parameters to null, they are not needed in this JSON
-		customFieldValue.setCustomField(null);
-		customFieldValue.setToBeDeleted(null);
-		customFieldValue.setIndexInList(null);
-		customFieldValue.setAmount(null);
-
-		final String patchJson = GsonUtils.createGson().toJson(customFieldValue, CustomFieldValue.class);
-
-		ParamsMap params = new ParamsMap();
-		params.put(APIData.JSON_OBJECT, patchJson);
-
-		return params;
-
-	}
 
 	/**
 	 * Convenience method to add to the ParamsMap input parameters common to most account transactions. Such common
@@ -287,7 +214,7 @@ public class ServiceHelper {
 	 */
 	private final static Set<String> modifiableLoanAccountFields = new HashSet<String>(Arrays.asList(
 			APIData.LOAN_AMOUNT, APIData.INTEREST_RATE, APIData.INTEREST_RATE_SPREAD, APIData.REPAYMENT_INSTALLMENTS,
-			APIData.REPAYMENT_PERIOD_COUNT, APIData.REPAYMENT_PERIOD_UNIT, APIData.EXPECTED_DISBURSEMENT,
+			APIData.REPAYMENT_PERIOD_COUNT, APIData.REPAYMENT_PERIOD_UNIT, APIData.EXPECTED_DISBURSEMENT_DATE,
 			APIData.FIRST_REPAYMENT_DATE, APIData.GRACE_PERIOD, APIData.PRNICIPAL_REPAYMENT_INTERVAL,
 			APIData.PENALTY_RATE, APIData.PERIODIC_PAYMENT));
 
@@ -322,11 +249,13 @@ public class ServiceHelper {
 	}
 
 	/**
-	 * A list of fields supported by the PATCH savings account API. Only updating OverdraftLimit is supports as of Mambu
-	 * 3.12.2. See MBU-9727
+	 * A list of fields supported by the PATCH savings account API. See MBU-10447 for a list of fields supported in 3.14
+	 * 
 	 */
-	private final static Set<String> modifiableSavingsAccountFields = new HashSet<String>(
-			Arrays.asList(APIData.OVERDRAFT_LIMIT));
+	private final static Set<String> modifiableSavingsAccountFields = new HashSet<String>(Arrays.asList(
+			APIData.INTEREST_RATE, APIData.INTEREST_RATE_SPREAD, APIData.MAX_WITHDRAWAL_AMOUNT,
+			APIData.RECOMMENDED_DEPOSIT_AMOUNT, APIData.TARGET_AMOUNT, APIData.OVERDRAFT_INTEREST_RATE,
+			APIData.OVERDRAFT_LIMIT, APIData.OVERDRAFT_EXPIRY_DATE));
 
 	/**
 	 * Create ParamsMap with a JSON string for the PATCH savings account API. Only fields applicable to the API are
@@ -359,12 +288,13 @@ public class ServiceHelper {
 	}
 
 	/**
-	 * A list of fields supported by get loan schedule preview API. See MBU-6789 and MBU-7676
+	 * A list of fields supported by get loan schedule preview API. See MBU-6789, MBU-7676 and MBU-10802.
 	 */
 	private final static Set<String> loanSchedulePreviewFields = new HashSet<String>(Arrays.asList(APIData.LOAN_AMOUNT,
 			APIData.INTEREST_RATE, APIData.REPAYMENT_INSTALLMENTS, APIData.REPAYMENT_PERIOD_COUNT,
-			APIData.REPAYMENT_PERIOD_UNIT, APIData.FIRST_REPAYMENT_DATE, APIData.GRACE_PERIOD,
-			APIData.PRNICIPAL_REPAYMENT_INTERVAL, APIData.PERIODIC_PAYMENT));
+			APIData.REPAYMENT_PERIOD_UNIT, APIData.EXPECTED_DISBURSEMENT_DATE, APIData.FIRST_REPAYMENT_DATE,
+			APIData.GRACE_PERIOD, APIData.PRNICIPAL_REPAYMENT_INTERVAL, APIData.PERIODIC_PAYMENT,
+			APIData.FIXED_DAYS_OF_MONTH));
 
 	/**
 	 * Create ParamsMap with a map of fields for the GET loan schedule for the product API. Only fields applicable to
@@ -385,12 +315,37 @@ public class ServiceHelper {
 		// Loan schedule API uses URL encoded params, so the dates should be in "yyyy-MM-dd" date format
 		JsonObject loanTermsObject = makeJsonObjectForFields(account, loanSchedulePreviewFields, APIData.yyyyMmddFormat);
 
+		// FIXED_DAYS_OF_MONTH field is an Integer array with the data in the format [2,15]. But for this url-encoded
+		// API it needs to be converted into a string with no array square brackets: Mambu expects it in this format:
+		// "fixedDaysOfMonth"="2,15" See MBU-10802.
+		// Get an array and convert it into a string with no square brackets
+		JsonElement fixedDaysElement = loanTermsObject.get(APIData.FIXED_DAYS_OF_MONTH);
+		if (fixedDaysElement != null && fixedDaysElement.isJsonArray()
+				&& fixedDaysElement.getAsJsonArray().toString().length() >= 2) {
+			String arrayData = fixedDaysElement.getAsJsonArray().toString();
+			arrayData = arrayData.substring(1, arrayData.length() - 1); // remove surrounding []
+			// Replace the original value with the data part only
+			loanTermsObject.remove(APIData.FIXED_DAYS_OF_MONTH);
+			if (arrayData.length() > 0) {
+				loanTermsObject.addProperty(APIData.FIXED_DAYS_OF_MONTH, arrayData);
+			}
+		}
 		// For this GET API we need to create params map with all individual params separately
 		// Convert Json object with the applicable fields into a ParamsMap.
 		Type type = new TypeToken<ParamsMap>() {
 		}.getType();
 		ParamsMap params = GsonUtils.createGson().fromJson(loanTermsObject.toString(), type);
-
+		if (params == null || params.size() == 0) {
+			return params;
+		}
+		// Mambu API expects "anticipatedDisbursement" parameter in place of "expectedDisbursementDate" loan field when
+		// getting loan account schedule. See MBU-6789
+		// Send expectedDisbursementdate value as APIData.ANTICIPATE_DISBURSEMENT parameter
+		String expectedDisbursement = params.get(APIData.EXPECTED_DISBURSEMENT_DATE);
+		if (expectedDisbursement != null) {
+			params.remove(APIData.EXPECTED_DISBURSEMENT_DATE);
+			params.put(APIData.ANTICIPATE_DISBURSEMENT, expectedDisbursement);
+		}
 		return params;
 
 	}
@@ -549,5 +504,32 @@ public class ServiceHelper {
 
 		return jsonWithAppKey.toString();
 
+	}
+
+	/**
+	 * Get class corresponding to the "full details" class for a Mambu Entity. For example, ClientExpanded.class for
+	 * MambuEntityType.CLIENT;
+	 * 
+	 * @param entityType
+	 *            entity type. Must not be null
+	 * @return class representing full details class for the Mambu Entity or null if no such class exists
+	 */
+	public static Class<?> getFullDetailsClass(MambuEntityType entityType) {
+		if (entityType == null) {
+			throw new IllegalArgumentException("Entity type must not be null");
+		}
+		switch (entityType) {
+		case CLIENT:
+			return ClientExpanded.class;
+		case GROUP:
+			return GroupExpanded.class;
+		case LOAN_ACCOUNT:
+			return LoanAccountExpanded.class;
+		case SAVINGS_ACCOUNT:
+			return JSONSavingsAccount.class;
+		default:
+			return null;
+
+		}
 	}
 }

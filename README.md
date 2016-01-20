@@ -13,8 +13,8 @@ Usage
 
 To use the Mambu Java API Wrapper, please include the following jars in your build path
 
-* build/Mambu-APIs-Java-3.13-bin.jar
-* lib/mambu-models-V3.13.jar
+* build/Mambu-APIs-Java-3.14-bin.jar
+* lib/mambu-models-V3.14.jar
 * further dependencies to run and test (see pom.xml for versions)
  * httpclient
  * httpcore
@@ -37,7 +37,9 @@ The list will be updated constantly and currently contains:
 - ClientsService
 - CommentsService
 - CustomFieldValueService
+- CustomViewsService
 - DocumentsService
+- DocumentTemplatesService
 - IntelligenceService
 - LinesOfCreditService
 - LoansService

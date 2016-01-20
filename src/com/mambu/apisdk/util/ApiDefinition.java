@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.accounting.shared.model.GLJournalEntry;
+import com.mambu.accounts.shared.model.DocumentTemplate;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.accountsecurity.shared.model.InvestorFund;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
@@ -35,6 +36,7 @@ import com.mambu.core.shared.model.IndexRate;
 import com.mambu.core.shared.model.IndexRateSource;
 import com.mambu.core.shared.model.ObjectLabel;
 import com.mambu.core.shared.model.Organization;
+import com.mambu.core.shared.model.Role;
 import com.mambu.core.shared.model.SearchResult;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
@@ -532,6 +534,8 @@ public class ApiDefinition {
 		apiEndPointsMap.put(JSONComment.class, APIData.COMMENTS);
 		// Identification Document Template
 		apiEndPointsMap.put(IdentificationDocumentTemplate.class, APIData.ID_DOCUMENT_TEMPLATES);
+		// Document Template
+		apiEndPointsMap.put(DocumentTemplate.class, APIData.TEMPLATES);
 		// Organization
 		apiEndPointsMap.put(Organization.class, APIData.ORGANIZATION);
 		apiEndPointsMap.put(GeneralSettings.class, APIData.GENERAL);
@@ -542,11 +546,12 @@ public class ApiDefinition {
 		apiEndPointsMap.put(AccountsFromLineOfCredit.class, APIData.ACCOUNTS);
 		apiEndPointsMap.put(LoanTranche.class, APIData.TRANCHES);
 		apiEndPointsMap.put(InvestorFund.class, APIData.FUNDS); // "funds" api end point
+		apiEndPointsMap.put(Role.class, APIData.USER_ROLES); // "userroles" api end point
 
 	}
 
 	// Get an Api endpoint for a Mambu class
-	private String getApiEndPoint(Class<?> entityClass) {
+	public static String getApiEndPoint(Class<?> entityClass) {
 
 		if (entityClass == null) {
 			throw new IllegalArgumentException("Entity Class cannot be NULL");

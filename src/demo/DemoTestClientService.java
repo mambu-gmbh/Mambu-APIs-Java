@@ -15,6 +15,7 @@ import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.ClientsService;
+import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.util.DateUtils;
 import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.model.Client;
@@ -413,16 +414,19 @@ public class DemoTestClientService {
 	public static void testGetDocuments() throws MambuApiException {
 		System.out.println("\nIn testGetDocuments");
 
+		Integer offset = 0;
+		Integer limit = 50;
 		// Getting Documents for a Client
-		ClientsService clientService = MambuAPIFactory.getClientService();
-		List<Document> documents = clientService.getClientDocuments(demoClient.getId());
+		DocumentsService documentsService = MambuAPIFactory.getDocumentsService();
+		List<Document> documents = documentsService.getDocuments(MambuEntityType.CLIENT, demoClient.getId(), offset,
+				limit);
 
 		// Log returned documents using DemoTestDocumentsService helper
 		System.out.println("Documents returned for a Client with ID=" + demoClient.getId());
 		DemoTestDocumentsService.logDocuments(documents);
 
 		// Getting Documents for a Group
-		documents = clientService.getGroupDocuments(demoGroup.getId());
+		documents = documentsService.getDocuments(MambuEntityType.GROUP, demoGroup.getId(), offset, limit);
 
 		// Log returned documents using DemoTestDocumentsService helper
 		System.out.println("Documents returned for a Group with ID=" + demoGroup.getId());
@@ -686,6 +690,8 @@ public class DemoTestClientService {
 
 		updatedAddresses.add(updatedAddress);
 		groupExpanded.setAddresses(updatedAddresses);
+		// TODO: Mambu 3.14 returns an exception when updating Groups with an existent address. See MBU-11214
+		groupExpanded.setAddresses(null); // for now clear address for testing, otherwise updating group wouldn't work
 
 		List<CustomFieldValue> customFields = groupExpanded.getCustomFieldValues();
 		List<CustomFieldValue> updatedFields = new ArrayList<CustomFieldValue>();

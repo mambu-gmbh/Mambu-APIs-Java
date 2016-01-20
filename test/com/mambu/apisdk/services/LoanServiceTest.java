@@ -121,6 +121,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 						+ "\"repaymentInstallments\":20,"
 						+ "\"gracePeriod\":0,"
 						+ "\"interestRate\":3.2,"
+						+ "\"interestBalanceCalculationMethod\":\"PRINCIPAL_ONLY\","
 						+ "\"principalRepaymentInterval\":1,"
 						+ "\"interestRateSource\":\"FIXED_INTEREST_RATE\","
 						+ "\"accruedInterest\":0,"

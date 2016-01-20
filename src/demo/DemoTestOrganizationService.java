@@ -22,7 +22,6 @@ import com.mambu.core.shared.model.GeneralSettings;
 import com.mambu.core.shared.model.IndexRate;
 import com.mambu.core.shared.model.ObjectLabel;
 import com.mambu.core.shared.model.Organization;
-import com.mambu.core.shared.model.Role;
 import com.mambu.core.shared.model.UsageRights;
 import com.mambu.core.shared.model.User;
 import com.mambu.organization.shared.model.Branch;
@@ -76,7 +75,7 @@ public class DemoTestOrganizationService {
 
 			testUpdateDeleteCustomFields(); // Available since 3.8
 
-			testGetDocumentTemplates(); // Available since 3.10.5
+			testGetIDDocumentTemplates(); // Available since 3.10.5
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Organization Service");
@@ -292,13 +291,13 @@ public class DemoTestOrganizationService {
 			String demoUserRoleKey = (demoUser.getRole() == null) ? null : demoUser.getRole().getEncodedKey();
 			UsageRights rights = channel.getUsageRights();
 			if (rights != null) {
-				List<Role> roles = rights.getRoles();
-				int totalRoles = (roles == null) ? 0 : roles.size();
+				List<String> roleKeys = rights.getRoles(); // Since 3.14 Mambu returns role keys only. See MBU-9725
+				int totalRoles = (roleKeys == null) ? 0 : roleKeys.size();
 				System.out.println("Is Accessible By All Users=" + rights.isAccessibleByAllUsers() + "\tTotal Roles="
 						+ totalRoles + "\tDemo User Role Key=" + demoUserRoleKey);
-				if (roles != null) {
-					for (Role role : roles) {
-						System.out.println("For Role Key=" + role.getEncodedKey());
+				if (roleKeys != null) {
+					for (String roleKey : roleKeys) {
+						System.out.println("For Role Key=" + roleKey);
 					}
 				}
 
@@ -347,8 +346,8 @@ public class DemoTestOrganizationService {
 	}
 
 	// Test getting Identification Document Templates
-	public static void testGetDocumentTemplates() throws MambuApiException {
-		System.out.println("\nIn testGetDocumentTemplates");
+	public static void testGetIDDocumentTemplates() throws MambuApiException {
+		System.out.println("\nIn testGetIDDocumentTemplates");
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 		List<IdentificationDocumentTemplate> templates = organizationService.getIdentificationDocumentTemplates();

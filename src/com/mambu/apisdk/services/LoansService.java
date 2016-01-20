@@ -17,6 +17,7 @@ import com.mambu.api.server.handler.tranches.model.JSONTranches;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.LoanAccountExpanded;
+import com.mambu.apisdk.services.CustomViewsService.CustomViewResultType;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
@@ -60,6 +61,7 @@ public class LoansService {
 	private static final String TYPE_FEE = APIData.TYPE_FEE;
 	private static final String TYPE_LOCK = APIData.TYPE_LOCK;
 	private static final String TYPE_UNLOCK = APIData.TYPE_UNLOCK;
+	private static final String TYPE_WRITE_OFF = APIData.TYPE_WRITE_OFF;
 	private static final String TYPE_DISBURSMENT_ADJUSTMENT = APIData.TYPE_DISBURSMENT_ADJUSTMENT;
 	private static final String TYPE_PENALTY_ADJUSTMENT = APIData.TYPE_PENALTY_ADJUSTMENT;
 	private static final String ORIGINAL_TRANSACTION_ID = APIData.ORIGINAL_TRANSACTION_ID;
@@ -189,7 +191,8 @@ public class LoansService {
 	 * 
 	 * @param accountId
 	 *            the id of the account
-	 * 
+	 * @param notes
+	 *            transaction notes
 	 * @return loanAccount
 	 * 
 	 *         Note: The account object in the response doesn't contain custom fields
@@ -234,7 +237,8 @@ public class LoansService {
 	 * 
 	 * @param accountId
 	 *            the id of the account
-	 * 
+	 * @param notes
+	 *            transaction notes
 	 * @return loanAccount
 	 * 
 	 *         Note: The account object in the response doesn't contain custom fields
@@ -256,7 +260,8 @@ public class LoansService {
 	 * 
 	 * @param accountId
 	 *            the id of the account
-	 * 
+	 * @param notes
+	 *            transaction notes
 	 * @return a list of loan transactions performed when locking account
 	 * 
 	 * @throws MambuApiException
@@ -279,7 +284,8 @@ public class LoansService {
 	 * 
 	 * @param accountId
 	 *            the id of the account
-	 * 
+	 * @param notes
+	 *            transaction notes
 	 * @return a list of loan transactions performed when unlocking account
 	 * 
 	 * @throws MambuApiException
@@ -294,6 +300,26 @@ public class LoansService {
 		ApiDefinition postAccountTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY, LoanAccount.class,
 				LoanTransaction.class);
 		postAccountTransaction.setApiReturnFormat(ApiReturnFormat.COLLECTION);
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
+	}
+
+	/****
+	 * Write of loan account
+	 * 
+	 * @param accountId
+	 *            the encoded key or id of the account. Must not be null
+	 * @param notes
+	 *            transaction notes
+	 * @return loan transaction
+	 * @throws MambuApiException
+	 */
+	public LoanTransaction writeOffLoanAccount(String accountId, String notes) throws MambuApiException {
+		// POST "type=WRITE_OFF" /api/loans/{ID}/transactions
+		// See MBU-10423
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, TYPE_WRITE_OFF);
+		paramsMap.addParam(NOTES, notes);
+
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
@@ -380,9 +406,10 @@ public class LoansService {
 	 * Disburse a loan account with a given disbursal date and some extra transaction details
 	 * 
 	 * @param accountId
-	 *            account ID
+	 *            account ID. Must not be null
 	 * @param amount
-	 *            disbursement amount
+	 *            disbursement amount. Loan amount can be null for all loan product types except REVOLVING_CREDIT. See
+	 *            MBU-1054
 	 * @param disbursalDate
 	 *            disbursement date
 	 * @param firstRepaymentDate
@@ -396,10 +423,11 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: Disbursements for Loans with tranches is NOT supported. See MBU-7214 (issue is closed as Incomplete)
 	public LoanTransaction disburseLoanAccount(String accountId, String amount, String disbursalDate,
 			String firstRepaymentDate, String notes, TransactionDetails transactionDetails) throws MambuApiException {
 
+		// Disbursing loan account with tranches is available since Mambu 3.13. See MBU-10045
+		// Disbursing Revolving Credit loans is available since Mambu 3.14 . See MBU-10547
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_DISBURSEMENT);
 
@@ -414,26 +442,6 @@ public class LoansService {
 	}
 
 	// TODO: Implement MBU-8811 Disburse with activation fees when MBU-8992 is ready
-
-	/***
-	 * Undo Disburse for a loan account. If the account has multiple tranches, reverses the last tranche
-	 * 
-	 * @deprecated use {@link #undoDisburseLoanAccount(String, String)} to provide "undo notes" parameter
-	 * 
-	 * @param accountId
-	 *            account encoded key or id. Must not be null
-	 * @return Loan Transaction
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public LoanTransaction undoDisburseLoanAccount(String accountId) throws MambuApiException {
-		// Example POST "type=DISBURSMENT_ADJUSTMENT" /api/loans/{id}/transactions/
-		// Available since Mambu 3.9. See MBU-7189
-
-		String notes = null;
-		return undoDisburseLoanAccount(accountId, notes);
-	}
 
 	/***
 	 * Undo Disburse for a loan account. If the account has multiple tranches, reverses the last tranche
@@ -506,8 +514,8 @@ public class LoansService {
 	 * updating LoanAccount with details. As of Mambu 3.4 only custom fields can be updated.
 	 * 
 	 * @param loan
-	 *            LoanAccountExtended object containing LoanAccount. LoanAccount encodedKey must be NOT null for account
-	 *            update
+	 *            LoanAccountExtended object containing LoanAccount. LoanAccount encodedKey or id must be NOT null for
+	 *            account update
 	 * 
 	 * @return updated object containing both the LoanAccount and its CustomInformation fields
 	 * 
@@ -520,9 +528,9 @@ public class LoansService {
 		}
 
 		LoanAccount inputAccount = loan.getLoanAccount();
-		String encodedKey = inputAccount.getEncodedKey();
+		String encodedKey = inputAccount.getEncodedKey() != null ? inputAccount.getEncodedKey() : inputAccount.getId();
 		if (encodedKey == null) {
-			throw new IllegalArgumentException("Cannot update Account, the encoded key must be NOT null");
+			throw new IllegalArgumentException("Cannot update Account: the encoded key or id must NOT be null");
 		}
 
 		return serviceExecutor.executeJson(updateAccount, loan, encodedKey);
@@ -614,7 +622,7 @@ public class LoansService {
 	 * Update funds for an existent Loan Account
 	 * 
 	 * @param accountId
-	 *            the encoded key or id of the loan account. Must not be null.
+	 *            the encoded key or id of the loan account. Account must not yet be disbursed. Must not be null.
 	 * @param funds
 	 *            funds to be updated. Must not be null
 	 * @return loan account with updated funds
@@ -623,7 +631,7 @@ public class LoansService {
 	 * @throws IllegalArgumentException
 	 */
 	public LoanAccount updateLoanAccountFunds(String accountId, List<InvestorFund> funds) throws MambuApiException {
-		// Available since Mambu 3.13. See MBU-9885
+		// Available since Mambu 3.13. See MBU-9885. MBU-11017 and MBU-11014
 
 		// Example: POST api/loans/ABC123/funds { funds":[
 		// // edit a fund
@@ -688,7 +696,13 @@ public class LoansService {
 	public List<LoanTransaction> getLoanTransactionsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		// Example GET loan/transactions?viewfilter=123&offset=0&limit=100
-		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+		String branchId = null;
+		String centreId = null;
+		String creditOfficerName = null;
+		CustomViewResultType resultType = CustomViewResultType.BASIC;
+
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
+				centreId, creditOfficerName, offset, limit);
 		return serviceExecutor.execute(getAllLoanTransactions, params);
 
 	}
@@ -882,7 +896,12 @@ public class LoansService {
 	 */
 	public List<LoanAccount> getLoanAccountsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
-		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+		String branchId = null;
+		String centreId = null;
+		String creditOfficerName = null;
+		CustomViewResultType resultType = CustomViewResultType.BASIC;
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
+				centreId, creditOfficerName, offset, limit);
 		return serviceExecutor.execute(getAccountsList, params);
 
 	}
@@ -951,15 +970,17 @@ public class LoansService {
 	 * Get repayment schedule preview for a Loan Product
 	 * 
 	 * @param productId
-	 *            the id of the loan product
+	 *            the id of the loan product. Must not be null.
 	 * @param account
 	 *            loan account containing parameters for determining loan schedule
 	 * 
 	 *            Only the following loan account parameters are currently supported: loanAmount (mandatory),
 	 *            anticipatedDisbursement, firstRepaymentDate, interestRate, repaymentInstallments, gracePeriod,
-	 *            repaymentPeriodUnit, repaymentPeriodCount, principalRepaymentInterval
+	 *            repaymentPeriodUnit, repaymentPeriodCount, principalRepaymentInterval, fixedDaysOfMonth
 	 * 
-	 *            See MBU-6789 and MBU-7676 for more details
+	 *            Loan repayment schedule preview is not available for Revolving Credit products. See MBU-10545
+	 * 
+	 *            See MBU-6789, MBU-7676 and MBU-10802 for more details
 	 * 
 	 * @return the List of Repayments
 	 * 
@@ -967,6 +988,7 @@ public class LoansService {
 	 */
 	public List<Repayment> getLoanProductSchedule(String productId, LoanAccount account) throws MambuApiException {
 		// E.g. GET /api/loanproducts/{ID}/schedule?loanAmount=1250&anticipatedDisbursement=2015-02-10&interestRate=4
+		// E.g. GET /api/loanproducts/{ID}/schedule?loanAmount=1250&fixedDaysOfMonth=2,10,20
 
 		if (account == null) {
 			throw new IllegalArgumentException("Loan Account cannot be null");
@@ -987,6 +1009,9 @@ public class LoansService {
 	/***
 	 * Get all documents for a specific Loan Account
 	 * 
+	 * @deprecated Starting from 3.14 use
+	 *             {@link DocumentsService#getDocuments(MambuEntityType, String, Integer, Integer)}. This methods
+	 *             supports pagination parameters
 	 * @param accountId
 	 *            the encoded key or id of the loan account for which attached documents are to be retrieved
 	 * 

@@ -12,16 +12,21 @@ import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstrain
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.services.CustomViewsService.CustomViewResultType;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.RequestExecutor.ContentType;
+import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.docs.shared.model.Document;
+import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
 import com.mambu.savings.shared.model.SavingsTransaction;
@@ -252,7 +257,14 @@ public class SavingsService {
 	public List<SavingsTransaction> getSavingsTransactionsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		// Example GET savings/transactions?viewfilter=567&offset=0&limit=100
-		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+
+		String branchId = null;
+		String centreId = null;
+		String creditOfficerName = null;
+		CustomViewResultType resultType = CustomViewResultType.BASIC;
+
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
+				centreId, creditOfficerName, offset, limit);
 		return serviceExecutor.execute(getAllSavingsTransactions, params);
 	}
 
@@ -648,7 +660,13 @@ public class SavingsService {
 	 */
 	public List<SavingsAccount> getSavingsAccountsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
-		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+		String branchId = null;
+		String centreId = null;
+		String creditOfficerName = null;
+		CustomViewResultType resultType = CustomViewResultType.BASIC;
+
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
+				centreId, creditOfficerName, offset, limit);
 		return serviceExecutor.execute(getAccountsList, params);
 
 	}
@@ -746,8 +764,8 @@ public class SavingsService {
 	 * 
 	 * 
 	 * @param savingsAccount
-	 *            JSONSavingsAccount object containing SavingsAccount. SavingsAccount encodedKey must be NOT null for
-	 *            account update
+	 *            JSONSavingsAccount object containing SavingsAccount. SavingsAccount encodedKey or id must be NOT null
+	 *            for account update
 	 * 
 	 * @return savingsAccount
 	 * 
@@ -761,9 +779,9 @@ public class SavingsService {
 		}
 
 		SavingsAccount inputAccount = account.getSavingsAccount();
-		String encodedKey = inputAccount.getEncodedKey();
+		String encodedKey = inputAccount.getEncodedKey() != null ? inputAccount.getEncodedKey() : inputAccount.getId();
 		if (encodedKey == null) {
-			throw new IllegalArgumentException("Cannot update  Account, the encoded key must be NOT null");
+			throw new IllegalArgumentException("Cannot update Account: the encoded key or id must NOT be null");
 		}
 
 		return serviceExecutor.executeJson(updateAccount, account, encodedKey);
@@ -776,8 +794,11 @@ public class SavingsService {
 	 * @param savings
 	 *            SavingsAccount object. Either account's encoded key or its ID must be NOT null for updating account
 	 * 
-	 *            Note that only some savings terms can be updated. As of Mambu 3.12.2 only overdraftLimit field can be
-	 *            updated. See MBU-9727 for details.
+	 *            Note that only some savings terms can be updated. As of Mambu 3.14 the following fields can be
+	 *            updated: interestRate, maxWidthdrawlAmount, recommendedDepositAmount, targetAmount,
+	 *            overdraftInterestSpread, overdraftLimit, overdraftExpiryDate.
+	 * 
+	 *            See MBU-10447 for more details
 	 * 
 	 * @returns success or failure
 	 * 
@@ -786,7 +807,7 @@ public class SavingsService {
 	 */
 	public boolean patchSavingsAccount(SavingsAccount savings) throws MambuApiException {
 		// Example: PATCH JSON /api/savings/{ID}
-		// See MBU-9727 for details
+		// See MBU-10447 for details
 		if (savings == null) {
 			throw new IllegalArgumentException("Account must not be NULL");
 		}
@@ -804,9 +825,34 @@ public class SavingsService {
 
 	}
 
+	/**
+	 * Get all loan accounts funded by a deposit investor account
+	 * 
+	 * @param savingsId
+	 *            encoded key or an id of an investor funding savings account. Must not be null
+	 * @return all loan accounts funded by the deposit account
+	 * @throws MambuApiException
+	 */
+	public List<LoanAccount> getFundedLoanAccounts(String savingsId) throws MambuApiException {
+		// Example: GET /api/savings/{SAVINGS_ID}/funding
+		// Available since Mambu 3.14. See MBU-10905
+
+		if (savingsId == null) {
+			throw new IllegalArgumentException("Savings Account ID must not be null");
+		}
+		String urlPath = APIData.SAVINGS + "/" + savingsId + "/" + APIData.FUNDING;
+		ApiDefinition apiDefinition = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET, LoanAccount.class,
+				ApiReturnFormat.COLLECTION);
+		return serviceExecutor.execute(apiDefinition, savingsId);
+
+	}
+
 	/***
 	 * Get all documents for a specific Savings Account
 	 * 
+	 * @deprecated Starting from 3.14 use
+	 *             {@link DocumentsService#getDocuments(MambuEntityType, String, Integer, Integer)}. This methods
+	 *             supports pagination parameters
 	 * @param accountId
 	 *            the encoded key or id of the savings account for which attached documents are to be retrieved
 	 * 
