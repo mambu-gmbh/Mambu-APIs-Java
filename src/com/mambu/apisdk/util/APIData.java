@@ -16,7 +16,6 @@ public class APIData {
 	public static final String FOR = "for";
 	public static final String VIEW_FILTER = "viewfilter";
 	public static final String RESULT_TYPE = "resultType"; // added in 3.14 to support what data to return
-	public static final String COLUMNS = "COLUMNS"; // return custom view columns
 	public static final String BASIC = "BASIC"; // returns entities without any extra details
 	// "FULL_DETAILS"- already defined. Returns entities with full details
 
