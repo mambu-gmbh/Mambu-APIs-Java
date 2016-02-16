@@ -10,6 +10,8 @@ import com.mambu.apisdk.services.ActivitiesService;
 import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.services.CommentsService;
 import com.mambu.apisdk.services.CustomFieldValueService;
+import com.mambu.apisdk.services.CustomViewsService;
+import com.mambu.apisdk.services.DocumentTemplatesService;
 import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.services.IntelligenceService;
 import com.mambu.apisdk.services.LinesOfCreditService;
@@ -256,6 +258,31 @@ public class MambuAPIFactory {
 		return injector.getInstance(CustomFieldValueService.class);
 	}
 
+	/***
+	 * Get an instance of the CustomViewsService class
+	 * 
+	 * @return the obtained instance
+	 * 
+	 * @throws MambuApiException
+	 */
+	public static CustomViewsService getCustomViewsService() throws MambuApiException {
+		validateFactorySetUp();
+		return injector.getInstance(CustomViewsService.class);
+	}
+
+	/***
+	 * Get an instance of the DocumentTemplatesService class
+	 * 
+	 * @return the obtained instance
+	 * 
+	 * @throws MambuApiException
+	 */
+	public static DocumentTemplatesService getDocumentTemplatesService() throws MambuApiException {
+		validateFactorySetUp();
+		return injector.getInstance(DocumentTemplatesService.class);
+	}
+
+	//
 	/***
 	 * Setter for an Application Key
 	 * 

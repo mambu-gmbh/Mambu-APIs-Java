@@ -99,7 +99,7 @@ public class DemoTestActivitiesService {
 
 		long timeNow = toDate.getTime();
 		int forNumberOfDays = 10;
-		long activiTiesForMsecInterval = 1000 * 60 * 60 * 24 * forNumberOfDays;
+		long activiTiesForMsecInterval = 1000L * 60 * 60 * 24 * forNumberOfDays;
 		long timeBefore = timeNow - activiTiesForMsecInterval;
 
 		// From forNumberOfDays ago

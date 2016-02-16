@@ -65,6 +65,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 
 		custField1.setCustomFieldId(customFieldId);
 		custField1.setValue(customFieldValue);
+		custField1.setCustomFieldSetGroupIndex(null); // Set to null explicitly: since Mambu 3.13 defaults to -1
 		// Add new field to the list
 		clientCustomInformation.add(custField1);
 		// Field #2
@@ -75,6 +76,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 
 		custField2.setCustomFieldId(customFieldId);
 		custField2.setValue(customFieldValue);
+		custField2.setCustomFieldSetGroupIndex(null); // Set to null explicitly: since Mambu 3.13 defaults to -1
 		// Add new field to the list
 		clientCustomInformation.add(custField2);
 
@@ -119,6 +121,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 						+ "\"repaymentInstallments\":20,"
 						+ "\"gracePeriod\":0,"
 						+ "\"interestRate\":3.2,"
+						+ "\"interestBalanceCalculationMethod\":\"PRINCIPAL_ONLY\","
 						+ "\"principalRepaymentInterval\":1,"
 						+ "\"interestRateSource\":\"FIXED_INTEREST_RATE\","
 						+ "\"accruedInterest\":0,"

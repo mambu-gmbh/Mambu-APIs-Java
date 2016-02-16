@@ -8,12 +8,12 @@ import com.google.inject.Inject;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.services.CustomViewsService.CustomViewResultType;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.ServiceExecutor;
-import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.loans.shared.model.LoanAccount;
@@ -147,7 +147,6 @@ public class ActivitiesService {
 	 *            the key of the Custom View to filter system activities
 	 * @param offset
 	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * 
 	 * @param limit
 	 *            pagination limit. If not null it must be an integer greater than zero
 	 * 
@@ -157,7 +156,14 @@ public class ActivitiesService {
 	 */
 	public List<JSONActivity> getActivitiesByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
-		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+
+		String branchId = null;
+		String centreId = null;
+		String creditOfficerName = null;
+		CustomViewResultType resultType = CustomViewResultType.BASIC;
+
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
+				centreId, creditOfficerName, offset, limit);
 		return serviceExecutor.execute(getJSONActivityList, params);
 	}
 

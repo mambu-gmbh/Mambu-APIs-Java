@@ -7,6 +7,9 @@ import java.util.Map;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
+import com.mambu.accounting.shared.model.GLAccount;
+import com.mambu.accounting.shared.model.GLJournalEntry;
+import com.mambu.accounts.shared.model.DocumentTemplate;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
@@ -31,6 +34,7 @@ import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
 import com.mambu.core.shared.model.CustomView;
 import com.mambu.core.shared.model.ObjectLabel;
+import com.mambu.core.shared.model.Role;
 import com.mambu.core.shared.model.SearchResult;
 import com.mambu.core.shared.model.SearchType;
 import com.mambu.core.shared.model.User;
@@ -41,6 +45,7 @@ import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
 import com.mambu.loans.shared.model.LoanTransaction;
 import com.mambu.loans.shared.model.Repayment;
+import com.mambu.notifications.shared.model.NotificationMessage;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 import com.mambu.savings.shared.model.SavingsAccount;
@@ -524,11 +529,26 @@ public class ServiceExecutor {
 		collectionTypesMap.put(IdentificationDocumentTemplate.class,
 				new TypeToken<List<IdentificationDocumentTemplate>>() {
 				}.getType());
+		// DocuementTemplate
+		collectionTypesMap.put(DocumentTemplate.class, new TypeToken<List<DocumentTemplate>>() {
+		}.getType());
 		// Object Labels
 		collectionTypesMap.put(ObjectLabel.class, new TypeToken<List<ObjectLabel>>() {
 		}.getType());
 		// Lines of Credit
 		collectionTypesMap.put(LineOfCredit.class, new TypeToken<List<LineOfCredit>>() {
+		}.getType());
+		// GLJournalEntry
+		collectionTypesMap.put(GLJournalEntry.class, new TypeToken<List<GLJournalEntry>>() {
+		}.getType());
+		// GLAccount
+		collectionTypesMap.put(GLAccount.class, new TypeToken<List<GLAccount>>() {
+		}.getType());
+		// Role
+		collectionTypesMap.put(Role.class, new TypeToken<List<Role>>() {
+		}.getType());
+		// NotificationMessage
+		collectionTypesMap.put(NotificationMessage.class, new TypeToken<List<NotificationMessage>>() {
 		}.getType());
 	}
 

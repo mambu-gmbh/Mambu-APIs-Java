@@ -5,7 +5,7 @@
 	<groupId>Mambu-APIs-Java</groupId>
 	<artifactId>Mambu-APIs-Java</artifactId>
 	<name>Mambu Java APIs SDK</name>
-	<version>3.12.3-bin</version>
+	<version>3.14-bin</version>
 	<url>http://www.mambu.com</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -128,9 +128,9 @@
 		<dependency>
 			<groupId>com.mambu</groupId>
 			<artifactId>mambumodels</artifactId>
-			<version>3.12</version>
+			<version>3.14</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/mambu-models-V3.12.jar
+			<systemPath>${project.basedir}/lib/mambu-models-V3.14.jar
 			</systemPath>
 			<optional>false</optional>
 		</dependency>

@@ -9,11 +9,15 @@ import java.util.List;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mambu.accounts.shared.model.TransactionDetails;
+import com.mambu.accountsecurity.shared.model.InvestorFund;
 import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
+import com.mambu.api.server.handler.funds.model.JSONInvestorFunds;
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
+import com.mambu.api.server.handler.tranches.model.JSONTranches;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.LoanAccountExpanded;
+import com.mambu.apisdk.services.CustomViewsService.CustomViewResultType;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
@@ -21,6 +25,7 @@ import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.DateUtils;
 import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.apisdk.util.ParamsMap;
+import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
@@ -28,7 +33,9 @@ import com.mambu.clients.shared.model.Group;
 import com.mambu.docs.shared.model.Document;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
+import com.mambu.loans.shared.model.LoanTranche;
 import com.mambu.loans.shared.model.LoanTransaction;
+import com.mambu.loans.shared.model.LoanTransactionType;
 import com.mambu.loans.shared.model.Repayment;
 
 /**
@@ -49,10 +56,15 @@ public class LoansService {
 	private static final String TYPE_REPAYMENT = APIData.TYPE_REPAYMENT;
 	private static final String TYPE_DISBURSEMENT = APIData.TYPE_DISBURSEMENT;
 	private static final String TYPE_APPROVAL = APIData.TYPE_APPROVAL;
+	private static final String TYPE_REQUEST_APPROVAL = APIData.TYPE_REQUEST_APPROVAL;
 	private static final String TYPE_UNDO_APPROVAL = APIData.TYPE_UNDO_APPROVAL;
 	private static final String TYPE_FEE = APIData.TYPE_FEE;
 	private static final String TYPE_LOCK = APIData.TYPE_LOCK;
 	private static final String TYPE_UNLOCK = APIData.TYPE_UNLOCK;
+	private static final String TYPE_WRITE_OFF = APIData.TYPE_WRITE_OFF;
+	private static final String TYPE_DISBURSMENT_ADJUSTMENT = APIData.TYPE_DISBURSMENT_ADJUSTMENT;
+	private static final String TYPE_PENALTY_ADJUSTMENT = APIData.TYPE_PENALTY_ADJUSTMENT;
+	private static final String ORIGINAL_TRANSACTION_ID = APIData.ORIGINAL_TRANSACTION_ID;
 
 	private static final String AMOUNT = APIData.AMOUNT;
 	private static final String REPAYMENT_NUMBER = APIData.REPAYMENT_NUMBER;
@@ -102,7 +114,12 @@ public class LoansService {
 	private final static ApiDefinition updateAccount = new ApiDefinition(ApiType.POST_ENTITY, LoanAccountExpanded.class);
 	// Patch Account. Used to update loan terms only. PATCH JSON /api/loans/loanId
 	private final static ApiDefinition patchAccount = new ApiDefinition(ApiType.PATCH_ENTITY, LoanAccount.class);
-
+	// Update Loan Tranches. Returns updated LoanAccount. POST /api/loans/loanId/tranches
+	private final static ApiDefinition updateAccountTranches = new ApiDefinition(ApiType.POST_ENTITY_ACTION,
+			LoanAccount.class, LoanTranche.class);
+	// Update Loan Investor Funds. Returns updated LoanAccount. POST /api/loans/loanId/funds
+	private final static ApiDefinition updateAccountFunds = new ApiDefinition(ApiType.POST_ENTITY_ACTION,
+			LoanAccount.class, InvestorFund.class);
 	// Loan Products API requests
 	// Get Loan Product Details
 	private final static ApiDefinition getProduct = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LoanProduct.class);
@@ -174,7 +191,8 @@ public class LoansService {
 	 * 
 	 * @param accountId
 	 *            the id of the account
-	 * 
+	 * @param notes
+	 *            transaction notes
 	 * @return loanAccount
 	 * 
 	 *         Note: The account object in the response doesn't contain custom fields
@@ -192,11 +210,35 @@ public class LoansService {
 	}
 
 	/****
+	 * Request Approval for a loan account to transition an account from a Partial Application state to a Pending
+	 * Approval state
+	 * 
+	 * @param accountId
+	 *            the encoded key or id of the account. Must not be null
+	 * @param notes
+	 *            transaction notes
+	 * @return loan account
+	 * 
+	 * @throws MambuApiException
+	 */
+	public LoanAccount requestApprovalLoanAccount(String accountId, String notes) throws MambuApiException {
+		// Available since Mambu 3.13. See MBU-9814
+		// E.g. format: POST "type=PENDING_APPROVAL" /api/loans/KHGJ593/transactions
+
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, TYPE_REQUEST_APPROVAL);
+		paramsMap.addParam(NOTES, notes);
+
+		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
+	}
+
+	/****
 	 * Undo Approve for a loan account
 	 * 
 	 * @param accountId
 	 *            the id of the account
-	 * 
+	 * @param notes
+	 *            transaction notes
 	 * @return loanAccount
 	 * 
 	 *         Note: The account object in the response doesn't contain custom fields
@@ -218,7 +260,8 @@ public class LoansService {
 	 * 
 	 * @param accountId
 	 *            the id of the account
-	 * 
+	 * @param notes
+	 *            transaction notes
 	 * @return a list of loan transactions performed when locking account
 	 * 
 	 * @throws MambuApiException
@@ -241,7 +284,8 @@ public class LoansService {
 	 * 
 	 * @param accountId
 	 *            the id of the account
-	 * 
+	 * @param notes
+	 *            transaction notes
 	 * @return a list of loan transactions performed when unlocking account
 	 * 
 	 * @throws MambuApiException
@@ -256,6 +300,26 @@ public class LoansService {
 		ApiDefinition postAccountTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY, LoanAccount.class,
 				LoanTransaction.class);
 		postAccountTransaction.setApiReturnFormat(ApiReturnFormat.COLLECTION);
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
+	}
+
+	/****
+	 * Write of loan account
+	 * 
+	 * @param accountId
+	 *            the encoded key or id of the account. Must not be null
+	 * @param notes
+	 *            transaction notes
+	 * @return loan transaction
+	 * @throws MambuApiException
+	 */
+	public LoanTransaction writeOffLoanAccount(String accountId, String notes) throws MambuApiException {
+		// POST "type=WRITE_OFF" /api/loans/{ID}/transactions
+		// See MBU-10423
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, TYPE_WRITE_OFF);
+		paramsMap.addParam(NOTES, notes);
+
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
@@ -342,9 +406,10 @@ public class LoansService {
 	 * Disburse a loan account with a given disbursal date and some extra transaction details
 	 * 
 	 * @param accountId
-	 *            account ID
+	 *            account ID. Must not be null
 	 * @param amount
-	 *            disbursement amount
+	 *            disbursement amount. Loan amount can be null for all loan product types except REVOLVING_CREDIT. See
+	 *            MBU-1054
 	 * @param disbursalDate
 	 *            disbursement date
 	 * @param firstRepaymentDate
@@ -358,10 +423,11 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: Disbursements for Loans with tranches is NOT supported. See MBU-7214 (issue is closed as Incomplete)
 	public LoanTransaction disburseLoanAccount(String accountId, String amount, String disbursalDate,
 			String firstRepaymentDate, String notes, TransactionDetails transactionDetails) throws MambuApiException {
 
+		// Disbursing loan account with tranches is available since Mambu 3.13. See MBU-10045
+		// Disbursing Revolving Credit loans is available since Mambu 3.14 . See MBU-10547
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, TYPE_DISBURSEMENT);
 
@@ -381,17 +447,20 @@ public class LoansService {
 	 * Undo Disburse for a loan account. If the account has multiple tranches, reverses the last tranche
 	 * 
 	 * @param accountId
-	 * 
+	 *            account encoded key or id. Must not be null
+	 * @param notes
+	 *            transaction notes
 	 * @return Loan Transaction
 	 * 
 	 * @throws MambuApiException
 	 */
-	public LoanTransaction undoDisburseLoanAccount(String accountId) throws MambuApiException {
-		// Example POST "type=DISBURSMENT_ADJUSTMENT" /api/loans/{id}/transactions/
+	public LoanTransaction undoDisburseLoanAccount(String accountId, String notes) throws MambuApiException {
+		// Example POST "type=DISBURSMENT_ADJUSTMENT&notes=undo+notes" /api/loans/{id}/transactions/
 		// Available since Mambu 3.9. See MBU-7189
 
 		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.addParam(TYPE, APIData.DISBURSMENT_ADJUSTMENT);
+		paramsMap.addParam(TYPE, TYPE_DISBURSMENT_ADJUSTMENT);
+		paramsMap.addParam(NOTES, notes);
 
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 
@@ -445,8 +514,8 @@ public class LoansService {
 	 * updating LoanAccount with details. As of Mambu 3.4 only custom fields can be updated.
 	 * 
 	 * @param loan
-	 *            LoanAccountExtended object containing LoanAccount. LoanAccount encodedKey must be NOT null for account
-	 *            update
+	 *            LoanAccountExtended object containing LoanAccount. LoanAccount encodedKey or id must be NOT null for
+	 *            account update
 	 * 
 	 * @return updated object containing both the LoanAccount and its CustomInformation fields
 	 * 
@@ -459,9 +528,9 @@ public class LoansService {
 		}
 
 		LoanAccount inputAccount = loan.getLoanAccount();
-		String encodedKey = inputAccount.getEncodedKey();
+		String encodedKey = inputAccount.getEncodedKey() != null ? inputAccount.getEncodedKey() : inputAccount.getId();
 		if (encodedKey == null) {
-			throw new IllegalArgumentException("Cannot update Account, the encoded key must be NOT null");
+			throw new IllegalArgumentException("Cannot update Account: the encoded key or id must NOT be null");
 		}
 
 		return serviceExecutor.executeJson(updateAccount, loan, encodedKey);
@@ -506,6 +575,86 @@ public class LoansService {
 	}
 
 	/***
+	 * Update tranches for an existent LoanAccount
+	 * 
+	 * @param accountId
+	 *            the encoded key or id of the loan account. Must not be null.
+	 * @param tranches
+	 *            tranches for a loan account. Must not be null. Existent tranches with a valid "encodedKey" field will
+	 *            be updated. Tranches with null "encodedKey" are treated as new tranches and will be created. Tranches
+	 *            that are not specified in the call will be deleted. Already disbursed tranches cannot be changed or
+	 *            deleted, they can be omitted when updating tranches.
+	 * @return loan account with updated tranches
+	 * 
+	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
+	 */
+	public LoanAccount updateLoanAccountTranches(String accountId, List<LoanTranche> tranches) throws MambuApiException {
+		// Available since Mambu 3.12.3. See MBU-9996
+
+		// Example: POST api/loans/ABC123/tranches { tranches":[
+		// edit a tranche
+		// { "encodedKey":"40288a134f219912014f21991d8c0004", "amount":"400",
+		// "expectedDisbursementDate":"2015-07-01T00:00:00+0000" }
+		// add a tranche
+		// {"amount":"500", "expectedDisbursementDate":"2015-08-11T00:00:00+0000"}
+		// ]}
+
+		if (tranches == null) {
+			throw new IllegalArgumentException("Tranches must not be NULL");
+		}
+
+		// This API doesn't accept tranche "index" field as an allowed field. Set it to null
+		for (LoanTranche tranche : tranches) {
+			tranche.setIndex(null);
+		}
+
+		// Create JSONTranches object to be used for JSON format { tranches":[tranche, tranche]}
+		JSONTranches jsonTranches = new JSONTranches();
+		jsonTranches.setTranches(tranches);
+
+		// Set ContentType to JSON (Update tranches API uses JSON format)
+		updateAccountTranches.setContentType(ContentType.JSON);
+		return serviceExecutor.executeJson(updateAccountTranches, jsonTranches, accountId);
+	}
+
+	/***
+	 * Update funds for an existent Loan Account
+	 * 
+	 * @param accountId
+	 *            the encoded key or id of the loan account. Account must not yet be disbursed. Must not be null.
+	 * @param funds
+	 *            funds to be updated. Must not be null
+	 * @return loan account with updated funds
+	 * 
+	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
+	 */
+	public LoanAccount updateLoanAccountFunds(String accountId, List<InvestorFund> funds) throws MambuApiException {
+		// Available since Mambu 3.13. See MBU-9885. MBU-11017 and MBU-11014
+
+		// Example: POST api/loans/ABC123/funds { funds":[
+		// // edit a fund
+		// {"encodedKey": "40288a5d4f3fbac9014f3fd02745001d",
+		// "guarantorKey": "40288a5d4f273153014f2731afe40102", "savingsAccountKey":
+		// "40288a5d4f3fbac9014f3fcf822c0014","amount": "50"},
+		// add a fund
+		// {guarantorKey": "40288a5d4f273153014f2731afe40103","savingsAccountKey": "40288a5d4f3fbac9014f3fcf822c0015","amount": "100"}
+		// ]}
+
+		if (funds == null) {
+			throw new IllegalArgumentException("Funds must not be NULL");
+		}
+
+		JSONInvestorFunds ivestorFunds = new JSONInvestorFunds();
+		ivestorFunds.setFunds(funds);
+
+		// Set ContentType to JSON (Update funds API uses JSON format)
+		updateAccountFunds.setContentType(ContentType.JSON);
+		return serviceExecutor.executeJson(updateAccountFunds, ivestorFunds, accountId);
+	}
+
+	/***
 	 * Get loan account Transactions by Loan id and offset and limit
 	 * 
 	 * @param accountId
@@ -547,7 +696,13 @@ public class LoansService {
 	public List<LoanTransaction> getLoanTransactionsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		// Example GET loan/transactions?viewfilter=123&offset=0&limit=100
-		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+		String branchId = null;
+		String centreId = null;
+		String creditOfficerName = null;
+		CustomViewResultType resultType = CustomViewResultType.BASIC;
+
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
+				centreId, creditOfficerName, offset, limit);
 		return serviceExecutor.execute(getAllLoanTransactions, params);
 
 	}
@@ -741,7 +896,12 @@ public class LoansService {
 	 */
 	public List<LoanAccount> getLoanAccountsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
-		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+		String branchId = null;
+		String centreId = null;
+		String creditOfficerName = null;
+		CustomViewResultType resultType = CustomViewResultType.BASIC;
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
+				centreId, creditOfficerName, offset, limit);
 		return serviceExecutor.execute(getAccountsList, params);
 
 	}
@@ -810,15 +970,17 @@ public class LoansService {
 	 * Get repayment schedule preview for a Loan Product
 	 * 
 	 * @param productId
-	 *            the id of the loan product
+	 *            the id of the loan product. Must not be null.
 	 * @param account
 	 *            loan account containing parameters for determining loan schedule
 	 * 
 	 *            Only the following loan account parameters are currently supported: loanAmount (mandatory),
 	 *            anticipatedDisbursement, firstRepaymentDate, interestRate, repaymentInstallments, gracePeriod,
-	 *            repaymentPeriodUnit, repaymentPeriodCount, principalRepaymentInterval
+	 *            repaymentPeriodUnit, repaymentPeriodCount, principalRepaymentInterval, fixedDaysOfMonth
 	 * 
-	 *            See MBU-6789 and MBU-7676 for more details
+	 *            Loan repayment schedule preview is not available for Revolving Credit products. See MBU-10545
+	 * 
+	 *            See MBU-6789, MBU-7676 and MBU-10802 for more details
 	 * 
 	 * @return the List of Repayments
 	 * 
@@ -826,6 +988,7 @@ public class LoansService {
 	 */
 	public List<Repayment> getLoanProductSchedule(String productId, LoanAccount account) throws MambuApiException {
 		// E.g. GET /api/loanproducts/{ID}/schedule?loanAmount=1250&anticipatedDisbursement=2015-02-10&interestRate=4
+		// E.g. GET /api/loanproducts/{ID}/schedule?loanAmount=1250&fixedDaysOfMonth=2,10,20
 
 		if (account == null) {
 			throw new IllegalArgumentException("Loan Account cannot be null");
@@ -846,6 +1009,9 @@ public class LoansService {
 	/***
 	 * Get all documents for a specific Loan Account
 	 * 
+	 * @deprecated Starting from 3.14 use
+	 *             {@link DocumentsService#getDocuments(MambuEntityType, String, Integer, Integer)}. This methods
+	 *             supports pagination parameters
 	 * @param accountId
 	 *            the encoded key or id of the loan account for which attached documents are to be retrieved
 	 * 
@@ -857,4 +1023,91 @@ public class LoansService {
 		return serviceExecutor.execute(getAccountDocuments, accountId);
 	}
 
+	/****
+	 * Reverse loans transactions for a loan account
+	 * 
+	 * @param accountId
+	 *            the id or encoded key of the loan account. Mandatory
+	 * @param originalTransactionType
+	 *            Original transaction type to be reversed. The following transaction types can be currently reversed:
+	 *            PENALTY_APPLIED. Must not be null.
+	 * @param originalTransactionId
+	 *            the id or the encodedKey of the transaction to be reversed. Must not be null.
+	 * @param notes
+	 *            transaction notes
+	 * @return Loan Transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public LoanTransaction reverseLoanTransaction(String accountId, LoanTransactionType originalTransactionType,
+			String originalTransactionId, String notes) throws MambuApiException {
+
+		// PENALTY_APPLIED reversal is available since 3.13. See MBU-9998 for more details
+		// POST "type=PENALTY_ADJUSTMENT&notes=reason&originalTransactionId=123" /api/loans/{id}/transactions/
+
+		// originalTransactionType is mandatory
+		if (originalTransactionType == null) {
+			throw new IllegalArgumentException("Transaction Type cannot be null");
+		}
+		// originalTransactionId is mandatory
+		if (originalTransactionId == null || originalTransactionId.isEmpty()) {
+			throw new IllegalArgumentException("Original Transaction ID must not be null or empty");
+		}
+		// Get reversal transaction type for the original transaction type
+		String transactionTypeParam;
+		switch (originalTransactionType) {
+		case PENALTY_APPLIED:
+			transactionTypeParam = TYPE_PENALTY_ADJUSTMENT;
+			break;
+
+		default:
+			throw new IllegalArgumentException("Reversal for Loan Transaction Type " + originalTransactionType.name()
+					+ " is not supported");
+		}
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, transactionTypeParam);
+		paramsMap.addParam(ORIGINAL_TRANSACTION_ID, originalTransactionId);
+		paramsMap.addParam(NOTES, notes);
+
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
+	}
+
+	/****
+	 * Convenience method to Reverse loan transaction by providing the original loan transaction
+	 * 
+	 * @param originalTransaction
+	 *            The following loan transactions types currently can be reversed: PENALTY_APPLIED. Mandatory.
+	 * @param notes
+	 *            transaction notes
+	 * @return Loan Transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public LoanTransaction reverseLoanTransaction(LoanTransaction originalTransaction, String notes)
+			throws MambuApiException {
+
+		// PENALTY_APPLIED reversal is available since 3.13. See MBU-9998 for more details
+		// Example: POST "type=PENALTY_ADJUSTMENT&notes=reason&originalTransactionId=123" /api/loans/{id}/transactions/
+
+		if (originalTransaction == null) {
+			throw new IllegalArgumentException("Original Transaction cannot be null");
+		}
+		// Get original transaction Key from the original transaction. Either encoded key or transaction id can be used
+		String transactionId = String.valueOf(originalTransaction.getTransactionId());
+		if (transactionId == null || transactionId.isEmpty()) {
+			// If no ID, try getting the encoded key.
+			String transactionKey = originalTransaction.getEncodedKey();
+			if (transactionKey == null) {
+				throw new IllegalArgumentException(
+						"Original Transaction must have either the encoded key or id not null and not empty");
+			}
+			// Use encoded key
+			transactionId = transactionKey;
+		}
+		// Get account id and original transaction type from the original transaction
+		String accountId = originalTransaction.getParentAccountKey();
+		LoanTransactionType transactionType = originalTransaction.getType();
+
+		return reverseLoanTransaction(accountId, transactionType, transactionId, notes);
+	}
 }

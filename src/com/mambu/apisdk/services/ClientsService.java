@@ -11,6 +11,7 @@ import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstrain
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.services.CustomViewsService.CustomViewResultType;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
@@ -437,7 +438,14 @@ public class ClientsService {
 	 */
 	public List<Client> getClientsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
-		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+
+		String branchId = null;
+		String centreId = null;
+		String creditOfficerName = null;
+		CustomViewResultType resultType = CustomViewResultType.BASIC;
+
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
+				centreId, creditOfficerName, offset, limit);
 		return serviceExecutor.execute(getClientsList, params);
 
 	}
@@ -484,7 +492,13 @@ public class ClientsService {
 	 */
 	public List<Group> getGroupsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
-		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
+		String branchId = null;
+		String centreId = null;
+		String creditOfficerName = null;
+		CustomViewResultType resultType = CustomViewResultType.BASIC;
+
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
+				centreId, creditOfficerName, offset, limit);
 		return serviceExecutor.execute(getGroupsList, params);
 
 	}
@@ -607,6 +621,9 @@ public class ClientsService {
 	/***
 	 * Get all documents for a specific Client
 	 * 
+	 * @deprecated Starting from 3.14 use
+	 *             {@link DocumentsService#getDocuments(MambuEntityType, String, Integer, Integer)}. This methods
+	 *             supports pagination parameters
 	 * @param clientId
 	 *            the encoded key or id of the Mambu client for which attached documents are to be retrieved
 	 * 
@@ -621,6 +638,9 @@ public class ClientsService {
 	/***
 	 * Get all documents for a specific Group
 	 * 
+	 * @deprecated Starting from 3.14 use
+	 *             {@link DocumentsService#getDocuments(MambuEntityType, String, Integer, Integer)}. This methods
+	 *             supports pagination parameters
 	 * @param groupId
 	 *            the encoded key or id of the Mambu group for which attached documents are to be retrieved
 	 * 

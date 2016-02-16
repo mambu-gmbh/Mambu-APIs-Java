@@ -15,6 +15,10 @@ public class APIData {
 	public static final String VIEWS = "views";
 	public static final String FOR = "for";
 	public static final String VIEW_FILTER = "viewfilter";
+	public static final String RESULT_TYPE = "resultType"; // added in 3.14 to support what data to return
+	public static final String COLUMNS = "COLUMNS"; // return custom view columns
+	public static final String BASIC = "BASIC"; // returns entities without any extra details
+	// "FULL_DETAILS"- already defined. Returns entities with full details
 
 	// Loans and Savings API
 	public static final String LOANS = "loans";
@@ -24,6 +28,10 @@ public class APIData {
 	public static final String FULL_DETAILS = "fullDetails";
 	public static final String ACTIVE = "ACTIVE";
 	public static final String INACTIVE = "INACTIVE";
+	public static final String TRANCHES = "tranches"; // available since 3.12.3. See MBU-9996
+	public static final String FUNDS = "funds"; // investor funds. available since Mambu 3.13. See MBU-9885
+	public static final String FUNDING = "funding"; // investor funding. available since Mambu 3.13. See MBU-9888
+
 	// Client Types. Added in 3.9
 	public static final String CLIENT_TYPES = "clienttypes";
 	// Group Role Names. Added in 3.9
@@ -50,7 +58,9 @@ public class APIData {
 	public static final String TRANSACTIONS = "transactions";
 	public static final String TYPE_REPAYMENT = "REPAYMENT";
 	public static final String TYPE_DISBURSEMENT = "DISBURSEMENT"; // Spelling corrected in 3.11 See MBU-7004
-	public static final String DISBURSMENT_ADJUSTMENT = "DISBURSMENT_ADJUSTMENT"; // added in 3.9
+	public static final String TYPE_DISBURSMENT_ADJUSTMENT = "DISBURSMENT_ADJUSTMENT"; // added in 3.9
+	public static final String TYPE_PENALTY_ADJUSTMENT = "PENALTY_ADJUSTMENT"; // added in 3.13. See MBU-9998
+	public static final String TYPE_REQUEST_APPROVAL = "PENDING_APPROVAL"; // added in 13.3. See MBU-9814
 	public static final String TYPE_APPROVAL = "APPROVAL";
 	public static final String TYPE_UNDO_APPROVAL = "UNDO_APPROVAL";
 	public static final String TYPE_FEE = "FEE";
@@ -60,6 +70,7 @@ public class APIData {
 	public static final String TYPE_LOCK = "LOCK";
 	public static final String TYPE_UNLOCK = "UNLOCK";
 	public static final String TYPE_INTEREST_APPLIED = "INTEREST_APPLIED";
+	public static final String TYPE_WRITE_OFF = "WRITE_OFF"; // added in 3.14. See MBU-10423
 	// Savings reversal transactions
 	public static final String TYPE_DEPOSIT_ADJUSTMENT = "DEPOSIT_ADJUSTMENT";
 	public static final String TYPE_WITHDRAWAL_ADJUSTMENT = "WITHDRAWAL_ADJUSTMENT";
@@ -112,6 +123,11 @@ public class APIData {
 	// Accounting API
 	public static final String GLACCOUNTS = "glaccounts";
 	public static final String GLJOURNALENTRIES = "gljournalentries";
+	// Parameters for posting GL Journal Entries. See MBU-1737. Available since 2.2
+	public static String DEBIT_ACCOUNT = "debitAccount";
+	public static String DEBIT_AMOUNT = "debitAmount";
+	public static String CREDIT_ACCOUNT = "creditAccount";
+	public static String CREDIT_AMOUNT = "creditAmount";
 
 	// Intelligence API
 	public static final String INDICATORS = "indicators";
@@ -135,7 +151,7 @@ public class APIData {
 	// Parameters supported by the loan product schedule API (MBU-6789) and loan terms patch API (MBU-7758)
 	public static final String LOAN_AMOUNT = "loanAmount";
 	public static final String ANTICIPATE_DISBURSEMENT = "anticipatedDisbursement";
-	public static final String EXPECTED_DISBURSEMENT = "expectedDisbursementDate";
+	public static final String EXPECTED_DISBURSEMENT_DATE = "expectedDisbursementDate";
 	// "firstRepaymentDate" - is already defined as FIRST_REPAYMENT_DATE
 	public static final String INTEREST_RATE = "interestRate";
 	public static final String INTEREST_RATE_SPREAD = "interestSpread";
@@ -146,9 +162,16 @@ public class APIData {
 	public static final String PRNICIPAL_REPAYMENT_INTERVAL = "principalRepaymentInterval";
 	public static final String PERIODIC_PAYMENT = "periodicPayment";
 	public static final String PENALTY_RATE = "penaltyRate";
+	public static final String FIXED_DAYS_OF_MONTH = "fixedDaysOfMonth"; // supported since 3.14. See MBU-10802
 
 	// Parameters supported by SavingsAccount PATCH API
 	public static final String OVERDRAFT_LIMIT = "overdraftLimit";
+	public static final String OVERDRAFT_INTEREST_RATE = "overdraftInterestRate";
+	public static final String OVERDRAFT_SPREAD = "overdraftInterestSpread";
+	public static final String OVERDRAFT_EXPIRY_DATE = "overdraftExpiryDate";
+	public static final String MAX_WITHDRAWAL_AMOUNT = "maxWidthdrawlAmount";
+	public static final String RECOMMENDED_DEPOSIT_AMOUNT = "recommendedDepositAmount";
+	public static final String TARGET_AMOUNT = "targetAmount";
 
 	public static final String DUE_FROM = "dueFrom";
 	public static final String DUE_TO = "dueTo";
@@ -167,6 +190,11 @@ public class APIData {
 	// Documents API
 	// API's endpoint
 	public static String DOCUMENTS = "documents";
+
+	// Document Template API
+	public static String TEMPLATES = "templates"; // /api/loans/{LOAN_ID}/templates/
+	public static String START_DATE = "startDate";
+	public static String END_DATE = "endDate";
 
 	// API endpoints for uploading client profile picture and signature. Available since 3.9
 	public static String PROFILE_PICTURE = "PROFILE_PICTURE";
@@ -213,6 +241,13 @@ public class APIData {
 	// Api endpoint for Lines of Credit. Available since 3.11
 	public static String LINES_OF_CREDIT = "linesofcredit"; // /api/linesofcredit
 	public static String ACCOUNTS = "accounts"; // /api/linesofcredit/{id}/accounts
+
+	// Use Roles API
+	public static String USER_ROLES = "userroles"; // api/userroles
+
+	// Notification Messages Search API
+	public static String NOTIFICATIONS = "notifications";
+	public static String MESSAGES = "messages"; // /api/notifications/messages/search. Available since 3.14
 
 	// Added to support Json object creation API
 	public static String yyyyMmddFormat = DateUtils.DATE_FORMAT;// ISO_8601_FORMAT_DATE "yyyy-MM-dd";

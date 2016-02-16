@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.mambu.accountsecurity.shared.model.InvestorFund;
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -44,6 +45,8 @@ public class DemoTestRepaymentService {
 			testUpdateLoanRepaymentsSchedule(); // Available since 3.9
 
 			testGetRepaymentsDueFromTo();
+
+			testGetInvestorAccountRepayments(); // Available since 3.13
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Repayment Service");
@@ -99,18 +102,23 @@ public class DemoTestRepaymentService {
 		System.out.println("Account " + LOAN_ACCOUNT_ID + " has " + repayemnts.size() + " repayments");
 
 		List<Repayment> modifiedRepayments = new ArrayList<Repayment>();
-		final long fiveDays = 5 * 24 * 60 * 60 * 1000; // 5 days
+		final long fiveDays = 5 * 24 * 60 * 60 * 1000L; // 5 days
 		int minusOrPlusOne = -1; // indicator to increase or t decrease repayment amount
 		final int maxRepaymentsToUpdate = 4; // Maximum number to update
 		int i = 0;
+		Date now = new Date();
 		for (Repayment repayment : repayemnts) {
 			// Fully paid repayments cannot be modified
 			if (repayment.wasFullyPaid()) {
 				continue;
 			}
+
 			// Modify some repayment fields
 			// Add 5 days to due date
 			Date dueDate = repayment.getDueDate();
+			if (dueDate.before(now)) {
+				continue;
+			}
 			repayment.setDueDate(new Date(dueDate.getTime() + fiveDays));
 			// Modify amounts
 			Money changeAmount = new Money(5.00);
@@ -142,6 +150,50 @@ public class DemoTestRepaymentService {
 		int totalReturned = (updatedRepayments == null) ? 0 : updatedRepayments.size();
 		System.out.println("Total Repayments returned after update=" + totalReturned);
 		// Can also see detailed update log on a Dashboard in Mambu
+
+	}
+
+	// Test getting repayments schedule for investor account.
+	public static void testGetInvestorAccountRepayments() throws MambuApiException {
+		System.out.println("\nIn testGetInvestorAccountRepayments");
+
+		// Get schedule for investor in a demo loan account
+		LoanAccount loanAccount = demoLoanAccount;
+		// Get loan account id
+		String loanId = loanAccount.getId();
+
+		// Get current funds for this account to get savings account
+		List<InvestorFund> funds = loanAccount.getFunds();
+		if (funds == null || funds.size() == 0) {
+			System.out.println("WARNING: Cannot test get repayment schedule: Loan Account " + loanId
+					+ " Has no investor funds specified");
+			return;
+		}
+
+		// Get savings account ID used for loan funding
+		String savingsId = null;
+		for (InvestorFund fund : funds) {
+			savingsId = fund.getSavingsAccountKey();
+			if (savingsId != null) {
+				break;
+			}
+		}
+		if (savingsId == null) {
+			System.out.println("WARNING: Cannot test get repayment schedule: Loan Account " + loanId
+					+ " Has no linked savings accounts specified");
+			return;
+		}
+		System.out.println("\nGetting repayment schedule for savings id=" + savingsId + " loanId=" + loanId);
+		RepaymentsService repaymentService = MambuAPIFactory.getRepaymentsService();
+		List<Repayment> repayemnts = repaymentService.getInvestorFundingRepayments(savingsId, loanId);
+
+		// Log results
+		System.out.println("Total Repayments=" + repayemnts.size());
+		if (repayemnts.size() > 0) {
+			System.out.println("First Repayment  Due date=" + repayemnts.get(0).getDueDate().toString());
+			System.out.println("Last  Repayment  Due date="
+					+ repayemnts.get(repayemnts.size() - 1).getDueDate().toString());
+		}
 
 	}
 }
