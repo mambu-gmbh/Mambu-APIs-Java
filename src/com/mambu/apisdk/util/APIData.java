@@ -16,8 +16,6 @@ public class APIData {
 	public static final String FOR = "for";
 	public static final String VIEW_FILTER = "viewfilter";
 	public static final String RESULT_TYPE = "resultType"; // added in 3.14 to support what data to return
-	public static final String BASIC = "BASIC"; // returns entities without any extra details
-	// "FULL_DETAILS"- already defined. Returns entities with full details
 
 	// Loans and Savings API
 	public static final String LOANS = "loans";
@@ -30,7 +28,7 @@ public class APIData {
 	public static final String TRANCHES = "tranches"; // available since 3.12.3. See MBU-9996
 	public static final String FUNDS = "funds"; // investor funds. available since Mambu 3.13. See MBU-9885
 	public static final String FUNDING = "funding"; // investor funding. available since Mambu 3.13. See MBU-9888
-
+	public static final String GUARANTEES = "guarantees"; // Guarantees. Available since Mambu 4.0. See MBU-11315
 	// Client Types. Added in 3.9
 	public static final String CLIENT_TYPES = "clienttypes";
 	// Group Role Names. Added in 3.9
@@ -75,9 +73,20 @@ public class APIData {
 	public static final String TYPE_WITHDRAWAL_ADJUSTMENT = "WITHDRAWAL_ADJUSTMENT";
 	public static final String TYPE_TRANSFER_ADJUSTMENT = "TRANSFER_ADJUSTMENT";
 
+	public static final String DISBURSEMENT_DETAILS = "disbursementDetails"; // Added in 4.0. See MBU-11481
+
+	// Users branch assignment type: assigned or managing. Available since 4.0. See MBU-11769
+	public static final String BRANCH_ID_TYPE = "branchIdType";
+
+	public static enum UserBranchAssignmentType {
+		ASSIGNED, MANAGE
+	}
+
 	// Type of account closer transaction
 	public static enum CLOSER_TYPE {
-		REJECT, WITHDRAW
+		REJECT, // Available since Mambu 3.3. See MBU-3090
+		WITHDRAW, // Available since Mambu 3.3. See MBU-3090
+		CLOSE // Available since Mambu 4.0 See MBU-10975 and MBU-10976
 	};
 
 	public static final String AMOUNT = "amount";
@@ -100,6 +109,7 @@ public class APIData {
 	public static final String OFFSET = "offset";
 	public static final String LIMIT = "limit";
 
+	public static final String SETTLEMENT_ACCOUNTS = "settlementAccounts"; // Available since 4.0. See MBU-11206
 	// Products
 	public static final String LOANPRODUCTS = "loanproducts";
 	public static final String SAVINGSRODUCTS = "savingsproducts";

@@ -7,6 +7,7 @@ import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.accounting.shared.model.GLJournalEntry;
 import com.mambu.accounts.shared.model.DocumentTemplate;
 import com.mambu.accounts.shared.model.TransactionChannel;
+import com.mambu.accountsecurity.shared.model.Guaranty;
 import com.mambu.accountsecurity.shared.model.InvestorFund;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.coments.model.JSONComment;
@@ -402,7 +403,7 @@ public class ApiDefinition {
 			if (entityClass == null) {
 				throw new IllegalArgumentException("entityClass must not be null for " + apiType.name());
 			}
-			returnClass = entityClass;
+			returnClass = resultClass == null ? entityClass : resultClass;
 			break;
 		case CREATE_JSON_ENTITY:
 		case POST_ENTITY:
@@ -546,6 +547,7 @@ public class ApiDefinition {
 		apiEndPointsMap.put(AccountsFromLineOfCredit.class, APIData.ACCOUNTS);
 		apiEndPointsMap.put(LoanTranche.class, APIData.TRANCHES);
 		apiEndPointsMap.put(InvestorFund.class, APIData.FUNDS); // "funds" api end point
+		apiEndPointsMap.put(Guaranty.class, APIData.GUARANTEES); // "guarantees" api end point
 		apiEndPointsMap.put(Role.class, APIData.USER_ROLES); // "userroles" api end point
 
 	}
