@@ -19,7 +19,6 @@ import com.mambu.accountsecurity.shared.model.InvestorFund;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.ApiLoanAccount;
-import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.services.SavingsService;
@@ -68,7 +67,7 @@ public class DemoTestLoanService {
 	private static LoanProduct demoProduct;
 	private static LoanAccount demoLoanAccount;
 
-	private static LoanAccountExpanded newAccount;
+	private static LoanAccount newAccount;
 
 	private static String methodName = null; // print method name on exception
 
@@ -289,28 +288,19 @@ public class DemoTestLoanService {
 		// Use helper to make test custom fields valid for the account's product
 		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(
 				CustomFieldType.LOAN_ACCOUNT_INFO, demoProduct.getEncodedKey());
-		// Create Account Expanded
-		LoanAccountExpanded accountExpanded = new LoanAccountExpanded();
-
-		accountExpanded.setLoanAccount(account);
-		accountExpanded.setCustomInformation(clientCustomInformation);
+		account.setCustomFieldValues(clientCustomInformation);
 
 		// Create Account in Mambu
-		newAccount = loanService.createLoanAccount(accountExpanded);
-		LoanAccount createdAccount = newAccount.getLoanAccount();
+		newAccount = loanService.createLoanAccount(account);
+		NEW_LOAN_ACCOUNT_ID = newAccount.getId();
 
-		NEW_LOAN_ACCOUNT_ID = createdAccount.getId();
+		System.out.println("Loan Account created OK, ID=" + newAccount.getId() + " Name= " + newAccount.getLoanName()
+				+ " Account Holder Key=" + newAccount.getAccountHolderKey());
 
-		System.out.println("Loan Account created OK, ID=" + createdAccount.getId() + " Name= "
-				+ createdAccount.getLoanName() + " Account Holder Key=" + createdAccount.getAccountHolderKey());
-
-		// Check returned custom fields after create. For LoanAccountExpanded custom information is not part of the
-		// LoanAccount but is a member of LoanAccountExoended. So get it from there
-		List<CustomFieldValue> customFieldValues = newAccount.getCustomInformation();
+		// Check returned custom fields after create
+		List<CustomFieldValue> customFieldValues = newAccount.getCustomFieldValues();
 		// Log Custom Field Values
-
-		String accountName = createdAccount.getLoanName();
-		DemoUtil.logCustomFieldValues(customFieldValues, accountName, createdAccount.getId());
+		DemoUtil.logCustomFieldValues(customFieldValues, newAccount.getLoanName(), newAccount.getId());
 
 	}
 
@@ -321,8 +311,8 @@ public class DemoTestLoanService {
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		// Use the newly created account and update some custom fields
-		LoanAccountExpanded updatedAccount = newAccount;
-		List<CustomFieldValue> customFields = newAccount.getCustomInformation();
+		LoanAccount updatedAccount = newAccount;
+		List<CustomFieldValue> customFields = newAccount.getCustomFieldValues();
 		List<CustomFieldValue> updatedFields = new ArrayList<CustomFieldValue>();
 		if (customFields != null) {
 			for (CustomFieldValue value : customFields) {
@@ -331,17 +321,16 @@ public class DemoTestLoanService {
 			}
 		}
 		// Disbursement Details cannot be updated by API. Setting to null
-		updatedAccount.getLoanAccount().setDisbursementDetails(null);
-		updatedAccount.setCustomInformation(updatedFields);
+		updatedAccount.setDisbursementDetails(null);
 
 		// Update account in Mambu
-		LoanAccountExpanded updatedAccountResult = loanService.updateLoanAccount(updatedAccount);
+		LoanAccount updatedAccountResult = loanService.updateLoanAccount(updatedAccount);
 
-		System.out.println("Loan Update OK, ID=" + updatedAccountResult.getLoanAccount().getId() + "\tAccount Name="
-				+ updatedAccountResult.getLoanAccount().getName());
+		System.out.println("Loan Update OK, ID=" + updatedAccountResult.getId() + "\tAccount Name="
+				+ updatedAccountResult.getName());
 
 		// Get returned custom fields
-		List<CustomFieldValue> updatedCustomFields = updatedAccountResult.getCustomInformation();
+		List<CustomFieldValue> updatedCustomFields = updatedAccountResult.getCustomFieldValues();
 
 		if (updatedCustomFields != null) {
 			System.out.println("Custom Fields for Loan Account\n");
@@ -360,7 +349,7 @@ public class DemoTestLoanService {
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
 		// Use the newly created account and update some terms fields
-		LoanAccount theAccount = newAccount.getLoanAccount();
+		LoanAccount theAccount = newAccount;
 		// Create new account with only the terms to be patched
 		LoanAccount account = new LoanAccount();
 		account.setId(theAccount.getId()); // set the ID, the encoded key cannot be set with 3.14 model
@@ -399,7 +388,7 @@ public class DemoTestLoanService {
 		System.out.println(methodName = "\nIn testUpdatingAccountTranches");
 
 		// Use demo loan account and update tranche details
-		LoanAccount theAccount = newAccount.getLoanAccount();
+		LoanAccount theAccount = newAccount;
 		String accountId = theAccount.getId();
 
 		// Get Loan Account Tranches
@@ -460,7 +449,7 @@ public class DemoTestLoanService {
 		System.out.println(methodName = "\nIn testUpdatingAccountFunds");
 
 		// Use demo loan account and update investor funds details
-		LoanAccount theAccount = newAccount.getLoanAccount();
+		LoanAccount theAccount = newAccount;
 		String accountId = theAccount.getId();
 
 		// Get Loan Account Funds
@@ -533,7 +522,7 @@ public class DemoTestLoanService {
 		System.out.println(methodName = "\nIn testUpdateLoanAccountGuarantees");
 
 		// Use demo loan account and update investor guarantees
-		LoanAccount theAccount = newAccount.getLoanAccount();
+		LoanAccount theAccount = newAccount;
 		String accountId = theAccount.getId();
 
 		// Get Loan Account Guarantees
@@ -586,11 +575,11 @@ public class DemoTestLoanService {
 		System.out.println(methodName = "\nIn test Disburse LoanAccount");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
-		if (newAccount == null || newAccount.getLoanAccount() == null) {
+		if (newAccount == null) {
 			System.out.println("\nThere is no account to disburse");
 		}
-		// LoanAccount account = newAccount.getLoanAccount();
-		LoanAccount account = newAccount.getLoanAccount();
+		;
+		LoanAccount account = newAccount;
 
 		String accountId = account.getId();
 		Date disbursementDate = DemoUtil.getAsMidnightUTC();
@@ -760,7 +749,7 @@ public class DemoTestLoanService {
 	public static void testRepayLoanAccount(boolean fullRepayment) throws MambuApiException {
 		System.out.println(methodName = "\nIn testRepayLoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
-		String accountId = newAccount.getLoanAccount().getId();
+		String accountId = newAccount.getId();
 		// Get the latest account and its balance
 		LoanAccount account = loanService.getLoanAccountDetails(accountId);
 		Money repaymentAmount = fullRepayment ? account.getTotalBalanceOutstanding() : account
@@ -889,15 +878,14 @@ public class DemoTestLoanService {
 		System.out.println(methodName = "\nIn testRequestApprovalLoanAccount");
 
 		// Check if the account is in PARTIAL_APPLICATION state
-		if (newAccount == null || newAccount.getLoanAccount() == null
-				|| newAccount.getLoanAccount().getAccountState() != AccountState.PARTIAL_APPLICATION) {
+		if (newAccount == null || newAccount.getAccountState() != AccountState.PARTIAL_APPLICATION) {
 			System.out
 					.println("WARNING: Need to create loan account in PARTIAL_APPLICATION state to test Request Approval");
 			return;
 		}
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		String accountId = newAccount.getLoanAccount().getId();
+		String accountId = newAccount.getId();
 		String requestNotes = "Requested Approval by Demo API";
 		LoanAccount account = loanService.requestApprovalLoanAccount(accountId, requestNotes);
 

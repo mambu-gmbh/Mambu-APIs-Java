@@ -15,6 +15,7 @@ import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstrain
 import com.mambu.api.server.handler.customviews.model.ApiViewType;
 import com.mambu.api.server.handler.funds.model.JSONInvestorFunds;
 import com.mambu.api.server.handler.guarantees.model.JSONGuarantees;
+import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
 import com.mambu.api.server.handler.tranches.model.JSONTranches;
 import com.mambu.apisdk.MambuAPIService;
@@ -113,9 +114,9 @@ public class LoansService {
 	private final static ApiDefinition deleteAccount = new ApiDefinition(ApiType.DELETE_ENTITY, LoanAccount.class);
 	// Create Account
 	private final static ApiDefinition createAccount = new ApiDefinition(ApiType.CREATE_JSON_ENTITY,
-			LoanAccountExpanded.class);
+			JSONLoanAccount.class);
 	// Update Account. Used to update custom fields for loan accounts only. POST JSON /api/loans/loanId
-	private final static ApiDefinition updateAccount = new ApiDefinition(ApiType.POST_ENTITY, LoanAccountExpanded.class);
+	private final static ApiDefinition updateAccount = new ApiDefinition(ApiType.POST_ENTITY, JSONLoanAccount.class);
 	// Patch Account. Used to update loan terms only. PATCH JSON /api/loans/loanId
 	private final static ApiDefinition patchAccount = new ApiDefinition(ApiType.PATCH_ENTITY, LoanAccount.class);
 	// Update Loan Tranches. Returns updated LoanAccount. POST /api/loans/loanId/tranches
@@ -533,6 +534,7 @@ public class LoansService {
 	 * Create a new LoanAccount using LoanAccountExpanded object and sending it as a JSON API. This API allows creating
 	 * LoanAccount with details, including creating custom fields.
 	 * 
+	 * @deprecated LoanAccountExpanded is deprecated.Use {@link #createLoanAccount(LoanAccount)}
 	 * @param loan
 	 *            LoanAccountExtended object containing LoanAccount. LoanAccount encodedKey must be null for account
 	 *            creation
@@ -541,6 +543,7 @@ public class LoansService {
 	 * @throws MambuApiException
 	 * @throws IllegalArgumentException
 	 */
+	@Deprecated
 	public LoanAccountExpanded createLoanAccount(LoanAccountExpanded loan) throws MambuApiException {
 
 		if (loan == null || loan.getLoanAccount() == null) {
@@ -552,13 +555,55 @@ public class LoansService {
 		if (encodedKey != null) {
 			throw new IllegalArgumentException("Cannot create Account, the encoded key must be null");
 		}
+		// Create Account
+		ApiDefinition createAccount = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, LoanAccountExpanded.class);
 		return serviceExecutor.executeJson(createAccount, loan);
+	}
+
+	/***
+	 * Create new LoanAccount using LoanAccount object. This API allows creating LoanAccount with details, including
+	 * creating custom fields.
+	 * 
+	 * The underlying API implementation uses JSONLoanAccount object.
+	 * 
+	 * @param loanAccount
+	 *            LoanAccount object. LoanAccount encodedKey must be null for account creation
+	 * @return newly created loan account with full details including custom fields
+	 * 
+	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
+	 */
+	public LoanAccount createLoanAccount(LoanAccount loanAccount) throws MambuApiException {
+		if (loanAccount == null) {
+			throw new IllegalArgumentException("Account must not be NULL");
+		}
+
+		if (loanAccount.getEncodedKey() != null) {
+			throw new IllegalArgumentException("Cannot create Account, the encoded key must be null");
+		}
+		// Create JSONLoanAccount to use in Mambu API. Mambu expects the following format:
+		// {"loanAccount":{.....}, "customInformation":[{field1},{field2}]}
+		JSONLoanAccount jsonLoanAccount = new JSONLoanAccount(loanAccount);
+		jsonLoanAccount.setCustomInformation(loanAccount.getCustomFieldValues());
+
+		// Send API request to Mambu
+		JSONLoanAccount createdJsonAccount = serviceExecutor.executeJson(createAccount, jsonLoanAccount);
+
+		if (createdJsonAccount == null || createdJsonAccount.getLoanAccount() == null) {
+			return null;
+		}
+		// Copy returned custom information into the loan account.Return result as LoanAccount.
+		LoanAccount createdLoanAccount = createdJsonAccount.getLoanAccount();
+		createdLoanAccount.setCustomFieldValues(createdJsonAccount.getCustomInformation());
+
+		return createdLoanAccount;
 	}
 
 	/***
 	 * Update an existent LoanAccount using LoanAccountExpanded object and sending it as a JSON API. This API allows
 	 * updating LoanAccount with details. As of Mambu 3.4 only custom fields can be updated.
 	 * 
+	 * @deprecated LoanAccountExpanded is deprecated. Use {@link #updateLoanAccount(LoanAccount)}
 	 * @param loan
 	 *            LoanAccountExtended object containing LoanAccount. LoanAccount encodedKey or id must be NOT null for
 	 *            account update
@@ -578,8 +623,48 @@ public class LoansService {
 		if (encodedKey == null) {
 			throw new IllegalArgumentException("Cannot update Account: the encoded key or id must NOT be null");
 		}
-
+		ApiDefinition updateAccount = new ApiDefinition(ApiType.POST_ENTITY, LoanAccountExpanded.class);
 		return serviceExecutor.executeJson(updateAccount, loan, encodedKey);
+	}
+
+	/***
+	 * Update an existent LoanAccount using LoanAccount object and sending it as a JSON API. This API allows updating
+	 * LoanAccount with details. As of Mambu 3.4 only custom fields can be updated.
+	 * 
+	 * @param loanAccount
+	 *            LoanAccount object containing LoanAccount. LoanAccount encodedKey or id must be NOT null for account
+	 *            update
+	 * 
+	 * @return updated LoanAccount object with updated custom fields
+	 * 
+	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
+	 */
+	public LoanAccount updateLoanAccount(LoanAccount loanAccount) throws MambuApiException {
+		if (loanAccount == null) {
+			throw new IllegalArgumentException("Account must not be NULL");
+		}
+
+		String encodedKey = loanAccount.getEncodedKey() != null ? loanAccount.getEncodedKey() : loanAccount.getId();
+		if (encodedKey == null) {
+			throw new IllegalArgumentException("Cannot update Account: the encoded key or id must NOT be null");
+		}
+
+		// Mambu API expects the request in the following format:
+		// {"loanAccount":{.....}, "customInformation":[{field1},{field2}]}
+		// Create JSONLoanAccount object for the API request. Set custom information in JSONLoanAccount
+		JSONLoanAccount jsonLoanAccount = new JSONLoanAccount(loanAccount);
+		jsonLoanAccount.setCustomInformation(loanAccount.getCustomFieldValues());
+
+		// Submit update account request to Mambu providing JSONLoanAccount object
+		JSONLoanAccount updatedJsonAccount = serviceExecutor.executeJson(updateAccount, jsonLoanAccount, encodedKey);
+		if (updatedJsonAccount == null || updatedJsonAccount.getLoanAccount() == null) {
+			return null;
+		}
+		// Set custom fields in the loan account. Return Loan Account object.
+		LoanAccount updatedLoanAccount = updatedJsonAccount.getLoanAccount();
+		updatedLoanAccount.setCustomFieldValues(updatedJsonAccount.getCustomInformation());
+		return updatedLoanAccount;
 	}
 
 	/***

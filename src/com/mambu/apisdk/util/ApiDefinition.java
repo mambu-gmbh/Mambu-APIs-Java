@@ -12,6 +12,7 @@ import com.mambu.accountsecurity.shared.model.InvestorFund;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.coments.model.JSONComment;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
+import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.api.server.handler.tasks.model.JSONTask;
@@ -489,6 +490,8 @@ public class ApiDefinition {
 
 		apiEndPointsMap.put(LoanAccount.class, APIData.LOANS);
 		apiEndPointsMap.put(LoanAccountExpanded.class, APIData.LOANS);
+		apiEndPointsMap.put(JSONLoanAccount.class, APIData.LOANS);
+
 		apiEndPointsMap.put(LoanTransaction.class, APIData.TRANSACTIONS);
 		apiEndPointsMap.put(Repayment.class, APIData.REPAYMENTS);
 
