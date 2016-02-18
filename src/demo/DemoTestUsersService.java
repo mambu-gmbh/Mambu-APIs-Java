@@ -16,6 +16,7 @@ import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.services.CustomViewsService;
 import com.mambu.apisdk.services.CustomViewsService.CustomViewResultType;
 import com.mambu.apisdk.services.UsersService;
+import com.mambu.apisdk.util.APIData.UserBranchAssignmentType;
 import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
@@ -50,6 +51,7 @@ public class DemoTestUsersService {
 	private static User demoUser;
 	private static String BRANCH_ID;
 	private static String USER_NAME;
+	private static String methodName = null; // print method name
 
 	public static void main(String[] args) {
 
@@ -88,72 +90,58 @@ public class DemoTestUsersService {
 	}
 
 	public static void testGetAllUsers() throws MambuApiException {
-		System.out.println("\nIn testGetAllUsers");
+		System.out.println(methodName = "\nIn testGetAllUsers");
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
-		Date d1 = new Date();
-
 		List<User> users = usersService.getUsers();
-
-		Date d2 = new Date();
-		long diff = d2.getTime() - d1.getTime();
-
-		System.out.println("Total users=" + users.size() + " Total time=" + diff);
-		for (User user : users) {
-			System.out.println(" Username=" + user.getUsername() + "\tId=" + user.getId());
-		}
-		System.out.println();
+		logUsers(users, methodName);
 	}
 
 	public static void testGetUsersByPage() throws MambuApiException {
-
+		System.out.println(methodName = "\nIn testGetUsersByPage");
 		String offset = "0";
 		String limit = "500";
 
-		System.out.println("\nIn testGetUsersByPage" + " offset=" + offset + " limit=" + limit);
-		Date d1 = new Date();
-
+		System.out.println("Offset=" + offset + " Limit=" + limit);
 		UsersService usersService = MambuAPIFactory.getUsersService();
-
 		List<User> users = usersService.getUsers(offset, limit);
-		Date d2 = new Date();
-		long diff = d2.getTime() - d1.getTime();
 
-		System.out.println("Total users=" + users.size() + " Total time=" + diff);
-		for (User user : users) {
-			System.out.println(" Username=" + user.getUsername() + "\tId=" + user.getId() + "\tBranchId="
-					+ user.getAssignedBranchKey());
-		}
-		System.out.println();
+		logUsers(users, methodName);
 	}
 
 	public static void testGetPaginatedUsersByBranch() throws MambuApiException {
-
+		System.out.println(methodName = "\nIn testGetPaginatedUsersByBranch");
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
 		String offset = "0";
 		String limit = "5";
-		String branchId = BRANCH_ID; // GBK 001
-		System.out
-				.println("\nIn testGetPaginatedUsers ByBranch=" + branchId + "  offset=" + offset + " limit=" + limit);
 
-		List<User> users = usersService.getUsers(branchId, null, null);
+		// Test getting all users
+		List<User> allUsers = usersService.getUsers(null, offset, limit);
+		logUsers(allUsers, methodName + ": All Users");
 
-		System.out.println("testGetPaginatedUsers OK, barnch ID=" + BRANCH_ID);
-		for (User user : users) {
-			System.out.println(" Username=" + user.getUsername() + "\tId=" + user.getId());
-		}
-		System.out.println();
+		// Test getting users for a demo branch ID
+		String branchId = BRANCH_ID;
+
+		// Test getting assigned users
+		UserBranchAssignmentType usersType = UserBranchAssignmentType.ASSIGNED;
+		List<User> assignedUsers = usersService.getUsers(branchId, usersType, offset, limit);
+		logUsers(assignedUsers, methodName + ": Users Assigned to " + BRANCH_ID);
+
+		// Test getting users managing the branch
+		usersType = UserBranchAssignmentType.MANAGE;
+		List<User> usersManagingBranch = usersService.getUsers(branchId, usersType, offset, limit);
+		logUsers(usersManagingBranch, methodName + ": Users Managing Branch " + BRANCH_ID);
 	}
 
 	public static void testGetUserById() throws MambuApiException {
-		System.out.println("\nIn testGetUserById");
+		System.out.println(methodName = "\nIn testGetUserById");
 
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
 		String userId = USER_NAME;
 
-		System.out.println("\nIn testGetUserById=" + userId);
+		System.out.println("UserId=" + userId);
 		Date d1 = new Date();
 
 		User user = usersService.getUserById(userId);
@@ -194,34 +182,34 @@ public class DemoTestUsersService {
 	}
 
 	public static void testGetUserByUsername() throws MambuApiException {
-		System.out.println("\nIn testGetUserByUsername");
+		System.out.println(methodName = "\nIn testGetUserByUsername");
 
 		UsersService usersService = MambuAPIFactory.getUsersService();
 		String username = USER_NAME;
-		System.out.println("\nIn testGetUserByUsername with name =" + username);
+		System.out.println("\nUsername =" + username);
 		User user = usersService.getUserByUsername(username);
 
-		System.out.println("testGetUserByUsername OK,returned user= " + user.getFirstName() + " " + user.getLastName()
-				+ " Id=" + user.getId() + " Username=" + user.getUsername());
+		System.out.println("Returned user= " + user.getFirstName() + " " + user.getLastName() + " Id=" + user.getId()
+				+ " Username=" + user.getUsername());
 
 	}
 
 	// Get Custom Views. Available since Mambu 3.7
 	public static void testGetCustomViewsByUsername() throws MambuApiException {
-		System.out.println("\nIn testGetCustomViewsByUsername");
+		System.out.println(methodName = "\nIn testGetCustomViewsByUsername");
 
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
 		String username = USER_NAME;
-		System.out.println("\nIn testGetCustomViewsByUsername with name =" + username);
+		System.out.println("Username =" + username);
 
 		List<CustomView> views = usersService.getCustomViews(username);
 
 		if (views == null) {
-			System.out.println("testGetCustomViewsByUsername OK,returned null");
+			System.out.println("Returned null views");
 			return;
 		}
-		System.out.println("testGetCustomViewsByUsername OK,returned views count= " + views.size());
+		System.out.println("Returned views count= " + views.size());
 
 		for (CustomView view : views) {
 			// Log view details
@@ -232,13 +220,14 @@ public class DemoTestUsersService {
 
 	// getCustomViews
 	public static void testGetCustomViewsByUsernameType() throws MambuApiException {
-		System.out.println("\nIn testGetCustomViewsByUsernameType");
+		System.out.println(methodName = "\nIn testGetCustomViewsByUsernameType");
 
 		MambuAPIServiceFactory serviceFactory = DemoUtil.getAPIServiceFactory();
 		UsersService usersService = serviceFactory.getUsersService();
 		String username = USER_NAME;
 
-		for (ApiViewType viewType : ApiViewType.values()) {
+		ApiViewType[] testedTypes = new ApiViewType[] { ApiViewType.LOAN_TRANSACTIONS, ApiViewType.DEPOSIT_TRANSACTIONS };
+		for (ApiViewType viewType : testedTypes) {
 			System.out.println("\n\nGetting Views for view type=" + viewType);
 			List<CustomView> views = usersService.getCustomViews(username, viewType);
 
@@ -250,7 +239,7 @@ public class DemoTestUsersService {
 				testGetEntitiesForCustomView(views);
 
 			} catch (MambuApiException e) {
-				System.out.println("\nError getting entities for view type=" + viewType + "\n");
+				System.out.println(methodName + "\nError getting entities for view type=" + viewType + "\n");
 			}
 		}
 
@@ -258,7 +247,7 @@ public class DemoTestUsersService {
 
 	// Retrieve entities by Custom View filter. Available since Mambu 3.7
 	private static void testGetEntitiesForCustomView(List<CustomView> views) throws MambuApiException {
-		System.out.println("\nIn testGetEntitiesForCustomView");
+		System.out.println(methodName = "\nIn testGetEntitiesForCustomView");
 
 		if (views == null) {
 			System.out.println("Cannot get entities for NULL list of views");
@@ -271,10 +260,12 @@ public class DemoTestUsersService {
 		}
 		System.out.println("Getting entities for " + views.size() + " views");
 
-		// TODO: add Branch/CreditOfficer filter parameters when MBU-7042 is done in 4.0
 		String offset = "0";
 		String limit = "5";
+		// Custom views can be filtered by an optional Branch ID filter. Available since 4.0. See MBU-7042
+		String branchId = demoUser.getAssignedBranchKey();
 
+		System.out.println("Getting entities for branch key=" + branchId);
 		for (CustomView view : views) {
 
 			logCustomView(view);
@@ -306,14 +297,14 @@ public class DemoTestUsersService {
 					case BASIC:
 						fullDetails = false;
 
-						List<Client> clients = service.getCustomViewEntities(apiViewType, fullDetails, viewkey, offset,
-								limit);
+						List<Client> clients = service.getCustomViewEntities(apiViewType, branchId, fullDetails,
+								viewkey, offset, limit);
 						System.out.println("Clients=" + clients.size() + "  for View=" + viewName);
 						break;
 					case FULL_DETAILS:
 						fullDetails = true;
-						List<ClientExpanded> clientsExpanded = service.getCustomViewEntities(apiViewType, fullDetails,
-								viewkey, offset, limit);
+						List<ClientExpanded> clientsExpanded = service.getCustomViewEntities(apiViewType, branchId,
+								fullDetails, viewkey, offset, limit);
 						System.out.println("Client Details=" + clientsExpanded.size() + "  for View=" + viewName);
 						break;
 					}
@@ -322,14 +313,14 @@ public class DemoTestUsersService {
 					switch (resultType) {
 					case BASIC:
 						fullDetails = false;
-						List<Group> groups = service.getCustomViewEntities(apiViewType, fullDetails, viewkey, offset,
-								limit);
+						List<Group> groups = service.getCustomViewEntities(apiViewType, branchId, fullDetails, viewkey,
+								offset, limit);
 						System.out.println("Groups=" + groups.size() + "  for View=" + viewName);
 						break;
 					case FULL_DETAILS:
 						fullDetails = true;
-						List<GroupExpanded> groupsExpanded = service.getCustomViewEntities(apiViewType, fullDetails,
-								viewkey, offset, limit);
+						List<GroupExpanded> groupsExpanded = service.getCustomViewEntities(apiViewType, branchId,
+								fullDetails, viewkey, offset, limit);
 						System.out.println("Group Details=" + groupsExpanded.size() + "  for View=" + viewName);
 						break;
 					}
@@ -338,13 +329,13 @@ public class DemoTestUsersService {
 					switch (resultType) {
 					case BASIC:
 						fullDetails = false;
-						List<LoanAccount> loans = service.getCustomViewEntities(apiViewType, fullDetails, viewkey,
-								offset, limit);
+						List<LoanAccount> loans = service.getCustomViewEntities(apiViewType, branchId, fullDetails,
+								viewkey, offset, limit);
 						System.out.println("Loans=" + loans.size() + "  for View=" + viewName);
 						break;
 					case FULL_DETAILS:
 						fullDetails = true;
-						List<LoanAccountExpanded> loansExpanded = service.getCustomViewEntities(apiViewType,
+						List<LoanAccountExpanded> loansExpanded = service.getCustomViewEntities(apiViewType, branchId,
 								fullDetails, viewkey, offset, limit);
 						System.out.println("Loan Details=" + loansExpanded.size() + "  for View=" + viewName);
 					}
@@ -353,13 +344,13 @@ public class DemoTestUsersService {
 					switch (resultType) {
 					case BASIC:
 						fullDetails = false;
-						List<SavingsAccount> savings = service.getCustomViewEntities(apiViewType, fullDetails, viewkey,
-								offset, limit);
+						List<SavingsAccount> savings = service.getCustomViewEntities(apiViewType, branchId,
+								fullDetails, viewkey, offset, limit);
 						System.out.println("Savings=" + savings.size() + "  for View=" + viewName);
 						break;
 					case FULL_DETAILS:
 						fullDetails = true;
-						List<JSONSavingsAccount> savingsExpanded = service.getCustomViewEntities(apiViewType,
+						List<JSONSavingsAccount> savingsExpanded = service.getCustomViewEntities(apiViewType, branchId,
 								fullDetails, viewkey, offset, limit);
 						System.out.println("Savings Details=" + savingsExpanded.size() + "  for View=" + viewName);
 						break;
@@ -369,8 +360,8 @@ public class DemoTestUsersService {
 					switch (resultType) {
 					case BASIC:
 						fullDetails = false;
-						List<LoanTransaction> transactions = service.getCustomViewEntities(apiViewType, fullDetails,
-								viewkey, offset, limit);
+						List<LoanTransaction> transactions = service.getCustomViewEntities(apiViewType, branchId,
+								fullDetails, viewkey, offset, limit);
 						System.out.println("Loan Transactions=" + transactions.size() + " for View=" + viewName);
 						break;
 					case FULL_DETAILS:
@@ -382,8 +373,8 @@ public class DemoTestUsersService {
 					switch (resultType) {
 					case BASIC:
 						fullDetails = false;
-						List<SavingsTransaction> transactions = service.getCustomViewEntities(apiViewType, fullDetails,
-								viewkey, offset, limit);
+						List<SavingsTransaction> transactions = service.getCustomViewEntities(apiViewType, branchId,
+								fullDetails, viewkey, offset, limit);
 						System.out.println("Savings Transactions=" + transactions.size() + " for View=" + viewName);
 						break;
 					case FULL_DETAILS:
@@ -395,8 +386,8 @@ public class DemoTestUsersService {
 					switch (resultType) {
 					case BASIC:
 						fullDetails = false;
-						List<JSONActivity> activities = service.getCustomViewEntities(apiViewType, fullDetails,
-								viewkey, offset, limit);
+						List<JSONActivity> activities = service.getCustomViewEntities(apiViewType, branchId,
+								fullDetails, viewkey, offset, limit);
 						System.out.println("Activities=" + activities.size() + " for View=" + viewName);
 						break;
 					case FULL_DETAILS:
@@ -484,5 +475,19 @@ public class DemoTestUsersService {
 		System.out.println("\tKey=" + userRole.getEncodedKey() + "\tName=" + userRole.getName() + "\n\tPermissions="
 				+ userRole.getPermissions().getPermissionSet());
 
+	}
+
+	// Log some details for a list of users. Prefix with an optional message
+	private static void logUsers(List<User> users, String message) {
+		if (users == null) {
+			return;
+		}
+		message = message == null ? "" : message;
+		System.out.println(message + "\tTotal Users=" + users.size());
+		for (User user : users) {
+			System.out.println(" Username=" + user.getUsername() + "\tName=" + user.getFullName() + "\tId="
+					+ user.getId() + "\tBranch=" + user.getAssignedBranchKey() + "\tAdmin=" + user.isAdministrator());
+		}
+		System.out.println();
 	}
 }
