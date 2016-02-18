@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.mambu.accounts.shared.model.Account.Type;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
+import com.mambu.api.server.handler.customviews.model.ApiViewType;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -243,6 +244,9 @@ public class SavingsService {
 	/**
 	 * Requests a list of savings transactions for a custom view, limited by offset/limit
 	 * 
+	 * @deprecated Starting with 4.0 use
+	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, boolean, String, String, String)}
+	 *             to filter entities by branch ID
 	 * @param customViewKey
 	 *            the key of the Custom View to filter savings transactions
 	 * @param offset
@@ -259,12 +263,10 @@ public class SavingsService {
 		// Example GET savings/transactions?viewfilter=567&offset=0&limit=100
 
 		String branchId = null;
-		String centreId = null;
-		String creditOfficerName = null;
 		CustomViewResultType resultType = CustomViewResultType.BASIC;
 
-		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
-				centreId, creditOfficerName, offset, limit);
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId, offset,
+				limit);
 		return serviceExecutor.execute(getAllSavingsTransactions, params);
 	}
 
@@ -539,16 +541,16 @@ public class SavingsService {
 	}
 
 	/****
-	 * Close Savings account specifying the type of closer (withdraw or reject)
+	 * Close Savings account specifying the type of closer (withdraw, reject or close)
 	 * 
-	 * Note: available since Mambu 3.4 See MBU-4581 for details.
+	 * Note: available since Mambu 3.4 See MBU-4581 and MBU-10976 for details.
 	 * 
 	 * @param accountId
-	 *            the id of the account to withdraw
-	 * 
+	 *            the id of the account to withdraw. Must not be null
 	 * @param type
-	 *            type of closer (withdraw or reject)
+	 *            type of closer (withdraw, reject or close). Must not be null
 	 * @param notes
+	 *            optional notes
 	 * 
 	 * @return savings account
 	 * 
@@ -645,8 +647,11 @@ public class SavingsService {
 	}
 
 	/**
-	 * Requests a list of savings accounts for a custom view, limited by offset/limit only
+	 * Requests a list of savings accounts for a custom view, limited by offset/limit only *
 	 * 
+	 * @deprecated Starting with 4.0 use
+	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, boolean, String, String, String)}
+	 *             to filter entities by branch ID
 	 * @param customViewKey
 	 *            the key of the Custom View to filter savings accounts
 	 * @param offset
@@ -661,12 +666,10 @@ public class SavingsService {
 	public List<SavingsAccount> getSavingsAccountsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		String branchId = null;
-		String centreId = null;
-		String creditOfficerName = null;
 		CustomViewResultType resultType = CustomViewResultType.BASIC;
 
-		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
-				centreId, creditOfficerName, offset, limit);
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId, offset,
+				limit);
 		return serviceExecutor.execute(getAccountsList, params);
 
 	}
