@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.google.inject.Inject;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
+import com.mambu.api.server.handler.customviews.model.ApiViewType;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.CustomViewsService.CustomViewResultType;
@@ -141,8 +142,11 @@ public class ActivitiesService {
 	}
 
 	/**
-	 * Requests a list of activities for a custom view, limited by offset/limit
+	 * Request a list of activities for a custom view, limited by offset/limit
 	 * 
+	 * @deprecated Starting with 4.0 use
+	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, String, String, String)} to get
+	 *             basic entities supporting branch ID filter parameter
 	 * @param customViewKey
 	 *            the key of the Custom View to filter system activities
 	 * @param offset
@@ -156,14 +160,10 @@ public class ActivitiesService {
 	 */
 	public List<JSONActivity> getActivitiesByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
-
 		String branchId = null;
-		String centreId = null;
-		String creditOfficerName = null;
 		CustomViewResultType resultType = CustomViewResultType.BASIC;
-
-		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
-				centreId, creditOfficerName, offset, limit);
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId, offset,
+				limit);
 		return serviceExecutor.execute(getJSONActivityList, params);
 	}
 
