@@ -739,26 +739,64 @@ public class SavingsService {
 	 * creating SavingsAccount with details, including creating custom field values.
 	 * 
 	 * 
-	 * @param savingsAccount
-	 *            JSONSavingsAccount object containing SavingsAccount. SavingsAccount's encodedKey must be null for
-	 *            account create
+	 * @param jsonSavingsAccount
+	 *            JSONSavingsAccount object containing SavingsAccount. Must be not null. SavingsAccount's encodedKey
+	 *            must be null for account create
 	 * 
-	 * @return savingsAccount
+	 * @return created JSONSavingsAccount
 	 * 
 	 * @throws MambuApiException
 	 */
-	public JSONSavingsAccount createSavingsAccount(JSONSavingsAccount account) throws MambuApiException {
-
-		if (account == null || account.getSavingsAccount() == null) {
+	public JSONSavingsAccount createSavingsAccount(JSONSavingsAccount jsonSavingsAccount) throws MambuApiException {
+		// Example: POST // {"savingsAccount":
+		// { "accountHolderKey":"123", "accountHolderType":"CLIENT”,… },
+		// "customInformation":[{ "customFieldID":"fieldId_1","value":"true" }, ….]
+		// }
+		if (jsonSavingsAccount == null || jsonSavingsAccount.getSavingsAccount() == null) {
 			throw new IllegalArgumentException("Account must not be NULL");
 		}
 
-		SavingsAccount inputAccount = account.getSavingsAccount();
+		SavingsAccount inputAccount = jsonSavingsAccount.getSavingsAccount();
 		String encodedKey = inputAccount.getEncodedKey();
 		if (encodedKey != null) {
 			throw new IllegalArgumentException("Cannot create  Account, the encoded key must be null");
 		}
-		return serviceExecutor.executeJson(createAccount, account);
+		return serviceExecutor.executeJson(createAccount, jsonSavingsAccount);
+	}
+
+	/***
+	 * Convenience method to create new SavingsAccount using SavingsAccount object.
+	 * 
+	 * @param savingsAccount
+	 *            SavingsAccount object. Must not be null. SavingsAccount's encodedKey must be null for account create
+	 * 
+	 * @return created savings account
+	 * 
+	 * @throws MambuApiException
+	 */
+	public SavingsAccount createSavingsAccount(SavingsAccount savingsAccount) throws MambuApiException {
+
+		if (savingsAccount == null) {
+			throw new IllegalArgumentException("Account must not be NULL");
+		}
+		// Create JSONSavingsAccount to use in Mambu API. Mambu expects the following format:
+		// {"savingsAccount":{.....}, "customInformation":[{field1},{field2}]}
+		JSONSavingsAccount jsonSavingsAccount = new JSONSavingsAccount(savingsAccount);
+		// In API request custom fields must be provided in the "customInformation" field
+		jsonSavingsAccount.setCustomInformation(savingsAccount.getCustomFieldValues());
+		// Clear custom fields at the account level, no need to send them in two places
+		savingsAccount.setCustomFieldValues(null);
+
+		// Submit API request to Mambu
+		JSONSavingsAccount createdJsonAccount = createSavingsAccount(jsonSavingsAccount);
+		if (createdJsonAccount == null || createdJsonAccount.getSavingsAccount() == null) {
+			return null;
+		}
+		// Move custom fields from the returned JSONSavingsAccount into the created savings account
+		SavingsAccount createdAccount = createdJsonAccount.getSavingsAccount();
+		createdAccount.setCustomFieldValues(createdJsonAccount.getCustomInformation());
+
+		return createdAccount;
 	}
 
 	/***
@@ -766,28 +804,69 @@ public class SavingsService {
 	 * allows updating JSONSavingsAccount with details. As of Mambu 3.4 only custom fields can be updated.
 	 * 
 	 * 
-	 * @param savingsAccount
+	 * @param jsonSavingsAccount
 	 *            JSONSavingsAccount object containing SavingsAccount. SavingsAccount encodedKey or id must be NOT null
 	 *            for account update
 	 * 
-	 * @return savingsAccount
+	 * @return updated JSONSavingsAccount
 	 * 
 	 * 
 	 * @throws MambuApiException
 	 */
-	public JSONSavingsAccount updateSavingsAccount(JSONSavingsAccount account) throws MambuApiException {
+	public JSONSavingsAccount updateSavingsAccount(JSONSavingsAccount jsonSavingsAccount) throws MambuApiException {
 
-		if (account == null || account.getSavingsAccount() == null) {
+		if (jsonSavingsAccount == null || jsonSavingsAccount.getSavingsAccount() == null) {
 			throw new IllegalArgumentException("Account must not be NULL");
 		}
 
-		SavingsAccount inputAccount = account.getSavingsAccount();
+		SavingsAccount inputAccount = jsonSavingsAccount.getSavingsAccount();
 		String encodedKey = inputAccount.getEncodedKey() != null ? inputAccount.getEncodedKey() : inputAccount.getId();
 		if (encodedKey == null) {
 			throw new IllegalArgumentException("Cannot update Account: the encoded key or id must NOT be null");
 		}
 
-		return serviceExecutor.executeJson(updateAccount, account, encodedKey);
+		return serviceExecutor.executeJson(updateAccount, jsonSavingsAccount, encodedKey);
+	}
+
+	/***
+	 * Convenience method to Update an existent SavingsAccount. As of Mambu 3.4 only custom fields can be updated.
+	 * 
+	 * @param savingsAccount
+	 *            savings account object to be updated. Must not be null. SavingsAccount encodedKey or id must be NOT
+	 *            null for account update
+	 * 
+	 * @return savingsAccount
+	 * @throws MambuApiException
+	 */
+	public SavingsAccount updateSavingsAccount(SavingsAccount savingsAccount) throws MambuApiException {
+
+		if (savingsAccount == null) {
+			throw new IllegalArgumentException("Account must not be NULL");
+		}
+
+		String encodedKey = savingsAccount.getEncodedKey() != null ? savingsAccount.getEncodedKey() : savingsAccount
+				.getId();
+		if (encodedKey == null) {
+			throw new IllegalArgumentException("Cannot update Account: the encoded key or id must NOT be null");
+		}
+		// Create JSONSavingsAccount to use in Mambu API. Mambu expects the following format:
+		// {"savingsAccount":{.....}, "customInformation":[{field1},{field2}]}
+		JSONSavingsAccount jsonSavingsAccount = new JSONSavingsAccount(savingsAccount);
+		// In API request custom fields must be provided in the "customInformation" field
+		jsonSavingsAccount.setCustomInformation(savingsAccount.getCustomFieldValues());
+		// Clear custom fields at the account level, no need to send them in two places
+		savingsAccount.setCustomFieldValues(null);
+
+		// Submit updated account request to Mambu
+		JSONSavingsAccount updatedJsonAccount = updateSavingsAccount(jsonSavingsAccount);
+		if (updatedJsonAccount == null || updatedJsonAccount.getSavingsAccount() == null) {
+			return null;
+		}
+		// Set updated custom fields in the returned savings account
+		SavingsAccount updatedSavingsAccount = updatedJsonAccount.getSavingsAccount();
+		updatedSavingsAccount.setCustomFieldValues(updatedJsonAccount.getCustomInformation());
+
+		return updatedSavingsAccount;
 	}
 
 	/***

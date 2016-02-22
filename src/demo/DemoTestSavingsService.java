@@ -12,7 +12,6 @@ import com.mambu.accounts.shared.model.AccountState;
 import com.mambu.accounts.shared.model.InterestChargeFrequencyMethod;
 import com.mambu.accounts.shared.model.InterestRateSource;
 import com.mambu.accounts.shared.model.TransactionDetails;
-import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.DocumentsService;
@@ -50,7 +49,7 @@ public class DemoTestSavingsService {
 	private static SavingsProduct demoSavingsProduct;
 	private static SavingsAccount demoSavingsAccount;
 
-	private static JSONSavingsAccount newAccount;
+	private static SavingsAccount newAccount;
 	private static String methodName = null; // print method name on exception
 
 	public static void main(String[] args) {
@@ -105,6 +104,7 @@ public class DemoTestSavingsService {
 				try {
 					// Test rejecting an account first
 					testCreateSavingsAccount();
+					testUpdateSavingsAccount(); // Available since 3.4
 					testCloseSavingsAccount(CLOSER_TYPE.REJECT); // Available since 3.4
 					testDeleteSavingsAccount(); // Available since 3.4
 
@@ -215,7 +215,7 @@ public class DemoTestSavingsService {
 		System.out.println(methodName = "\nIn testGetFundedLoanAccounts");
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
-		String savingsId = newAccount.getSavingsAccount().getId();
+		String savingsId = newAccount.getId();
 
 		// This API call can succeed only if the test account is of SavingsType.INVESTOR_ACCOUNT type
 		try {
@@ -457,22 +457,18 @@ public class DemoTestSavingsService {
 		// Add Custom Fields
 		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(
 				CustomFieldType.SAVINGS_ACCOUNT_INFO, demoSavingsProduct.getEncodedKey());
-		//
-
-		JSONSavingsAccount jsonSavingsAccount = new JSONSavingsAccount(savingsAccount);
-		jsonSavingsAccount.setCustomInformation(clientCustomInformation);
+		savingsAccount.setCustomFieldValues(clientCustomInformation);
 
 		// Create Account in Mambu
-		newAccount = service.createSavingsAccount(jsonSavingsAccount);
-		SavingsAccount savingsAccountResult = newAccount.getSavingsAccount();
+		newAccount = service.createSavingsAccount(savingsAccount);
 
-		SAVINGS_ACCOUNT_ID = savingsAccountResult.getId();
+		SAVINGS_ACCOUNT_ID = newAccount.getId();
 
-		System.out.println("Savings Account created OK, ID=" + savingsAccountResult.getId() + " Name= "
-				+ savingsAccountResult.getName() + " Account Holder Key=" + savingsAccountResult.getAccountHolderKey());
+		System.out.println("Savings Account created OK, ID=" + newAccount.getId() + " Name= " + newAccount.getName()
+				+ " Account Holder Key=" + newAccount.getAccountHolderKey());
 
 		// Get Custom Information from the JSONSavingsAccount
-		List<CustomFieldValue> updatedCustomFields = newAccount.getCustomInformation();
+		List<CustomFieldValue> updatedCustomFields = newAccount.getCustomFieldValues();
 
 		if (updatedCustomFields != null) {
 			System.out.println("Custom Fields for Account\n");
@@ -490,12 +486,12 @@ public class DemoTestSavingsService {
 		SavingsService service = MambuAPIFactory.getSavingsService();
 
 		// Use the newly created account and update some custom fields
-		JSONSavingsAccount updatedAccount = newAccount;
-		// Savings API doesn't return CustomField with the CustomFieldValue. Need to refresh account with full details
-		SavingsAccount account = updatedAccount.getSavingsAccount();
-		account = service.getSavingsAccountDetails(account.getEncodedKey());
+		SavingsAccount updatedAccount = newAccount;
+		// Note: Savings API doesn't return CustomField with the CustomFieldValue in create response.
+		// Need to refresh account with full details to custom field IDs
+		updatedAccount = service.getSavingsAccountDetails(updatedAccount.getEncodedKey());
 
-		List<CustomFieldValue> customFields = account.getCustomFieldValues();
+		List<CustomFieldValue> customFields = updatedAccount.getCustomFieldValues();
 		List<CustomFieldValue> toUpdateCustomFields = new ArrayList<CustomFieldValue>();
 
 		if (customFields != null) {
@@ -504,16 +500,16 @@ public class DemoTestSavingsService {
 				toUpdateCustomFields.add(value);
 			}
 		}
-		updatedAccount.setCustomInformation(toUpdateCustomFields);
+		updatedAccount.setCustomFieldValues(toUpdateCustomFields);
 
 		// Update account in Mambu
-		JSONSavingsAccount updatedAccountResult = service.updateSavingsAccount(updatedAccount);
+		SavingsAccount updatedAccountResult = service.updateSavingsAccount(updatedAccount);
 
-		System.out.println("Savings Update OK, ID=" + updatedAccountResult.getSavingsAccount().getId()
-				+ "\tAccount Name=" + updatedAccountResult.getSavingsAccount().getName());
+		System.out.println("Savings Update OK, ID=" + updatedAccountResult.getId() + "\tAccount Name="
+				+ updatedAccountResult.getName());
 
 		// Get returned custom fields
-		List<CustomFieldValue> updatedCustomFields = updatedAccountResult.getCustomInformation();
+		List<CustomFieldValue> updatedCustomFields = updatedAccountResult.getCustomFieldValues();
 
 		if (updatedCustomFields != null) {
 			System.out.println("Custom Fields for Savings Account\n");
@@ -530,7 +526,7 @@ public class DemoTestSavingsService {
 		System.out.println(methodName = "\nIn testPatchSavingsAccountTerms");
 
 		// See MBU-10447 for a list of fields that can be updated (as of Mambu 3.14)
-		SavingsAccount savingsAccount = newAccount.getSavingsAccount();
+		SavingsAccount savingsAccount = newAccount;
 		String productKey = savingsAccount.getProductTypeKey();
 		SavingsProduct product = DemoUtil.getDemoSavingsProduct(productKey);
 		SavingsType productType = product.getProductType();
