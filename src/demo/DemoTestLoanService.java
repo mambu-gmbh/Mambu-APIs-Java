@@ -12,6 +12,9 @@ import com.mambu.accounting.shared.model.GLAccountingRule;
 import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.accounts.shared.model.AccountState;
 import com.mambu.accounts.shared.model.InterestRateSource;
+import com.mambu.accounts.shared.model.PredefinedFee;
+import com.mambu.accounts.shared.model.PredefinedFee.AmountCalculationMethod;
+import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.accountsecurity.shared.model.Guaranty;
 import com.mambu.accountsecurity.shared.model.Guaranty.GuarantyType;
@@ -221,26 +224,8 @@ public class DemoTestLoanService {
 
 		// Log Loan's Disbursement Details. Available since 4.0. See MBU-11223
 		DisbursementDetails disbDetails = loanDeatils.getDisbursementDetails();
-		if (disbDetails != null) {
-			System.out.println("DisbursementDetails:\tFirstRepaymentDate=" + disbDetails.getFirstRepaymentDate()
-					+ "\tDisbursementDate:" + disbDetails.getDisbursementDate() + "\tEntityName:"
-					+ disbDetails.getEntityName() + "\tEntityType:" + disbDetails.getEntityType());
+		logDisbursementDetails(disbDetails);
 
-			List<CustomPredefinedFee> dibsursementFees = disbDetails.getFees();
-			if (dibsursementFees != null) {
-				System.out.println("\nDisbursement Fees:");
-				for (CustomPredefinedFee fee : dibsursementFees) {
-					System.out.println("CustomPredefinedFee=" + fee.getFee() + "\tAmount=" + fee.getAmount());
-				}
-			}
-			TransactionDetails transactionDetails = disbDetails.getTransactionDetails();
-			if (transactionDetails != null) {
-				System.out.println("\nDisbursement TransactionDetails:");
-				if (transactionDetails.getTransactionChannel() != null) {
-					System.out.println("Channel:" + transactionDetails.getTransactionChannel().getName());
-				}
-			}
-		}
 		// If account has Securities, log their custom info to test MBU-7684
 		// See MBU-7684 As a Developer, I need to work with guarantees with custom fields
 		List<Guaranty> guarantees = loanDeatils.getGuarantees();
@@ -296,6 +281,9 @@ public class DemoTestLoanService {
 
 		System.out.println("Loan Account created OK, ID=" + newAccount.getId() + " Name= " + newAccount.getLoanName()
 				+ " Account Holder Key=" + newAccount.getAccountHolderKey());
+
+		// Log Disbursement Details
+		logDisbursementDetails(newAccount.getDisbursementDetails());
 
 		// Check returned custom fields after create
 		List<CustomFieldValue> customFieldValues = newAccount.getCustomFieldValues();
@@ -572,7 +560,7 @@ public class DemoTestLoanService {
 
 	// / Transactions testing
 	public static void testDisburseLoanAccount() throws MambuApiException {
-		System.out.println(methodName = "\nIn test Disburse LoanAccount");
+		System.out.println(methodName = "\nIn testDisburseLoanAccount");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		if (newAccount == null) {
@@ -588,7 +576,7 @@ public class DemoTestLoanService {
 
 		// Since 3.14, the disbursement amount must be specified only for Revolving Credit products and can be null for
 		// others. See MBU-10547 and MBU-11058
-		String amount = null;
+		Money amount = null;
 		LoanProductType productType = demoProduct.getLoanProductType();
 		switch (productType) {
 		case DYNAMIC_TERM_LOAN:
@@ -632,7 +620,7 @@ public class DemoTestLoanService {
 			break;
 		case REVOLVING_CREDIT:
 			// Amount is mandatory for Revolving Credit loans. See MBU-10547
-			amount = account.getLoanAmount().toPlainString();
+			amount = account.getLoanAmount();
 			// First repayment date should be specified only for the first disbursement (when transitioning from
 			// Approved to Active state)
 			if (account.getAccountState() != AccountState.APPROVED) {
@@ -646,11 +634,18 @@ public class DemoTestLoanService {
 		System.out.println("Disbursement=" + disbursementDateParam + "\tFirstRepaymentDate=" + firstRepaymentDateParam);
 		String notes = "Disbursed loan for testing";
 
-		// Make demo transactionDetails with the valid channel fields
-		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
-		LoanTransaction transaction = loanService.disburseLoanAccount(accountId, amount, disbursementDateParam,
-				firstRepaymentDateParam, notes, transactionDetails);
+		// Set disbursement dates in the DisbursementDetails
+		DisbursementDetails disbDetails = newAccount.getDisbursementDetails();
+		disbDetails.setFirstRepaymentDate(firstRepaymentDate);
+		disbDetails.setExpectedDisbursementDate(disbursementDate);
 
+		// Set up disbursement Fees as per Mambu expectations. See MBU-8811
+		List<CustomPredefinedFee> disbursementFees = makePredefinedDisburseFees();
+		disbDetails.setFees(disbursementFees);
+
+		// Send API request to Mambu to test JSON Disburse API
+		LoanTransaction transaction = loanService.disburseLoanAccount(accountId, amount,
+				newAccount.getDisbursementDetails(), notes);
 		System.out.println("\nLoan for Disbursement with Details: Transaction Id=" + transaction.getTransactionId()
 				+ " amount=" + transaction.getAmount().toString());
 	}
@@ -1086,7 +1081,7 @@ public class DemoTestLoanService {
 	private static final String apiTestIdPrefix = "API-";
 
 	// Create demo loan account with parameters consistent with the demo product
-	private static LoanAccount makeLoanAccountForDemoProduct() {
+	private static LoanAccount makeLoanAccountForDemoProduct() throws MambuApiException {
 		System.out.println(methodName = "\nIn makeLoanAccountForDemoProduct");
 		System.out.println("\nProduct name=" + demoProduct.getName() + " id=" + demoProduct.getId());
 
@@ -1288,6 +1283,10 @@ public class DemoTestLoanService {
 		Date firstRepaymentDate = makeFirstRepaymentDate(loanAccount, demoProduct, false);
 		loanAccount.setFirstRepaymentDateInDisbursementDetails(firstRepaymentDate);
 
+		// Create demo Transaction details for this account
+		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
+		DisbursementDetails disbursementDetails = loanAccount.getDisbursementDetails();
+		disbursementDetails.setTransactionDetails(transactionDetails);
 		// Disbursement Details are not available for REVOLVING_CREDIT products
 		if (productType == LoanProductType.REVOLVING_CREDIT) {
 			loanAccount.setDisbursementDetails(null);
@@ -1434,14 +1433,15 @@ public class DemoTestLoanService {
 
 			// get minimum offset
 			Integer minOffsetDays = product.getMinFirstRepaymentDueDateOffset();
+			Integer maxOffsetDays = product.getMaxFirstRepaymentDueDateOffset();
 			System.out.println("INTERVAL schedule due dates product. Min offset=" + minOffsetDays
 					+ " RepaymentPeriodUnit=" + unit + " repaymentPeriodCount=" + repaymentPeriodCount);
 
-			if (minOffsetDays == null) {
+			if (minOffsetDays == null && maxOffsetDays == null) {
 				// if no offset to 4 days in a future
 				return firstRepaymentDate;
 			}
-
+			minOffsetDays = minOffsetDays != null ? minOffsetDays : maxOffsetDays;
 			// Create UTC disbursement date with day, month year only
 			Calendar disbDateCal = Calendar.getInstance();
 			int day = disbDateCal.get(Calendar.DAY_OF_MONTH);
@@ -1481,6 +1481,87 @@ public class DemoTestLoanService {
 
 		System.out.println("FirstRepaymentDate =" + firstRepaymentDate);
 		return firstRepaymentDate;
+
+	}
+
+	// Helper to specify Disbursement fees as expected by Mambu API. See MBU-8811
+	// Specify only Disbursement Fees
+	// Product Fees with pre-defined amounts should NOT have this amount specified in the API request
+	// Otherwise Mambu returns INCONSISTENT_FEE_AMOUNT_WITH_PRODUCT_FEE error
+	private static List<CustomPredefinedFee> makePredefinedDisburseFees() {
+		List<PredefinedFee> predefinedFees = demoProduct.getFees();
+		if (predefinedFees == null || predefinedFees.size() == 0) {
+			return new ArrayList<>();
+		}
+		List<CustomPredefinedFee> disburseCustomFees = new ArrayList<>();
+		for (PredefinedFee fee : predefinedFees) {
+			if (!fee.isDisbursementFee()) {
+				continue;
+			}
+			AmountCalculationMethod amountMethod = fee.getAmountCalculationMethod();
+			if (amountMethod == null) {
+				continue;
+			}
+			Money amount = null;
+			// Amount must not be specified if it is set in the product. See MBU-8811
+			switch (amountMethod) {
+			case FLAT:
+				if (fee.getAmount() == null || fee.getAmount().getAmount() == null) {
+					// no product value. Specify amount
+					amount = new Money(15.50);
+				}
+				break;
+			case LOAN_AMOUNT_PERCENTAGE:
+				// Check if percentage is specified (though percentage is mandatory in Mambu, so should be not null)
+				BigDecimal percent = fee.getPercentageAmount();
+				if (percent == null) {
+					amount = new Money(1.2);
+				}
+				break;
+			case REPAYMENT_PRINCIPAL_AMOUNT_PERCENTAGE:
+				continue;
+
+			}
+			CustomPredefinedFee customFee = new CustomPredefinedFee(fee, amount);
+			disburseCustomFees.add(customFee);
+		}
+
+		return disburseCustomFees;
+
+	}
+
+	// Log Loan's Disbursement Details. Available since 4.0. See MBU-11223
+	private static void logDisbursementDetails(DisbursementDetails disbDetails) {
+		if (disbDetails == null) {
+			return;
+		}
+
+		System.out.println("DisbursementDetails:\tFirstRepaymentDate=" + disbDetails.getFirstRepaymentDate()
+				+ "\tDisbursementDate:" + disbDetails.getDisbursementDate() + "\tEntityName:"
+				+ disbDetails.getEntityName() + "\tEntityType:" + disbDetails.getEntityType());
+
+		List<CustomPredefinedFee> dibsursementFees = disbDetails.getFees();
+		if (dibsursementFees != null) {
+			System.out.println("\nDisbursement Fees:");
+			for (CustomPredefinedFee customFee : dibsursementFees) {
+				System.out.println("\tAmount=" + customFee.getAmount());
+				PredefinedFee fee = customFee.getFee();
+				if (fee == null) {
+					continue;
+				}
+				System.out.println("\tPredefinedFee=" + fee.getEncodedKey() + "\tAmount=" + fee.getAmount());
+			}
+		}
+		TransactionDetails transactionDetails = disbDetails.getTransactionDetails();
+		if (transactionDetails == null) {
+			return;
+		}
+		System.out.println("\nDisbursement TransactionDetails:");
+		TransactionChannel transactionChannel = transactionDetails.getTransactionChannel();
+		if (transactionChannel != null) {
+			System.out
+					.println("\tChannel: ID=" + transactionChannel.getId() + " Name =" + transactionChannel.getName());
+		}
 
 	}
 }

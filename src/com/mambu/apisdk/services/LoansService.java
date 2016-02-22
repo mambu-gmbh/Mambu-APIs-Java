@@ -17,6 +17,7 @@ import com.mambu.api.server.handler.funds.model.JSONInvestorFunds;
 import com.mambu.api.server.handler.guarantees.model.JSONGuarantees;
 import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
+import com.mambu.api.server.handler.loan.model.JSONTransactionRequest;
 import com.mambu.api.server.handler.tranches.model.JSONTranches;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -35,7 +36,9 @@ import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
+import com.mambu.core.shared.model.Money;
 import com.mambu.docs.shared.model.Document;
+import com.mambu.loans.shared.model.DisbursementDetails;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
 import com.mambu.loans.shared.model.LoanTranche;
@@ -448,9 +451,11 @@ public class LoansService {
 		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
 	}
 
-	/***
+/***
 	 * 
 	 * Disburse a loan account with a given disbursal date and some extra transaction details
+	 * 
+	 * @deprecated Use {@link #disburseLoanAccount(String, Money, DisbursementDetails, String), which uses JSON version of the Disburse API and supports specifying disbursement fees
 	 * 
 	 * @param accountId
 	 *            account ID. Must not be null
@@ -470,6 +475,7 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public LoanTransaction disburseLoanAccount(String accountId, String amount, String disbursalDate,
 			String firstRepaymentDate, String notes, TransactionDetails transactionDetails) throws MambuApiException {
 
@@ -488,7 +494,45 @@ public class LoansService {
 
 	}
 
-	// TODO: Implement MBU-8811 Disburse with activation fees when MBU-8992 is ready
+	/**
+	 * Disburse loan account using JSON disburse API request. The JSON disburse API request supports providing
+	 * transaction details and disbursement fees.
+	 * 
+	 * @param accountId
+	 *            loan account id or encoded key. Must not be null
+	 * @param amount
+	 *            disbursement amount.
+	 * @param disbursementDetails
+	 *            disbursement details for the loan account
+	 * @param notes
+	 *            transaction notes
+	 * @return loan transaction
+	 * @throws MambuApiException
+	 */
+	public LoanTransaction disburseLoanAccount(String accountId, Money amount, DisbursementDetails disbursementDetails,
+			String notes) throws MambuApiException {
+		// Disburse loan account using JSON format and optionally specifying transaction details and disbursement fees
+		// See MBU-8811, MBU-10045, MBU-11853
+
+		// Example: POST {"type":"DISBURSEMENT",
+		// date":"2016-02-20T16:00:00-0800", "firstRepaymentDate":"2016-02-27T16:00:00-0800",
+		// "method":"channel_id_1”, "checkNumber”:”123”,”bankAccountNumber”:”456”,
+		// fees": [{"encodedKey":"feeKey1"}, {encodedKey":"feeKey2", "amount":"100.00"}], "notes":"notes"}
+
+		// Create JSONTransactionRequest
+		JSONTransactionRequest request = ServiceHelper.makeJSONTransactionRequest(amount, disbursementDetails, notes);
+
+		// Create Params Map with the transaction request JSON
+		ParamsMap paramsMap = ServiceHelper.makeTransactionRequestJson(APIData.TYPE_DISBURSEMENT, request);
+
+		// Send disburse API request and get LoanTransaction back
+		ApiDefinition postJsonAccountTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY, LoanAccount.class,
+				LoanTransaction.class);
+		postJsonAccountTransaction.setContentType(ContentType.JSON);
+		LoanTransaction loanTransaction = serviceExecutor.execute(postJsonAccountTransaction, accountId, paramsMap);
+
+		return loanTransaction;
+	}
 
 	/***
 	 * Undo Disburse for a loan account. If the account has multiple tranches, reverses the last tranche
@@ -585,6 +629,8 @@ public class LoansService {
 		// {"loanAccount":{.....}, "customInformation":[{field1},{field2}]}
 		JSONLoanAccount jsonLoanAccount = new JSONLoanAccount(loanAccount);
 		jsonLoanAccount.setCustomInformation(loanAccount.getCustomFieldValues());
+		// Clear custom fields at the account level, no need to send them in two places
+		loanAccount.setCustomFieldValues(null);
 
 		// Send API request to Mambu
 		JSONLoanAccount createdJsonAccount = serviceExecutor.executeJson(createAccount, jsonLoanAccount);
@@ -655,6 +701,8 @@ public class LoansService {
 		// Create JSONLoanAccount object for the API request. Set custom information in JSONLoanAccount
 		JSONLoanAccount jsonLoanAccount = new JSONLoanAccount(loanAccount);
 		jsonLoanAccount.setCustomInformation(loanAccount.getCustomFieldValues());
+		// Clear custom fields at the account level, no need to send them in two places
+		loanAccount.setCustomFieldValues(null);
 
 		// Submit update account request to Mambu providing JSONLoanAccount object
 		JSONLoanAccount updatedJsonAccount = serviceExecutor.executeJson(updateAccount, jsonLoanAccount, encodedKey);

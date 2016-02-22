@@ -1,7 +1,10 @@
 package com.mambu.apisdk.util;
 
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -9,15 +12,21 @@ import java.util.Set;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.mambu.accounts.shared.model.PredefinedFee;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
+import com.mambu.api.server.handler.loan.model.JSONDisburseFeeRequest;
+import com.mambu.api.server.handler.loan.model.JSONTransactionRequest;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.GroupExpanded;
+import com.mambu.core.shared.model.Money;
+import com.mambu.loans.shared.model.CustomPredefinedFee;
+import com.mambu.loans.shared.model.DisbursementDetails;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.savings.shared.model.SavingsAccount;
 
@@ -124,6 +133,133 @@ public class ServiceHelper {
 				break;
 			}
 		}
+	}
+
+	/**
+	 * Create JSONTransactionRequest for submitting JSON transaction API requests
+	 * 
+	 * @param amount
+	 *            transaction amount
+	 * @param backDate
+	 *            transaction back date
+	 * @param firstRepaymentDate
+	 *            first repayment date
+	 * @param transactionDetails
+	 *            transaction details
+	 * @param transactionFees
+	 *            transaction fees
+	 * @param notes
+	 *            transaction notes
+	 * @return JSON Transaction Request
+	 */
+	public static JSONTransactionRequest makeJSONTransactionRequest(Money amount, Date backDate,
+			Date firstRepaymentDate, TransactionDetails transactionDetails, List<CustomPredefinedFee> transactionFees,
+			String notes) {
+
+		JSONTransactionRequest request = new JSONTransactionRequest();
+		// Add amount and notes
+		BigDecimal bigDecimalAmount = amount == null ? null : amount.getAmount();
+		request.setAmount(bigDecimalAmount);
+		request.setNotes(notes);
+		// Add Back Date and First Repayment Date
+		request.setDate(backDate);
+		request.setFirstRepaymentDate(firstRepaymentDate);
+
+		// Set Transaction channel Details
+		request.setTransactionDetails(transactionDetails);
+		// Transaction Channel must be set separately
+		if (transactionDetails != null && transactionDetails.getTransactionChannel() != null) {
+			String channelId = transactionDetails.getTransactionChannel().getId();
+			// Set channel's ID (method)
+			request.setMethod(channelId);
+		}
+		// Add Transaction Fees
+		request.setPredefinedFeeInfo(null);
+		if (transactionFees == null || transactionFees.size() == 0) {
+			return request;
+		}
+		// Add fees converting CustomPredefinedFee to an expected JSONDisburseFeeRequest
+		List<JSONDisburseFeeRequest> fees = new ArrayList<>();
+		for (CustomPredefinedFee custFee : transactionFees) {
+			PredefinedFee predefinedFee = custFee.getFee();
+			if (predefinedFee == null) {
+				continue;
+			}
+			// Make JSONDisburseFeeRequest
+			JSONDisburseFeeRequest jsonFee = new JSONDisburseFeeRequest();
+			jsonFee.setEncodedKey(predefinedFee.getEncodedKey()); // set key from PredefinedFee
+			// Set amount. Must be not null only for fees with no amount defined in the product. See MBU-8811
+			jsonFee.setAmount(custFee.getAmount()); // set amount from CustomPredefinedFe
+			fees.add(jsonFee);
+		}
+		request.setPredefinedFeeInfo(fees);
+
+		return request;
+
+	}
+
+	/**
+	 * Convenience method to create JSONTransactionRequest specifying disbursement details
+	 * 
+	 * @param amount
+	 *            transaction amount
+	 * @param disbursementDetails
+	 *            disbursement details
+	 * @param notes
+	 *            transaction notes
+	 * @return JSON Transaction Request
+	 */
+	public static JSONTransactionRequest makeJSONTransactionRequest(Money amount,
+			DisbursementDetails disbursementDetails, String notes) {
+		Date backDate = null;
+		Date firstRepaymentDate = null;
+		List<CustomPredefinedFee> disbursementFees = null;
+		TransactionDetails transactionDetails = null;
+		// Get transaction request fields from the disbursementDetails
+		if (disbursementDetails != null) {
+			backDate = disbursementDetails.getExpectedDisbursementDate();
+			firstRepaymentDate = disbursementDetails.getFirstRepaymentDate();
+			transactionDetails = disbursementDetails.getTransactionDetails();
+			disbursementFees = disbursementDetails.getFees();
+		}
+
+		return makeJSONTransactionRequest(amount, backDate, firstRepaymentDate, transactionDetails, disbursementFees,
+				notes);
+	}
+
+	/**
+	 * Create params map with as JSON request message for a transaction type
+	 * 
+	 * @param transactionType
+	 *            transaction type string. Example: "DISBURSEMENT"
+	 * 
+	 * @param transactionReqest
+	 *            jSON transaction request. If null then the JSON string with only the transactionType is returned.
+	 * @return params map with a JSON_OBJECT included
+	 */
+	public static ParamsMap makeTransactionRequestJson(String transactionType, JSONTransactionRequest transactionReqest) {
+		// JSONTransactionRequest contains all required for a request fields except the transaction type
+		// Create JSON string for a transactionReqest and add type parameter in a format of: "type":"DISBURSEMENT"
+
+		// Make "type":"transactionType" to be added to the JSON string
+		final String typeParameter = "{\"" + APIData.TYPE + "\":\"" + transactionType + "\",";
+
+		String jsonRequest = null;
+		if (transactionReqest == null) {
+			// if nothing on the request, allow sending just the transaction type as a JSON
+			jsonRequest = transactionType + "}";
+		} else {
+			// Create JSON string for the JSONTransactionRequest first
+			jsonRequest = GsonUtils.createGson().toJson(transactionReqest, JSONTransactionRequest.class);
+
+			// Add transaction type string (replacing the opening "{")
+			jsonRequest = jsonRequest.trim().replaceFirst("\\{", typeParameter);
+		}
+		// return params map with the generated JSON
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.put(APIData.JSON_OBJECT, jsonRequest);
+		return paramsMap;
+
 	}
 
 	/***
