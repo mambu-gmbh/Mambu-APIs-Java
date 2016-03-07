@@ -16,6 +16,7 @@ import com.mambu.api.server.handler.customviews.model.ApiViewType;
 import com.mambu.api.server.handler.funds.model.JSONInvestorFunds;
 import com.mambu.api.server.handler.guarantees.model.JSONGuarantees;
 import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
+import com.mambu.api.server.handler.loan.model.JSONLoanAccountResponse;
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
 import com.mambu.api.server.handler.loan.model.JSONTransactionRequest;
 import com.mambu.api.server.handler.tranches.model.JSONTranches;
@@ -90,6 +91,9 @@ public class LoansService {
 	// Create API definitions for services provided by LoanService
 	// Get Account Details
 	private final static ApiDefinition getAccount = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LoanAccount.class);
+	// Create an API definition to get loan account with full details and request returning as ApiLoanAccount
+	ApiDefinition getApiLoanAccount = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LoanAccount.class,
+			ApiLoanAccount.class);
 	// Get Lists of Accounts
 	private final static ApiDefinition getAccountsList = new ApiDefinition(ApiType.GET_LIST, LoanAccount.class);
 	// Get Accounts for a Client
@@ -170,20 +174,24 @@ public class LoansService {
 	 * 
 	 * @param accountId
 	 *            the id or encoded key of a loan account. Must not be null
-	 * @return loan account details with settlement savings accounts included
+	 * @return JSON loan account response with loan account details and settlement savings accounts included
 	 * @throws MambuApiException
 	 */
-	public ApiLoanAccount getApiLoanAccount(String accountId) throws MambuApiException {
+	public JSONLoanAccountResponse getLoanAccountWithSettlementAccounts(String accountId) throws MambuApiException {
 		// Example: GET /api/loans/accountId?fullDetails=true
 		// For getting settlement accounts is available since 4.0 See MBU-11206
 		// Note: This API uses GET Loan with full details request. The settlement accounts are also returned by this
 		// method in an ApiLoanAccount object
 
-		// Create an API definition to get loan account with full details and request returning as ApiLoanAccount
-		ApiDefinition apiDefinition = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LoanAccount.class,
-				ApiLoanAccount.class);
+		// Request loan account with settlement accounts. Deserialize as ApiLoanAccount matching the response format
+		ApiLoanAccount apiLoanAccount = serviceExecutor.execute(getApiLoanAccount, accountId);
 
-		return serviceExecutor.execute(apiDefinition, accountId);
+		// Return as JSONLoanAccountResponse, containing LoanAccount and a list of settlement accounts
+		JSONLoanAccountResponse loanAccountResponse = null;
+		if (apiLoanAccount != null) {
+			loanAccountResponse = new JSONLoanAccountResponse(apiLoanAccount, apiLoanAccount.getSettlementAccounts());
+		}
+		return loanAccountResponse;
 	}
 
 	/***

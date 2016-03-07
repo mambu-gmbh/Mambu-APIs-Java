@@ -19,9 +19,9 @@ import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.accountsecurity.shared.model.Guaranty;
 import com.mambu.accountsecurity.shared.model.Guaranty.GuarantyType;
 import com.mambu.accountsecurity.shared.model.InvestorFund;
+import com.mambu.api.server.handler.loan.model.JSONLoanAccountResponse;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.model.ApiLoanAccount;
 import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.services.SavingsService;
@@ -489,9 +489,9 @@ public class DemoTestLoanService {
 		// Get Settlement accounts
 		String accountId = demoLoanAccount.getId();
 		LoansService loanService = MambuAPIFactory.getLoanService();
-		ApiLoanAccount apiLoanAccount = loanService.getApiLoanAccount(accountId);
+		JSONLoanAccountResponse loanAccountResponse = loanService.getLoanAccountWithSettlementAccounts(accountId);
 		// Log Settlement Accounts details
-		List<SavingsAccount> settlementAccounts = apiLoanAccount.getSettlemetAccounts();
+		List<SavingsAccount> settlementAccounts = loanAccountResponse.getSettlementAccounts();
 		int totalAccounts = settlementAccounts == null ? 0 : settlementAccounts.size();
 		System.out.println("Total Settlement Accounts-" + totalAccounts + " for Account ID=" + accountId);
 		if (totalAccounts == 0) {
@@ -1287,6 +1287,9 @@ public class DemoTestLoanService {
 		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
 		DisbursementDetails disbursementDetails = loanAccount.getDisbursementDetails();
 		disbursementDetails.setTransactionDetails(transactionDetails);
+		// Add demo disbursement fees
+		List<CustomPredefinedFee> customFees = makePredefinedDisburseFees();
+		disbursementDetails.setFees(customFees);
 		// Disbursement Details are not available for REVOLVING_CREDIT products
 		if (productType == LoanProductType.REVOLVING_CREDIT) {
 			loanAccount.setDisbursementDetails(null);

@@ -47,7 +47,7 @@ public class ApiLoanAccount extends LoanAccount {
 	 * 
 	 * @return savings settlement accounts
 	 */
-	public List<SavingsAccount> getSettlemetAccounts() {
+	public List<SavingsAccount> getSettlementAccounts() {
 		return settlementAccounts;
 	}
 
