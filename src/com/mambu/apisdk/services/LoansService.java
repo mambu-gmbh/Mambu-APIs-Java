@@ -182,6 +182,7 @@ public class LoansService {
 		// Create an API definition to get loan account with full details and request returning as ApiLoanAccount
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LoanAccount.class,
 				ApiLoanAccount.class);
+
 		return serviceExecutor.execute(apiDefinition, accountId);
 	}
 
@@ -523,7 +524,7 @@ public class LoansService {
 		JSONTransactionRequest request = ServiceHelper.makeJSONTransactionRequest(amount, disbursementDetails, notes);
 
 		// Create Params Map with the transaction request JSON
-		ParamsMap paramsMap = ServiceHelper.makeTransactionRequestJson(APIData.TYPE_DISBURSEMENT, request);
+		ParamsMap paramsMap = ServiceHelper.makeParamsForTransactionRequest(APIData.TYPE_DISBURSEMENT, request);
 
 		// Send disburse API request and get LoanTransaction back
 		ApiDefinition postJsonAccountTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY, LoanAccount.class,
@@ -634,13 +635,14 @@ public class LoansService {
 
 		// Send API request to Mambu
 		JSONLoanAccount createdJsonAccount = serviceExecutor.executeJson(createAccount, jsonLoanAccount);
+		// Get Loan account
+		LoanAccount createdLoanAccount = null;
+		if (createdJsonAccount != null && createdJsonAccount.getLoanAccount() != null) {
+			createdLoanAccount = createdJsonAccount.getLoanAccount();
+			// Copy returned custom information into the loan account
+			createdLoanAccount.setCustomFieldValues(createdJsonAccount.getCustomInformation());
 
-		if (createdJsonAccount == null || createdJsonAccount.getLoanAccount() == null) {
-			return null;
 		}
-		// Copy returned custom information into the loan account.Return result as LoanAccount.
-		LoanAccount createdLoanAccount = createdJsonAccount.getLoanAccount();
-		createdLoanAccount.setCustomFieldValues(createdJsonAccount.getCustomInformation());
 
 		return createdLoanAccount;
 	}
@@ -659,6 +661,7 @@ public class LoansService {
 	 * @throws MambuApiException
 	 * @throws IllegalArgumentException
 	 */
+	@Deprecated
 	public LoanAccountExpanded updateLoanAccount(LoanAccountExpanded loan) throws MambuApiException {
 		if (loan == null || loan.getLoanAccount() == null) {
 			throw new IllegalArgumentException("Account must not be NULL");
@@ -706,12 +709,14 @@ public class LoansService {
 
 		// Submit update account request to Mambu providing JSONLoanAccount object
 		JSONLoanAccount updatedJsonAccount = serviceExecutor.executeJson(updateAccount, jsonLoanAccount, encodedKey);
-		if (updatedJsonAccount == null || updatedJsonAccount.getLoanAccount() == null) {
-			return null;
+		// Get Loan Account
+		LoanAccount updatedLoanAccount = null;
+		if (updatedJsonAccount != null && updatedJsonAccount.getLoanAccount() != null) {
+			updatedLoanAccount = updatedJsonAccount.getLoanAccount();
+			// Copy returned custom information into the loan account
+			updatedLoanAccount.setCustomFieldValues(updatedJsonAccount.getCustomInformation());
+
 		}
-		// Set custom fields in the loan account. Return Loan Account object.
-		LoanAccount updatedLoanAccount = updatedJsonAccount.getLoanAccount();
-		updatedLoanAccount.setCustomFieldValues(updatedJsonAccount.getCustomInformation());
 		return updatedLoanAccount;
 	}
 
@@ -908,6 +913,7 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<LoanTransaction> getLoanTransactionsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		// Example GET loan/transactions?viewfilter=123&offset=0&limit=100
@@ -1110,6 +1116,7 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<LoanAccount> getLoanAccountsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		String branchId = null;
@@ -1233,6 +1240,7 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<Document> getLoanAccountDocuments(String accountId) throws MambuApiException {
 		return serviceExecutor.execute(getAccountDocuments, accountId);
 	}

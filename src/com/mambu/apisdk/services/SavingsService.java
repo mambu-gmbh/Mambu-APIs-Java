@@ -258,6 +258,7 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<SavingsTransaction> getSavingsTransactionsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		// Example GET savings/transactions?viewfilter=567&offset=0&limit=100
@@ -663,6 +664,7 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<SavingsAccount> getSavingsAccountsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		String branchId = null;
@@ -789,12 +791,13 @@ public class SavingsService {
 
 		// Submit API request to Mambu
 		JSONSavingsAccount createdJsonAccount = createSavingsAccount(jsonSavingsAccount);
-		if (createdJsonAccount == null || createdJsonAccount.getSavingsAccount() == null) {
-			return null;
+		// Get Savings account
+		SavingsAccount createdAccount = null;
+		if (createdJsonAccount != null && createdJsonAccount.getSavingsAccount() != null) {
+			createdAccount = createdJsonAccount.getSavingsAccount();
+			// Move custom fields from the returned JSONSavingsAccount into the created savings account
+			createdAccount.setCustomFieldValues(createdJsonAccount.getCustomInformation());
 		}
-		// Move custom fields from the returned JSONSavingsAccount into the created savings account
-		SavingsAccount createdAccount = createdJsonAccount.getSavingsAccount();
-		createdAccount.setCustomFieldValues(createdJsonAccount.getCustomInformation());
 
 		return createdAccount;
 	}
@@ -859,13 +862,13 @@ public class SavingsService {
 
 		// Submit updated account request to Mambu
 		JSONSavingsAccount updatedJsonAccount = updateSavingsAccount(jsonSavingsAccount);
-		if (updatedJsonAccount == null || updatedJsonAccount.getSavingsAccount() == null) {
-			return null;
+		// Get Savings Account
+		SavingsAccount updatedSavingsAccount = null;
+		if (updatedJsonAccount != null && updatedJsonAccount.getSavingsAccount() != null) {
+			updatedSavingsAccount = updatedJsonAccount.getSavingsAccount();
+			// Set updated custom fields in the returned savings account
+			updatedSavingsAccount.setCustomFieldValues(updatedJsonAccount.getCustomInformation());
 		}
-		// Set updated custom fields in the returned savings account
-		SavingsAccount updatedSavingsAccount = updatedJsonAccount.getSavingsAccount();
-		updatedSavingsAccount.setCustomFieldValues(updatedJsonAccount.getCustomInformation());
-
 		return updatedSavingsAccount;
 	}
 
@@ -942,6 +945,7 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<Document> getSavingsAccountDocuments(String accountId) throws MambuApiException {
 		return serviceExecutor.execute(getAccountDocuments, accountId);
 	}

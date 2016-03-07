@@ -175,24 +175,23 @@ public class ServiceHelper {
 		}
 		// Add Transaction Fees
 		request.setPredefinedFeeInfo(null);
-		if (transactionFees == null || transactionFees.size() == 0) {
-			return request;
-		}
-		// Add fees converting CustomPredefinedFee to an expected JSONDisburseFeeRequest
-		List<JSONDisburseFeeRequest> fees = new ArrayList<>();
-		for (CustomPredefinedFee custFee : transactionFees) {
-			PredefinedFee predefinedFee = custFee.getFee();
-			if (predefinedFee == null) {
-				continue;
+		if (transactionFees != null && transactionFees.size() > 0) {
+			// Add fees converting CustomPredefinedFee to an expected JSONDisburseFeeRequest
+			List<JSONDisburseFeeRequest> fees = new ArrayList<>();
+			for (CustomPredefinedFee custFee : transactionFees) {
+				PredefinedFee predefinedFee = custFee.getFee();
+				if (predefinedFee == null) {
+					continue;
+				}
+				// Make JSONDisburseFeeRequest
+				JSONDisburseFeeRequest jsonFee = new JSONDisburseFeeRequest();
+				jsonFee.setEncodedKey(predefinedFee.getEncodedKey()); // set key from PredefinedFee
+				// Set amount. Must be not null only for fees with no amount defined in the product. See MBU-8811
+				jsonFee.setAmount(custFee.getAmount()); // set amount from CustomPredefinedFe
+				fees.add(jsonFee);
 			}
-			// Make JSONDisburseFeeRequest
-			JSONDisburseFeeRequest jsonFee = new JSONDisburseFeeRequest();
-			jsonFee.setEncodedKey(predefinedFee.getEncodedKey()); // set key from PredefinedFee
-			// Set amount. Must be not null only for fees with no amount defined in the product. See MBU-8811
-			jsonFee.setAmount(custFee.getAmount()); // set amount from CustomPredefinedFe
-			fees.add(jsonFee);
+			request.setPredefinedFeeInfo(fees);
 		}
-		request.setPredefinedFeeInfo(fees);
 
 		return request;
 
@@ -233,26 +232,28 @@ public class ServiceHelper {
 	 * @param transactionType
 	 *            transaction type string. Example: "DISBURSEMENT"
 	 * 
-	 * @param transactionReqest
+	 * @param transactionRequest
 	 *            jSON transaction request. If null then the JSON string with only the transactionType is returned.
 	 * @return params map with a JSON_OBJECT included
 	 */
-	public static ParamsMap makeTransactionRequestJson(String transactionType, JSONTransactionRequest transactionReqest) {
+	public static ParamsMap makeParamsForTransactionRequest(String transactionType,
+			JSONTransactionRequest transactionRequest) {
 		// JSONTransactionRequest contains all required for a request fields except the transaction type
 		// Create JSON string for a transactionReqest and add type parameter in a format of: "type":"DISBURSEMENT"
 
 		// Make "type":"transactionType" to be added to the JSON string
-		final String typeParameter = "{\"" + APIData.TYPE + "\":\"" + transactionType + "\",";
+		String typeParameter = "{\"" + APIData.TYPE + "\":\"" + transactionType + "\"";
 
 		String jsonRequest = null;
-		if (transactionReqest == null) {
+		if (transactionRequest == null) {
 			// if nothing on the request, allow sending just the transaction type as a JSON
-			jsonRequest = transactionType + "}";
+			jsonRequest = typeParameter + "}";
 		} else {
 			// Create JSON string for the JSONTransactionRequest first
-			jsonRequest = GsonUtils.createGson().toJson(transactionReqest, JSONTransactionRequest.class);
+			jsonRequest = GsonUtils.createGson().toJson(transactionRequest, JSONTransactionRequest.class);
 
 			// Add transaction type string (replacing the opening "{")
+			typeParameter = typeParameter.concat(",");
 			jsonRequest = jsonRequest.trim().replaceFirst("\\{", typeParameter);
 		}
 		// return params map with the generated JSON
