@@ -146,6 +146,8 @@ public class CustomViewsService {
 	/**
 	 * Make ParamsMap for GET Mambu entities for a custom view API requests
 	 * 
+	 * @deprecated as public method in 4.0. Will continue to be used internally as private method by
+	 *             {@link CustomViewsService}.
 	 * @param customViewKey
 	 *            the encoded key of the Custom View to filter entities. Must not be null
 	 * @param resultType
@@ -159,7 +161,8 @@ public class CustomViewsService {
 	 * 
 	 * @return params params map
 	 */
-	protected static ParamsMap makeParamsForGetByCustomView(String customViewKey, CustomViewResultType resultType,
+	@Deprecated
+	public static ParamsMap makeParamsForGetByCustomView(String customViewKey, CustomViewResultType resultType,
 			String branchId, String offset, String limit) {
 
 		// Verify that the customViewKey is not null or empty

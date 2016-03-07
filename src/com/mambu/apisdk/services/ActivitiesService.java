@@ -158,6 +158,7 @@ public class ActivitiesService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<JSONActivity> getActivitiesByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		String branchId = null;

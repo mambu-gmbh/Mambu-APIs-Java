@@ -476,6 +476,7 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<Client> getClientsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 
@@ -530,6 +531,7 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<Group> getGroupsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		String branchId = null;
@@ -668,6 +670,7 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<Document> getClientDocuments(String clientId) throws MambuApiException {
 		return serviceExecutor.execute(getClientDocuments, clientId);
 	}
@@ -685,6 +688,7 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<Document> getGroupDocuments(String groupId) throws MambuApiException {
 		return serviceExecutor.execute(getGroupDocuments, groupId);
 	}
