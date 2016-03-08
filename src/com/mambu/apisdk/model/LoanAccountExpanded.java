@@ -17,9 +17,13 @@ import com.mambu.loans.shared.model.LoanAccount;
  * The class provides just basic getters and setters loanAccount and customInformation. It's primary purpose is to
  * represent a Json object for LoanAccount creation API.
  * 
+ * @deprecated This class is deprecated as of Mambu 4.0. The JSONLoanAccount class from the Mambu model library can be
+ *             used internally instead when needed.
+ * 
  * @author mdanilkis
  * 
  */
+@Deprecated
 public class LoanAccountExpanded {
 
 	private LoanAccount loanAccount;

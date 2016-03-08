@@ -9,13 +9,20 @@ import java.util.List;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mambu.accounts.shared.model.TransactionDetails;
+import com.mambu.accountsecurity.shared.model.Guaranty;
 import com.mambu.accountsecurity.shared.model.InvestorFund;
 import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
+import com.mambu.api.server.handler.customviews.model.ApiViewType;
 import com.mambu.api.server.handler.funds.model.JSONInvestorFunds;
+import com.mambu.api.server.handler.guarantees.model.JSONGuarantees;
+import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
+import com.mambu.api.server.handler.loan.model.JSONLoanAccountResponse;
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
+import com.mambu.api.server.handler.loan.model.JSONTransactionRequest;
 import com.mambu.api.server.handler.tranches.model.JSONTranches;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.model.ApiLoanAccount;
 import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.services.CustomViewsService.CustomViewResultType;
 import com.mambu.apisdk.util.APIData;
@@ -30,7 +37,9 @@ import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
+import com.mambu.core.shared.model.Money;
 import com.mambu.docs.shared.model.Document;
+import com.mambu.loans.shared.model.DisbursementDetails;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
 import com.mambu.loans.shared.model.LoanTranche;
@@ -82,6 +91,9 @@ public class LoansService {
 	// Create API definitions for services provided by LoanService
 	// Get Account Details
 	private final static ApiDefinition getAccount = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LoanAccount.class);
+	// Create an API definition to get loan account with full details and request returning as ApiLoanAccount
+	ApiDefinition getApiLoanAccount = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LoanAccount.class,
+			ApiLoanAccount.class);
 	// Get Lists of Accounts
 	private final static ApiDefinition getAccountsList = new ApiDefinition(ApiType.GET_LIST, LoanAccount.class);
 	// Get Accounts for a Client
@@ -109,9 +121,9 @@ public class LoansService {
 	private final static ApiDefinition deleteAccount = new ApiDefinition(ApiType.DELETE_ENTITY, LoanAccount.class);
 	// Create Account
 	private final static ApiDefinition createAccount = new ApiDefinition(ApiType.CREATE_JSON_ENTITY,
-			LoanAccountExpanded.class);
+			JSONLoanAccount.class);
 	// Update Account. Used to update custom fields for loan accounts only. POST JSON /api/loans/loanId
-	private final static ApiDefinition updateAccount = new ApiDefinition(ApiType.POST_ENTITY, LoanAccountExpanded.class);
+	private final static ApiDefinition updateAccount = new ApiDefinition(ApiType.POST_ENTITY, JSONLoanAccount.class);
 	// Patch Account. Used to update loan terms only. PATCH JSON /api/loans/loanId
 	private final static ApiDefinition patchAccount = new ApiDefinition(ApiType.PATCH_ENTITY, LoanAccount.class);
 	// Update Loan Tranches. Returns updated LoanAccount. POST /api/loans/loanId/tranches
@@ -120,6 +132,9 @@ public class LoansService {
 	// Update Loan Investor Funds. Returns updated LoanAccount. POST /api/loans/loanId/funds
 	private final static ApiDefinition updateAccountFunds = new ApiDefinition(ApiType.POST_ENTITY_ACTION,
 			LoanAccount.class, InvestorFund.class);
+	// Update Loan Account Guarantees API. Returns LoanAccount. POST /api/loans/loanId/guarantees
+	private final static ApiDefinition updateAccountGuarantees = new ApiDefinition(ApiType.POST_ENTITY_ACTION,
+			LoanAccount.class, Guaranty.class);
 	// Loan Products API requests
 	// Get Loan Product Details
 	private final static ApiDefinition getProduct = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LoanProduct.class);
@@ -141,7 +156,7 @@ public class LoansService {
 	}
 
 	/***
-	 * Get a loan account by its id
+	 * Get a loan account with full details by its id
 	 * 
 	 * @param accountId
 	 *            the id of the account
@@ -152,6 +167,31 @@ public class LoansService {
 	 */
 	public LoanAccount getLoanAccount(String accountId) throws MambuApiException {
 		return serviceExecutor.execute(getAccount, accountId);
+	}
+
+	/**
+	 * Get full loan account details, including settlement accounts
+	 * 
+	 * @param accountId
+	 *            the id or encoded key of a loan account. Must not be null
+	 * @return JSON loan account response with loan account details and settlement savings accounts included
+	 * @throws MambuApiException
+	 */
+	public JSONLoanAccountResponse getLoanAccountWithSettlementAccounts(String accountId) throws MambuApiException {
+		// Example: GET /api/loans/accountId?fullDetails=true
+		// For getting settlement accounts is available since 4.0 See MBU-11206
+		// Note: This API uses GET Loan with full details request. The settlement accounts are also returned by this
+		// method in an ApiLoanAccount object
+
+		// Request loan account with settlement accounts. Deserialize as ApiLoanAccount matching the response format
+		ApiLoanAccount apiLoanAccount = serviceExecutor.execute(getApiLoanAccount, accountId);
+
+		// Return as JSONLoanAccountResponse, containing LoanAccount and a list of settlement accounts
+		JSONLoanAccountResponse loanAccountResponse = null;
+		if (apiLoanAccount != null) {
+			loanAccountResponse = new JSONLoanAccountResponse(apiLoanAccount, apiLoanAccount.getSettlementAccounts());
+		}
+		return loanAccountResponse;
 	}
 
 	/***
@@ -372,7 +412,25 @@ public class LoansService {
 	}
 
 	/****
-	 * Close Loan account specifying the type of closer (withdraw or reject)
+	 * Close loan account with all obligations met
+	 * 
+	 * @param accountId
+	 *            the id of the account. Must not be nul
+	 * @param notes
+	 *            the reason why the account is closed
+	 * 
+	 * @return LoanAccount
+	 * 
+	 * @throws MambuApiException
+	 */
+	public LoanAccount closeLoanAccount(String accountId, String notes) throws MambuApiException {
+		// E.g. format: POST "type=CLOSE" /api/loans/KHGJ593/transactions
+		// Available since Mambu 4.0. See MBU-10975
+		return closeLoanAccount(accountId, APIData.CLOSER_TYPE.CLOSE, notes);
+	}
+
+	/****
+	 * Close Loan account specifying the type of closer (withdraw, reject or close)
 	 * 
 	 * @param accountId
 	 *            the id of the account to close. Mandatory
@@ -389,8 +447,9 @@ public class LoansService {
 	public LoanAccount closeLoanAccount(String accountId, APIData.CLOSER_TYPE closerType, String notes)
 			throws MambuApiException {
 		// E.g. POST "type=WITHDRAW" /api/loans/KHGJ593/transactions
-		// or POST "type=REJECT" /api/loans/KHGJ593/transactions
-		// Available since Mambu 3.3 See MBU-3090 for details.
+		// POST "type=REJECT" /api/loans/KHGJ593/transactions
+		// POST "type=CLOSE" /api/loans/KHGJ593/transactions
+		// Available since Mambu 3.3 See MBU-3090 and MBU-10975 for details.
 		if (closerType == null) {
 			throw new IllegalArgumentException("Closer Type must not  be null");
 		}
@@ -401,9 +460,11 @@ public class LoansService {
 		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
 	}
 
-	/***
+/***
 	 * 
 	 * Disburse a loan account with a given disbursal date and some extra transaction details
+	 * 
+	 * @deprecated Use {@link #disburseLoanAccount(String, Money, DisbursementDetails, String), which uses JSON version of the Disburse API and supports specifying disbursement fees
 	 * 
 	 * @param accountId
 	 *            account ID. Must not be null
@@ -423,6 +484,7 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public LoanTransaction disburseLoanAccount(String accountId, String amount, String disbursalDate,
 			String firstRepaymentDate, String notes, TransactionDetails transactionDetails) throws MambuApiException {
 
@@ -441,7 +503,45 @@ public class LoansService {
 
 	}
 
-	// TODO: Implement MBU-8811 Disburse with activation fees when MBU-8992 is ready
+	/**
+	 * Disburse loan account using JSON disburse API request. The JSON disburse API request supports providing
+	 * transaction details and disbursement fees.
+	 * 
+	 * @param accountId
+	 *            loan account id or encoded key. Must not be null
+	 * @param amount
+	 *            disbursement amount.
+	 * @param disbursementDetails
+	 *            disbursement details for the loan account
+	 * @param notes
+	 *            transaction notes
+	 * @return loan transaction
+	 * @throws MambuApiException
+	 */
+	public LoanTransaction disburseLoanAccount(String accountId, Money amount, DisbursementDetails disbursementDetails,
+			String notes) throws MambuApiException {
+		// Disburse loan account using JSON format and optionally specifying transaction details and disbursement fees
+		// See MBU-8811, MBU-10045, MBU-11853
+
+		// Example: POST {"type":"DISBURSEMENT",
+		// date":"2016-02-20T16:00:00-0800", "firstRepaymentDate":"2016-02-27T16:00:00-0800",
+		// "method":"channel_id_1”, "checkNumber”:”123”,”bankAccountNumber”:”456”,
+		// fees": [{"encodedKey":"feeKey1"}, {encodedKey":"feeKey2", "amount":"100.00"}], "notes":"notes"}
+
+		// Create JSONTransactionRequest
+		JSONTransactionRequest request = ServiceHelper.makeJSONTransactionRequest(amount, disbursementDetails, notes);
+
+		// Create Params Map with the transaction request JSON
+		ParamsMap paramsMap = ServiceHelper.makeParamsForTransactionRequest(APIData.TYPE_DISBURSEMENT, request);
+
+		// Send disburse API request and get LoanTransaction back
+		ApiDefinition postJsonAccountTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY, LoanAccount.class,
+				LoanTransaction.class);
+		postJsonAccountTransaction.setContentType(ContentType.JSON);
+		LoanTransaction loanTransaction = serviceExecutor.execute(postJsonAccountTransaction, accountId, paramsMap);
+
+		return loanTransaction;
+	}
 
 	/***
 	 * Undo Disburse for a loan account. If the account has multiple tranches, reverses the last tranche
@@ -487,6 +587,7 @@ public class LoansService {
 	 * Create a new LoanAccount using LoanAccountExpanded object and sending it as a JSON API. This API allows creating
 	 * LoanAccount with details, including creating custom fields.
 	 * 
+	 * @deprecated LoanAccountExpanded is deprecated.Use {@link #createLoanAccount(LoanAccount)}
 	 * @param loan
 	 *            LoanAccountExtended object containing LoanAccount. LoanAccount encodedKey must be null for account
 	 *            creation
@@ -495,6 +596,7 @@ public class LoansService {
 	 * @throws MambuApiException
 	 * @throws IllegalArgumentException
 	 */
+	@Deprecated
 	public LoanAccountExpanded createLoanAccount(LoanAccountExpanded loan) throws MambuApiException {
 
 		if (loan == null || loan.getLoanAccount() == null) {
@@ -506,13 +608,58 @@ public class LoansService {
 		if (encodedKey != null) {
 			throw new IllegalArgumentException("Cannot create Account, the encoded key must be null");
 		}
+		// Create Account
+		ApiDefinition createAccount = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, LoanAccountExpanded.class);
 		return serviceExecutor.executeJson(createAccount, loan);
+	}
+
+	/***
+	 * Create new LoanAccount using LoanAccount object. This API allows creating LoanAccount with details, including
+	 * creating custom fields.
+	 * 
+	 * The underlying API implementation uses JSONLoanAccount object.
+	 * 
+	 * @param loanAccount
+	 *            LoanAccount object. LoanAccount encodedKey must be null for account creation
+	 * @return newly created loan account with full details including custom fields
+	 * 
+	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
+	 */
+	public LoanAccount createLoanAccount(LoanAccount loanAccount) throws MambuApiException {
+		if (loanAccount == null) {
+			throw new IllegalArgumentException("Account must not be NULL");
+		}
+
+		if (loanAccount.getEncodedKey() != null) {
+			throw new IllegalArgumentException("Cannot create Account, the encoded key must be null");
+		}
+		// Create JSONLoanAccount to use in Mambu API. Mambu expects the following format:
+		// {"loanAccount":{.....}, "customInformation":[{field1},{field2}]}
+		JSONLoanAccount jsonLoanAccount = new JSONLoanAccount(loanAccount);
+		jsonLoanAccount.setCustomInformation(loanAccount.getCustomFieldValues());
+		// Clear custom fields at the account level, no need to send them in two places
+		loanAccount.setCustomFieldValues(null);
+
+		// Send API request to Mambu
+		JSONLoanAccount createdJsonAccount = serviceExecutor.executeJson(createAccount, jsonLoanAccount);
+		// Get Loan account
+		LoanAccount createdLoanAccount = null;
+		if (createdJsonAccount != null && createdJsonAccount.getLoanAccount() != null) {
+			createdLoanAccount = createdJsonAccount.getLoanAccount();
+			// Copy returned custom information into the loan account
+			createdLoanAccount.setCustomFieldValues(createdJsonAccount.getCustomInformation());
+
+		}
+
+		return createdLoanAccount;
 	}
 
 	/***
 	 * Update an existent LoanAccount using LoanAccountExpanded object and sending it as a JSON API. This API allows
 	 * updating LoanAccount with details. As of Mambu 3.4 only custom fields can be updated.
 	 * 
+	 * @deprecated LoanAccountExpanded is deprecated. Use {@link #updateLoanAccount(LoanAccount)}
 	 * @param loan
 	 *            LoanAccountExtended object containing LoanAccount. LoanAccount encodedKey or id must be NOT null for
 	 *            account update
@@ -522,6 +669,7 @@ public class LoansService {
 	 * @throws MambuApiException
 	 * @throws IllegalArgumentException
 	 */
+	@Deprecated
 	public LoanAccountExpanded updateLoanAccount(LoanAccountExpanded loan) throws MambuApiException {
 		if (loan == null || loan.getLoanAccount() == null) {
 			throw new IllegalArgumentException("Account must not be NULL");
@@ -532,8 +680,52 @@ public class LoansService {
 		if (encodedKey == null) {
 			throw new IllegalArgumentException("Cannot update Account: the encoded key or id must NOT be null");
 		}
-
+		ApiDefinition updateAccount = new ApiDefinition(ApiType.POST_ENTITY, LoanAccountExpanded.class);
 		return serviceExecutor.executeJson(updateAccount, loan, encodedKey);
+	}
+
+	/***
+	 * Update an existent LoanAccount using LoanAccount object and sending it as a JSON API. This API allows updating
+	 * LoanAccount with details. As of Mambu 3.4 only custom fields can be updated.
+	 * 
+	 * @param loanAccount
+	 *            LoanAccount object containing LoanAccount. LoanAccount encodedKey or id must be NOT null for account
+	 *            update
+	 * 
+	 * @return updated LoanAccount object with updated custom fields
+	 * 
+	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
+	 */
+	public LoanAccount updateLoanAccount(LoanAccount loanAccount) throws MambuApiException {
+		if (loanAccount == null) {
+			throw new IllegalArgumentException("Account must not be NULL");
+		}
+
+		String encodedKey = loanAccount.getEncodedKey() != null ? loanAccount.getEncodedKey() : loanAccount.getId();
+		if (encodedKey == null) {
+			throw new IllegalArgumentException("Cannot update Account: the encoded key or id must NOT be null");
+		}
+
+		// Mambu API expects the request in the following format:
+		// {"loanAccount":{.....}, "customInformation":[{field1},{field2}]}
+		// Create JSONLoanAccount object for the API request. Set custom information in JSONLoanAccount
+		JSONLoanAccount jsonLoanAccount = new JSONLoanAccount(loanAccount);
+		jsonLoanAccount.setCustomInformation(loanAccount.getCustomFieldValues());
+		// Clear custom fields at the account level, no need to send them in two places
+		loanAccount.setCustomFieldValues(null);
+
+		// Submit update account request to Mambu providing JSONLoanAccount object
+		JSONLoanAccount updatedJsonAccount = serviceExecutor.executeJson(updateAccount, jsonLoanAccount, encodedKey);
+		// Get Loan Account
+		LoanAccount updatedLoanAccount = null;
+		if (updatedJsonAccount != null && updatedJsonAccount.getLoanAccount() != null) {
+			updatedLoanAccount = updatedJsonAccount.getLoanAccount();
+			// Copy returned custom information into the loan account
+			updatedLoanAccount.setCustomFieldValues(updatedJsonAccount.getCustomInformation());
+
+		}
+		return updatedLoanAccount;
 	}
 
 	/***
@@ -655,6 +847,39 @@ public class LoansService {
 	}
 
 	/***
+	 * Update guarantees for an existent Loan Account
+	 * 
+	 * @param accountId
+	 *            the encoded key or id of the loan account. Must not be null.
+	 * @param guarantees
+	 *            guarantees to be updated. Must not be null. The guarantees that have encodedKey will be edited. If the
+	 *            encodedKey is not present, a new guaranty will be created. Existing guarantees that are not specified
+	 *            in the update call will be deleted
+	 * @return loan account with updated guarantees
+	 * 
+	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
+	 */
+	public LoanAccount updateLoanAccountGuarantees(String accountId, List<Guaranty> guarantees)
+			throws MambuApiException {
+		// Available since Mambu 4.0. See MBU-11315
+		// Example: POST api/loans/ABC123/guarantees "guarantees":[{
+		// "assetName": "car", "amount": "4000", "type": "ASSET", "customFieldValues": [ {…}]
+		// }]
+
+		if (guarantees == null) {
+			throw new IllegalArgumentException("Guarantees must not be NULL");
+		}
+
+		JSONGuarantees jsonGuarantees = new JSONGuarantees();
+		jsonGuarantees.setGuarantees(guarantees);
+
+		// Set ContentType to JSON (Update guarantees API uses JSON format)
+		updateAccountGuarantees.setContentType(ContentType.JSON);
+		return serviceExecutor.executeJson(updateAccountGuarantees, jsonGuarantees, accountId);
+	}
+
+	/***
 	 * Get loan account Transactions by Loan id and offset and limit
 	 * 
 	 * @param accountId
@@ -682,6 +907,9 @@ public class LoansService {
 	/**
 	 * Requests a list of loan transactions for a custom view, limited by offset/limit
 	 * 
+	 * @deprecated Starting with 4.0 use
+	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, boolean, String, String, String)}
+	 *             to filter entities by branch ID
 	 * @param customViewKey
 	 *            the key of the Custom View to filter loan transactions
 	 * @param offset
@@ -693,16 +921,15 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<LoanTransaction> getLoanTransactionsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		// Example GET loan/transactions?viewfilter=123&offset=0&limit=100
 		String branchId = null;
-		String centreId = null;
-		String creditOfficerName = null;
 		CustomViewResultType resultType = CustomViewResultType.BASIC;
 
-		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
-				centreId, creditOfficerName, offset, limit);
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId, offset,
+				limit);
 		return serviceExecutor.execute(getAllLoanTransactions, params);
 
 	}
@@ -883,6 +1110,9 @@ public class LoansService {
 	/**
 	 * Requests a list of loan accounts for a custom view, limited by offset/limit
 	 * 
+	 * @deprecated Starting with 4.0 use
+	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, boolean, String, String, String)}
+	 *             to filter entities by branch ID
 	 * @param customViewKey
 	 *            the key of the Custom View to filter loan accounts
 	 * @param offset
@@ -894,14 +1124,13 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<LoanAccount> getLoanAccountsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		String branchId = null;
-		String centreId = null;
-		String creditOfficerName = null;
 		CustomViewResultType resultType = CustomViewResultType.BASIC;
-		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
-				centreId, creditOfficerName, offset, limit);
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId, offset,
+				limit);
 		return serviceExecutor.execute(getAccountsList, params);
 
 	}
@@ -1019,6 +1248,7 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<Document> getLoanAccountDocuments(String accountId) throws MambuApiException {
 		return serviceExecutor.execute(getAccountDocuments, accountId);
 	}

@@ -170,7 +170,7 @@ public class DocumentTemplatesService {
 	 */
 	public static boolean isSupported(MambuEntityType entityType) {
 		if (entityType == null) {
-			return false;
+			throw new IllegalArgumentException("NULL entity type is not supported");
 		}
 
 		Set<MambuEntityType> set = new HashSet<MambuEntityType>(Arrays.asList(supportedEntities));

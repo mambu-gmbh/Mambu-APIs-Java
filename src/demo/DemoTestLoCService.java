@@ -52,7 +52,7 @@ public class DemoTestLoCService {
 
 		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
 		Integer offset = 0;
-		Integer limit = 30;
+		Integer limit = 5;
 
 		// Test getting all lines of credit
 		List<LineOfCredit> linesOfCredit = linesOfCreditService.getAllLinesOfCredit(offset, limit);
@@ -60,6 +60,9 @@ public class DemoTestLoCService {
 		if (linesOfCredit.size() == 0) {
 			System.out.println("*** No Lines of Credit to test ***");
 			return;
+		}
+		for (LineOfCredit loc : linesOfCredit) {
+			System.out.println("\tID=" + loc.getId() + "\tAmount=" + loc.getAmount());
 		}
 		// Test get Line Of Credit details
 		String lineofcreditId = linesOfCredit.get(0).getId();

@@ -205,7 +205,7 @@ public class DocumentsService {
 	 */
 	public static boolean isSupported(MambuEntityType parentEntityType) {
 		if (parentEntityType == null) {
-			return false;
+			throw new IllegalArgumentException("NULL entity type is not supported");
 		}
 
 		Set<MambuEntityType> set = new HashSet<MambuEntityType>(Arrays.asList(supportedEntities));

@@ -1,7 +1,10 @@
 package com.mambu.apisdk.util;
 
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -9,15 +12,21 @@ import java.util.Set;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.mambu.accounts.shared.model.PredefinedFee;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
+import com.mambu.api.server.handler.loan.model.JSONDisburseFeeRequest;
+import com.mambu.api.server.handler.loan.model.JSONTransactionRequest;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.GroupExpanded;
+import com.mambu.core.shared.model.Money;
+import com.mambu.loans.shared.model.CustomPredefinedFee;
+import com.mambu.loans.shared.model.DisbursementDetails;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.savings.shared.model.SavingsAccount;
 
@@ -126,6 +135,134 @@ public class ServiceHelper {
 		}
 	}
 
+	/**
+	 * Create JSONTransactionRequest for submitting JSON transaction API requests
+	 * 
+	 * @param amount
+	 *            transaction amount
+	 * @param backDate
+	 *            transaction back date
+	 * @param firstRepaymentDate
+	 *            first repayment date
+	 * @param transactionDetails
+	 *            transaction details
+	 * @param transactionFees
+	 *            transaction fees
+	 * @param notes
+	 *            transaction notes
+	 * @return JSON Transaction Request
+	 */
+	public static JSONTransactionRequest makeJSONTransactionRequest(Money amount, Date backDate,
+			Date firstRepaymentDate, TransactionDetails transactionDetails, List<CustomPredefinedFee> transactionFees,
+			String notes) {
+
+		JSONTransactionRequest request = new JSONTransactionRequest();
+		// Add amount and notes
+		BigDecimal bigDecimalAmount = amount == null ? null : amount.getAmount();
+		request.setAmount(bigDecimalAmount);
+		request.setNotes(notes);
+		// Add Back Date and First Repayment Date
+		request.setDate(backDate);
+		request.setFirstRepaymentDate(firstRepaymentDate);
+
+		// Set Transaction channel Details
+		request.setTransactionDetails(transactionDetails);
+		// Transaction Channel must be set separately
+		if (transactionDetails != null && transactionDetails.getTransactionChannel() != null) {
+			String channelId = transactionDetails.getTransactionChannel().getId();
+			// Set channel's ID (method)
+			request.setMethod(channelId);
+		}
+		// Add Transaction Fees
+		request.setPredefinedFeeInfo(null);
+		if (transactionFees != null && transactionFees.size() > 0) {
+			// Add fees converting CustomPredefinedFee to an expected JSONDisburseFeeRequest
+			List<JSONDisburseFeeRequest> fees = new ArrayList<>();
+			for (CustomPredefinedFee custFee : transactionFees) {
+				PredefinedFee predefinedFee = custFee.getFee();
+				if (predefinedFee == null) {
+					continue;
+				}
+				// Make JSONDisburseFeeRequest
+				JSONDisburseFeeRequest jsonFee = new JSONDisburseFeeRequest();
+				jsonFee.setEncodedKey(predefinedFee.getEncodedKey()); // set key from PredefinedFee
+				// Set amount. Must be not null only for fees with no amount defined in the product. See MBU-8811
+				jsonFee.setAmount(custFee.getAmount()); // set amount from CustomPredefinedFe
+				fees.add(jsonFee);
+			}
+			request.setPredefinedFeeInfo(fees);
+		}
+
+		return request;
+
+	}
+
+	/**
+	 * Convenience method to create JSONTransactionRequest specifying disbursement details
+	 * 
+	 * @param amount
+	 *            transaction amount
+	 * @param disbursementDetails
+	 *            disbursement details
+	 * @param notes
+	 *            transaction notes
+	 * @return JSON Transaction Request
+	 */
+	public static JSONTransactionRequest makeJSONTransactionRequest(Money amount,
+			DisbursementDetails disbursementDetails, String notes) {
+		Date backDate = null;
+		Date firstRepaymentDate = null;
+		List<CustomPredefinedFee> disbursementFees = null;
+		TransactionDetails transactionDetails = null;
+		// Get transaction request fields from the disbursementDetails
+		if (disbursementDetails != null) {
+			backDate = disbursementDetails.getExpectedDisbursementDate();
+			firstRepaymentDate = disbursementDetails.getFirstRepaymentDate();
+			transactionDetails = disbursementDetails.getTransactionDetails();
+			disbursementFees = disbursementDetails.getFees();
+		}
+
+		return makeJSONTransactionRequest(amount, backDate, firstRepaymentDate, transactionDetails, disbursementFees,
+				notes);
+	}
+
+	/**
+	 * Create params map with as JSON request message for a transaction type
+	 * 
+	 * @param transactionType
+	 *            transaction type string. Example: "DISBURSEMENT"
+	 * 
+	 * @param transactionRequest
+	 *            jSON transaction request. If null then the JSON string with only the transactionType is returned.
+	 * @return params map with a JSON_OBJECT included
+	 */
+	public static ParamsMap makeParamsForTransactionRequest(String transactionType,
+			JSONTransactionRequest transactionRequest) {
+		// JSONTransactionRequest contains all required for a request fields except the transaction type
+		// Create JSON string for a transactionReqest and add type parameter in a format of: "type":"DISBURSEMENT"
+
+		// Make "type":"transactionType" to be added to the JSON string
+		String typeParameter = "{\"" + APIData.TYPE + "\":\"" + transactionType + "\"";
+
+		String jsonRequest = null;
+		if (transactionRequest == null) {
+			// if nothing on the request, allow sending just the transaction type as a JSON
+			jsonRequest = typeParameter + "}";
+		} else {
+			// Create JSON string for the JSONTransactionRequest first
+			jsonRequest = GsonUtils.createGson().toJson(transactionRequest, JSONTransactionRequest.class);
+
+			// Add transaction type string (replacing the opening "{")
+			typeParameter = typeParameter.concat(",");
+			jsonRequest = jsonRequest.trim().replaceFirst("\\{", typeParameter);
+		}
+		// return params map with the generated JSON
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.put(APIData.JSON_OBJECT, jsonRequest);
+		return paramsMap;
+
+	}
+
 	/***
 	 * Create ParamsMap with a JSON string for the JSONDocument object
 	 * 
@@ -211,12 +348,15 @@ public class ServiceHelper {
 
 	/**
 	 * A list of fields supported by the PATCH loan account API. See MBU-7758
+	 * 
+	 * Note, since 4.0 the EXPECTED_DISBURSEMENT_DATE and FIRST_REPAYMENT_DATE are part of the DISBURSEMENT_DETAILS, see
+	 * MBU-11481
 	 */
 	private final static Set<String> modifiableLoanAccountFields = new HashSet<String>(Arrays.asList(
 			APIData.LOAN_AMOUNT, APIData.INTEREST_RATE, APIData.INTEREST_RATE_SPREAD, APIData.REPAYMENT_INSTALLMENTS,
 			APIData.REPAYMENT_PERIOD_COUNT, APIData.REPAYMENT_PERIOD_UNIT, APIData.EXPECTED_DISBURSEMENT_DATE,
 			APIData.FIRST_REPAYMENT_DATE, APIData.GRACE_PERIOD, APIData.PRNICIPAL_REPAYMENT_INTERVAL,
-			APIData.PENALTY_RATE, APIData.PERIODIC_PAYMENT));
+			APIData.PENALTY_RATE, APIData.PERIODIC_PAYMENT, APIData.DISBURSEMENT_DETAILS));
 
 	/**
 	 * Create ParamsMap with a JSON string for the PATCH loan account API. Only fields applicable to the API are added
@@ -234,7 +374,12 @@ public class ServiceHelper {
 		}
 
 		// Create JSON expected by the PATCH loan account API:
-		JsonObject accountFields = makeJsonObjectForFields(account, modifiableLoanAccountFields);
+		// PATCH Loan account API expects all fields to be at one level. including the date fields from the nested
+		// LoanAccount.DisbursementDetails. See MBU-11481
+		// Example:{ "loanAccount":{"loanAmount":"1000", "repaymentPeriodCount":"10",
+		// "firstRepaymentDate":"2016-02-23T16:00:00-0800"}'
+		boolean makeJsonFlat = true; // create all fields at the top level
+		JsonObject accountFields = makeJsonObjectForFields(account, modifiableLoanAccountFields, makeJsonFlat);
 		if (accountFields == null) {
 			return null;
 		}
@@ -273,7 +418,9 @@ public class ServiceHelper {
 		}
 
 		// Create JSON expected by the PATCH loan account API:
-		JsonObject accountFields = makeJsonObjectForFields(account, modifiableSavingsAccountFields);
+		// PATCH Savings account API expects all fields to be at one level
+		boolean makeJsonFlat = true; // create all fields at the top level
+		JsonObject accountFields = makeJsonObjectForFields(account, modifiableSavingsAccountFields, makeJsonFlat);
 		if (accountFields == null) {
 			return null;
 		}
@@ -288,13 +435,15 @@ public class ServiceHelper {
 	}
 
 	/**
-	 * A list of fields supported by get loan schedule preview API. See MBU-6789, MBU-7676 and MBU-10802.
+	 * A list of fields supported by get loan schedule preview API. See MBU-6789, MBU-7676, MBU-10802 and MBU-11481.
+	 * 
+	 * Note, since 4.0 the EXPECTED_DISBURSEMENT_DATE and FIRST_REPAYMENT_DATE are part of the DISBURSEMENT_DETAILS
 	 */
 	private final static Set<String> loanSchedulePreviewFields = new HashSet<String>(Arrays.asList(APIData.LOAN_AMOUNT,
 			APIData.INTEREST_RATE, APIData.REPAYMENT_INSTALLMENTS, APIData.REPAYMENT_PERIOD_COUNT,
 			APIData.REPAYMENT_PERIOD_UNIT, APIData.EXPECTED_DISBURSEMENT_DATE, APIData.FIRST_REPAYMENT_DATE,
 			APIData.GRACE_PERIOD, APIData.PRNICIPAL_REPAYMENT_INTERVAL, APIData.PERIODIC_PAYMENT,
-			APIData.FIXED_DAYS_OF_MONTH));
+			APIData.FIXED_DAYS_OF_MONTH, APIData.DISBURSEMENT_DETAILS));
 
 	/**
 	 * Create ParamsMap with a map of fields for the GET loan schedule for the product API. Only fields applicable to
@@ -313,7 +462,10 @@ public class ServiceHelper {
 
 		// Make JsonObject with the applicable fields only
 		// Loan schedule API uses URL encoded params, so the dates should be in "yyyy-MM-dd" date format
-		JsonObject loanTermsObject = makeJsonObjectForFields(account, loanSchedulePreviewFields, APIData.yyyyMmddFormat);
+		// create all fields at the top level as we need just the params to be used in the url-encoded API
+		boolean makeJsonFlat = true;
+		JsonObject loanTermsObject = makeJsonObjectForFields(account, loanSchedulePreviewFields, makeJsonFlat,
+				APIData.yyyyMmddFormat);
 
 		// FIXED_DAYS_OF_MONTH field is an Integer array with the data in the format [2,15]. But for this url-encoded
 		// API it needs to be converted into a string with no array square brackets: Mambu expects it in this format:
@@ -360,9 +512,9 @@ public class ServiceHelper {
 	 *            a set of applicable fields
 	 * @return JSON object
 	 */
-	public static <T> JsonObject makeJsonObjectForFields(T object, Set<String> applicableFields) {
+	public static <T> JsonObject makeJsonObjectForFields(T object, Set<String> applicableFields, boolean makeFlatJson) {
 
-		return makeJsonObjectForFields(object, applicableFields, GsonUtils.defaultDateTimeFormat);
+		return makeJsonObjectForFields(object, applicableFields, makeFlatJson, GsonUtils.defaultDateTimeFormat);
 	}
 
 	/**
@@ -372,17 +524,28 @@ public class ServiceHelper {
 	 *            object
 	 * @param applicableFields
 	 *            a set of applicable fields
+	 * @param makeJsonFlat
+	 *            a boolean indicating if all fields must be create in the JSON at the top level. When false, extracted
+	 *            fields should remains within their enclosing objects preserving the original object structure
 	 * @param dateTimeFormat
 	 *            a string representing Mambu API date time format
 	 * @return JSON object
 	 */
-	public static <T> JsonObject makeJsonObjectForFields(T object, Set<String> applicableFields, String dateTimeFormat) {
+	private static <T> JsonObject makeJsonObjectForFields(T object, Set<String> applicableFields, boolean makeJsonFlat,
+			String dateTimeFormat) {
+
+		// If the makeJsonFlat = false then (using the firstRepaymentDate as the example) the "flat" version JSON
+		// (makeJsonFlat=false) the JSON would look like {"loanAccount":{"loanAmount":"1000",
+		// "firstRepaymentDate":"2016-02-23T16:00:00-0800”}}
+
+		// For makeJsonFlat = true: the firstRepaymentDate field would be inside the "disbursementDetails"
+		// {"loanAccount":{"loanAmount":"1000", "disbursementDetails":
+		// {”firstRepaymentDate":"2016-02-23T16:00:00-0800”}}}
 
 		if (dateTimeFormat == null) {
 			dateTimeFormat = GsonUtils.defaultDateTimeFormat;
 		}
-		// Create JsonObject for the full loan account and then extract only the fields present in the applicableFields
-		// set
+		// Create JsonObject for the input object and then extract only the fields present in the applicableFields
 		JsonObject loanAccountJson = GsonUtils.createGson(dateTimeFormat).toJsonTree(object).getAsJsonObject();
 
 		// Make JsonObject with the applicable fields only. Add only those which are not NULL
@@ -393,9 +556,70 @@ public class ServiceHelper {
 				// Field value is NULL. Skipping
 				continue;
 			}
+			boolean isObject = element.isJsonObject();
+			if (isObject) {
+				addJsonObjectForFields(element.getAsJsonObject(), fieldName, loanSubsetObject, applicableFields,
+						makeJsonFlat);
+				continue;
+			}
 			loanSubsetObject.add(fieldName, element);
 		}
 		return loanSubsetObject;
+	}
+
+	/**
+	 * Add all applicable fields from a JsonObject to another JsonObject
+	 * 
+	 * @param fromObject
+	 *            JsonObject object from where applicable fields are extracted
+	 * @param fromFieldName
+	 *            the field name of the JsonObject
+	 * @param toObject
+	 *            target JsonObject to which the applicable fields should be added
+	 * @param applicableFields
+	 *            a list of applicable fields
+	 * @param makeJsonFlat
+	 *            a boolean indicating if the applicable fields must be created in the JSON at the top level (true).
+	 *            When false, extracted fields should be added within their enclosing objects, preserving the original
+	 *            object structure
+	 * @return JsonObject with applicable fields added
+	 */
+	private static JsonObject addJsonObjectForFields(JsonObject fromObject, String fromFieldName, JsonObject toObject,
+			Set<String> applicableFields, boolean makeJsonFlat) {
+
+		boolean isEmpty = true;
+		// Add fields either directly to the target toObject or create a new JsonObject for them first
+		JsonObject nestedObject = makeJsonFlat ? null : new JsonObject();
+		for (String fieldName : applicableFields) {
+			JsonElement element = fromObject.get(fieldName);
+			if (element == null) {
+				// Field value is NULL. Skipping
+				continue;
+			}
+			// If the element is an object, iteratively go through its fields too
+			boolean isObject = element.isJsonObject();
+			if (isObject) {
+				addJsonObjectForFields(element.getAsJsonObject(), fieldName, toObject, applicableFields, makeJsonFlat);
+				continue;
+			}
+			// We have a new field to be added
+			isEmpty = false;
+			if (makeJsonFlat) {
+				// Need a flat structure: add field directly to the target JsonObject
+				toObject.add(fieldName, element);
+			} else {
+				// add field to the dedicated nestedObject first. This nestedObject will be then added as an object to
+				// the target JsonObject
+				nestedObject.add(fieldName, element);
+
+			}
+		}
+		// Check if we do have a non-empty nested object to be added to the target
+		if (!isEmpty && !makeJsonFlat) {
+			toObject.add(fromFieldName, nestedObject);
+		}
+
+		return toObject;
 	}
 
 	/**
