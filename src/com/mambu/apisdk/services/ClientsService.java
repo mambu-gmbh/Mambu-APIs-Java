@@ -8,11 +8,9 @@ import java.util.List;
 import com.google.inject.Inject;
 import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
-import com.mambu.api.server.handler.customviews.model.ApiViewType;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.services.CustomViewsService.CustomViewResultType;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
@@ -84,10 +82,6 @@ public class ClientsService {
 			GroupExpanded.class);
 	// Get Lists of Groups
 	private final static ApiDefinition getGroupsList = new ApiDefinition(ApiType.GET_LIST, Group.class);
-
-	// Get Documents for a Client
-	private final static ApiDefinition getClientDocuments = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, Client.class,
-			Document.class);
 	// Post Client Profile Documents. POST clients/client_id/documents/PROFILE_PICTURE or
 	// clients/client_id/documents/SIGNATURE
 	private final static ApiDefinition postClientProfileFile = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
@@ -100,9 +94,6 @@ public class ClientsService {
 	// or DELETE api/clients/client_id/documents/SIGNATURE
 	private final static ApiDefinition deleteClientProfileFile = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
 			Client.class, Document.class);
-	// Get Documents for a group
-	private final static ApiDefinition getGroupDocuments = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, Group.class,
-			Document.class);
 
 	/***
 	 * Create a new client service
@@ -460,35 +451,6 @@ public class ClientsService {
 	}
 
 	/**
-	 * Requests a list of clients for a custom view, limited by offset/limit
-	 * 
-	 * @deprecated Starting with 4.0 use
-	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, boolean, String, String, String)}
-	 *             to filter entities by branch ID
-	 * @param customViewKey
-	 *            the id of the Custom View to filter clients
-	 * @param offset
-	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * @param limit
-	 *            pagination limit. If not null it must be an integer greater than zero
-	 * 
-	 * @return the list of Mambu clients
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public List<Client> getClientsByCustomView(String customViewKey, String offset, String limit)
-			throws MambuApiException {
-
-		String branchId = null;
-		CustomViewResultType resultType = CustomViewResultType.BASIC;
-		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId, offset,
-				limit);
-		return serviceExecutor.execute(getClientsList, params);
-
-	}
-
-	/**
 	 * Get clients by specifying filter constraints
 	 * 
 	 * @param filterConstraints
@@ -511,34 +473,6 @@ public class ClientsService {
 		// POST Filter JSON with pagination params map
 		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
 				ServiceHelper.makePaginationParams(offset, limit));
-
-	}
-
-	/**
-	 * Requests a list of groups for a custom view, limited by offset/limit
-	 * 
-	 * @deprecated Starting with 4.0 use
-	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, boolean, String, String, String)}
-	 *             to filter entities by branch ID
-	 * @param customViewKey
-	 *            the key of the Custom View to filter groups
-	 * @param offset
-	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * @param limit
-	 *            pagination limit. If not null it must be an integer greater than zero
-	 * 
-	 * @return the list of Mambu groups
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public List<Group> getGroupsByCustomView(String customViewKey, String offset, String limit)
-			throws MambuApiException {
-		String branchId = null;
-		CustomViewResultType resultType = CustomViewResultType.BASIC;
-		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId, offset,
-				limit);
-		return serviceExecutor.execute(getGroupsList, params);
 
 	}
 
@@ -655,42 +589,6 @@ public class ClientsService {
 			String limit) throws MambuApiException {
 		String centreId = null;
 		return getGroupsByBranchCentreOfficer(branchId, centreId, creditOfficerUserName, offset, limit);
-	}
-
-	/***
-	 * Get all documents for a specific Client
-	 * 
-	 * @deprecated Starting from 3.14 use
-	 *             {@link DocumentsService#getDocuments(MambuEntityType, String, Integer, Integer)}. This methods
-	 *             supports pagination parameters
-	 * @param clientId
-	 *            the encoded key or id of the Mambu client for which attached documents are to be retrieved
-	 * 
-	 * @return documents attached to the entity
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public List<Document> getClientDocuments(String clientId) throws MambuApiException {
-		return serviceExecutor.execute(getClientDocuments, clientId);
-	}
-
-	/***
-	 * Get all documents for a specific Group
-	 * 
-	 * @deprecated Starting from 3.14 use
-	 *             {@link DocumentsService#getDocuments(MambuEntityType, String, Integer, Integer)}. This methods
-	 *             supports pagination parameters
-	 * @param groupId
-	 *            the encoded key or id of the Mambu group for which attached documents are to be retrieved
-	 * 
-	 * @return documents attached to the entity
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public List<Document> getGroupDocuments(String groupId) throws MambuApiException {
-		return serviceExecutor.execute(getGroupDocuments, groupId);
 	}
 
 	/***

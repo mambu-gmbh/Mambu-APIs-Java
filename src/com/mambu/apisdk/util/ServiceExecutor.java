@@ -12,11 +12,11 @@ import com.mambu.accounting.shared.model.GLJournalEntry;
 import com.mambu.accounts.shared.model.DocumentTemplate;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
+import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.exception.MambuApiResponseMessage;
-import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
@@ -453,8 +453,8 @@ public class ServiceExecutor {
 		// LoanAccount
 		collectionTypesMap.put(LoanAccount.class, new TypeToken<List<LoanAccount>>() {
 		}.getType());
-		// LoanAccountExpanded
-		collectionTypesMap.put(LoanAccountExpanded.class, new TypeToken<List<LoanAccountExpanded>>() {
+		// JSONLoanAccount
+		collectionTypesMap.put(JSONLoanAccount.class, new TypeToken<List<JSONLoanAccount>>() {
 		}.getType());
 		// LoanTransaction
 		collectionTypesMap.put(LoanTransaction.class, new TypeToken<List<LoanTransaction>>() {

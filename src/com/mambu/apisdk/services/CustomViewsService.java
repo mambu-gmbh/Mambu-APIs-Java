@@ -113,41 +113,8 @@ public class CustomViewsService {
 	}
 
 	/**
-	 * Get entities for a Custom View for all branches managed by the API user
-	 * 
-	 * @deprecated Starting with 4.0 use
-	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, boolean, String, String, String)}
-	 *             to filter entities by branch ID
-	 * @param apiViewType
-	 *            API view type. Example, ApiViewType.LOANS, or ApiViewType.CLIENTS
-	 * @param fullDetails
-	 *            boolean indicating if entities with fullDetails shall be returned. Applicable to Clients, Groups, Loan
-	 *            Accounts and Savings Accounts
-	 * @param customViewKey
-	 *            the encoded key for the custom view. Must not be null
-	 * @param offset
-	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * @param limit
-	 *            pagination limit. If not null it must be an integer greater than zero
-	 * @return a list of entities for the custom view
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public <T> List<T> getCustomViewEntities(ApiViewType apiViewType, boolean fullDetails, String customViewKey,
-			String offset, String limit) throws MambuApiException {
-		// Example GET /api/clients?viewfilter=123&offset=0&limit=100&resultType=FULL_DETAILS
-		// See MBU-4607, MBU-10842
-
-		String branchId = null; // setting branchId to null to get entities for all branches
-		return getCustomViewEntities(apiViewType, branchId, fullDetails, customViewKey, offset, limit);
-
-	}
-
-	/**
 	 * Make ParamsMap for GET Mambu entities for a custom view API requests
 	 * 
-	 * @deprecated as public method in 4.0. Will continue to be used internally as private method by
-	 *             {@link CustomViewsService}.
 	 * @param customViewKey
 	 *            the encoded key of the Custom View to filter entities. Must not be null
 	 * @param resultType
@@ -161,8 +128,7 @@ public class CustomViewsService {
 	 * 
 	 * @return params params map
 	 */
-	@Deprecated
-	public static ParamsMap makeParamsForGetByCustomView(String customViewKey, CustomViewResultType resultType,
+	private static ParamsMap makeParamsForGetByCustomView(String customViewKey, CustomViewResultType resultType,
 			String branchId, String offset, String limit) {
 
 		// Verify that the customViewKey is not null or empty

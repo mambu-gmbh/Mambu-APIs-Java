@@ -13,7 +13,6 @@ import org.mockito.Mockito;
 import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.apisdk.MambuAPIServiceTest;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
@@ -52,8 +51,6 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 		// From Product
 		account.setRepaymentPeriodUnit(RepaymentPeriodUnit.DAYS);
 		account.setRepaymentPeriodCount(1);
-		// Set Custom fields to null in the account
-		account.setCustomFieldValues(null);
 
 		// ADd Custom Fields
 
@@ -81,15 +78,10 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 		clientCustomInformation.add(custField2);
 
 		// Add All custom fields
-		// account.setCustomFieldValues(clientCustomInformation);
-
-		// Create Account Expanded
-		LoanAccountExpanded accountExpanded = new LoanAccountExpanded();
-		accountExpanded.setLoanAccount(account);
-		accountExpanded.setCustomInformation(clientCustomInformation);
+		account.setCustomFieldValues(clientCustomInformation);
 
 		// Create Account in Mambu
-		service.createLoanAccount(accountExpanded);
+		service.createLoanAccount(account);
 
 		ParamsMap params = new ParamsMap();
 		params.addParam(

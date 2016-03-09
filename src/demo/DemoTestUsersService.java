@@ -8,11 +8,11 @@ import java.util.List;
 import com.mambu.accounts.shared.model.TransactionLimitType;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.customviews.model.ApiViewType;
+import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.MambuAPIServiceFactory;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.services.CustomViewsService;
 import com.mambu.apisdk.services.CustomViewsService.CustomViewResultType;
 import com.mambu.apisdk.services.UsersService;
@@ -335,7 +335,7 @@ public class DemoTestUsersService {
 						break;
 					case FULL_DETAILS:
 						fullDetails = true;
-						List<LoanAccountExpanded> loansExpanded = service.getCustomViewEntities(apiViewType, branchId,
+						List<JSONLoanAccount> loansExpanded = service.getCustomViewEntities(apiViewType, branchId,
 								fullDetails, viewkey, offset, limit);
 						System.out.println("Loan Details=" + loansExpanded.size() + "  for View=" + viewName);
 					}

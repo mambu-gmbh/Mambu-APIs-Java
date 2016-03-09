@@ -18,10 +18,10 @@ import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.api.server.handler.loan.model.JSONDisburseFeeRequest;
+import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
 import com.mambu.api.server.handler.loan.model.JSONTransactionRequest;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIFactory;
-import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.GroupExpanded;
 import com.mambu.core.shared.model.Money;
@@ -748,7 +748,7 @@ public class ServiceHelper {
 		case GROUP:
 			return GroupExpanded.class;
 		case LOAN_ACCOUNT:
-			return LoanAccountExpanded.class;
+			return JSONLoanAccount.class;
 		case SAVINGS_ACCOUNT:
 			return JSONSavingsAccount.class;
 		default:

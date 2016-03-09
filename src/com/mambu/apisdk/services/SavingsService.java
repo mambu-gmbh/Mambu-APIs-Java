@@ -9,11 +9,9 @@ import com.google.inject.Inject;
 import com.mambu.accounts.shared.model.Account.Type;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
-import com.mambu.api.server.handler.customviews.model.ApiViewType;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.services.CustomViewsService.CustomViewResultType;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
@@ -26,7 +24,6 @@ import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
-import com.mambu.docs.shared.model.Document;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
@@ -86,9 +83,6 @@ public class SavingsService {
 	// Get Accounts for a Group
 	private final static ApiDefinition getAccountsForGroup = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, Group.class,
 			SavingsAccount.class);
-	// Get Documents for an Account
-	private final static ApiDefinition getAccountDocuments = new ApiDefinition(ApiType.GET_OWNED_ENTITIES,
-			SavingsAccount.class, Document.class);
 	// Post Account Transactions. Params map defines the transaction type
 	private final static ApiDefinition postAccountTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
 			SavingsAccount.class, SavingsTransaction.class);
@@ -97,9 +91,6 @@ public class SavingsService {
 			SavingsAccount.class, SavingsTransaction.class);
 	// Get Accounts Transactions (transactions for a specific savings account)
 	private final static ApiDefinition getAccountTransactions = new ApiDefinition(ApiType.GET_OWNED_ENTITIES,
-			SavingsAccount.class, SavingsTransaction.class);
-	// Get All Savings Transactions (transactions for all savings accounts)
-	private final static ApiDefinition getAllSavingsTransactions = new ApiDefinition(ApiType.GET_RELATED_ENTITIES,
 			SavingsAccount.class, SavingsTransaction.class);
 	// Delete Account
 	private final static ApiDefinition deleteAccount = new ApiDefinition(ApiType.DELETE_ENTITY, SavingsAccount.class);
@@ -239,36 +230,6 @@ public class SavingsService {
 		paramsMap.put(LIMIT, limit);
 
 		return serviceExecutor.execute(getAccountTransactions, accountId, paramsMap);
-	}
-
-	/**
-	 * Requests a list of savings transactions for a custom view, limited by offset/limit
-	 * 
-	 * @deprecated Starting with 4.0 use
-	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, boolean, String, String, String)}
-	 *             to filter entities by branch ID
-	 * @param customViewKey
-	 *            the key of the Custom View to filter savings transactions
-	 * @param offset
-	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * @param limit
-	 *            pagination limit. If not null it must be an integer greater than zero
-	 * 
-	 * @return the list of Mambu savings transactions
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public List<SavingsTransaction> getSavingsTransactionsByCustomView(String customViewKey, String offset, String limit)
-			throws MambuApiException {
-		// Example GET savings/transactions?viewfilter=567&offset=0&limit=100
-
-		String branchId = null;
-		CustomViewResultType resultType = CustomViewResultType.BASIC;
-
-		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId, offset,
-				limit);
-		return serviceExecutor.execute(getAllSavingsTransactions, params);
 	}
 
 	/**
@@ -648,35 +609,6 @@ public class SavingsService {
 	}
 
 	/**
-	 * Requests a list of savings accounts for a custom view, limited by offset/limit only *
-	 * 
-	 * @deprecated Starting with 4.0 use
-	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, boolean, String, String, String)}
-	 *             to filter entities by branch ID
-	 * @param customViewKey
-	 *            the key of the Custom View to filter savings accounts
-	 * @param offset
-	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * @param limit
-	 *            pagination limit. If not null it must be an integer greater than zero
-	 * 
-	 * @return the list of Mambu savings accounts
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public List<SavingsAccount> getSavingsAccountsByCustomView(String customViewKey, String offset, String limit)
-			throws MambuApiException {
-		String branchId = null;
-		CustomViewResultType resultType = CustomViewResultType.BASIC;
-
-		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId, offset,
-				limit);
-		return serviceExecutor.execute(getAccountsList, params);
-
-	}
-
-	/**
 	 * Get savings accounts by specifying filter constraints
 	 * 
 	 * @param filterConstraints
@@ -930,24 +862,6 @@ public class SavingsService {
 				ApiReturnFormat.COLLECTION);
 		return serviceExecutor.execute(apiDefinition, savingsId);
 
-	}
-
-	/***
-	 * Get all documents for a specific Savings Account
-	 * 
-	 * @deprecated Starting from 3.14 use
-	 *             {@link DocumentsService#getDocuments(MambuEntityType, String, Integer, Integer)}. This methods
-	 *             supports pagination parameters
-	 * @param accountId
-	 *            the encoded key or id of the savings account for which attached documents are to be retrieved
-	 * 
-	 * @return documents documents attached to the entity
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public List<Document> getSavingsAccountDocuments(String accountId) throws MambuApiException {
-		return serviceExecutor.execute(getAccountDocuments, accountId);
 	}
 
 }

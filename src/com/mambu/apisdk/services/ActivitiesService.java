@@ -6,10 +6,8 @@ import java.util.List;
 
 import com.google.inject.Inject;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
-import com.mambu.api.server.handler.customviews.model.ApiViewType;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.services.CustomViewsService.CustomViewResultType;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
@@ -139,33 +137,6 @@ public class ActivitiesService {
 	 */
 	public List<JSONActivity> getActivities(Date fromDate, Date toDate) throws MambuApiException {
 		return getActivities(fromDate, toDate, null, null);
-	}
-
-	/**
-	 * Request a list of activities for a custom view, limited by offset/limit
-	 * 
-	 * @deprecated Starting with 4.0 use
-	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, String, String, String)} to get
-	 *             basic entities supporting branch ID filter parameter
-	 * @param customViewKey
-	 *            the key of the Custom View to filter system activities
-	 * @param offset
-	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * @param limit
-	 *            pagination limit. If not null it must be an integer greater than zero
-	 * 
-	 * @return the list of Mambu activities
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public List<JSONActivity> getActivitiesByCustomView(String customViewKey, String offset, String limit)
-			throws MambuApiException {
-		String branchId = null;
-		CustomViewResultType resultType = CustomViewResultType.BASIC;
-		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId, offset,
-				limit);
-		return serviceExecutor.execute(getJSONActivityList, params);
 	}
 
 	// Private helper
