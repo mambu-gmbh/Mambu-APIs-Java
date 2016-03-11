@@ -33,6 +33,13 @@ public class LoanAccountExpanded implements HasCustomFields {
     public LoanAccountExpanded(LoanAccount loanAccount)
     {
         this.loanAccount = loanAccount;
+        popCustomFieldValues();
+    }
+
+    public void popCustomFieldValues()
+    {
+        customInformation = loanAccount.getCustomFieldValues();
+        loanAccount.setCustomFieldValues(null);
     }
 
 	/**
