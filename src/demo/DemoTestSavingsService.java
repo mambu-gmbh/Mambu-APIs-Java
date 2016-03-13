@@ -2,20 +2,21 @@ package demo;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import com.mambu.accounts.shared.model.Account;
 import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.accounts.shared.model.AccountState;
+import com.mambu.accounts.shared.model.InterestChargeFrequencyMethod;
 import com.mambu.accounts.shared.model.InterestRateSource;
 import com.mambu.accounts.shared.model.TransactionDetails;
-import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.services.SavingsService;
-import com.mambu.apisdk.util.APIData;
+import com.mambu.apisdk.util.APIData.CLOSER_TYPE;
 import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
@@ -48,7 +49,7 @@ public class DemoTestSavingsService {
 	private static SavingsProduct demoSavingsProduct;
 	private static SavingsAccount demoSavingsAccount;
 
-	private static JSONSavingsAccount newAccount;
+	private static SavingsAccount newAccount;
 	private static String methodName = null; // print method name on exception
 
 	public static void main(String[] args) {
@@ -101,21 +102,22 @@ public class DemoTestSavingsService {
 						+ " ***");
 
 				try {
-
+					// Test rejecting an account first
 					testCreateSavingsAccount();
-					testCloseSavingsAccount(); // Available since 3.4
+					testUpdateSavingsAccount(); // Available since 3.4
+					testCloseSavingsAccount(CLOSER_TYPE.REJECT); // Available since 3.4
 					testDeleteSavingsAccount(); // Available since 3.4
 
+					// Test savings operations
 					testCreateSavingsAccount();
-
-					testUpdateSavingsAccount(); // Available since 3.4
 					testPatchSavingsAccountTerms(); // Available since 3.12.2
-
-					testApproveSavingsAccount();
-					testGetFundedLoanAccounts(); // Available since 3.14
-
+					testApproveSavingsAccount(); // Available since 3.5
 					testUndoApproveSavingsAccount(); // Available since 3.5
 					testApproveSavingsAccount(); // Available since 3.5
+
+					testUpdateSavingsAccount(); // Available since 3.4
+
+					testGetFundedLoanAccounts(); // Available since 3.14
 
 					testGetSavingsAccount();
 					testGetSavingsAccountDetails();
@@ -127,6 +129,7 @@ public class DemoTestSavingsService {
 					// Test deposit and reversal transactions
 					SavingsTransaction deposiTransaction = testDepositToSavingsAccount();
 					testReverseSavingsAccountTransaction(deposiTransaction); // Available since 3.10
+
 					testDepositToSavingsAccount(); // Make another deposit after reversal to continue testing
 
 					// Test withdrawal and reversal transactions
@@ -149,6 +152,8 @@ public class DemoTestSavingsService {
 					testGetDocuments();// Available since 3.6
 
 					testUpdateDeleteCustomFields(); // Available since 3.8
+					// Test Closing accounts with obligations met
+					testCloseSavingsAccount(CLOSER_TYPE.CLOSE); // CLOSER_TYPE.CLOSE Available since 4.0
 
 				} catch (MambuApiException e) {
 					DemoUtil.logException(methodName, e);
@@ -177,18 +182,21 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testGetSavingsAccountDetails() throws MambuApiException {
-		System.out.println(methodName = "\nIn testGetSavingsAccount with Details");
+		System.out.println(methodName = "\nIn testGetSavingsAccountDetails");
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
 		SavingsAccount account = savingsService.getSavingsAccountDetails(SAVINGS_ACCOUNT_ID);
 
-		System.out.println("Got Savings account: " + account.getName());
+		// Log some account details
+		System.out.println("Account name: " + account.getName() + "\tID=" + account.getId() + "\tInterest="
+				+ account.getInterestRate() + "\tFrequency=" + account.getInterestChargeFrequency()
+				+ "\tFrequency Count=" + account.getInterestChargeFrequencyCount());
 
 	}
 
 	public static void testGetSavingsAccountsForClient() throws MambuApiException {
-		System.out.println(methodName = "\nIn testGetSavingsAccountsFor Client");
+		System.out.println(methodName = "\nIn testGetSavingsAccountsForClient");
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
 		String clientid = demoClient.getId();
@@ -207,7 +215,7 @@ public class DemoTestSavingsService {
 		System.out.println(methodName = "\nIn testGetFundedLoanAccounts");
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
-		String savingsId = demoSavingsAccount.getId();
+		String savingsId = newAccount.getId();
 
 		// This API call can succeed only if the test account is of SavingsType.INVESTOR_ACCOUNT type
 		try {
@@ -224,7 +232,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testGetSavingsAccountsForGroup() throws MambuApiException {
-		System.out.println(methodName = "\nIn testGetSavingsAccountsFor Group");
+		System.out.println(methodName = "\nIn testGetSavingsAccountsForGroup");
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
 		List<SavingsAccount> savingsAccounts = savingsService.getSavingsAccountsForGroup(demoGroup.getId());
@@ -243,12 +251,16 @@ public class DemoTestSavingsService {
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
-		List<SavingsTransaction> transactions = savingsService.getSavingsAccountTransactions(SAVINGS_ACCOUNT_ID, null,
-				null);
+		String offset = "1";
+		String limit = "2";
+		List<SavingsTransaction> transactions = savingsService.getSavingsAccountTransactions(SAVINGS_ACCOUNT_ID,
+				offset, limit);
 
-		System.out.println("Got Savings Transactions for account with the " + SAVINGS_ACCOUNT_ID + " id:");
+		System.out.println("Got Savings Transactions " + transactions.size() + "  for account " + SAVINGS_ACCOUNT_ID
+				+ " Offset=" + offset + " limit=" + limit);
 		for (SavingsTransaction transaction : transactions) {
-			System.out.println(transaction.getEntryDate().toString() + " " + transaction.getType());
+			System.out.println("\tID=" + transaction.getTransactionId() + "\tDate="
+					+ transaction.getEntryDate().toString() + "\tType=" + transaction.getType());
 		}
 		System.out.println();
 	}
@@ -420,12 +432,18 @@ public class DemoTestSavingsService {
 
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
-		String productId = demoSavingsProduct.getId(); // DSP FDS SP highInterest_001
+		String productId = demoSavingsProduct.getId();
 
 		SavingsProduct product = savingsService.getSavingsProduct(productId);
 
-		System.out.println("Product=" + product.getName() + "  Id=" + product.getId() + " Loan Type="
-				+ product.getTypeOfProduct().name());
+		// Log also Interest Rate frequency. Available since Mambu 4.0. See MBU-11447 and MBU-11449
+		InterestChargeFrequencyMethod frequencyMethod = demoSavingsProduct.getInterestChargeFrequency();
+		InterestChargeFrequencyMethod overdraftFrequencyMethod = demoSavingsProduct
+				.getOverdraftInterestChargeFrequency();
+
+		System.out.println("Product=" + product.getName() + "\tId=" + product.getId() + "\tSavings Type="
+				+ product.getTypeOfProduct().name() + "\tInterestChargeFrequency=" + frequencyMethod
+				+ "\tOverdraftInterestChargeFrequency=" + overdraftFrequencyMethod);
 
 	}
 
@@ -439,22 +457,18 @@ public class DemoTestSavingsService {
 		// Add Custom Fields
 		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(
 				CustomFieldType.SAVINGS_ACCOUNT_INFO, demoSavingsProduct.getEncodedKey());
-		//
-
-		JSONSavingsAccount jsonSavingsAccount = new JSONSavingsAccount(savingsAccount);
-		jsonSavingsAccount.setCustomInformation(clientCustomInformation);
+		savingsAccount.setCustomFieldValues(clientCustomInformation);
 
 		// Create Account in Mambu
-		newAccount = service.createSavingsAccount(jsonSavingsAccount);
-		SavingsAccount savingsAccountResult = newAccount.getSavingsAccount();
+		newAccount = service.createSavingsAccount(savingsAccount);
 
-		SAVINGS_ACCOUNT_ID = savingsAccountResult.getId();
+		SAVINGS_ACCOUNT_ID = newAccount.getId();
 
-		System.out.println("Savings Account created OK, ID=" + savingsAccountResult.getId() + " Name= "
-				+ savingsAccountResult.getName() + " Account Holder Key=" + savingsAccountResult.getAccountHolderKey());
+		System.out.println("Savings Account created OK, ID=" + newAccount.getId() + " Name= " + newAccount.getName()
+				+ " Account Holder Key=" + newAccount.getAccountHolderKey());
 
 		// Get Custom Information from the JSONSavingsAccount
-		List<CustomFieldValue> updatedCustomFields = newAccount.getCustomInformation();
+		List<CustomFieldValue> updatedCustomFields = newAccount.getCustomFieldValues();
 
 		if (updatedCustomFields != null) {
 			System.out.println("Custom Fields for Account\n");
@@ -472,27 +486,30 @@ public class DemoTestSavingsService {
 		SavingsService service = MambuAPIFactory.getSavingsService();
 
 		// Use the newly created account and update some custom fields
-		JSONSavingsAccount updatedAccount = newAccount;
-		// Savings API doesn't return CustomField with the CustomFieldValue. Need to refresh account with full details
-		SavingsAccount account = updatedAccount.getSavingsAccount();
-		account = service.getSavingsAccountDetails(account.getEncodedKey());
+		SavingsAccount updatedAccount = newAccount;
+		// Note: Savings API doesn't return CustomField with the CustomFieldValue in create response.
+		// Need to refresh account with full details to custom field IDs
+		updatedAccount = service.getSavingsAccountDetails(updatedAccount.getEncodedKey());
 
-		List<CustomFieldValue> customFields = account.getCustomFieldValues();
+		List<CustomFieldValue> customFields = updatedAccount.getCustomFieldValues();
+		List<CustomFieldValue> toUpdateCustomFields = new ArrayList<CustomFieldValue>();
+
 		if (customFields != null) {
 			for (CustomFieldValue value : customFields) {
 				value = DemoUtil.makeNewCustomFieldValue(value);
+				toUpdateCustomFields.add(value);
 			}
 		}
-		updatedAccount.setCustomInformation(customFields);
+		updatedAccount.setCustomFieldValues(toUpdateCustomFields);
 
 		// Update account in Mambu
-		JSONSavingsAccount updatedAccountResult = service.updateSavingsAccount(updatedAccount);
+		SavingsAccount updatedAccountResult = service.updateSavingsAccount(updatedAccount);
 
-		System.out.println("Savings Update OK, ID=" + updatedAccountResult.getSavingsAccount().getId()
-				+ "\tAccount Name=" + updatedAccountResult.getSavingsAccount().getName());
+		System.out.println("Savings Update OK, ID=" + updatedAccountResult.getId() + "\tAccount Name="
+				+ updatedAccountResult.getName());
 
 		// Get returned custom fields
-		List<CustomFieldValue> updatedCustomFields = updatedAccountResult.getCustomInformation();
+		List<CustomFieldValue> updatedCustomFields = updatedAccountResult.getCustomFieldValues();
 
 		if (updatedCustomFields != null) {
 			System.out.println("Custom Fields for Savings Account\n");
@@ -509,7 +526,7 @@ public class DemoTestSavingsService {
 		System.out.println(methodName = "\nIn testPatchSavingsAccountTerms");
 
 		// See MBU-10447 for a list of fields that can be updated (as of Mambu 3.14)
-		SavingsAccount savingsAccount = newAccount.getSavingsAccount();
+		SavingsAccount savingsAccount = newAccount;
 		String productKey = savingsAccount.getProductTypeKey();
 		SavingsProduct product = DemoUtil.getDemoSavingsProduct(productKey);
 		SavingsType productType = product.getProductType();
@@ -645,7 +662,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testApproveSavingsAccount() throws MambuApiException {
-		System.out.println(methodName = "\nIn test Approve Savings Account");
+		System.out.println(methodName = "\nIn testApproveSavingsAccount");
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
 
@@ -670,7 +687,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testUndoApproveSavingsAccount() throws MambuApiException {
-		System.out.println(methodName = "\nIn test Undo Approve Savings Account");
+		System.out.println(methodName = "\nIn testUndoApproveSavingsAccount");
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
 		String accountId = SAVINGS_ACCOUNT_ID;
@@ -683,7 +700,7 @@ public class DemoTestSavingsService {
 	}
 
 	public static void testDeleteSavingsAccount() throws MambuApiException {
-		System.out.println(methodName = "\nIn test Delete Savings Account");
+		System.out.println(methodName = "\nIn testDeleteSavingsAccount");
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
 
@@ -694,20 +711,38 @@ public class DemoTestSavingsService {
 		System.out.println("Deleted Savings account with id=" + accountId + "\tDeletion status=" + accountDeleted);
 	}
 
-	public static void testCloseSavingsAccount() throws MambuApiException {
-		System.out.println(methodName = "\nIn test Close Savings Account");
+	/**
+	 * Test Closing Savings account
+	 * 
+	 * @param closerType
+	 *            closer type. Must not be null. Supported closer types are: REJECT, WITHDRAW and CLOSE
+	 * @throws MambuApiException
+	 */
+	public static void testCloseSavingsAccount(CLOSER_TYPE closerType) throws MambuApiException {
+		System.out.println(methodName = "\nIn testCloseSavingsAccount");
 
+		if (closerType == null) {
+			throw new IllegalArgumentException("Closer type must not be null");
+		}
 		SavingsService service = MambuAPIFactory.getSavingsService();
 
-		String accountId = SAVINGS_ACCOUNT_ID;
-		APIData.CLOSER_TYPE closerType = APIData.CLOSER_TYPE.WITHDRAW; // APIData.CLOSER_TYPE.WITHDRAW //
-																		// APIData.CLOSER_TYPE.REJECT
+		// Get current account
+		SavingsAccount account = DemoUtil.getDemoSavingsAccount(SAVINGS_ACCOUNT_ID);
+		String accountId = account.getId();
 
-		String notes = "Account Closed notes";
+		// For CLOSER_TYPE.CLOSE - withdraw any remaining balance first to test Close transaction
+		Money balance = account.getBalance();
+		if (closerType == CLOSER_TYPE.CLOSE && balance != null && balance.isPositive()) {
+			System.out.println("Withdrawing remaining Balance to test Close transaction");
+			service.makeWithdrawal(accountId, balance.toPlainString(), null, "Withdraw to test Close Transaction", null);
+		}
+		// Closer type: WITHDRAW, REJECT or CLOSE;
+		String notes = "Closed by Demo Test";
+		System.out.println("CloserType==" + closerType + "\tID=" + accountId + "\tState=" + account.getAccountState());
+		SavingsAccount resultAaccount = service.closeSavingsAccount(accountId, closerType, notes);
 
-		SavingsAccount account = service.closeSavingsAccount(accountId, closerType, notes);
-
-		System.out.println("Closed account id:" + account.getId() + "\tState=" + account.getAccountState().name());
+		System.out.println("Closed account id:" + resultAaccount.getId() + "\tNew State="
+				+ resultAaccount.getAccountState().name());
 	}
 
 	public static void testGetDocuments() throws MambuApiException {
@@ -855,8 +890,11 @@ public class DemoTestSavingsService {
 				+ " **");
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 		List<SavingsAccount> accounts = savingsService.getSavingsAccountsForClient(demoClient.getId());
-		if (accounts == null || accounts.size() == 0) {
-			System.out.println("Nothing to delete for client " + demoClient.getFullNameWithId());
+		List<SavingsAccount> groupAccounts = savingsService.getSavingsAccountsForGroup(demoGroup.getId());
+		accounts.addAll(groupAccounts);
+
+		if (accounts != null && accounts.size() == 0) {
+			System.out.println("Nothing to delete for demo client or group");
 			return;
 		}
 		for (SavingsAccount account : accounts) {

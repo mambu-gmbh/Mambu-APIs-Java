@@ -151,13 +151,13 @@ public class SearchService {
 	 *            following entities: Clients, Groups, Loans, Savings, Loan Transactions and SavingsTransactions,
 	 *            NotificationMessage.
 	 * 
-	 *            See MBU-8986, MBU-10646 for more details
+	 *            See MBU-8986, MBU-10646, MBU-11120 for more details
 	 * 
 	 * @return api definition for searching entities using filter constraints
 	 */
 	public static ApiDefinition makeApiDefinitionforSearchByFilter(MambuEntityType searchEntityType) {
 
-		// See MBU-8986, MBU-8975, MBU-8987, MBU-8988, MBU-8989
+		// See MBU-8986, MBU-8975, MBU-8987, MBU-8988, MBU-8989, MBU-11120
 		// POST Example for searching clients. See MBU-8975.
 		// POST {"filterConstraints":[
 		// {"filterSelection":"BIRTH_DATE",

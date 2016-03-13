@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.mambu.accounts.shared.model.Account.Type;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
+import com.mambu.api.server.handler.customviews.model.ApiViewType;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -243,6 +244,9 @@ public class SavingsService {
 	/**
 	 * Requests a list of savings transactions for a custom view, limited by offset/limit
 	 * 
+	 * @deprecated Starting with 4.0 use
+	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, boolean, String, String, String)}
+	 *             to filter entities by branch ID
 	 * @param customViewKey
 	 *            the key of the Custom View to filter savings transactions
 	 * @param offset
@@ -254,17 +258,16 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<SavingsTransaction> getSavingsTransactionsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		// Example GET savings/transactions?viewfilter=567&offset=0&limit=100
 
 		String branchId = null;
-		String centreId = null;
-		String creditOfficerName = null;
 		CustomViewResultType resultType = CustomViewResultType.BASIC;
 
-		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
-				centreId, creditOfficerName, offset, limit);
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId, offset,
+				limit);
 		return serviceExecutor.execute(getAllSavingsTransactions, params);
 	}
 
@@ -539,16 +542,16 @@ public class SavingsService {
 	}
 
 	/****
-	 * Close Savings account specifying the type of closer (withdraw or reject)
+	 * Close Savings account specifying the type of closer (withdraw, reject or close)
 	 * 
-	 * Note: available since Mambu 3.4 See MBU-4581 for details.
+	 * Note: available since Mambu 3.4 See MBU-4581 and MBU-10976 for details.
 	 * 
 	 * @param accountId
-	 *            the id of the account to withdraw
-	 * 
+	 *            the id of the account to withdraw. Must not be null
 	 * @param type
-	 *            type of closer (withdraw or reject)
+	 *            type of closer (withdraw, reject or close). Must not be null
 	 * @param notes
+	 *            optional notes
 	 * 
 	 * @return savings account
 	 * 
@@ -645,8 +648,11 @@ public class SavingsService {
 	}
 
 	/**
-	 * Requests a list of savings accounts for a custom view, limited by offset/limit only
+	 * Requests a list of savings accounts for a custom view, limited by offset/limit only *
 	 * 
+	 * @deprecated Starting with 4.0 use
+	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, boolean, String, String, String)}
+	 *             to filter entities by branch ID
 	 * @param customViewKey
 	 *            the key of the Custom View to filter savings accounts
 	 * @param offset
@@ -658,15 +664,14 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<SavingsAccount> getSavingsAccountsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		String branchId = null;
-		String centreId = null;
-		String creditOfficerName = null;
 		CustomViewResultType resultType = CustomViewResultType.BASIC;
 
-		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
-				centreId, creditOfficerName, offset, limit);
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId, offset,
+				limit);
 		return serviceExecutor.execute(getAccountsList, params);
 
 	}
@@ -736,26 +741,65 @@ public class SavingsService {
 	 * creating SavingsAccount with details, including creating custom field values.
 	 * 
 	 * 
-	 * @param savingsAccount
-	 *            JSONSavingsAccount object containing SavingsAccount. SavingsAccount's encodedKey must be null for
-	 *            account create
+	 * @param jsonSavingsAccount
+	 *            JSONSavingsAccount object containing SavingsAccount. Must be not null. SavingsAccount's encodedKey
+	 *            must be null for account create
 	 * 
-	 * @return savingsAccount
+	 * @return created JSONSavingsAccount
 	 * 
 	 * @throws MambuApiException
 	 */
-	public JSONSavingsAccount createSavingsAccount(JSONSavingsAccount account) throws MambuApiException {
-
-		if (account == null || account.getSavingsAccount() == null) {
+	public JSONSavingsAccount createSavingsAccount(JSONSavingsAccount jsonSavingsAccount) throws MambuApiException {
+		// Example: POST // {"savingsAccount":
+		// { "accountHolderKey":"123", "accountHolderType":"CLIENT”,… },
+		// "customInformation":[{ "customFieldID":"fieldId_1","value":"true" }, ….]
+		// }
+		if (jsonSavingsAccount == null || jsonSavingsAccount.getSavingsAccount() == null) {
 			throw new IllegalArgumentException("Account must not be NULL");
 		}
 
-		SavingsAccount inputAccount = account.getSavingsAccount();
+		SavingsAccount inputAccount = jsonSavingsAccount.getSavingsAccount();
 		String encodedKey = inputAccount.getEncodedKey();
 		if (encodedKey != null) {
 			throw new IllegalArgumentException("Cannot create  Account, the encoded key must be null");
 		}
-		return serviceExecutor.executeJson(createAccount, account);
+		return serviceExecutor.executeJson(createAccount, jsonSavingsAccount);
+	}
+
+	/***
+	 * Convenience method to create new SavingsAccount using SavingsAccount object.
+	 * 
+	 * @param savingsAccount
+	 *            SavingsAccount object. Must not be null. SavingsAccount's encodedKey must be null for account create
+	 * 
+	 * @return created savings account
+	 * 
+	 * @throws MambuApiException
+	 */
+	public SavingsAccount createSavingsAccount(SavingsAccount savingsAccount) throws MambuApiException {
+
+		if (savingsAccount == null) {
+			throw new IllegalArgumentException("Account must not be NULL");
+		}
+		// Create JSONSavingsAccount to use in Mambu API. Mambu expects the following format:
+		// {"savingsAccount":{.....}, "customInformation":[{field1},{field2}]}
+		JSONSavingsAccount jsonSavingsAccount = new JSONSavingsAccount(savingsAccount);
+		// In API request custom fields must be provided in the "customInformation" field
+		jsonSavingsAccount.setCustomInformation(savingsAccount.getCustomFieldValues());
+		// Clear custom fields at the account level, no need to send them in two places
+		savingsAccount.setCustomFieldValues(null);
+
+		// Submit API request to Mambu
+		JSONSavingsAccount createdJsonAccount = createSavingsAccount(jsonSavingsAccount);
+		// Get Savings account
+		SavingsAccount createdAccount = null;
+		if (createdJsonAccount != null && createdJsonAccount.getSavingsAccount() != null) {
+			createdAccount = createdJsonAccount.getSavingsAccount();
+			// Move custom fields from the returned JSONSavingsAccount into the created savings account
+			createdAccount.setCustomFieldValues(createdJsonAccount.getCustomInformation());
+		}
+
+		return createdAccount;
 	}
 
 	/***
@@ -763,28 +807,69 @@ public class SavingsService {
 	 * allows updating JSONSavingsAccount with details. As of Mambu 3.4 only custom fields can be updated.
 	 * 
 	 * 
-	 * @param savingsAccount
+	 * @param jsonSavingsAccount
 	 *            JSONSavingsAccount object containing SavingsAccount. SavingsAccount encodedKey or id must be NOT null
 	 *            for account update
 	 * 
-	 * @return savingsAccount
+	 * @return updated JSONSavingsAccount
 	 * 
 	 * 
 	 * @throws MambuApiException
 	 */
-	public JSONSavingsAccount updateSavingsAccount(JSONSavingsAccount account) throws MambuApiException {
+	public JSONSavingsAccount updateSavingsAccount(JSONSavingsAccount jsonSavingsAccount) throws MambuApiException {
 
-		if (account == null || account.getSavingsAccount() == null) {
+		if (jsonSavingsAccount == null || jsonSavingsAccount.getSavingsAccount() == null) {
 			throw new IllegalArgumentException("Account must not be NULL");
 		}
 
-		SavingsAccount inputAccount = account.getSavingsAccount();
+		SavingsAccount inputAccount = jsonSavingsAccount.getSavingsAccount();
 		String encodedKey = inputAccount.getEncodedKey() != null ? inputAccount.getEncodedKey() : inputAccount.getId();
 		if (encodedKey == null) {
 			throw new IllegalArgumentException("Cannot update Account: the encoded key or id must NOT be null");
 		}
 
-		return serviceExecutor.executeJson(updateAccount, account, encodedKey);
+		return serviceExecutor.executeJson(updateAccount, jsonSavingsAccount, encodedKey);
+	}
+
+	/***
+	 * Convenience method to Update an existent SavingsAccount. As of Mambu 3.4 only custom fields can be updated.
+	 * 
+	 * @param savingsAccount
+	 *            savings account object to be updated. Must not be null. SavingsAccount encodedKey or id must be NOT
+	 *            null for account update
+	 * 
+	 * @return savingsAccount
+	 * @throws MambuApiException
+	 */
+	public SavingsAccount updateSavingsAccount(SavingsAccount savingsAccount) throws MambuApiException {
+
+		if (savingsAccount == null) {
+			throw new IllegalArgumentException("Account must not be NULL");
+		}
+
+		String encodedKey = savingsAccount.getEncodedKey() != null ? savingsAccount.getEncodedKey() : savingsAccount
+				.getId();
+		if (encodedKey == null) {
+			throw new IllegalArgumentException("Cannot update Account: the encoded key or id must NOT be null");
+		}
+		// Create JSONSavingsAccount to use in Mambu API. Mambu expects the following format:
+		// {"savingsAccount":{.....}, "customInformation":[{field1},{field2}]}
+		JSONSavingsAccount jsonSavingsAccount = new JSONSavingsAccount(savingsAccount);
+		// In API request custom fields must be provided in the "customInformation" field
+		jsonSavingsAccount.setCustomInformation(savingsAccount.getCustomFieldValues());
+		// Clear custom fields at the account level, no need to send them in two places
+		savingsAccount.setCustomFieldValues(null);
+
+		// Submit updated account request to Mambu
+		JSONSavingsAccount updatedJsonAccount = updateSavingsAccount(jsonSavingsAccount);
+		// Get Savings Account
+		SavingsAccount updatedSavingsAccount = null;
+		if (updatedJsonAccount != null && updatedJsonAccount.getSavingsAccount() != null) {
+			updatedSavingsAccount = updatedJsonAccount.getSavingsAccount();
+			// Set updated custom fields in the returned savings account
+			updatedSavingsAccount.setCustomFieldValues(updatedJsonAccount.getCustomInformation());
+		}
+		return updatedSavingsAccount;
 	}
 
 	/***
@@ -860,6 +945,7 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<Document> getSavingsAccountDocuments(String accountId) throws MambuApiException {
 		return serviceExecutor.execute(getAccountDocuments, accountId);
 	}

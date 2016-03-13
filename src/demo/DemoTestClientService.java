@@ -70,7 +70,9 @@ public class DemoTestClientService {
 			testCreateJsonClient();
 
 			testGetClient();
-			testUpdateClient();
+			ClientExpanded updatedClient = testUpdateClient();
+			testUpdateClientState(updatedClient.getClient()); // // Available since 4.0
+
 			testGetClientDetails();
 
 			testGetClients();
@@ -315,7 +317,7 @@ public class DemoTestClientService {
 	private static final String updatedSuffix = "_updated";
 
 	// Test update client. This method updates previously created client saved in clientCreated object
-	public static void testUpdateClient() throws MambuApiException {
+	public static ClientExpanded testUpdateClient() throws MambuApiException {
 		System.out.println("\nIn testUpdateClient");
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
@@ -323,7 +325,7 @@ public class DemoTestClientService {
 		Client client = clientUpdated.getClient();
 		client.setFirstName(client.getFirstName() + updatedSuffix);
 		client.setLastName(client.getLastName() + updatedSuffix);
-		client.setPreferredLanguage(Language.SPANISH); // TODO: Mambu issue - Language is NOT updated
+		client.setPreferredLanguage(Language.SPANISH);
 
 		// Test updating custom fields too
 		List<CustomFieldValue> customFields = clientCreated.getCustomFieldValues();
@@ -335,11 +337,56 @@ public class DemoTestClientService {
 			}
 		}
 		clientUpdated.setCustomFieldValues(updatedFields);
+		// Test also updating client's address
+		List<Address> addresses = clientUpdated.getAddresses();
+		Address currentAddress = (addresses == null || addresses.size() == 0) ? new Address() : addresses.get(0);
+
+		Address updatedAddress = new Address();
+		updatedAddress.setLine1(currentAddress.getLine1() + updatedSuffix);
+		updatedAddress.setLine2(currentAddress.getLine2() + updatedSuffix);
+		updatedAddress.setCity(currentAddress.getCity() + updatedSuffix);
+		updatedAddress.setPostcode(currentAddress.getPostcode() + updatedSuffix);
+		updatedAddress.setCountry(currentAddress.getCountry() + updatedSuffix);
+		updatedAddress.setLatitude(currentAddress.getLatitude());
+		updatedAddress.setLongitude(currentAddress.getLongitude());
+
+		List<Address> updatedAddresses = new ArrayList<Address>();
+		updatedAddresses.add(updatedAddress);
+
+		clientUpdated.setAddresses(updatedAddresses);
+
 		ClientExpanded clientExpandedResult = clientService.updateClient(clientUpdated);
 
 		System.out.println("Client Update OK, ID=" + clientExpandedResult.getClient().getId() + "\tLastName="
 				+ clientExpandedResult.getClient().getLastName() + "\tFirst Name ="
 				+ clientExpandedResult.getClient().getFirstName());
+
+		return clientExpandedResult;
+	}
+
+	// Test updating client's state API
+	public static void testUpdateClientState(Client client) throws MambuApiException {
+		System.out.println("\nIn testUpdateClientState");
+		if (client == null) {
+			System.out.println("WARNING:cannot test updating state for a  null client");
+			return;
+		}
+		String clientId = client.getId();
+		ClientState currentState = client.getState();
+
+		// Change client's state
+		ClientState newState = ClientState.BLACKLISTED;
+
+		System.out.println("Updating State from " + currentState + " to " + newState + " for client ID=" + clientId);
+		ClientsService clientService = MambuAPIFactory.getClientService();
+		boolean stateUpdated = clientService.patchClientState(clientId, newState);
+		System.out.println("Update status=" + stateUpdated);
+
+		// Test restoring client's state back to its previous state
+		System.out.println("Updating State back from " + newState + " to " + currentState + " for client ID="
+				+ clientId);
+		boolean stateUpdated2 = clientService.patchClientState(clientId, currentState);
+		System.out.println("Update status=" + stateUpdated2);
 
 	}
 
@@ -679,7 +726,10 @@ public class DemoTestClientService {
 		List<Address> addresses = groupExpanded.getAddresses();
 		Address currentAddress = (addresses == null || addresses.size() == 0) ? new Address() : addresses.get(0);
 		List<Address> updatedAddresses = new ArrayList<Address>();
-		Address updatedAddress = new Address();
+		// TODO: Mambu 3.14 returns an exception when updating Groups with an existent address if it'a a new address.
+		// See MBU-11719. The workaround is use the current Address (and not to create a new one) and just to update its
+		// fields. This works. See MBU-11214
+		Address updatedAddress = currentAddress;
 		updatedAddress.setLine1(currentAddress.getLine1() + updatedSuffix);
 		updatedAddress.setLine2(currentAddress.getLine2() + updatedSuffix);
 		updatedAddress.setCity(currentAddress.getCity() + updatedSuffix);
@@ -687,11 +737,8 @@ public class DemoTestClientService {
 		updatedAddress.setCountry(currentAddress.getCountry() + updatedSuffix);
 		updatedAddress.setLatitude(currentAddress.getLatitude());
 		updatedAddress.setLongitude(currentAddress.getLongitude());
-
 		updatedAddresses.add(updatedAddress);
 		groupExpanded.setAddresses(updatedAddresses);
-		// TODO: Mambu 3.14 returns an exception when updating Groups with an existent address. See MBU-11214
-		groupExpanded.setAddresses(null); // for now clear address for testing, otherwise updating group wouldn't work
 
 		List<CustomFieldValue> customFields = groupExpanded.getCustomFieldValues();
 		List<CustomFieldValue> updatedFields = new ArrayList<CustomFieldValue>();

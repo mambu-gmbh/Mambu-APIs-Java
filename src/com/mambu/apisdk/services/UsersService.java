@@ -8,6 +8,7 @@ import com.mambu.api.server.handler.customviews.model.ApiViewType;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
+import com.mambu.apisdk.util.APIData.UserBranchAssignmentType;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
@@ -29,6 +30,7 @@ public class UsersService {
 	private static String OFFSET = APIData.OFFSET;
 	private static String LIMIT = APIData.LIMIT;
 	private static String BRANCH_ID = APIData.BRANCH_ID;
+	private static String BRANCH_ID_TYPE = APIData.BRANCH_ID_TYPE;
 
 	// Service Executor
 	private ServiceExecutor serviceExecutor;
@@ -84,10 +86,16 @@ public class UsersService {
 	}
 
 	/**
-	 * Get a paginated list of users filtered by branch
+	 * Get a paginated list of users. API allows getting all users, or users who are assigned to a branch or users who
+	 * are assigned or allowed to manage the branch
 	 * 
 	 * @param branchId
-	 *            the id of the branch to filter with
+	 *            the id of the branch. If null, users for all branches are returned
+	 * @param userBranchAssignmentType
+	 *            user's branch assignment type. This parameter is ignored if the branchId parameter is null. If
+	 *            userBranchAssignmentType is ASSIGNED then only users assigned to the specified branch are returned. If
+	 *            its value is MANAGE then all users who are either assigned or who can manage the branch are returned.
+	 *            If null, the default is ASSIGNED.
 	 * @param offset
 	 *            the offset of the response. If not set a value of 0 is used by default
 	 * @param limit
@@ -97,14 +105,43 @@ public class UsersService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public List<User> getUsers(String branchId, String offset, String limit) throws MambuApiException {
+	public List<User> getUsers(String branchId, UserBranchAssignmentType userBranchAssignmentType, String offset,
+			String limit) throws MambuApiException {
+		// Examples:
+		// GET api/users?offset="0"&limit="100" # get all users
+		// GET api/users?branchId=b1 # get assigned users for a branch
+		// Note: branchIdType parameter is available since Mambu 4.0. See MBU-11769
+		// GET api/users?branchId=b1&branchIdType=MANAGE" or GET api/users?branchId=b1&branchIdType=ASSIGNED"
 
 		ParamsMap params = new ParamsMap();
 		params.put(BRANCH_ID, branchId);
+		// Add UserBranchAssignmentType. Applicable only if branchId is not null
+		if (branchId != null && userBranchAssignmentType != null) {
+			params.put(BRANCH_ID_TYPE, userBranchAssignmentType.name());
+		}
 		params.put(OFFSET, offset);
 		params.put(LIMIT, limit);
 
 		return serviceExecutor.execute(getUsers, params);
+	}
+
+	/**
+	 * Convenience method to Get a paginated list of users assigned to a branch, filtered by branch
+	 * 
+	 * @param branchId
+	 *            the id of the branch to filter with. If null, all users are returned
+	 * @param offset
+	 *            the offset of the response. If not set a value of 0 is used by default
+	 * @param limit
+	 *            the maximum number of response entries. If not set a value of 50 is used by default
+	 * 
+	 * @return list of assigned Users if branch id is not null. Otherwise, all users are returned
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<User> getUsers(String branchId, String offset, String limit) throws MambuApiException {
+		// Return users assigned to a branch
+		return getUsers(branchId, null, offset, limit);
 	}
 
 	/**

@@ -8,6 +8,7 @@ import java.util.List;
 import com.google.inject.Inject;
 import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
+import com.mambu.api.server.handler.customviews.model.ApiViewType;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -22,6 +23,7 @@ import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
+import com.mambu.clients.shared.model.ClientState;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.GroupExpanded;
 import com.mambu.clients.shared.model.GroupRoleName;
@@ -64,9 +66,11 @@ public class ClientsService {
 			ClientExpanded.class);
 	// Update Client
 	private final static ApiDefinition updateClient = new ApiDefinition(ApiType.POST_ENTITY, ClientExpanded.class);
+	// Patch Client State: PATCH {"client":{ "state":"EXITED" }} /api/clients/clientID
+	private final static ApiDefinition patchClientState = new ApiDefinition(ApiType.PATCH_ENTITY, Client.class);
 	// Create Group. POST JSON /api/groups
 	private final static ApiDefinition createGroup = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, GroupExpanded.class);
-	// Update Group. PATCH JSON /api/groups/groupId
+	// Update Group. POST JSON /api/groups/groupId
 	private final static ApiDefinition updateGroup = new ApiDefinition(ApiType.POST_ENTITY, GroupExpanded.class);
 	// Get Group Role Names. GET /api/grouprolenames/
 	private final static ApiDefinition getGroupRoles = new ApiDefinition(ApiType.GET_LIST, GroupRoleName.class);
@@ -310,6 +314,39 @@ public class ClientsService {
 		return serviceExecutor.executeJson(updateClient, clientDetails, encodedKey);
 	}
 
+	/**
+	 * Patch client state
+	 * 
+	 * @param clientId
+	 *            the id or the encoded key of a client. Must not be null
+	 * @param clientState
+	 *            new client state. Must not be null. Allowed states: BLACKLISTED, REJECTED, EXITED, INACTIVE
+	 *            (approved), PENDING_APPROVAL (undo approval).
+	 * 
+	 *            See MBU-11443 for more details
+	 * @returns success or failure
+	 * @throws MambuApiException
+	 */
+	public boolean patchClientState(String clientId, ClientState clientState) throws MambuApiException {
+		// Available since Mambu 4.0. See MBU-11443
+		// Example: PATCH {"client":{ "state":"EXITED" }} /api/clients/clientID
+
+		// Verify that both the client ID and clientState are not NULL
+		if (clientId == null || clientState == null) {
+			throw new IllegalArgumentException("Client Id=" + clientId + " and ClientState=" + clientState
+					+ " must not be null");
+		}
+		// Create JSON string for this patch request
+		String clientStateJsonFormat = "{\"client\":{\"state\":%s}}";
+		String patchStateJson = String.format(clientStateJsonFormat, clientState.name());
+		// Add JSON to the paramsMap
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.put(APIData.JSON_OBJECT, patchStateJson);
+
+		// execute Patch request
+		return serviceExecutor.execute(patchClientState, clientId, paramsMap);
+	}
+
 	/***
 	 * Create a new group using GroupExpanded object and sending it as a JSON api. This API allows creating a new Group
 	 * with group details, group members, group roles, custom fields, and group address
@@ -425,6 +462,9 @@ public class ClientsService {
 	/**
 	 * Requests a list of clients for a custom view, limited by offset/limit
 	 * 
+	 * @deprecated Starting with 4.0 use
+	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, boolean, String, String, String)}
+	 *             to filter entities by branch ID
 	 * @param customViewKey
 	 *            the id of the Custom View to filter clients
 	 * @param offset
@@ -436,16 +476,14 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<Client> getClientsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 
 		String branchId = null;
-		String centreId = null;
-		String creditOfficerName = null;
 		CustomViewResultType resultType = CustomViewResultType.BASIC;
-
-		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
-				centreId, creditOfficerName, offset, limit);
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId, offset,
+				limit);
 		return serviceExecutor.execute(getClientsList, params);
 
 	}
@@ -479,6 +517,9 @@ public class ClientsService {
 	/**
 	 * Requests a list of groups for a custom view, limited by offset/limit
 	 * 
+	 * @deprecated Starting with 4.0 use
+	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, boolean, String, String, String)}
+	 *             to filter entities by branch ID
 	 * @param customViewKey
 	 *            the key of the Custom View to filter groups
 	 * @param offset
@@ -490,15 +531,13 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<Group> getGroupsByCustomView(String customViewKey, String offset, String limit)
 			throws MambuApiException {
 		String branchId = null;
-		String centreId = null;
-		String creditOfficerName = null;
 		CustomViewResultType resultType = CustomViewResultType.BASIC;
-
-		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId,
-				centreId, creditOfficerName, offset, limit);
+		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId, offset,
+				limit);
 		return serviceExecutor.execute(getGroupsList, params);
 
 	}
@@ -631,6 +670,7 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<Document> getClientDocuments(String clientId) throws MambuApiException {
 		return serviceExecutor.execute(getClientDocuments, clientId);
 	}
@@ -648,6 +688,7 @@ public class ClientsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<Document> getGroupDocuments(String groupId) throws MambuApiException {
 		return serviceExecutor.execute(getGroupDocuments, groupId);
 	}
