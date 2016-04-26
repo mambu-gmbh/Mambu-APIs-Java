@@ -11,6 +11,7 @@ import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstrain
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.json.ClientPatchJsonSerializer;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
@@ -64,8 +65,14 @@ public class ClientsService {
 			ClientExpanded.class);
 	// Update Client
 	private final static ApiDefinition updateClient = new ApiDefinition(ApiType.POST_ENTITY, ClientExpanded.class);
-	// Patch Client State: PATCH {"client":{ "state":"EXITED" }} /api/clients/clientID
-	private final static ApiDefinition patchClientState = new ApiDefinition(ApiType.PATCH_ENTITY, Client.class);
+	// Patch Client: PATCH {"client":{ "state":"EXITED", "clientRoleId":"{roleID}","firstName":"jan", }}
+	// /api/clients/clientID
+	private final static ApiDefinition patchClient;
+	static {
+		patchClient = new ApiDefinition(ApiType.PATCH_ENTITY, Client.class);
+		// Use ClientPatchJsonSerializer
+		patchClient.addJsonSerializer(Client.class, new ClientPatchJsonSerializer());
+	}
 	// Create Group. POST JSON /api/groups
 	private final static ApiDefinition createGroup = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, GroupExpanded.class);
 	// Update Group. POST JSON /api/groups/groupId
@@ -306,7 +313,7 @@ public class ClientsService {
 	}
 
 	/**
-	 * Patch client state
+	 * Convenience method to Patch client state
 	 * 
 	 * @param clientId
 	 *            the id or the encoded key of a client. Must not be null
@@ -327,15 +334,87 @@ public class ClientsService {
 			throw new IllegalArgumentException("Client Id=" + clientId + " and ClientState=" + clientState
 					+ " must not be null");
 		}
-		// Create JSON string for this patch request
-		String clientStateJsonFormat = "{\"client\":{\"state\":%s}}";
-		String patchStateJson = String.format(clientStateJsonFormat, clientState.name());
-		// Add JSON to the paramsMap
-		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.put(APIData.JSON_OBJECT, patchStateJson);
+		// Set client state in a client
+		Client client = new Client();
+		client.setId(null); // The default is not null, it is ""
+		client.setPreferredLanguage(null); // default is not null (English)
+		switch (clientState) {
+		case BLACKLISTED:
+			client.setToBlackListed(null);
+			break;
+		case REJECTED:
+			client.setToRejected(null);
+			break;
+		case EXITED:
+			client.setToExited(null);
+			break;
+		case INACTIVE:
+			client.setToInactive();
+			break;
+		case PENDING_APPROVAL:
+			client.setToPendingApproval();
+			break;
+		case ACTIVE:
+			client.setToActive(null);
+			break;
+		default:
+			throw new IllegalArgumentException("Setting client state to" + clientState + " is not supported");
 
-		// execute Patch request
-		return serviceExecutor.execute(patchClientState, clientId, paramsMap);
+		}
+		// Execute patch client API
+		return patchClient(client, clientId);
+	}
+
+	/**
+	 * Patch client fields
+	 * 
+	 * @param client
+	 *            client. Must not be null and client's encoded key or its id must not be null.
+	 * 
+	 *            As of Mambu 4.1 the following fields can be patched: id, clientRoleId, firstName, lastName,
+	 *            middleName, homePhone, mobilePhone1, birthDate, emailAddress, gender, state, notes, preferredLanguage
+	 * 
+	 * @return true if client was updated successfully, false otherwise
+	 * @throws MambuApiException
+	 */
+	public boolean patchClient(Client client) throws MambuApiException {
+		// Available since Mambu 4.1. See MBU-11868
+		// Updating client state is available since Mambu 4.0. See MBU-11443
+
+		// Example: PATCH "client":{"clientRoleId":"{roleID}", "state":"EXITED", "firstName":"jan",
+		// "lastName":"vanDamme","middleName":"claude", "gender":"female","emailAddress":"jjj@yahoo.com", "id":"123444"}
+		// /api/clients/clientID
+
+		// Verify that both the client and its ID or encoded key are not NULL
+		if (client == null || (client.getEncodedKey() == null && client.getId() == null)) {
+			throw new IllegalArgumentException("Client and client's encoded key or id  must not be null");
+		}
+		String clientId = client.getEncodedKey() != null ? client.getEncodedKey() : client.getId();
+
+		return patchClient(client, clientId);
+	}
+
+	/**
+	 * Patch client fields
+	 * 
+	 * @param client
+	 *            client. Must not be null
+	 * @param clientId
+	 *            client id or encoded key. Must not be null
+	 * @return true if client was patched successfully
+	 * @throws MambuApiException
+	 */
+	private boolean patchClient(Client client, String clientId) throws MambuApiException {
+		// Available since Mambu 4.1. See See MBU-11868
+		// Updating client state is available since Mambu 4.0. See MBU-11443
+		// Verify that both the client ID and clientState are not NULL
+		if (client == null || clientId == null) {
+			throw new IllegalArgumentException("Client and client id  must not be null");
+		}
+
+		// Create an object to be use for PATCH client JSON
+		// execute Patch API request
+		return serviceExecutor.executeJson(patchClient, client, clientId);
 	}
 
 	/***
