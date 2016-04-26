@@ -111,7 +111,7 @@ public class SearchService {
 	 * @param searchEntityType
 	 *            Mambu entity type. Must not be null. Currently searching with filter constrains API supports the
 	 *            following entities: Clients, Groups, Loans, Savings, Loan Transactions, SavingsTransactions and
-	 *            NotificationMessages
+	 *            NotificationMessages and GlJournalEntries
 	 * @param filterConstraints
 	 *            JSONFilterConstraints object defining an array of applicable filter constraints and an optional sort
 	 *            order. Must not be null
@@ -148,16 +148,16 @@ public class SearchService {
 	 * 
 	 * @param searchEntityType
 	 *            entity type for searching with filter constraints. Must not be null. Currently API supports the
-	 *            following entities: Clients, Groups, Loans, Savings, Loan Transactions and SavingsTransactions,
-	 *            NotificationMessage.
+	 *            following entities: Clients, Groups, Loans, Savings, Loan Transactions, SavingsTransactions,
+	 *            NotificationMessages and GlJournalEntries
 	 * 
-	 *            See MBU-8986, MBU-10646, MBU-11120 for more details
+	 *            See MBU-8986, MBU-10646, MBU-11120, MBU-12099 for more details
 	 * 
 	 * @return api definition for searching entities using filter constraints
 	 */
 	public static ApiDefinition makeApiDefinitionforSearchByFilter(MambuEntityType searchEntityType) {
 
-		// See MBU-8986, MBU-8975, MBU-8987, MBU-8988, MBU-8989, MBU-11120
+		// See MBU-8986, MBU-8975, MBU-8987, MBU-8988, MBU-8989, MBU-11120, MBU-12099
 		// POST Example for searching clients. See MBU-8975.
 		// POST {"filterConstraints":[
 		// {"filterSelection":"BIRTH_DATE",
@@ -170,6 +170,8 @@ public class SearchService {
 		// "filterElement":"EQUALS",
 		// "value":"ABC123"
 		// } ] } /api/clients/search
+
+		// For searching GLJournal entries, See MBU-12099 (Mambu 4.1)
 
 		// Crate search URL. Example: /api/clients/search?offset=0&limit=5
 		String searchUrl = makeUrlForSearchWithFilter(searchEntityType);
@@ -221,6 +223,11 @@ public class SearchService {
 			// Example: /api/notifications/messages/search. See MBU-10646
 			entityUrl = APIData.NOTIFICATIONS + apiDelimiter + APIData.MESSAGES;
 			break;
+		case GL_JOURNAL_ENTRY:
+			// Example: /api/gljournalentries/search See MBU-12099
+			entityUrl = APIData.GLJOURNALENTRIES;
+			break;
+
 		default:
 			throw new IllegalArgumentException("Search for Entity " + searchEntityType.name() + " is not supported");
 		}
