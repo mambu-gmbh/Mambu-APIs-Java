@@ -17,7 +17,6 @@ import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
-import com.mambu.api.server.handler.loan.model.JSONDisburseFeeRequest;
 import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
 import com.mambu.api.server.handler.loan.model.JSONTransactionRequest;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
@@ -644,13 +643,37 @@ public class ServiceHelper {
 	 * @return JSON string for the object
 	 */
 	public static <T> String makeApiJson(T object, String dateTimeFormat) {
-		if (dateTimeFormat == null) {
-			// Use default API formatter
-			return GsonUtils.createGson().toJson(object, object.getClass());
-		} else {
-			// Use provided dateTimeFormat
-			return GsonUtils.createGson(dateTimeFormat).toJson(object, object.getClass());
-		}
+		// Use provided dateTimeFormat. Default format will be used if null
+		return GsonUtils.createGson(dateTimeFormat).toJson(object, object.getClass());
+	}
+
+	/**
+	 * Generate a JSON string for an object and with the specified ApiDefinition
+	 * 
+	 * @param object
+	 *            object
+	 * @param apiDefinition
+	 *            API definition
+	 * @return JSON string for the object
+	 */
+	public static <T> String makeApiJson(T object, ApiDefinition apiDefinition) {
+		return GsonUtils.createSerializerGson(apiDefinition).toJson(object, object.getClass());
+
+	}
+
+	/**
+	 * Generate a JsonElement for an object and with the specified ApiDefinition
+	 * 
+	 * @param object
+	 *            object
+	 * @param apiDefinition
+	 *            API definition
+	 * @return JsonElement for an object
+	 */
+	public static <T> JsonElement makeApiJsonElement(T object, ApiDefinition apiDefinition) {
+
+		return GsonUtils.createSerializerGson(apiDefinition).toJsonTree(object, object.getClass());
+
 	}
 
 	/**

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.accounting.shared.model.GLAccount;
@@ -153,21 +154,18 @@ public class ServiceExecutor {
 		// Use mambuAPIService to execute request
 		String jsonResponse = mambuAPIService.executeRequest(apiUrlPath, paramsMap, method, contentType);
 
-		// Process API Response. Get the return format and returnClass from the apiDefintion
-		Class<?> returnClass = apiDefinition.getReturnClass();
+		// Process API Response. Get the return format from the apiDefintion
 		ApiReturnFormat returnFormat = apiDefinition.getApiReturnFormat();
 
 		R result = null;
 		switch (returnFormat) {
 		case OBJECT:
 			// Get Single Object from the response
-			result = getObject(jsonResponse, returnClass);
+			result = getObject(jsonResponse, apiDefinition);
 			break;
 		case COLLECTION:
-			// Get a list of Objects from the response
-			Type collectionType = getCollectionType(returnClass);
 			// Get result as a collection
-			result = getCollection(jsonResponse, collectionType);
+			result = getCollection(jsonResponse, apiDefinition);
 			break;
 		case BOOLEAN:
 			// Get result as a boolean
@@ -283,10 +281,8 @@ public class ServiceExecutor {
 			throw new IllegalArgumentException("JSON object must not be NULL");
 		}
 
-		// Parse input object into a JSON string
-		final String dateTimeFormat = apiDefinition.getJsonDateTimeFormat();
-		final String jsonData = ServiceHelper.makeApiJson(object, dateTimeFormat);
-
+		// Make API JSON string based on its ApiDefinition
+		final String jsonData = ServiceHelper.makeApiJson(object, apiDefinition);
 		// Add JSON string as JSON_OBJECT to the ParamsMap
 		if (paramsMap == null) {
 			paramsMap = new ParamsMap();
@@ -399,8 +395,13 @@ public class ServiceExecutor {
 	 * @return object the returned object can be cast to the objectClass by the calling methods
 	 */
 	@SuppressWarnings("unchecked")
-	private <R> R getObject(String jsonResponse, Class<?> objectClass) {
-		return (R) GsonUtils.createGson().fromJson(jsonResponse, objectClass);
+	private <R> R getObject(String jsonResponse, ApiDefinition apiDefinition) {
+		// Create Gson with optional deserializers as per ApiDefinition
+		Gson gson = GsonUtils.createDeserializerGson(apiDefinition);
+		// Get return class from ApiDefinition
+		Class<?> returnClass = apiDefinition.getReturnClass();
+		// Get object from jsonResponse
+		return (R) gson.fromJson(jsonResponse, returnClass);
 	}
 
 	/****
@@ -413,8 +414,14 @@ public class ServiceExecutor {
 	 * 
 	 * @return object this object represents a list of entities and must be case to the object's list type
 	 */
-	private <R> R getCollection(String jsonResponse, Type collectionType) {
-		return GsonUtils.createGson().fromJson(jsonResponse, collectionType);
+	private <R> R getCollection(String jsonResponse, ApiDefinition apiDefinition) {
+		// Create Gson with optional deserializers as per ApiDefinition
+		Gson gson = GsonUtils.createDeserializerGson(apiDefinition);
+		Class<?> returnClass = apiDefinition.getReturnClass();
+		// Get return class from ApiDefinition and make a collection type for it
+		Type collectionType = getCollectionType(returnClass);
+		// Get collection of objects from jsonResponse
+		return gson.fromJson(jsonResponse, collectionType);
 	}
 
 	/****
@@ -874,4 +881,5 @@ public class ServiceExecutor {
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.DELETE_ENTITY, clazz);
 		return executeJson(apiDefinition, entityId);
 	}
+
 }

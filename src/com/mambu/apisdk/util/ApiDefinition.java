@@ -1,8 +1,13 @@
 package com.mambu.apisdk.util;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonSerializer;
 import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.accounting.shared.model.GLJournalEntry;
 import com.mambu.accounts.shared.model.DocumentTemplate;
@@ -61,7 +66,9 @@ import com.mambu.tasks.shared.model.Task;
  * ApiDefinition is a helper class which allows service classes to provide a specification for a Mambu API request and
  * then use ServiceHelper class to actually execute the API request with this ApiDefinition and with provided input
  * parameters. This class allows users to define API format parameters required by a specific API request, including the
- * URL path structure, the HTTP method and content type, and the specification for the expected Mambu response
+ * URL path structure, the HTTP method and content type, and the specification for the expected Mambu response.
+ * ApiDefinition also allows optionally specifying custom JsonSerializers and JsonDeserializers to be used when
+ * generating API requests or processing Mambu responses as well as serialisation exclusion strategies
  * 
  * For the URL path part of the specification, the API definition assumes the URL path to be build in the following
  * format: endpoint[/objectId][/relatedEntity][/[relatedEntityID]], with all parts , except the endpoint, being
@@ -262,6 +269,14 @@ public class ApiDefinition {
 	// default. ApiDefinition allows optionally setting this format for a specific API definition. For example, to use a
 	// shorter date only format, like "yyyy-MM-dd"
 	private String jsonDateTimeFormat = GsonUtils.defaultDateTimeFormat;
+
+	// support specifying optional exclusion strategies
+	List<ExclusionStrategy> serializationExclusionStrategies = null;
+
+	// support optional API request JsonSerializers
+	private HashMap<Class<?>, JsonSerializer<?>> jsonSerializers = null;
+	// support optional API response JsonDeserializers
+	private HashMap<Class<?>, JsonDeserializer<?>> jsonDeserializers = null;
 
 	/**
 	 * Constructor used with ApiType requests for which only one entity class needs to be specified, Example GET
@@ -643,4 +658,75 @@ public class ApiDefinition {
 	public void setUrlPath(String urlPath) {
 		this.urlPath = urlPath;
 	}
+
+	/**
+	 * Add serialization ExclusionStrategy to the API definition
+	 * 
+	 * @param exclusionStrategy
+	 *            exclusion strategy
+	 */
+	public void addSerializationExclusionStrategy(ExclusionStrategy exclusionStrategy) {
+		if (serializationExclusionStrategies == null) {
+			serializationExclusionStrategies = new ArrayList<>();
+		}
+		serializationExclusionStrategies.add(exclusionStrategy);
+	}
+
+	/**
+	 * Get serialization ExclusionStrategy specified in the API definition
+	 * 
+	 * @return exclusion strategy
+	 */
+	public List<ExclusionStrategy> getSerializationExclusionStrategies() {
+		return serializationExclusionStrategies;
+	}
+
+	/**
+	 * Add JsonSerializer for a specific class to the API definition
+	 * 
+	 * @param clazz
+	 *            class
+	 * @param serializer
+	 *            JsonSerializer
+	 */
+	public void addJsonSerializer(Class<?> clazz, JsonSerializer<?> serializer) {
+		if (jsonSerializers == null) {
+			jsonSerializers = new HashMap<>();
+		}
+		jsonSerializers.put(clazz, serializer);
+	}
+
+	/**
+	 * Get JsonSerializers specified in the API definition
+	 * 
+	 * @return map of classes to JsonSerializer for these classes
+	 */
+	public HashMap<Class<?>, JsonSerializer<?>> getJsonSerializers() {
+		return jsonSerializers;
+	}
+
+	/**
+	 * Add JsonDeserializer for a specific class to the API definition
+	 * 
+	 * @param clazz
+	 *            class
+	 * @param deserializer
+	 *            Json Deserializer
+	 */
+	public void addJsonDeserializer(Class<?> clazz, JsonDeserializer<?> deserializer) {
+		if (jsonDeserializers == null) {
+			jsonDeserializers = new HashMap<>();
+		}
+		jsonDeserializers.put(clazz, deserializer);
+	}
+
+	/**
+	 * Get JsonDeserializers specified in the API definition
+	 * 
+	 * @return map of classes to JsonDeserializers for these classes
+	 */
+	public HashMap<Class<?>, JsonDeserializer<?>> getJsonDeserializers() {
+		return jsonDeserializers;
+	}
+
 }
