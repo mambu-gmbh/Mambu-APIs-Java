@@ -10,10 +10,12 @@ import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.accounting.shared.model.GLJournalEntry;
+import com.mambu.accounts.shared.model.Account;
 import com.mambu.accounts.shared.model.DocumentTemplate;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
+import com.mambu.api.server.handler.loan.model.JSONTransactionRequest;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -882,4 +884,39 @@ public class ServiceExecutor {
 		return executeJson(apiDefinition, entityId);
 	}
 
+	/**
+	 * POST JSON Transaction Request
+	 * 
+	 * @param accountId
+	 *            account id or encoded key. Must not be null
+	 * @param request
+	 *            JSON Transaction Request
+	 * @param accountType
+	 *            account type, LOAN or SAVINGS
+	 * @param transactionTypeName
+	 *            transaction type name. E.g. FEE, DISBURSEMENT, DEPOSIT
+	 * @return loan transaction or savings transaction depending on accountType
+	 * @throws MambuApiException
+	 */
+	public <R> R executeJSONTransactionRequest(String accountId, JSONTransactionRequest request,
+			Account.Type accountType, String transactionTypeName) throws MambuApiException {
+		if (request == null || transactionTypeName == null || accountType == null || accountId == null) {
+			throw new IllegalArgumentException("All input parameters must not be null");
+		}
+		// Create Params Map containing JSON for the transaction request
+		ParamsMap paramsMap = ServiceHelper.makeParamsForTransactionRequest(transactionTypeName, request);
+
+		// Create API Definition specifying entity class and expected result class
+		Class<?> entityClass = accountType == Account.Type.LOAN ? LoanAccount.class : SavingsAccount.class;
+		Class<?> transactionClass = accountType == Account.Type.LOAN ? LoanTransaction.class : SavingsTransaction.class;
+
+		// Make ApiDefinition to POST_OWNED_ENTITY using JSON format
+		ApiDefinition postJsonAccountTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY, entityClass,
+				transactionClass);
+		postJsonAccountTransaction.setContentType(ContentType.JSON);
+
+		// Execute API request with ParamsMap containing JSON
+		// Returns LoanTransaction or SavingsTransaction (depending on accountType),
+		return execute(postJsonAccountTransaction, accountId, paramsMap);
+	}
 }
