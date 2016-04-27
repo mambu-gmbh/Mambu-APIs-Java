@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
+import com.mambu.accounting.shared.model.GLAccount;
+import com.mambu.accounting.shared.model.GLAccountingRule;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
 import com.mambu.api.server.handler.settings.organization.model.JSONOrganization;
@@ -41,6 +43,7 @@ public class DemoTestOrganizationService {
 
 	private static User demoUser;
 	private static Centre demoCentre;
+	private static String methodName = null; // print method name on exception
 
 	public static void main(String[] args) {
 
@@ -86,11 +89,11 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetAllBranches() throws MambuApiException {
-		System.out.println("\nIn testGetAllBranches");
+		System.out.println(methodName = "\nIn testGetAllBranches");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
-		String offset = null;
-		String limit = null;
+		String offset = "1";
+		String limit = "3";
 		Date d1 = new Date();
 		List<Branch> branches = organizationService.getBranches(offset, limit);
 		Date d2 = new Date();
@@ -108,7 +111,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetBranchesByPage() throws MambuApiException {
-
+		System.out.println(methodName = "\nIn testGetBranchesByPage");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		String offset = "0";
@@ -133,7 +136,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetBranch() throws MambuApiException {
-		System.out.println("\nIn testGetBranch");
+		System.out.println(methodName = "\nIn testGetBranch");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		Branch branch = organizationService.getBranch(BRANCH_ID);
@@ -146,7 +149,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetCentre() throws MambuApiException {
-
+		System.out.println(methodName = "\nIn testGetCentre");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		String centreId = demoCentre.getId();
@@ -163,11 +166,11 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetCentresByPage() throws MambuApiException {
-
+		System.out.println(methodName = "\nIn testGetCentresByPage");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		String offset = "0";
-		String limit = "500";
+		String limit = "5";
 		String branchId = null;
 		System.out.println("\nIn testGetCentresByPage" + "  Offset=" + offset + "  Limit=" + limit);
 
@@ -189,7 +192,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetCentresByBranch() throws MambuApiException {
-
+		System.out.println(methodName = "\nIn testGetCentresByBranch");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		String branchId = BRANCH_ID;
@@ -212,7 +215,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetCurrency() throws MambuApiException {
-		System.out.println("\nIn testGetCurrency");
+		System.out.println(methodName = "\nIn testGetCurrency");
 		Date d1 = new Date();
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -230,7 +233,7 @@ public class DemoTestOrganizationService {
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		String fieldId = CUSTOM_FIELD_ID;
-		System.out.println("\nIn testGetCustomField by ID." + "  Field ID=" + fieldId);
+		System.out.println(methodName = "\nIn testGetCustomField by ID." + "  Field ID=" + fieldId);
 
 		Date d1 = new Date();
 
@@ -250,11 +253,11 @@ public class DemoTestOrganizationService {
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		// E.g. CustomField.Type.CLIENT_INFO, CustomField.Type.LOAN_ACCOUNT_INFO, etc
-		CustomFieldType customFieldType = CustomFieldType.CLIENT_INFO;
-
-		System.out.println("\nIn testGetCustomFieldSetsByType for " + customFieldType);
+		CustomFieldType customFieldType = CustomFieldType.TRANSACTION_CHANNEL_INFO;
+		System.out.println(methodName = "\nIn testGetCustomFieldSetsByType for " + customFieldType);
 
 		Date d1 = new Date();
+
 		List<CustomFieldSet> sustomFieldSets = organizationService.getCustomFieldSets(customFieldType);
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
@@ -263,8 +266,8 @@ public class DemoTestOrganizationService {
 		for (CustomFieldSet set : sustomFieldSets) {
 			List<CustomField> customFields = set.getCustomFields();
 
-			System.out.println("\nSet Name=" + set.getName() + "\tType=" + set.getType().toString() + "  Total Fields="
-					+ customFields.size() + "\tUsage=" + set.getUsage());
+			System.out.println("\nSet Name=" + set.getName() + "\tType=" + set.getType().toString() + "\tBuiltInType="
+					+ set.getBuiltInType() + "\nTotal Fields=" + customFields.size() + "\tUsage=" + set.getUsage());
 			System.out.println("List of fields");
 			for (CustomField field : customFields) {
 				CUSTOM_FIELD_ID = DemoUtil.logCustomField(field);
@@ -274,18 +277,18 @@ public class DemoTestOrganizationService {
 
 	}
 
+	// Test getting transaction channels API
+	// Since Mambu 4.1 this API returns also applicable custom fields for each channel. See MBU-12226
 	public static void testGetTransactionChannels() throws MambuApiException {
-		System.out.println("\nIn testGetTransactionChannels");
+		System.out.println(methodName = "\nIn testGetTransactionChannels");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		List<TransactionChannel> transactionChannels = organizationService.getTransactionChannels();
-
 		System.out.println("Total Channels=" + transactionChannels.size());
 		for (TransactionChannel channel : transactionChannels) {
-			List<ChannelField> fields = channel.getChannelFields();
-			int channelFieldsCount = (fields == null) ? 0 : fields.size();
-			System.out.println("Channel Name=" + channel.getName() + "\tId=" + channel.getId() + "\tTotal Fields="
-					+ channelFieldsCount);
+			String channelName = channel.getName();
+			String channelId = channel.getId();
+			System.out.println("\nChannel Name=" + channelName + "\tId=" + channelId);
 
 			// Transaction channels also have UsageRights since Mambu 3.13. See MBU-9562
 			String demoUserRoleKey = (demoUser.getRole() == null) ? null : demoUser.getRole().getEncodedKey();
@@ -300,31 +303,50 @@ public class DemoTestOrganizationService {
 						System.out.println("For Role Key=" + roleKey);
 					}
 				}
+			} else {
+				System.out.println("WARNING: No UsageRights available");
+			}
+			// Get TransactionChannel Custom Fields. Available since Mambu 4.1. See MBU-12226
+			List<CustomField> channelFields = channel.getCustomInformation();
+			int totalCustomFields = channelFields != null ? channelFields.size() : 0;
+			System.out.println("Total Custom Fields=" + totalCustomFields);
+			for (CustomField field : channelFields) {
+				System.out.println("\tName=" + field.getName() + "\tID=" + field.getId() + "\tIndex="
+						+ field.getIndexInList());
+			}
+			// Log GLAccountingRule for Get Transaction channel
+			GLAccountingRule accountingRue = channel.getTransactionChannelAccountingRule();
+			if (accountingRue != null) {
+				GLAccount glAccount = accountingRue.getAccount();
+				String accountName = glAccount.getLongName();
+				System.out.println("GLAccount=" + accountName + "\tFinancialResource="
+						+ accountingRue.getFinancialResource());
+			} else {
+				System.out.println("No GLAccountingRule");
+			}
 
-			}
-			System.out.println();
-			for (ChannelField field : fields) {
-				System.out.println("Field Name=" + field.name() + " ");
-			}
-			System.out.println();
+			// Predefined channel fields were deprecated in 4.1. See MBU-11800
+			List<ChannelField> deprecatedFields = channel.getChannelFields();
+			int deprecatedlFieldsCount = (deprecatedFields == null) ? 0 : deprecatedFields.size();
+			System.out.println("\tTotal Deprecated Fields=" + deprecatedlFieldsCount);
 		}
 	}
 
 	// Update Custom Field values for the demo Branch and for demo Centre and delete the first custom field
 	public static void testUpdateDeleteCustomFields() throws MambuApiException {
-		System.out.println("\nIn testUpdateDeleteCustomFields");
+		System.out.println(methodName = "\nIn testUpdateDeleteCustomFields");
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
 		// Test fields for a Branch
-		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.BRANCH);
+		DemoTestCustomFiledValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.BRANCH);
 
 		// Test fields for a Centre
-		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.CENTRE);
+		DemoTestCustomFiledValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.CENTRE);
 	}
 
 	// Test Posting Index Interest Rates. Available since 3.10
 	public static void testPostIndexInterestRate() throws MambuApiException {
-		System.out.println("\nIn testPostIndexInterestRate");
+		System.out.println(methodName = "\nIn testPostIndexInterestRate");
 		// Note that there is no API yet to get Index Rate Sources. API developers need to know the rate source key to
 		// post new rates. These keys can be obtained from Mambu. They can also be looked up from the getProduct API
 		// response. See MBU-8059 for more details
@@ -337,17 +359,21 @@ public class DemoTestOrganizationService {
 		// Create new IndexRate
 		IndexRate indexRate = new IndexRate(startDate, new BigDecimal(3.5));
 
-		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
-		IndexRate indexRateResult = organizationService.postIndexInterestRate(indexRateSourceKey, indexRate);
+		try {
+			OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+			IndexRate indexRateResult = organizationService.postIndexInterestRate(indexRateSourceKey, indexRate);
 
-		System.out.println("Interest Rate updated. New Rate=" + indexRateResult.getRate() + " for source="
-				+ indexRateResult.getRateSource().getName() + " Start date=" + indexRateResult.getStartDate());
+			System.out.println("Interest Rate updated. New Rate=" + indexRateResult.getRate() + " for source="
+					+ indexRateResult.getRateSource().getName() + " Start date=" + indexRateResult.getStartDate());
+		} catch (MambuApiException e) {
+			DemoUtil.logException(methodName, e);
+		}
 
 	}
 
 	// Test getting Identification Document Templates
 	public static void testGetIDDocumentTemplates() throws MambuApiException {
-		System.out.println("\nIn testGetIDDocumentTemplates");
+		System.out.println(methodName = "\nIn testGetIDDocumentTemplates");
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 		List<IdentificationDocumentTemplate> templates = organizationService.getIdentificationDocumentTemplates();
@@ -365,7 +391,7 @@ public class DemoTestOrganizationService {
 
 	// Get Organization details. Available since 3.11
 	public static void testGetOrganizationDetails() throws MambuApiException {
-		System.out.println("\nIn testGetOrganization");
+		System.out.println(methodName = "\nIn testGetOrganization");
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -381,29 +407,41 @@ public class DemoTestOrganizationService {
 
 		// Test Get General Settings API
 		GeneralSettings generalSettings = organizationService.getGeneralSettings();
-		System.out.println("\nSettings. BirthDateRequired=" + generalSettings.getBirthDateRequired() + "\tDATE_FORMAT="
+		System.out.println("\nSettings. BirthDateRequired=" + "\tDATE_FORMAT="
 				+ generalSettings.getDateFormats().get(DateFormatType.DATE_FORMAT) + "\tDATETIME_FORMAT="
 				+ generalSettings.getDateFormats().get(DateFormatType.DATE_TIME_FORMAT) + "\tDecimalSeperator="
 				+ generalSettings.getDecimalSeperator());
 
-		// Test Get Mambu Object Labels
-		List<ObjectLabel> objectLabels = organizationService.getObjectLabels();
-		System.out.println("\nTotal Object Labels Returned=" + objectLabels.size());
-		// Print ObjectLabel details
-		for (ObjectLabel label : objectLabels) {
-			System.out.println("Object Label. Type=" + label.getType() + "\tSingular=" + label.getSingularValue()
-					+ "\tPlural=" + label.getPluralValue() + "\tLanguage=" + label.getLanguage()
-					// Note, Encoded key is not returned in response.
-					+ "\tHas Custom Value=" + label.hasCustomValue());
+		try {
+			// Test Get Mambu Object Labels
+			List<ObjectLabel> objectLabels = organizationService.getObjectLabels();
+			System.out.println("\nTotal Object Labels Returned=" + objectLabels.size());
+			// Print ObjectLabel details
+			for (ObjectLabel label : objectLabels) {
+				System.out.println("Object Label. Type=" + label.getType() + "\tSingular=" + label.getSingularValue()
+						+ "\tPlural=" + label.getPluralValue() + "\tLanguage=" + label.getLanguage()
+						// Note, Encoded key is not returned in response.
+						+ "\tHas Custom Value=" + label.hasCustomValue());
 
+			}
+		} catch (MambuApiException e) {
+			DemoUtil.logException(methodName, e);
 		}
 		// Test Get Organization Logo
-		String logo = organizationService.getBrandingLogo();
-		System.out.println("\nEncoded Logo file=" + logo);
+		try {
+			String logo = organizationService.getBrandingLogo();
+			System.out.println("\nEncoded Logo file=" + logo);
+		} catch (MambuApiException e) {
+			DemoUtil.logException(methodName, e);
+		}
 
 		// Test Get Organization Icon
-		String icon = organizationService.getBrandingIcon();
-		System.out.println("\nEncoded Icon file=" + icon);
+		try {
+			String icon = organizationService.getBrandingIcon();
+			System.out.println("\nEncoded Icon file=" + icon);
+		} catch (MambuApiException e) {
+			DemoUtil.logException(methodName, e);
+		}
 
 	}
 }
