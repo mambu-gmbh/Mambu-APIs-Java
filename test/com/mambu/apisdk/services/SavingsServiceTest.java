@@ -52,12 +52,14 @@ public class SavingsServiceTest extends MambuAPIServiceTest {
 		custField1.setCustomFieldId("Interest_Deposit_Accounts");
 		custField1.setValue("My Loan Purpose 5");
 		custField1.setCustomFieldSetGroupIndex(null); // Set to null explicitly: since Mambu 3.13 defaults to -1
+		custField1.setSkipUniqueValidation(null); // Set to null explicitly: new in Mambu 4.1, defaults to false
 		savingsAccountCustomInformation.add(custField1);
 
 		CustomFieldValue custField2 = new CustomFieldValue();
 		custField2.setCustomFieldId("Deposit_frequency_Deposit_Accoun");
 		custField2.setValue("Daily");
 		custField2.setCustomFieldSetGroupIndex(null); // Set to null explicitly: since Mambu 3.13 defaults to -1
+		custField2.setSkipUniqueValidation(null); // Set to null explicitly: since Mambu 4.1 defaults to false
 		savingsAccountCustomInformation.add(custField2);
 
 		JSONSavingsAccount jsonSavingsAccount = new JSONSavingsAccount(savingsAccount);
