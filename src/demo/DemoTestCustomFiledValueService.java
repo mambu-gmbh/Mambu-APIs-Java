@@ -171,12 +171,16 @@ public class DemoTestCustomFiledValueService {
 				break;
 			}
 		}
-		if (groupedSet == null || groupedSet.getCustomFields() == null) {
+		if (groupedSet == null || groupedSet.getCustomFields() == null || groupedSet.getCustomFields().size() == 0) {
 			System.out.println("\nWARNING: No Grouped Custom Field Sets with fields found for " + customFieldType);
 			return;
 		}
-		// Make test custom fields values for the set
-		List<CustomField> groupFields = groupedSet.getCustomFields();
+		// Make test custom fields values for the set. Get only applicable custom fields (e.g. applicable to product)
+		List<CustomField> groupFields = DemoUtil.getForEntityCustomFields(groupedSet, entityParams.getLinkedTypeKey());
+		if (groupFields.size() == 0) {
+			System.out.println("\nWARNING: No Applicable Grouped Custom Fields found for " + customFieldType);
+			return;
+		}
 		List<CustomFieldValue> customFieldValues = new ArrayList<>();
 		for (CustomField field : groupFields) {
 			// Create test value matching field's data type

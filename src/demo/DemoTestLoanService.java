@@ -1559,7 +1559,7 @@ public class DemoTestLoanService {
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
 		DemoEntityParams demoEntityParams = new DemoEntityParams(newAccount.getName(), newAccount.getEncodedKey(),
-				newAccount.getId());
+				newAccount.getId(), newAccount.getProductTypeKey());
 		DemoTestCustomFiledValueService.testUpdateAdddDeleteEntityCustomFields(MambuEntityType.LOAN_ACCOUNT,
 				demoEntityParams);
 
