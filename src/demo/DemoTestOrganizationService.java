@@ -288,7 +288,8 @@ public class DemoTestOrganizationService {
 		for (TransactionChannel channel : transactionChannels) {
 			String channelName = channel.getName();
 			String channelId = channel.getId();
-			System.out.println("\nChannel Name=" + channelName + "\tId=" + channelId);
+			System.out.println("\nChannel Key=" + channel.getEncodedKey() + "\tName=" + channelName + "\tId="
+					+ channelId);
 
 			// Transaction channels also have UsageRights since Mambu 3.13. See MBU-9562
 			String demoUserRoleKey = (demoUser.getRole() == null) ? null : demoUser.getRole().getEncodedKey();
@@ -307,12 +308,12 @@ public class DemoTestOrganizationService {
 				System.out.println("WARNING: No UsageRights available");
 			}
 			// Get TransactionChannel Custom Fields. Available since Mambu 4.1. See MBU-12226
-			List<CustomField> channelFields = channel.getCustomInformation();
+			List<CustomField> channelFields = channel.getCustomFields();
 			int totalCustomFields = channelFields != null ? channelFields.size() : 0;
 			System.out.println("Total Custom Fields=" + totalCustomFields);
+
 			for (CustomField field : channelFields) {
-				System.out.println("\tName=" + field.getName() + "\tID=" + field.getId() + "\tIndex="
-						+ field.getIndexInList());
+				DemoUtil.logCustomField(field);
 			}
 			// Log GLAccountingRule for Get Transaction channel
 			GLAccountingRule accountingRue = channel.getTransactionChannelAccountingRule();
