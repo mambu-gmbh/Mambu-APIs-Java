@@ -3,17 +3,19 @@
  */
 package com.mambu.apisdk.services;
 
+import java.util.Date;
 import java.util.List;
 
 import com.google.inject.Inject;
 import com.mambu.accounts.shared.model.Account.Type;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
-import com.mambu.api.server.handler.customviews.model.ApiViewType;
+import com.mambu.api.server.handler.loan.model.JSONApplyManualFee;
+import com.mambu.api.server.handler.loan.model.JSONTransactionRequest;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.services.CustomViewsService.CustomViewResultType;
+import com.mambu.apisdk.json.SavingsAccountPatchJsonSerializer;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
@@ -26,8 +28,11 @@ import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
-import com.mambu.docs.shared.model.Document;
+import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.core.shared.model.Money;
+import com.mambu.loans.shared.model.CustomPredefinedFee;
 import com.mambu.loans.shared.model.LoanAccount;
+import com.mambu.loans.shared.model.LoanTransactionType;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsProduct;
 import com.mambu.savings.shared.model.SavingsTransaction;
@@ -86,9 +91,6 @@ public class SavingsService {
 	// Get Accounts for a Group
 	private final static ApiDefinition getAccountsForGroup = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, Group.class,
 			SavingsAccount.class);
-	// Get Documents for an Account
-	private final static ApiDefinition getAccountDocuments = new ApiDefinition(ApiType.GET_OWNED_ENTITIES,
-			SavingsAccount.class, Document.class);
 	// Post Account Transactions. Params map defines the transaction type
 	private final static ApiDefinition postAccountTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
 			SavingsAccount.class, SavingsTransaction.class);
@@ -98,9 +100,6 @@ public class SavingsService {
 	// Get Accounts Transactions (transactions for a specific savings account)
 	private final static ApiDefinition getAccountTransactions = new ApiDefinition(ApiType.GET_OWNED_ENTITIES,
 			SavingsAccount.class, SavingsTransaction.class);
-	// Get All Savings Transactions (transactions for all savings accounts)
-	private final static ApiDefinition getAllSavingsTransactions = new ApiDefinition(ApiType.GET_RELATED_ENTITIES,
-			SavingsAccount.class, SavingsTransaction.class);
 	// Delete Account
 	private final static ApiDefinition deleteAccount = new ApiDefinition(ApiType.DELETE_ENTITY, SavingsAccount.class);
 	// Create Account
@@ -109,11 +108,16 @@ public class SavingsService {
 	// Update Account
 	private final static ApiDefinition updateAccount = new ApiDefinition(ApiType.POST_ENTITY, JSONSavingsAccount.class);
 	// Patch Account. Used to update savings terms only. PATCH JSON /api/savings/savingsId
-	private final static ApiDefinition patchAccount = new ApiDefinition(ApiType.PATCH_ENTITY, SavingsAccount.class);
-	// Loan Products API requests
-	// Get Loan Product Details
+	private final static ApiDefinition patchAccount;
+	static {
+		patchAccount = new ApiDefinition(ApiType.PATCH_ENTITY, SavingsAccount.class);
+		// Use SavingsAccountPatchJsonSerializer
+		patchAccount.addJsonSerializer(SavingsAccount.class, new SavingsAccountPatchJsonSerializer());
+	}
+	// Products API requests
+	// Get Savings Product Details
 	private final static ApiDefinition getProduct = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, SavingsProduct.class);
-	// Get Lists of Loan Products
+	// Get Lists of Savings Products
 	private final static ApiDefinition getProducts = new ApiDefinition(ApiType.GET_LIST, SavingsProduct.class);
 
 	/***
@@ -242,36 +246,6 @@ public class SavingsService {
 	}
 
 	/**
-	 * Requests a list of savings transactions for a custom view, limited by offset/limit
-	 * 
-	 * @deprecated Starting with 4.0 use
-	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, boolean, String, String, String)}
-	 *             to filter entities by branch ID
-	 * @param customViewKey
-	 *            the key of the Custom View to filter savings transactions
-	 * @param offset
-	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * @param limit
-	 *            pagination limit. If not null it must be an integer greater than zero
-	 * 
-	 * @return the list of Mambu savings transactions
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public List<SavingsTransaction> getSavingsTransactionsByCustomView(String customViewKey, String offset, String limit)
-			throws MambuApiException {
-		// Example GET savings/transactions?viewfilter=567&offset=0&limit=100
-
-		String branchId = null;
-		CustomViewResultType resultType = CustomViewResultType.BASIC;
-
-		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId, offset,
-				limit);
-		return serviceExecutor.execute(getAllSavingsTransactions, params);
-	}
-
-	/**
 	 * Get savings transactions by specifying filter constraints
 	 * 
 	 * @param filterConstraints
@@ -315,6 +289,7 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public SavingsTransaction makeWithdrawal(String accountId, String amount, String date, String notes,
 			TransactionDetails transactionDetails) throws MambuApiException {
 
@@ -329,8 +304,41 @@ public class SavingsService {
 	}
 
 	/****
+	 * Make a withdrawal from an account.
+	 * 
+	 * @param accountId
+	 *            account ID or encoded key. Must not be null
+	 * @param amount
+	 *            transaction amount
+	 * @param date
+	 *            transaction date
+	 * @param transactionDetails
+	 *            transaction details
+	 * @param customInformation
+	 *            transaction custom fields
+	 * @param notes
+	 *            transaction notes
+	 * 
+	 * @return Savings Transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public SavingsTransaction makeWithdrawal(String accountId, Money amount, Date date,
+			TransactionDetails transactionDetails, List<CustomFieldValue> customInformation, String notes)
+			throws MambuApiException {
+
+		JSONTransactionRequest transactionRequest = ServiceHelper.makeJSONTransactionRequest(amount, date, null,
+				transactionDetails, null, customInformation, notes);
+
+		return serviceExecutor.executeJSONTransactionRequest(accountId, transactionRequest, Type.SAVINGS,
+				SavingsTransactionType.WITHDRAWAL.name());
+	}
+
+	/****
 	 * Make a deposit to an account.
 	 * 
+	 * @deprecated since Mambu 4.1 use method supporting transaction custom fields
+	 *             {@link #makeDeposit(String, Money, Date, TransactionDetails, List, String)}
 	 * @param accountId
 	 *            account ID
 	 * @param amount
@@ -346,6 +354,7 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public SavingsTransaction makeDeposit(String accountId, String amount, String date, String notes,
 			TransactionDetails transactionDetails) throws MambuApiException {
 
@@ -356,6 +365,37 @@ public class SavingsService {
 		ServiceHelper.addAccountTransactionParams(paramsMap, amount, date, notes, transactionDetails);
 
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
+	}
+
+	/****
+	 * Make a deposit to an account.
+	 * 
+	 * @param accountId
+	 *            account ID or encoded key. Must not be null
+	 * @param amount
+	 *            transaction amount
+	 * @param date
+	 *            transaction date
+	 * @param transactionDetails
+	 *            transaction details
+	 * @param customInformation
+	 *            transaction custom fields
+	 * @param notes
+	 *            transaction notes
+	 * 
+	 * @return Savings Transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public SavingsTransaction makeDeposit(String accountId, Money amount, Date date,
+			TransactionDetails transactionDetails, List<CustomFieldValue> customInformation, String notes)
+			throws MambuApiException {
+
+		JSONTransactionRequest transactionRequest = ServiceHelper.makeJSONTransactionRequest(amount, date, null,
+				transactionDetails, null, customInformation, notes);
+
+		return serviceExecutor.executeJSONTransactionRequest(accountId, transactionRequest, Type.SAVINGS,
+				SavingsTransactionType.DEPOSIT.name());
 	}
 
 	/**
@@ -428,6 +468,81 @@ public class SavingsService {
 		paramsMap.addParam(NOTES, notes);
 
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
+	}
+
+	/****
+	 * Apply Predefined Fee to to a savings account
+	 * 
+	 * @param accountId
+	 *            the id or the encoded key of the account. Must not be null
+	 * @param fees
+	 *            fees. Only Manual Predefined Fees are currently supported. Must not be null. Must contain exactly one
+	 *            fee.
+	 * 
+	 *            Note: Once MBU-12865 is implemented this method will support both predefined fees and arbitrary fees
+	 *            and the (@link {@link #applyFeeToLoanAccount(String, String, String, String)} method used for
+	 *            arbitrary fees can be deprecated
+	 * @param notes
+	 *            transaction notes
+	 * 
+	 * @return Savings Transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public SavingsTransaction applyFeeToSavingsAccount(String accountId, List<CustomPredefinedFee> fees, String notes)
+			throws MambuApiException {
+		//
+		if (fees == null || fees.size() != 1) {
+			throw new IllegalArgumentException("There must be exactly one fee present");
+		}
+		// Support for manual predefined fees available since Mambu 4.1. See MBU-12273
+		// Example: POST /api/savings/SAVINGS_ID/transactions
+		// {"type":"FEE", "fees":[{"encodedKey":"8a80816752715c34015278bd4792084b","amount":"20" }],
+		// "notes":"test" ]
+
+		// Create JSONTransactionRequest for Apply FEE API - need to specify only fees and notes
+		Integer repaymentNumber = null; // not applicable for savings account
+		JSONApplyManualFee transactionRequest = ServiceHelper.makeJSONApplyManualFeeRequest(fees, repaymentNumber,
+				notes);
+		return serviceExecutor.executeJSONTransactionRequest(accountId, transactionRequest, Type.SAVINGS,
+				LoanTransactionType.FEE.name());
+	}
+
+	/**
+	 * Convenience method to execute Savings Account transaction by providing JSONTransactionRequest
+	 * 
+	 * @param accountId
+	 *            account id or encoded key. Must not be null
+	 * @param transactionType
+	 *            savings transaction type. Must not be null. Supported types are: FEE_APPLIED, DEPOSIT and WITHDRAWAL
+	 * @param transactionRequest
+	 *            JSON transaction request
+	 * @return savings transaction
+	 * @throws MambuApiException
+	 */
+	public SavingsTransaction executeJSONTransactionRequest(String accountId, SavingsTransactionType transactionType,
+			JSONTransactionRequest transactionRequest) throws MambuApiException {
+		//
+		if (transactionRequest == null || transactionType == null) {
+			throw new IllegalArgumentException("Transaction request and transactionType must not be null");
+		}
+
+		String methodName = transactionType.name();
+		switch (transactionType) {
+		case FEE_APPLIED:
+			// Mambu expects the transaction name to be "FEE", the same as for Loans
+			methodName = LoanTransactionType.FEE.name();
+			break;
+		case DEPOSIT:
+		case WITHDRAWAL:
+			break;
+		default:
+			throw new IllegalArgumentException("Transaction  type " + transactionType + " is not supported");
+		}
+		// Post Transaction of type FEE. Note, using LoanTransactionType.FEE enum to match the expected "FEE"
+		// transaction type string (method)
+		return serviceExecutor.executeJSONTransactionRequest(accountId, transactionRequest, Type.SAVINGS, methodName);
+
 	}
 
 	/****
@@ -512,11 +627,11 @@ public class SavingsService {
 		String transactionKey = originalTransaction.getEncodedKey();
 		if (transactionKey == null || transactionKey.isEmpty()) {
 			// Try getting the id
-			long transId = originalTransaction.getTransactionId();
-			if (transId == 0) {
+			if (originalTransaction.getTransactionId() == null || originalTransaction.getTransactionId() == 0) {
 				throw new IllegalArgumentException(
 						"Original Transaction must have either the encoded key or id not null or empty");
 			}
+			long transId = originalTransaction.getTransactionId();
 			transactionKey = String.valueOf(transId);
 		}
 		// Get account id and original transaction type from the original transaction
@@ -644,35 +759,6 @@ public class SavingsService {
 		String centreId = null;
 		return getSavingsAccountsByBranchCentreOfficerState(branchId, centreId, creditOfficerUserName, accountState,
 				offset, limit);
-
-	}
-
-	/**
-	 * Requests a list of savings accounts for a custom view, limited by offset/limit only *
-	 * 
-	 * @deprecated Starting with 4.0 use
-	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, boolean, String, String, String)}
-	 *             to filter entities by branch ID
-	 * @param customViewKey
-	 *            the key of the Custom View to filter savings accounts
-	 * @param offset
-	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * @param limit
-	 *            pagination limit. If not null it must be an integer greater than zero
-	 * 
-	 * @return the list of Mambu savings accounts
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public List<SavingsAccount> getSavingsAccountsByCustomView(String customViewKey, String offset, String limit)
-			throws MambuApiException {
-		String branchId = null;
-		CustomViewResultType resultType = CustomViewResultType.BASIC;
-
-		ParamsMap params = CustomViewsService.makeParamsForGetByCustomView(customViewKey, resultType, branchId, offset,
-				limit);
-		return serviceExecutor.execute(getAccountsList, params);
 
 	}
 
@@ -904,10 +990,8 @@ public class SavingsService {
 			throw new IllegalArgumentException("Cannot update Account, the encodedKey or ID must be NOT null");
 		}
 
-		String id = (accountId != null) ? accountId : encodedKey;
-		ParamsMap params = ServiceHelper.makeParamsForSavingsTermsPatch(savings);
-		return serviceExecutor.execute(patchAccount, id, params);
-
+		String id = accountId != null ? accountId : encodedKey;
+		return serviceExecutor.executeJson(patchAccount, savings, id);
 	}
 
 	/**
@@ -930,24 +1014,6 @@ public class SavingsService {
 				ApiReturnFormat.COLLECTION);
 		return serviceExecutor.execute(apiDefinition, savingsId);
 
-	}
-
-	/***
-	 * Get all documents for a specific Savings Account
-	 * 
-	 * @deprecated Starting from 3.14 use
-	 *             {@link DocumentsService#getDocuments(MambuEntityType, String, Integer, Integer)}. This methods
-	 *             supports pagination parameters
-	 * @param accountId
-	 *            the encoded key or id of the savings account for which attached documents are to be retrieved
-	 * 
-	 * @return documents documents attached to the entity
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public List<Document> getSavingsAccountDocuments(String accountId) throws MambuApiException {
-		return serviceExecutor.execute(getAccountDocuments, accountId);
 	}
 
 }

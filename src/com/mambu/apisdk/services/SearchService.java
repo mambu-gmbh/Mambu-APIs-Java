@@ -148,8 +148,8 @@ public class SearchService {
 	 * 
 	 * @param searchEntityType
 	 *            entity type for searching with filter constraints. Must not be null. Currently API supports the
-	 *            following entities: Clients, Groups, Loans, Savings, Loan Transactions and SavingsTransactions,
-	 *            NotificationMessage.
+	 *            following entities: Clients, Groups, Loans, Savings, Loan Transactions, SavingsTransactions, and
+	 *            NotificationMessages
 	 * 
 	 *            See MBU-8986, MBU-10646, MBU-11120 for more details
 	 * 
@@ -221,6 +221,7 @@ public class SearchService {
 			// Example: /api/notifications/messages/search. See MBU-10646
 			entityUrl = APIData.NOTIFICATIONS + apiDelimiter + APIData.MESSAGES;
 			break;
+
 		default:
 			throw new IllegalArgumentException("Search for Entity " + searchEntityType.name() + " is not supported");
 		}

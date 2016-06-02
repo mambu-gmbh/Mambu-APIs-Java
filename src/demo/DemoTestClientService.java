@@ -68,10 +68,11 @@ public class DemoTestClientService {
 			demoGroup = DemoUtil.getDemoGroup(null);
 
 			testCreateJsonClient();
-
 			testGetClient();
+
 			ClientExpanded updatedClient = testUpdateClient();
-			testUpdateClientState(updatedClient.getClient()); // // Available since 4.0
+			testPatchClient(updatedClient.getClient()); // Available since 4.1
+			testUpdateClientState(updatedClient.getClient()); // Available since 4.0
 
 			testGetClientDetails();
 
@@ -390,6 +391,33 @@ public class DemoTestClientService {
 
 	}
 
+	// Test PATCH Client fields API
+	public static void testPatchClient(Client client) throws MambuApiException {
+		System.out.println("\nIn testPatchClient");
+
+		client.setFirstName(client.getFirstName()); // keep the same to continue using our demo client
+		client.setLastName(client.getLastName()); // keep the same to continue using our demo client
+		client.setMiddleName(client.getMiddleName() + updatedSuffix);
+		client.setPreferredLanguage(Language.ROMANIAN);
+		String iD = client.getId() + updatedSuffix;
+		// Limit the ID's value to 32 chars. Otherwise 501 error code is returned
+		if (iD.length() > 32) {
+			iD = iD.substring(0, 16);
+		}
+		client.setId(iD);
+		client.setBirthDate(new Date());
+		// Execute Client PATCH API
+		ClientsService clientService = MambuAPIFactory.getClientService();
+		boolean status = clientService.patchClient(client);
+		System.out.println("Update status=" + status);
+
+		// Get updated client details back to confirm PATCHed values
+		Client updatedClient = clientService.getClient(client.getEncodedKey());
+		System.out.println("\tUpdate FirstName=" + updatedClient.getFirstName() + "\tID=" + updatedClient.getId()
+				+ "\tState=" + updatedClient.getState());
+
+	}
+
 	public static void testGetClientsByBranchCentreOfficerState() throws MambuApiException {
 		System.out.println("\nIn testGetClientsByBranchCentreOfficerState");
 
@@ -487,10 +515,10 @@ public class DemoTestClientService {
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
 		// Test fields for a Client
-		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.CLIENT);
+		DemoTestCustomFiledValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.CLIENT);
 
 		// Test fields for a Group
-		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.GROUP);
+		DemoTestCustomFiledValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.GROUP);
 	}
 
 	// Test getting client types

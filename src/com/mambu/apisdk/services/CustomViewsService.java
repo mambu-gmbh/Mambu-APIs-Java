@@ -5,8 +5,11 @@ import java.util.List;
 
 import com.google.inject.Inject;
 import com.mambu.api.server.handler.customviews.model.ApiViewType;
+import com.mambu.api.server.handler.customviews.model.CustomViewEntitiesSummaryWrapper;
+import com.mambu.api.server.handler.customviews.model.ResultType;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.model.JSONCustomViewEntitiesSummaryWrapper;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
@@ -22,8 +25,9 @@ public class CustomViewsService {
 	// Service helper
 	protected ServiceExecutor serviceExecutor;
 
-	// Custom Views API supports two types of returned values
-	// See MBU-10842. Note: a third result type (COLUMNS) will be added in future releases
+	// NOTE: CustomViewResultType deprecated in 4.1 Mambu model has
+	// com.mambu.api.server.handler.customviews.model.ResultType supporting BASIC, FULL_DETAILS and SUMMARY result types
+	@Deprecated
 	public enum CustomViewResultType {
 		BASIC, // returns entities without any extra details
 		FULL_DETAILS, // returns entities with full details
@@ -78,7 +82,7 @@ public class CustomViewsService {
 		// Example GET /api/clients?viewfilter=123&branchId=b123&offset=0&limit=100&resultType=FULL_DETAILS
 		// See MBU-4607, MBU-10842, MBU-7042
 
-		CustomViewResultType resultType = fullDetails ? CustomViewResultType.FULL_DETAILS : CustomViewResultType.BASIC;
+		ResultType resultType = fullDetails ? ResultType.FULL_DETAILS : ResultType.BASIC;
 		ApiDefinition apiDefinition = makeApiDefintion(apiViewType, resultType);
 
 		// Create params map with all filtering parameters
@@ -113,41 +117,43 @@ public class CustomViewsService {
 	}
 
 	/**
-	 * Get entities for a Custom View for all branches managed by the API user
+	 * Get summary for a custom view
 	 * 
-	 * @deprecated Starting with 4.0 use
-	 *             {@link CustomViewsService#getCustomViewEntities(ApiViewType, String, boolean, String, String, String)}
-	 *             to filter entities by branch ID
 	 * @param apiViewType
 	 *            API view type. Example, ApiViewType.LOANS, or ApiViewType.CLIENTS
-	 * @param fullDetails
-	 *            boolean indicating if entities with fullDetails shall be returned. Applicable to Clients, Groups, Loan
-	 *            Accounts and Savings Accounts
+	 * @param branchId
+	 *            an optional branch ID filtering parameter. If null, summary for entities in all branches managed by
+	 *            the API user are retrieved
 	 * @param customViewKey
 	 *            the encoded key for the custom view. Must not be null
-	 * @param offset
-	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * @param limit
-	 *            pagination limit. If not null it must be an integer greater than zero
-	 * @return a list of entities for the custom view
+	 * @return custom view summary
 	 * @throws MambuApiException
 	 */
-	@Deprecated
-	public <T> List<T> getCustomViewEntities(ApiViewType apiViewType, boolean fullDetails, String customViewKey,
-			String offset, String limit) throws MambuApiException {
-		// Example GET /api/clients?viewfilter=123&offset=0&limit=100&resultType=FULL_DETAILS
-		// See MBU-4607, MBU-10842
+	public CustomViewEntitiesSummaryWrapper getCustomViewSummary(ApiViewType apiViewType, String branchId,
+			String customViewKey) throws MambuApiException {
+		// Available since Mambu 4.1 . See MBU-11879
+		// Example: Example GET /api/clients?viewfilter=123&branchId=b123&resultType=SUMMARY
+		// Response example: { "summary":{ "count":"2", "totals":[{ "dataItemType":"CLIENT", "values":{
+		// "LOAN_AMOUNT":"1900","PRINCIPAL_DUE":"0}, "customFieldValues":{"LOAN_AMOUNT":"1900", "PRINCIPAL_DUE":"0"
+		// }}]}}
 
-		String branchId = null; // setting branchId to null to get entities for all branches
-		return getCustomViewEntities(apiViewType, branchId, fullDetails, customViewKey, offset, limit);
+		// Make apiDefinition for a ResultType.SUMMARY
+		final ResultType resultType = ResultType.SUMMARY;
+		ApiDefinition apiDefinition = makeApiDefintion(apiViewType, resultType);
 
+		// Create params map with filtering parameters. Offset and limit are not applicable when getting summaries
+		ParamsMap params = makeParamsForGetByCustomView(customViewKey, resultType, branchId, null, null);
+
+		// Execute API
+		JSONCustomViewEntitiesSummaryWrapper jsonSummary = serviceExecutor.execute(apiDefinition, params);
+
+		// Return the summary (CustomViewEntitiesSummaryWrapper)
+		return jsonSummary != null ? jsonSummary.getSummary() : null;
 	}
 
 	/**
 	 * Make ParamsMap for GET Mambu entities for a custom view API requests
 	 * 
-	 * @deprecated as public method in 4.0. Will continue to be used internally as private method by
-	 *             {@link CustomViewsService}.
 	 * @param customViewKey
 	 *            the encoded key of the Custom View to filter entities. Must not be null
 	 * @param resultType
@@ -161,9 +167,8 @@ public class CustomViewsService {
 	 * 
 	 * @return params params map
 	 */
-	@Deprecated
-	public static ParamsMap makeParamsForGetByCustomView(String customViewKey, CustomViewResultType resultType,
-			String branchId, String offset, String limit) {
+	private static ParamsMap makeParamsForGetByCustomView(String customViewKey, ResultType resultType, String branchId,
+			String offset, String limit) {
 
 		// Verify that the customViewKey is not null or empty
 		if (customViewKey == null || customViewKey.trim().isEmpty()) {
@@ -197,7 +202,7 @@ public class CustomViewsService {
 	 *            required result type
 	 * @return api definition
 	 */
-	private ApiDefinition makeApiDefintion(ApiViewType apiViewType, CustomViewResultType resultType) {
+	private ApiDefinition makeApiDefintion(ApiViewType apiViewType, ResultType resultType) {
 
 		if (resultType == null) {
 			throw new IllegalArgumentException("Result Type must not be null");
@@ -239,6 +244,12 @@ public class CustomViewsService {
 			if (resultClass == null) {
 				throw new IllegalArgumentException("Full Details entities are not supported for " + forEntity);
 			}
+			break;
+
+		case SUMMARY:
+			// For summaries, the API returns JSONCustomViewEntitiesSummaryWrapper
+			resultClass = JSONCustomViewEntitiesSummaryWrapper.class;
+			returnFormat = ApiReturnFormat.OBJECT;
 			break;
 		}
 

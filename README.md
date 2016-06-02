@@ -13,8 +13,8 @@ Usage
 
 To use the Mambu Java API Wrapper, please include the following jars in your build path
 
-* build/Mambu-APIs-Java-4.0-bin.jar
-* lib/mambu-models-V4.0.jar
+* build/Mambu-APIs-Java-4.1-bin.jar
+* lib/mambu-models-V4.1.jar
 * further dependencies to run and test (see pom.xml for versions)
  * httpclient
  * httpcore
@@ -28,6 +28,7 @@ To use the Mambu Java API Wrapper, please include the following jars in your bui
  * mockito-all
  * junit
  * gwt-user
+ * datanucleus-core
 
 There is a list of services which are provided through a factory.
 The list will be updated constantly and currently contains:

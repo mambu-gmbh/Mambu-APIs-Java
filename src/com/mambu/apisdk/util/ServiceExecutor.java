@@ -5,18 +5,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.accounting.shared.model.GLJournalEntry;
+import com.mambu.accounts.shared.model.Account;
 import com.mambu.accounts.shared.model.DocumentTemplate;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
+import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
+import com.mambu.api.server.handler.loan.model.JSONTransactionRequest;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.exception.MambuApiResponseMessage;
-import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
@@ -153,21 +156,18 @@ public class ServiceExecutor {
 		// Use mambuAPIService to execute request
 		String jsonResponse = mambuAPIService.executeRequest(apiUrlPath, paramsMap, method, contentType);
 
-		// Process API Response. Get the return format and returnClass from the apiDefintion
-		Class<?> returnClass = apiDefinition.getReturnClass();
+		// Process API Response. Get the return format from the apiDefintion
 		ApiReturnFormat returnFormat = apiDefinition.getApiReturnFormat();
 
 		R result = null;
 		switch (returnFormat) {
 		case OBJECT:
 			// Get Single Object from the response
-			result = getObject(jsonResponse, returnClass);
+			result = getObject(jsonResponse, apiDefinition);
 			break;
 		case COLLECTION:
-			// Get a list of Objects from the response
-			Type collectionType = getCollectionType(returnClass);
 			// Get result as a collection
-			result = getCollection(jsonResponse, collectionType);
+			result = getCollection(jsonResponse, apiDefinition);
 			break;
 		case BOOLEAN:
 			// Get result as a boolean
@@ -283,10 +283,8 @@ public class ServiceExecutor {
 			throw new IllegalArgumentException("JSON object must not be NULL");
 		}
 
-		// Parse input object into a JSON string
-		final String dateTimeFormat = apiDefinition.getJsonDateTimeFormat();
-		final String jsonData = ServiceHelper.makeApiJson(object, dateTimeFormat);
-
+		// Make API JSON string based on its ApiDefinition
+		final String jsonData = ServiceHelper.makeApiJson(object, apiDefinition);
 		// Add JSON string as JSON_OBJECT to the ParamsMap
 		if (paramsMap == null) {
 			paramsMap = new ParamsMap();
@@ -399,8 +397,13 @@ public class ServiceExecutor {
 	 * @return object the returned object can be cast to the objectClass by the calling methods
 	 */
 	@SuppressWarnings("unchecked")
-	private <R> R getObject(String jsonResponse, Class<?> objectClass) {
-		return (R) GsonUtils.createGson().fromJson(jsonResponse, objectClass);
+	private <R> R getObject(String jsonResponse, ApiDefinition apiDefinition) {
+		// Create Gson with optional deserializers as per ApiDefinition
+		Gson gson = GsonUtils.createDeserializerGson(apiDefinition);
+		// Get return class from ApiDefinition
+		Class<?> returnClass = apiDefinition.getReturnClass();
+		// Get object from jsonResponse
+		return (R) gson.fromJson(jsonResponse, returnClass);
 	}
 
 	/****
@@ -413,8 +416,14 @@ public class ServiceExecutor {
 	 * 
 	 * @return object this object represents a list of entities and must be case to the object's list type
 	 */
-	private <R> R getCollection(String jsonResponse, Type collectionType) {
-		return GsonUtils.createGson().fromJson(jsonResponse, collectionType);
+	private <R> R getCollection(String jsonResponse, ApiDefinition apiDefinition) {
+		// Create Gson with optional deserializers as per ApiDefinition
+		Gson gson = GsonUtils.createDeserializerGson(apiDefinition);
+		Class<?> returnClass = apiDefinition.getReturnClass();
+		// Get return class from ApiDefinition and make a collection type for it
+		Type collectionType = getCollectionType(returnClass);
+		// Get collection of objects from jsonResponse
+		return gson.fromJson(jsonResponse, collectionType);
 	}
 
 	/****
@@ -453,8 +462,8 @@ public class ServiceExecutor {
 		// LoanAccount
 		collectionTypesMap.put(LoanAccount.class, new TypeToken<List<LoanAccount>>() {
 		}.getType());
-		// LoanAccountExpanded
-		collectionTypesMap.put(LoanAccountExpanded.class, new TypeToken<List<LoanAccountExpanded>>() {
+		// JSONLoanAccount
+		collectionTypesMap.put(JSONLoanAccount.class, new TypeToken<List<JSONLoanAccount>>() {
 		}.getType());
 		// LoanTransaction
 		collectionTypesMap.put(LoanTransaction.class, new TypeToken<List<LoanTransaction>>() {
@@ -873,5 +882,41 @@ public class ServiceExecutor {
 		Class<?> clazz = mambuEntity.getEntityClass();
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.DELETE_ENTITY, clazz);
 		return executeJson(apiDefinition, entityId);
+	}
+
+	/**
+	 * POST JSON Transaction Request
+	 * 
+	 * @param accountId
+	 *            account id or encoded key. Must not be null
+	 * @param request
+	 *            JSON Transaction Request
+	 * @param accountType
+	 *            account type, LOAN or SAVINGS
+	 * @param transactionTypeName
+	 *            transaction type name. E.g. FEE, DISBURSEMENT, DEPOSIT
+	 * @return loan transaction or savings transaction depending on accountType
+	 * @throws MambuApiException
+	 */
+	public <R> R executeJSONTransactionRequest(String accountId, JSONTransactionRequest request,
+			Account.Type accountType, String transactionTypeName) throws MambuApiException {
+		if (request == null || transactionTypeName == null || accountType == null || accountId == null) {
+			throw new IllegalArgumentException("All input parameters must not be null");
+		}
+		// Create Params Map containing JSON for the transaction request
+		ParamsMap paramsMap = ServiceHelper.makeParamsForTransactionRequest(transactionTypeName, request);
+
+		// Create API Definition specifying entity class and expected result class
+		Class<?> entityClass = accountType == Account.Type.LOAN ? LoanAccount.class : SavingsAccount.class;
+		Class<?> transactionClass = accountType == Account.Type.LOAN ? LoanTransaction.class : SavingsTransaction.class;
+
+		// Make ApiDefinition to POST_OWNED_ENTITY using JSON format
+		ApiDefinition postJsonAccountTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY, entityClass,
+				transactionClass);
+		postJsonAccountTransaction.setContentType(ContentType.JSON);
+
+		// Execute API request with ParamsMap containing JSON
+		// Returns LoanTransaction or SavingsTransaction (depending on accountType),
+		return execute(postJsonAccountTransaction, accountId, paramsMap);
 	}
 }

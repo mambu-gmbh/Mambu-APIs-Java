@@ -136,54 +136,6 @@ public class AccountingService {
 	}
 
 	/**
-	 * Returns all GLJournalEntries of a specific date-range for all branches and using default limits
-	 * 
-	 * @deprecated Starting with 3.14 use method supporting branch ID and offset and limit parameters
-	 *             {@link #getGLJournalEntries(String, Date, Date, int, int)}
-	 * 
-	 * @param fromDate
-	 *            range starting from
-	 * @param toDate
-	 *            range ending at
-	 * 
-	 * @return a List of GLJournalEntries
-	 * 
-	 * @throws MambuApiException
-	 *             in case of an error
-	 */
-	@Deprecated
-	public List<GLJournalEntry> getGLJournalEntries(Date fromDate, Date toDate) throws MambuApiException {
-		return (getGLJournalEntries(null, fromDate, toDate, -1, -1));
-	}
-
-	/**
-	 * Returns all GLJournalEntries of a specific date-range for all branches
-	 * 
-	 * @deprecated Starting with 3.14 use method supporting branch ID parameter
-	 *             {@link #getGLJournalEntries(String, Date, Date, int, int)}
-	 * 
-	 * @param fromDate
-	 *            range starting from
-	 * @param toDate
-	 *            range ending at
-	 * @param offset
-	 *            offset to start pagination
-	 * @param limit
-	 *            page-size
-	 * 
-	 * @return a List of GLJournalEntries
-	 * 
-	 * @throws MambuApiException
-	 *             in case of an error
-	 */
-	@Deprecated
-	public List<GLJournalEntry> getGLJournalEntries(Date fromDate, Date toDate, int offset, int limit)
-			throws MambuApiException {
-
-		return getGLJournalEntries(null, fromDate, toDate, offset, limit);
-	}
-
-	/**
 	 * Returns all GLJournalEntries of a specific date-range
 	 * 
 	 * @param branchId
