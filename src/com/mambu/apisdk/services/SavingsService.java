@@ -275,38 +275,6 @@ public class SavingsService {
 	 * Make a withdrawal from an account.
 	 * 
 	 * @param accountId
-	 *            account ID
-	 * @param amount
-	 *            transaction amount
-	 * @param date
-	 *            transaction date
-	 * @param notes
-	 *            transaction notes
-	 * @param transactionDetails
-	 *            transaction details, including transaction channel and channel fields
-	 * 
-	 * @return Savings Transaction
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public SavingsTransaction makeWithdrawal(String accountId, String amount, String date, String notes,
-			TransactionDetails transactionDetails) throws MambuApiException {
-
-		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.addParam(TYPE, TYPE_WITHDRAWAL);
-
-		// Add transactionDetails to the paramsMap
-		ServiceHelper.addAccountTransactionParams(paramsMap, amount, date, notes, transactionDetails);
-
-		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
-
-	}
-
-	/****
-	 * Make a withdrawal from an account.
-	 * 
-	 * @param accountId
 	 *            account ID or encoded key. Must not be null
 	 * @param amount
 	 *            transaction amount
@@ -332,39 +300,6 @@ public class SavingsService {
 
 		return serviceExecutor.executeJSONTransactionRequest(accountId, transactionRequest, Type.SAVINGS,
 				SavingsTransactionType.WITHDRAWAL.name());
-	}
-
-	/****
-	 * Make a deposit to an account.
-	 * 
-	 * @deprecated since Mambu 4.1 use method supporting transaction custom fields
-	 *             {@link #makeDeposit(String, Money, Date, TransactionDetails, List, String)}
-	 * @param accountId
-	 *            account ID
-	 * @param amount
-	 *            transaction amount
-	 * @param date
-	 *            transaction date
-	 * @param notes
-	 *            transaction notes
-	 * @param transactionDetails
-	 *            transaction details, including transaction channel and channel fields
-	 * 
-	 * @return Savings Transaction
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public SavingsTransaction makeDeposit(String accountId, String amount, String date, String notes,
-			TransactionDetails transactionDetails) throws MambuApiException {
-
-		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.addParam(TYPE, TYPE_DEPOSIT);
-
-		// Add transactionDetails to the paramsMap
-		ServiceHelper.addAccountTransactionParams(paramsMap, amount, date, notes, transactionDetails);
-
-		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
 	/****

@@ -11,8 +11,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.mambu.accounts.shared.model.PredefinedFee;
-import com.mambu.accounts.shared.model.TransactionChannel;
-import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.api.server.handler.loan.model.JSONApplyManualFee;
@@ -40,135 +38,6 @@ import com.mambu.loans.shared.model.LoanAccount;
  * 
  */
 public class ServiceHelper {
-
-	/**
-	 * Convenience method to add to the ParamsMap input parameters common to most account transactions. Such common
-	 * parameters include transaction amount, transaction date, transaction notes and transactionDetails object
-	 * 
-	 * @deprecated It used only in now deprecated x-www-form-urlencoded methods for pasting transactions which do not
-	 *             support transaction fees and transaction custom fields
-	 * 
-	 * @param params
-	 *            input ParamsMap map to which transactionDetails shall be added. Must not be null
-	 * @param amount
-	 *            transaction amount
-	 * @param date
-	 *            transaction date
-	 * @param notes
-	 *            transaction notes
-	 * @param transactionDetails
-	 *            TransactionDetails object containing information about the transaction channel and the channel fields
-	 */
-	@Deprecated
-	public static void addAccountTransactionParams(ParamsMap params, String amount, String date, String notes,
-			TransactionDetails transactionDetails) {
-
-		// Params map must not be null
-		if (params == null) {
-			throw new IllegalArgumentException("Params Map cannot be null");
-		}
-		params.addParam(APIData.AMOUNT, amount);
-		params.addParam(APIData.DATE, date);
-		params.addParam(APIData.NOTES, notes);
-
-		// Add transactionDetails to the paramsMap
-		addParamsForTransactionDetails(params, transactionDetails);
-
-		return;
-	}
-
-	/**
-	 * Add TransactionDetails to the input ParamsMap required for account transactions (e.g. disburseLoanAccount(),
-	 * makeLoanRepayment(), etc.)
-	 * 
-	 * @deprecated Predefined Transaction Channel fields were deprecated in Mambu 4.1. Custom transaction fields are now
-	 *             used instead (see MBU-11800)
-	 * @param params
-	 *            input ParamsMap to which transactionDetails shall be added. Must be not null
-	 * 
-	 * @param transactionDetails
-	 *            TransactionDetails object containing information about the transaction channel and the channel fields
-	 */
-	@Deprecated
-	private static void addParamsForTransactionDetails(ParamsMap params, TransactionDetails transactionDetails) {
-
-		if (transactionDetails == null) {
-			// Nothing to add
-			return;
-		}
-		// Params must not be null
-		if (params == null) {
-			throw new IllegalArgumentException("params Map cannot be null");
-		}
-
-		// Get Channel ID
-		TransactionChannel channel = transactionDetails.getTransactionChannel();
-		String channelId = (channel == null) ? null : channel.getId();
-		params.addParam(APIData.PAYMENT_METHOD, channelId);
-
-		if (channel == null || channel.getChannelFields() == null) {
-			// If channel was not specified or channel has no fields then there is nothing more to add
-			return;
-		}
-		// Get Channel Fields configured for the provided channel
-		List<ChannelField> channelFields = channel.getChannelFields();
-
-		// Get field's value from the transactionDetails and add each field to the ParamsMap
-		for (ChannelField field : channelFields) {
-			switch (field) {
-			case ACCOUNT_NAME:
-				params.addParam(APIData.ACCOUNT_NAME, transactionDetails.getAccountName());
-				break;
-			case ACCOUNT_NUMBER:
-				params.addParam(APIData.BANK_ACCOUNT_NUMBER, transactionDetails.getAccountNumber());
-				break;
-			case BANK_NUMBER:
-				params.addParam(APIData.BANK_NUMBER, transactionDetails.getBankNumber());
-				break;
-			case CHECK_NUMBER:
-				params.addParam(APIData.CHECK_NUMBER, transactionDetails.getCheckNumber());
-				break;
-			case IDENTIFIER:
-				params.addParam(APIData.IDENTIFIER, transactionDetails.getIdentifier());
-				break;
-			case RECEPIT_NUMBER:
-				params.addParam(APIData.RECEIPT_NUMBER, transactionDetails.getReceiptNumber());
-				break;
-			case ROUTING_NUMBER:
-				params.addParam(APIData.BANK_ROUTING_NUMBER, transactionDetails.getRoutingNumber());
-				break;
-			}
-		}
-	}
-
-	/**
-	 * Create JSONTransactionRequest for submitting JSON transaction API requests
-	 * 
-	 * @deprecated in 4.1. Use method supporting specifying custom transaction fields
-	 *             {@link #makeJSONTransactionRequest(Money, Date, Date, TransactionDetails, List, List, String)}. See
-	 *             MBU-11800
-	 * @param amount
-	 *            transaction amount
-	 * @param backDate
-	 *            transaction back date
-	 * @param firstRepaymentDate
-	 *            first repayment date
-	 * @param transactionDetails
-	 *            transaction details
-	 * @param transactionFees
-	 *            transaction fees
-	 * @param notes
-	 *            transaction notes
-	 * @return JSON Transaction Request
-	 */
-	@Deprecated
-	public static JSONTransactionRequest makeJSONTransactionRequest(Money amount, Date backDate,
-			Date firstRepaymentDate, TransactionDetails transactionDetails, List<CustomPredefinedFee> transactionFees,
-			String notes) {
-		List<CustomFieldValue> customInformation = null;
-		return makeJSONTransactionRequest(amount, backDate, firstRepaymentDate, transactionDetails, transactionFees,
-				customInformation, notes);
-	}
 
 	/**
 	 * Create JSONTransactionRequest for submitting JSON transaction API requests
@@ -211,11 +80,9 @@ public class ServiceHelper {
 		// Set Transaction channel Details
 		request.setTransactionDetails(transactionDetails);
 		// Transaction Channel must be set separately
-		if (transactionDetails != null && transactionDetails.getTransactionChannel() != null) {
-			String channelId = transactionDetails.getTransactionChannel().getId();
-			// Set channel's ID (method)
-			request.setMethod(channelId);
-		}
+		String channelKey = transactionDetails != null ? transactionDetails.getTransactionChannelKey() : null;
+		request.setMethod(channelKey);
+
 		// Add Transaction Fees
 		setTransactionFees(request, transactionFees);
 		return request;

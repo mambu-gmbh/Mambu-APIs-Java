@@ -125,7 +125,7 @@ public class DemoTestCustomFiledValueService {
 		}
 
 		String transactionId = transaction.getTransactionId().toString();
-		String channelKey = transaction.getDetails().getTransactionChannel().getEncodedKey();
+		String channelKey = transaction.getDetails().getTransactionChannelKey();
 
 		// Test Updating Transaction Custom fields: since Mambu model for 4.1 transactions can have CustomFieldValues
 		List<CustomFieldValue> transactionFields = transaction.getCustomFieldValues();

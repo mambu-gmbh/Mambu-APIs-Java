@@ -685,25 +685,24 @@ public class DemoTestLoanService {
 			accountTransactionDetails = new TransactionDetails();
 		}
 		// Get channel for custom fields
-		TransactionChannel channel = accountTransactionDetails.getTransactionChannel();
-		if (channel == null) {
-			channel = DemoUtil.getDemoTransactionChannel();
+		String channelKey = accountTransactionDetails.getTransactionChannelKey();
+		if (channelKey == null) {
+			TransactionChannel channel = DemoUtil.getDemoTransactionChannel();
+			channelKey = channel != null ? channel.getEncodedKey() : null;
 		}
 		// Create new TransactionDetails: in 4.1 we need only the channel and they must NOT have deprecated channel
 		// fields too (they are returned by Mambu in Create response)> Otherwise Mambu returns:
 		// "returnCode":918,"returnStatus":"DUPLICATE_CUSTOM_FIELD_VALUES",
 		TransactionDetails transactionDetails = new TransactionDetails();
-		transactionDetails.setTransactionChannel(channel);
+		transactionDetails.setTransactionChannelKey(channelKey);
 		disbDetails.setTransactionDetails(transactionDetails);
 
 		// Make transaction custom fields
-		String channelKey = channel.getEncodedKey();
 		// Use CustomFieldValue specified on Create, if any
-
 		List<CustomFieldValue> transactionFields = disbDetails.getCustomFieldValues();
 		if (transactionFields == null || transactionFields.size() == 0) {
 			// Make new ones for this channel
-			System.out.println("Creating new transaction fields for channel=" + channel.getId());
+			System.out.println("Creating new transaction fields for channel=" + channelKey);
 			transactionFields = DemoUtil.makeForEntityCustomFieldValues(CustomFieldType.TRANSACTION_CHANNEL_INFO,
 					channelKey, false);
 		}
@@ -834,8 +833,7 @@ public class DemoTestLoanService {
 
 		// Make demo transactionDetails with the valid channel fields
 		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
-		String channelKey = transactionDetails != null ? transactionDetails.getTransactionChannel().getEncodedKey()
-				: null;
+		String channelKey = transactionDetails != null ? transactionDetails.getTransactionChannelKey() : null;
 		List<CustomFieldValue> transactionCustomFields = DemoUtil.makeForEntityCustomFieldValues(
 				CustomFieldType.TRANSACTION_CHANNEL_INFO, channelKey, false);
 
@@ -1516,7 +1514,7 @@ public class DemoTestLoanService {
 		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
 		DisbursementDetails disbursementDetails = loanAccount.getDisbursementDetails();
 		disbursementDetails.setTransactionDetails(transactionDetails);
-		String method = transactionDetails.getTransactionChannel().getEncodedKey();
+		String method = transactionDetails.getTransactionChannelKey();
 
 		disbursementDetails.setCustomFieldValues(DemoUtil.makeForEntityCustomFieldValues(
 				CustomFieldType.TRANSACTION_CHANNEL_INFO, method, false));
@@ -1742,21 +1740,14 @@ public class DemoTestLoanService {
 
 		// Log TransactionDetails
 		TransactionDetails transactionDetails = disbDetails.getTransactionDetails();
-		String channelId = null;
-		String channelName = null;
-		if (transactionDetails != null) {
-			TransactionChannel transactionChannel = transactionDetails.getTransactionChannel();
-			channelId = transactionChannel != null ? transactionChannel.getId() : null;
-			channelName = transactionChannel != null ? transactionChannel.getName() : null;
-			System.out.println("\tChannel: ID=" + channelId + " Name =" + channelName);
-		} else {
-			System.out.println("\tNull transaction details");
-		}
+		String channelKey = transactionDetails != null ? transactionDetails.getTransactionChannelKey() : null;
+		System.out.println("\tChannel: Key=" + channelKey);
+
 		// Log Transaction Custom Fields. Available since Mambu 4.1. See MBU-11800
 		List<CustomFieldValue> transactionFields = disbDetails.getCustomFieldValues();
 		if (transactionFields != null) {
 			System.out.println("Total Transaction Fields= " + transactionFields.size());
-			DemoUtil.logCustomFieldValues(transactionFields, "Channel", channelId);
+			DemoUtil.logCustomFieldValues(transactionFields, "Channel", channelKey);
 		} else {
 			System.out.println("\tNull transaction custom fields");
 		}

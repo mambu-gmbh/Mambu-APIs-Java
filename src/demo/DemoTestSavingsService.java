@@ -289,8 +289,7 @@ public class DemoTestSavingsService {
 		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
 		// make test transaction fields
 		List<CustomFieldValue> transactionFields = DemoUtil.makeForEntityCustomFieldValues(
-				CustomFieldType.TRANSACTION_CHANNEL_INFO, transactionDetails.getTransactionChannel().getEncodedKey(),
-				false);
+				CustomFieldType.TRANSACTION_CHANNEL_INFO, transactionDetails.getTransactionChannelKey(), false);
 		SavingsTransaction transaction = savingsService.makeWithdrawal(NEW_ACCOUNT_ID, amount, date,
 				transactionDetails, transactionFields, notes);
 		System.out.println("Made Withdrawal from Savings for account with the " + NEW_ACCOUNT_ID + " id:" + ". Amount="
@@ -312,8 +311,7 @@ public class DemoTestSavingsService {
 		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
 		// Make Transaction Fields
 		List<CustomFieldValue> transactionFields = DemoUtil.makeForEntityCustomFieldValues(
-				CustomFieldType.TRANSACTION_CHANNEL_INFO, transactionDetails.getTransactionChannel().getEncodedKey(),
-				false);
+				CustomFieldType.TRANSACTION_CHANNEL_INFO, transactionDetails.getTransactionChannelKey(), false);
 
 		SavingsTransaction transaction = savingsService.makeDeposit(NEW_ACCOUNT_ID, amount, date, transactionDetails,
 				transactionFields, notes);

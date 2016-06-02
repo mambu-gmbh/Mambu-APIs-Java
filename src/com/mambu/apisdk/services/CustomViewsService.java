@@ -25,14 +25,6 @@ public class CustomViewsService {
 	// Service helper
 	protected ServiceExecutor serviceExecutor;
 
-	// NOTE: CustomViewResultType deprecated in 4.1 Mambu model has
-	// com.mambu.api.server.handler.customviews.model.ResultType supporting BASIC, FULL_DETAILS and SUMMARY result types
-	@Deprecated
-	public enum CustomViewResultType {
-		BASIC, // returns entities without any extra details
-		FULL_DETAILS, // returns entities with full details
-	}
-
 	// Specify Mambu entities supported by the Custom View Value API: Client, Group. LoanAccount, SavingsAccount,
 	// LoanTranscation, SavingsTransaction, Activity
 	private final static HashMap<ApiViewType, MambuEntityType> supportedApiViewTypes = new HashMap<>();

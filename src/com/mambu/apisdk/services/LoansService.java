@@ -971,40 +971,6 @@ public class LoansService {
 	}
 
 	/****
-	 * Make Repayment for a loan account
-	 * 
-	 * @deprecated starting form 4.1. use method supporting transaction custom fields
-	 *             {@link #makeLoanRepayment(String, Money, Date, TransactionDetails, List, String)}
-	 * @param accountId
-	 *            account ID
-	 * @param amount
-	 *            transaction amount
-	 * @param date
-	 *            transaction date
-	 * @param notes
-	 *            transaction notes
-	 * @param transactionDetails
-	 *            transaction details, including transaction channel and channel fields
-	 * 
-	 * @return LoanTransaction
-	 * 
-	 * @throws MambuApiException
-	 */
-	@Deprecated
-	public LoanTransaction makeLoanRepayment(String accountId, String amount, String date, String notes,
-			TransactionDetails transactionDetails) throws MambuApiException {
-
-		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.addParam(TYPE, TYPE_REPAYMENT);
-
-		// Add transactionDetails to the paramsMap
-		ServiceHelper.addAccountTransactionParams(paramsMap, amount, date, notes, transactionDetails);
-
-		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
-
-	}
-
-	/****
 	 * Make Repayment for a loan account. POST as JSON transaction
 	 * 
 	 * @param accountId

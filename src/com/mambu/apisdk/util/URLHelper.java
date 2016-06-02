@@ -64,24 +64,6 @@ public class URLHelper {
 	}
 
 	/***
-	 * Appends some params to a given URL String
-	 * 
-	 * @deprecated use static version of this method, see {@link #makeUrlWithParams(String, ParamsMap)}
-	 * 
-	 * @param urlString
-	 *            the already created URL String
-	 * @param paramsMap
-	 *            the params which must be added
-	 * 
-	 * @return the complete URL
-	 */
-	@Deprecated
-	public String createUrlWithParams(String urlString, ParamsMap paramsMap) {
-		return makeUrlWithParams(urlString, paramsMap);
-
-	}
-
-	/***
 	 * Static helper to Append URL params to a given URL String
 	 * 
 	 * @param urlString
