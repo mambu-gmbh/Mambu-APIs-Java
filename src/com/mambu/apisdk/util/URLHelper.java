@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mambu.apisdk.MambuAPIServiceTest;
 import com.mambu.apisdk.model.Domain;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
@@ -60,6 +61,24 @@ public class URLHelper {
 					+ " with url details=" + details);
 			return "";
 		}
+
+	}
+
+	/***
+	 * Appends some params to a given URL String
+	 * 
+	 * NOTE: this non-static version is used in SDK Mockito tests (see {@link MambuAPIServiceTest}. Mockito cannot use
+	 * static methods
+	 * 
+	 * @param urlString
+	 *            the already created URL String
+	 * @param paramsMap
+	 *            the params which must be added
+	 * 
+	 * @return the complete URL
+	 */
+	public String createUrlWithParams(String urlString, ParamsMap paramsMap) {
+		return makeUrlWithParams(urlString, paramsMap);
 
 	}
 
