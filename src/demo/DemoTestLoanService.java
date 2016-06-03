@@ -126,8 +126,12 @@ public class DemoTestLoanService {
 				System.out.println("Product Id=" + demoProduct.getId() + " Name=" + demoProduct.getName() + " ***");
 
 				demoLoanAccount = DemoUtil.getDemoLoanAccount(testAccountId);
-				System.out.println("Using Demo Loan Account=" + demoLoanAccount.getId() + "\tName="
-						+ demoLoanAccount.getName());
+				if (demoLoanAccount != null) {
+					System.out.println("Using Demo Loan Account=" + demoLoanAccount.getId() + "\tName="
+							+ demoLoanAccount.getName());
+				} else {
+					System.out.println("WARNING: no Demo account found for ID=" + testAccountId);
+				}
 
 				try {
 					// Create account to test patch, approve, undo approve, reject, close
@@ -192,7 +196,7 @@ public class DemoTestLoanService {
 
 					// Get transactions
 					List<LoanTransaction> transactions = testGetLoanAccountTransactions();
-					testReverseLoanAccountTransactions(transactions); // Available since Mambu 3.13 for PENALTY_APPLIED
+					testReverseLoanAccountTransactions(transactions); // Available since Mambu 3.1 and 4.2
 
 					// Repay and Write off
 					testRepayLoanAccount(false); // Make partial repayment
@@ -751,6 +755,8 @@ public class DemoTestLoanService {
 		System.out.println("\nOK Write Off for account=" + accountId + "\tTransaction Id="
 				+ transaction.getTransactionId());
 
+		// Test reversing this transaction
+		testReverseLoanAccountTransactions(Collections.singletonList(transaction));
 	}
 
 	public static List<LoanTransaction> testGetLoanAccountTransactions() throws MambuApiException {
@@ -769,6 +775,7 @@ public class DemoTestLoanService {
 	}
 
 	// Test Reversing loan transactions. Available since 3.13 for PENALTY_APPLIED transaction. See MBU-9998
+	// Available since 4.2 for REPAYMENT, INTEREST_APPLIED, WRITE_OFF, see
 	public static void testReverseLoanAccountTransactions(List<LoanTransaction> transactions) throws MambuApiException {
 		System.out.println(methodName = "\nIn testReverseLoanAccountTransactions");
 
@@ -781,23 +788,35 @@ public class DemoTestLoanService {
 		// reversal)
 		boolean reversalTested = false;
 		for (LoanTransaction transaction : transactions) {
+			if (transaction.getReversalTransactionKey() != null) {
+				// this transaction was already reversed. Cannot reverse twice. Skipping
+				continue;
+			}
 			LoanTransactionType originalTransactionType = transaction.getType();
-			// as of Mambu 3.13 only PENALTY_APPLIED transaction can be reversed
+			// as of Mambu 3.13 PENALTY_APPLIED transaction can be reversed
+			// As of Mambu 4.2 REPAYMENT, INTEREST_APPLIED, WRITE_OFF can be reversed
 			switch (originalTransactionType) {
 			case PENALTY_APPLIED:
+			case REPAYMENT:
+			case FEE:
+			case INTEREST_APPLIED:
+			case WRITE_OFF:
 				reversalTested = true;
 				// Try reversing supported transaction type
 				// Catch exceptions: For example, if there were later transactions logged after this one then Mambu
 				// would return an exception
 				try {
+
 					String reversalNotes = "Reversed " + originalTransactionType + " by Demo API";
 					String originalTransactionId = String.valueOf(transaction.getTransactionId());
-					LoanTransaction reversed = loanService.reverseLoanTransaction(demoLoanAccount.getId(),
+					System.out.println("Reversing " + originalTransactionType + "\tID=" + originalTransactionId
+							+ "\tAmount=" + transaction.getAmount());
+					LoanTransaction reversed = loanService.reverseLoanTransaction(transaction.getParentAccountKey(),
 							originalTransactionType, originalTransactionId, reversalNotes);
 
 					System.out.println("Reversed Transaction " + transaction.getType() + "\tReversed Amount="
 							+ reversed.getAmount().toString() + "\tBalance =" + reversed.getBalance().toString()
-							+ "Transaction Type=" + reversed.getType() + "\tAccount key="
+							+ "\tTransaction Type=" + reversed.getType() + "\tAccount key="
 							+ reversed.getParentAccountKey());
 				} catch (MambuApiException e) {
 					DemoUtil.logException(methodName, e);
@@ -842,6 +861,11 @@ public class DemoTestLoanService {
 
 		System.out.println("Repaid loan account with the " + accountId + " id response="
 				+ transaction.getTransactionId() + "   for amount=" + transaction.getAmount());
+
+		// Test reversing partial repayment transaction
+		if (!fullRepayment) {
+			testReverseLoanAccountTransactions(Collections.singletonList(transaction));
+		}
 	}
 
 	// Test Applying Fee. For Arbitrary Fees available since 3.6. For Manual Predefined fees available since Mambu 4.1
@@ -862,18 +886,22 @@ public class DemoTestLoanService {
 		List<CustomPredefinedFee> productFees = DemoUtil.makeDemoPredefinedFees(demoProduct,
 				new HashSet<>(Collections.singletonList(FeeCategory.MANUAL)));
 		if (productFees.size() > 0) {
-			// Submit random predefined fee from the list of fees available for this product
-			int randomIndex = (int) Math.random() * (productFees.size() - 1);
-			CustomPredefinedFee predefinedFee = productFees.get(randomIndex);
-			System.out.println("Applying Predefined Fee =" + predefinedFee.getPredefinedFeeEncodedKey() + " Amount="
-					+ predefinedFee.getAmount());
-			List<CustomPredefinedFee> customFees = new ArrayList<>();
-			customFees.add(predefinedFee);
-			// Submit API request
-			LoanTransaction transaction = loanService.applyFeeToLoanAccount(accountId, customFees, repaymentNumber,
-					notes);
-			System.out.println("Predefined Fee. TransactionID=" + transaction.getTransactionId() + "\tAmount="
-					+ transaction.getAmount().toString() + "\tFees Amount=" + transaction.getFeesAmount());
+			// Test Submitting available product fees and their reversal when applicable
+			for (CustomPredefinedFee predefinedFee : productFees) {
+				System.out.println("Applying Predefined Fee =" + predefinedFee.getPredefinedFeeEncodedKey()
+						+ "\tAmount=" + predefinedFee.getAmount());
+				// Only one fee in a time is allowed in API
+				List<CustomPredefinedFee> customFees = new ArrayList<>();
+				customFees.add(predefinedFee);
+				// Submit API request
+				LoanTransaction transaction = loanService.applyFeeToLoanAccount(accountId, customFees, repaymentNumber,
+						notes);
+				System.out.println("Predefined Fee. TransactionID=" + transaction.getTransactionId() + "\tAmount="
+						+ transaction.getAmount().toString() + "\tFees Amount=" + transaction.getFeesAmount());
+
+				// Now test reversing this Apply Fee Transaction
+				testReverseLoanAccountTransactions(Collections.singletonList(transaction));
+			}
 		} else {
 			System.out.println("WARNING: No Predefined Fees defined for product " + demoProduct.getId());
 		}
@@ -891,6 +919,9 @@ public class DemoTestLoanService {
 			System.out.println("Arbitrary Fee. TransactionID=" + transaction.getTransactionId() + "\tAmount="
 					+ transaction.getAmount().toString() + "\tFees Amount=" + transaction.getFeesAmount());
 
+			// Now test reversing this Apply Arbitrary Fee Transaction
+			testReverseLoanAccountTransactions(Collections.singletonList(transaction));
+
 		} else {
 			System.out.println("WARNING: Arbitrary Fees no allowed for product " + demoProduct.getId());
 		}
@@ -902,7 +933,7 @@ public class DemoTestLoanService {
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
-		String accountId = demoLoanAccount.getId();
+		String accountId = newAccount.getId();
 		System.out.println("For Loan ID=" + accountId);
 		Date date = new Date();
 		String notes = "Notes for applying interest to a loan";
@@ -1046,6 +1077,10 @@ public class DemoTestLoanService {
 	public static void testGetLoanAccountsForGroup() throws MambuApiException {
 		System.out.println(methodName = "\nIn testGetLoanAccountsForGroup");
 		LoansService loanService = MambuAPIFactory.getLoanService();
+		if (demoGroup == null) {
+			System.out.println("WARNING: no Demo Group available");
+			return;
+		}
 		String groupId = demoGroup.getId();
 		List<LoanAccount> loanAccounts = loanService.getLoanAccountsForGroup(groupId);
 

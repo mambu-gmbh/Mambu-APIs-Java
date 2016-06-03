@@ -1306,6 +1306,9 @@ public class DemoUtil {
 		// Make CustomPredefinedFees
 		List<CustomPredefinedFee> demoFees = new ArrayList<>();
 		for (PredefinedFee fee : predefinedFees) {
+			if (!fee.getActive()) {
+				continue;
+			}
 			if (addDisbursement && !fee.isDisbursementFee()) {
 				continue;
 			}
@@ -1332,9 +1335,13 @@ public class DemoUtil {
 					amount = new Money(1.2);
 				}
 				break;
+
 			case REPAYMENT_PRINCIPAL_AMOUNT_PERCENTAGE:
 				continue;
 
+			case LOAN_AMOUNT_PERCENTAGE_NUMBER_OF_INSTALLMENTS:
+				// See MBU-12658 in 4.2.
+				continue;
 			}
 			CustomPredefinedFee customFee = new CustomPredefinedFee(fee, amount);
 			demoFees.add(customFee);
