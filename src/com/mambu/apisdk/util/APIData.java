@@ -57,14 +57,10 @@ public class APIData {
 	public static final String TRANSACTIONS = "transactions";
 	public static final String TYPE_REPAYMENT = "REPAYMENT";
 	public static final String TYPE_DISBURSEMENT = "DISBURSEMENT"; // Spelling corrected in 3.11 See MBU-7004
-	public static final String TYPE_DISBURSMENT_ADJUSTMENT = "DISBURSMENT_ADJUSTMENT"; // added in 3.9
-	public static final String TYPE_PENALTY_ADJUSTMENT = "PENALTY_ADJUSTMENT"; // added in 3.13. See MBU-9998
 	public static final String TYPE_REQUEST_APPROVAL = "PENDING_APPROVAL"; // added in 13.3. See MBU-9814
 	public static final String TYPE_APPROVAL = "APPROVAL";
 	public static final String TYPE_UNDO_APPROVAL = "UNDO_APPROVAL";
 	public static final String TYPE_FEE = "FEE";
-	public static final String TYPE_DEPOSIT = "DEPOSIT";
-	public static final String TYPE_WITHDRAWAL = "WITHDRAWAL";
 	public static final String TYPE_TRANSFER = "TRANSFER";
 	public static final String TYPE_LOCK = "LOCK";
 	public static final String TYPE_UNLOCK = "UNLOCK";
@@ -72,9 +68,6 @@ public class APIData {
 	public static final String TYPE_WRITE_OFF = "WRITE_OFF"; // added in 3.14. See MBU-10423
 	// Savings reversal transactions
 	public static final String TYPE_DEPOSIT_ADJUSTMENT = "DEPOSIT_ADJUSTMENT";
-	public static final String TYPE_WITHDRAWAL_ADJUSTMENT = "WITHDRAWAL_ADJUSTMENT";
-	public static final String TYPE_TRANSFER_ADJUSTMENT = "TRANSFER_ADJUSTMENT";
-
 	public static final String DISBURSEMENT_DETAILS = "disbursementDetails"; // Added in 4.0. See MBU-11481
 
 	public static final String ACTION = "action"; // Added in 4.1. See MBU-12051 and MBU-12052
