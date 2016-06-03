@@ -48,7 +48,7 @@ public class MambuAPIServiceTest {
 			}
 		});
 
-		when(URLHelper.makeUrlWithParams(anyString(), (ParamsMap) anyObject())).thenAnswer(new Answer<String>() {
+		when(mockUrlHelper.createUrlWithParams(anyString(), (ParamsMap) anyObject())).thenAnswer(new Answer<String>() {
 
 			@Override
 			public String answer(InvocationOnMock invocation) throws Throwable {
