@@ -394,6 +394,9 @@ public class DemoTestSavingsService {
 
 			System.out.println("Predefined Fee. TransactionID=" + transaction.getTransactionId() + "\tAmount="
 					+ transaction.getAmount() + "\tFees Amount=" + transaction.getFeesAmount());
+
+			// Test reversing Transaction
+			testReverseSavingsAccountTransaction(transaction); // Available since 4.2 for Fees
 		} else {
 			System.out.println("WARNING: No Predefined Fees defined for product " + demoSavingsProduct.getId());
 		}
@@ -408,6 +411,9 @@ public class DemoTestSavingsService {
 					notes);
 			System.out.println("Arbitrary Fee. TransactionID=" + transaction.getTransactionId() + "\tAmount="
 					+ transaction.getAmount().toString() + "\tFees Amount=" + transaction.getFeesAmount());
+
+			// Test reversing Transaction
+			testReverseSavingsAccountTransaction(transaction); // Available since 4.2 for Fees
 
 		} else {
 			System.out.println("WARNING: Arbitrary Fees no allowed for product " + demoSavingsProduct.getId());

@@ -48,13 +48,9 @@ import com.mambu.savings.shared.model.SavingsTransactionType;
 public class SavingsService {
 
 	private static final String TYPE = APIData.TYPE;
-	private static final String TYPE_DEPOSIT = APIData.TYPE_DEPOSIT;
-	private static final String TYPE_WITHDRAWAL = APIData.TYPE_WITHDRAWAL;
 	private static final String TYPE_TRANSFER = APIData.TYPE_TRANSFER;
 	private static final String TYPE_FEE = APIData.TYPE_FEE;
 	private static final String TYPE_DEPOSIT_ADJUSTMENT = APIData.TYPE_DEPOSIT_ADJUSTMENT;
-	private static final String TYPE_WITHDRAWAL_ADJUSTMENT = APIData.TYPE_WITHDRAWAL_ADJUSTMENT;
-	private static final String TYPE_TRANSFER_ADJUSTMENT = APIData.TYPE_TRANSFER_ADJUSTMENT;
 
 	private static final String ORIGINAL_TRANSACTION_ID = APIData.ORIGINAL_TRANSACTION_ID;
 
@@ -487,7 +483,7 @@ public class SavingsService {
 	 *            the id of the savings account. Mandatory
 	 * @param originalTransactionType
 	 *            Original transaction type to be reversed. The following transaction types can be reversed: DEPOSIT,
-	 *            WITHDRAWAL and TRANSFER. Mandatory.
+	 *            WITHDRAWAL, TRANSFER, FEE. Mandatory.
 	 * @param originalTransactionId
 	 *            the id or the encodedKey of the transaction to be reversed. Mandatory
 	 * @param notes
@@ -502,6 +498,9 @@ public class SavingsService {
 
 		// Available since 3.10. See MBU-7933, MBU-7935, MBU-7936 for more details
 		// Example POST "type=DEPOSIT_ADJUSTMENT&notes=reason&originalTransactionId=123" /api/savings/67/transactions/
+
+		// Available since 4.2 for FEE reversal. See MBU-13192. type":"FEE_ADJUSTED"
+
 		// Note: When posting reversal transaction to Mambu the required reversal transaction type is supplied by the
 		// wrapper : DEPOSIT_ADJUSTMENT, WITHDRAWAL_ADJUSTMENT or TRANSFER_ADJUSTMENT
 
@@ -517,13 +516,20 @@ public class SavingsService {
 		String transactionTypeParam;
 		switch (originalTransactionType) {
 		case DEPOSIT:
+			// TODO: we cannot use SavingsTransactionType for DEPOSIT reversal: the API expects this string:
+			// DEPOSIT_ADJUSTMENT but the SavingsTransactionType defines it as ADJUSTMENT
+			// (i.e.SavingsTransactionType.ADJUSTMENT). So it cannot be used. Define "DEPOSIT_ADJUSTMENT" in ApiData.
 			transactionTypeParam = TYPE_DEPOSIT_ADJUSTMENT;
 			break;
 		case WITHDRAWAL:
-			transactionTypeParam = TYPE_WITHDRAWAL_ADJUSTMENT;
+			transactionTypeParam = SavingsTransactionType.WITHDRAWAL_ADJUSTMENT.name();
 			break;
 		case TRANSFER:
-			transactionTypeParam = TYPE_TRANSFER_ADJUSTMENT;
+			transactionTypeParam = SavingsTransactionType.TRANSFER_ADJUSTMENT.name();
+			break;
+		case FEE_APPLIED:
+			// See MBU-13192 in 4.2
+			transactionTypeParam = SavingsTransactionType.FEE_ADJUSTED.name();
 			break;
 		default:
 			throw new IllegalArgumentException("Reversal for Savings Transaction Type "
@@ -552,6 +558,7 @@ public class SavingsService {
 			throws MambuApiException {
 
 		// Available since 3.10. See MBU-7933, MBU-7935, MBU-7936 for more details
+		// Available since 4.2 for FEE reversal. See MBU-13192. type":"FEE_ADJUSTED"
 		// Example. POST "type=TYPE_WITHDRAWAL_ADJUSTMENT&notes=reason&originalTransactionId=123"
 		// /api/savings/67/transactions/
 
