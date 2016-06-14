@@ -73,6 +73,10 @@ public class APIData {
 	public static final String ACTION = "action"; // Added in 4.1. See MBU-12051 and MBU-12052
 	public static final String RESCHEDULE = "RESCHEDULE"; // Added in 4.1. See MBU-12051
 	public static final String REFINANCE = "REFINANCE"; // Added in 4.1. See MBU-12052
+	// UNDO Closer transaction types
+	public static final String UNDO_REJECT = "UNDO_REJECT"; // Added in 4.2 See MBU-13190 and MBU-13193
+	public static final String UNDO_WITHDRAWN = "UNDO_WITHDRAWN"; // Added in 4.2 See MBU-13190 and MBU-13193
+	public static final String UNDO_CLOSE = "UNDO_CLOSE"; // Added in 4.2 See MBU-13190 and MBU-13193
 
 	// Users branch assignment type: assigned or managing. Available since 4.0. See MBU-11769
 	public static final String BRANCH_ID_TYPE = "branchIdType";
@@ -117,6 +121,8 @@ public class APIData {
 	public static final String INDEXRATESOURCES = "indexratesources";
 	public static final String INDEXRATES = "indexrates";
 
+	public static final String RATES = "rates"; // Added in 4.2. See MBU-12628 and MBU-12629
+
 	// Comments (available since 3.11)
 	public static final String COMMENTS = "comments";
 
@@ -144,6 +150,10 @@ public class APIData {
 	public static String BRANCHES = "branches";
 	public static String CENTRES = "centres";
 	public static String CURRENCIES = "currencies";
+	// Flag for getting all currencies. See MBU-4128 and MBU-13420. Available since 4.2
+	public static String INCLUDE_FOREIGN = "includeForeign";
+	public static String TRUE = "true"; // values used for boolean flags, e.g. INCLUDE_FOREIGN, FULL_DETAILS
+	public static String FALSE = "false"; // values used for boolean flags, e.g. INCLUDE_FOREIGN, FULL_DETAILS
 
 	// Custom fields and Custom Field Sets
 	public static String CUSTOM_FIELDS = "customfields";
