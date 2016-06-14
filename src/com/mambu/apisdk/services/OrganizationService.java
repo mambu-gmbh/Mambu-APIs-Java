@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.google.inject.Inject;
 import com.mambu.accounts.shared.model.TransactionChannel;
+import com.mambu.admin.shared.model.ExchangeRate;
 import com.mambu.api.server.handler.indexratesources.model.JsonIndexRate;
 import com.mambu.api.server.handler.settings.organization.model.JSONOrganization;
 import com.mambu.apisdk.MambuAPIService;
@@ -65,6 +66,9 @@ public class OrganizationService {
 	// Post Index Interest Rate
 	private final static ApiDefinition postIndexInterestRate = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
 			IndexRateSource.class, IndexRate.class);
+	
+	private final static ApiDefinition postExchangeRates = new ApiDefinition(ApiType.POST_OWNED_ENTITY, 
+			Currency.class, ExchangeRate.class);
 
 	/***
 	 * Create a new organization service
@@ -370,5 +374,31 @@ public class OrganizationService {
 		ApiDefinition getIcon = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET, String.class,
 				ApiReturnFormat.OBJECT);
 		return serviceExecutor.execute(getIcon);
+	}
+	
+	/**
+	 * Create a new exchange rate using a currency code and ExchangeRate object and sends it as a JSON api. 
+	 * 
+	 * 
+	 * @param currencyCode
+	 * 			the currency code 
+	 * @param exchangeRate
+	 * 			the exchange rate to be created
+	 * @return newly created ExchangeRate
+	 * @throws MambuApiException
+	 * @throws IllegalArgumentException
+	 */
+	public ExchangeRate createExchangeRate(String currencyCode, ExchangeRate exchangeRate) throws MambuApiException{
+		/* POST /api/curencies/{curencyCode}/rates */
+		/* Available since 4.2. See MBU-12629 */
+
+		if (null == currencyCode || null == exchangeRate) {
+			throw new IllegalArgumentException("Currency code and Exchange rate must not  be null");
+		}
+		
+		postExchangeRates.setContentType(ContentType.JSON);
+		postExchangeRates.setJsonDateTimeFormat(APIData.yyyyMmddFormat);
+		
+		return serviceExecutor.executeJson(postExchangeRates, exchangeRate, currencyCode);
 	}
 }

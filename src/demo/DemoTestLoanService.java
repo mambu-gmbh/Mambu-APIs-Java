@@ -396,6 +396,8 @@ public class DemoTestLoanService {
 		account.setPrincipalRepaymentInterval(theAccount.getPrincipalRepaymentInterval()); // principalRepaymentInterval
 		account.setPenaltyRate(theAccount.getPenaltyRate()); // penaltyRate
 		account.setPeriodicPayment(theAccount.getPeriodicPayment()); // periodicPayment
+		account.setLoanAmount(theAccount.getLoanAmount().add(new BigDecimal("55")));
+		
 
 		// Test Principal Payment for REVOLVING CREDIT. See MBU-12143
 
@@ -1561,6 +1563,7 @@ public class DemoTestLoanService {
 		// Disbursement Details are not available for REVOLVING_CREDIT products
 		if (productType == LoanProductType.REVOLVING_CREDIT) {
 			loanAccount.setDisbursementDetails(null);
+			loanAccount.setLoanAmount(new Money(999));
 		}
 
 		loanAccount.setNotes("Created by DemoTest on " + new Date());

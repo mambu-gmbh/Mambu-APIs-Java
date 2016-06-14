@@ -1,6 +1,7 @@
 package demo;
 
 import java.math.BigDecimal;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -8,6 +9,7 @@ import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.accounting.shared.model.GLAccountingRule;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
+import com.mambu.admin.shared.model.ExchangeRate;
 import com.mambu.api.server.handler.settings.organization.model.JSONOrganization;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -68,6 +70,8 @@ public class DemoTestOrganizationService {
 			testGetCentre();
 
 			testGetCurrency();
+			
+			testPostCurrency();
 
 			testGetAllBranches();
 			testGetCentresByBranch();
@@ -225,6 +229,42 @@ public class DemoTestOrganizationService {
 		System.out.println("Currency code=" + currency.getCode() + "   Name=" + currency.getName() + " Total time="
 				+ diff);
 
+	}
+	
+	private static void testPostCurrency() throws MambuApiException {
+		System.out.println(methodName = "\nIn testGetCurrency");
+		Date start = new Date();
+		String exchangeAlreadyDefinedOnThatDateMessage = "{\"returnCode\":660,\"returnStatus\":\"EXCHANGE_RATE_ALREADY_DEFINED_ON_DATE\"}";
+		
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+
+		String currencyCote = "EUR";
+		//create an exchange rate 
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(new Date());
+		cal.add(Calendar.DATE, 1);
+		ExchangeRate exchangeRate = new ExchangeRate(); 
+		exchangeRate.setBuyRate(new BigDecimal("3.00"));
+		exchangeRate.setToCurrencyCode(currencyCote);
+		exchangeRate.setStartDate(cal.getTime());
+		exchangeRate.setSellRate(new BigDecimal("4.50"));
+		
+		
+		try{
+			organizationService.createExchangeRate(currencyCote, exchangeRate);
+		}catch(MambuApiException mae){
+			if(mae.getMessage().equals(exchangeAlreadyDefinedOnThatDateMessage)){
+				//added to consider as success this test if it is ran more than once a day
+				//TODO refactor this try catch once getExchangeRate method exist. Add method to get the last date of the ExchangeRate 
+				//and add days to it
+				//for now just consider it success
+				
+			}else{
+				throw mae;
+			}
+		}
+		Date end = new Date();
+		System.out.println("testPostCurrency() took " + (end.getTime() - start.getTime()) + " miliseconds");
 	}
 
 	// Get Custom Field by ID

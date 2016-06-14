@@ -127,6 +127,19 @@ public class APIData {
 	public static final String DUE_DATE = "duedate";
 	public static final String CLIENT_ID = "clientid";
 	public static final String GROUP_ID = "groupid";
+	
+	/* Group constants*/
+	public static final String GROUP = "group";
+	public static final String GROUP_NAME = "groupName";
+	public static final String ASSIGNED_BRANCH_KEY = "assignedBranchKey";
+	public static final String ASSIGNED_CENTRE_KEY = "assignedCentreKey";
+	public static final String GROUP_MEMBERS = "groupMembers";
+	public static final String GROUP_ROLES = "groupRoles";
+	
+	public static final String THE_GROUP = "theGroup";
+	public static final String GROUP_ROLE_NAME_KEY = "groupRoleNameKey";
+	public static final String CLIENT_KEY = "clientKey";
+	
 
 	// Accounting API
 	public static final String GLACCOUNTS = "glaccounts";
@@ -144,6 +157,7 @@ public class APIData {
 	public static String BRANCHES = "branches";
 	public static String CENTRES = "centres";
 	public static String CURRENCIES = "currencies";
+	public static String RATES = "rates";
 
 	// Custom fields and Custom Field Sets
 	public static String CUSTOM_FIELDS = "customfields";

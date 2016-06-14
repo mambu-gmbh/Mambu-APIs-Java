@@ -12,6 +12,8 @@ import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.json.ClientPatchJsonSerializer;
+import com.mambu.apisdk.json.GroupExpandedPatchSerializer;
+import com.mambu.apisdk.json.GroupPatchSerializer;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
@@ -68,11 +70,11 @@ public class ClientsService {
 	// Patch Client: PATCH {"client":{ "state":"EXITED", "clientRoleId":"{roleID}","firstName":"jan", }}
 	// /api/clients/clientID
 	private final static ApiDefinition patchClient;
-	static {
-		patchClient = new ApiDefinition(ApiType.PATCH_ENTITY, Client.class);
-		// Use ClientPatchJsonSerializer
-		patchClient.addJsonSerializer(Client.class, new ClientPatchJsonSerializer());
-	}
+	
+	/* PATCH group */
+	private final static ApiDefinition patchGroup;
+	private final static ApiDefinition patchGroupExpanded;
+			
 	// Create Group. POST JSON /api/groups
 	private final static ApiDefinition createGroup = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, GroupExpanded.class);
 	// Update Group. POST JSON /api/groups/groupId
@@ -101,6 +103,19 @@ public class ClientsService {
 	// or DELETE api/clients/client_id/documents/SIGNATURE
 	private final static ApiDefinition deleteClientProfileFile = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
 			Client.class, Document.class);
+	
+	static {
+		patchClient = new ApiDefinition(ApiType.PATCH_ENTITY, Client.class);
+		// Use ClientPatchJsonSerializer
+		patchClient.addJsonSerializer(Client.class, new ClientPatchJsonSerializer());
+		
+		patchGroup = new ApiDefinition(ApiType.PATCH_ENTITY, Group.class);
+		patchGroup.addJsonSerializer(Group.class, new GroupPatchSerializer());
+		
+		patchGroupExpanded = new ApiDefinition(ApiType.PATCH_ENTITY, GroupExpanded.class);
+		patchGroupExpanded.addJsonSerializer(GroupExpanded.class, new GroupExpandedPatchSerializer());
+		
+	}
 
 	/***
 	 * Create a new client service
@@ -879,4 +894,42 @@ public class ClientsService {
 		return serviceExecutor.execute(deleteClientProfileFile, clientId, documentType, null);
 
 	}
+	
+	/**
+	 * Patch Group fields
+	 * 
+	 * @param group
+	 * 			the Group to be patched
+	 * @return a boolean indicating if the patch was successful
+	 * @throws MambuApiException
+	 */
+	public boolean patchGroup(Group group) throws MambuApiException{
+		/* e.g. PATCH /api/groups/40288a164c31eca9014c31f1135103de*/
+		/* See MBU-12985 for more details */
+		if (group == null || (group.getEncodedKey() == null )) {
+			throw new IllegalArgumentException("Group and group's encoded key or id  must not be null");
+		}
+		String encodedKey = group.getEncodedKey();
+		return serviceExecutor.executeJson(patchGroup, group, encodedKey);
+	}
+	
+	/**
+	 * Patch Group fields through GroupExpanded
+	 * 
+	 * @param groupExpanded
+	 * 			the GroupExpanded to be patched
+	 * @return a boolean indicating if the patch was successful
+	 * @throws MambuApiException
+	 */
+	public boolean patchGroup(GroupExpanded groupExpanded) throws MambuApiException{
+		/* e.g. PATCH /api/groups/40288a164c31eca9014c31f1135103de*/
+		/* See MBU-12985 for more details */
+		if (groupExpanded == null || (groupExpanded.getEncodedKey() == null )) {
+			throw new IllegalArgumentException("Group and group's encoded key or id  must not be null");
+		}
+		String encodedKey = groupExpanded.getEncodedKey();
+		return serviceExecutor.executeJson(patchGroupExpanded, groupExpanded, encodedKey);
+		
+	}
+	
 }
