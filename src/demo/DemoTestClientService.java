@@ -87,6 +87,10 @@ public class DemoTestClientService {
 
 			createdGroup = testCreateGroup(); // Available since 3.9
 			testUpdateGroup(createdGroup); // Available since 3.10
+			
+			testGetGroup();
+			testPatchGroup();
+			testPatchGroupExtended();
 
 			testGetGroup();
 			testGetGroupDetails();
@@ -221,6 +225,56 @@ public class DemoTestClientService {
 
 	}
 
+	public static void testPatchGroup() throws MambuApiException{
+		System.out.println("\n In testPatchGroup");
+		String groupId = NEW_GROUP_ID;
+		
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		boolean gotPatched = false;
+		
+		Group group = clientService.getGroup(groupId);
+		
+		group.setGroupName("Patched Group");
+		group.setEmailAddress("test_group_patch5@mambu.com");
+		group.setPreferredLanguage(Language.ROMANIAN);
+		group.setHomePhone("333-4444-5555-66");
+		group.setNotes("this is a note created through patch group");
+		group.setMobilePhone1("777-888-9999");
+		
+		gotPatched = clientService.patchGroup(group);
+
+		if(gotPatched){
+			System.out.println("Patch operation on " + group.getGroupName() +" succeded");
+		}
+	}
+	
+	public static void testPatchGroupExtended() throws MambuApiException{
+		System.out.println("\n In testPatchGroupExtended");
+		String groupId = NEW_GROUP_ID;
+		
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		boolean gotPatched = false;
+		
+		GroupExpanded groupExpanded = clientService.getGroupDetails(groupId);
+		Group group = groupExpanded.getGroup();
+		
+		group.setGroupName("Patched GroupExpanded");
+		group.setEmailAddress("test_group_expanded_patch@mambu.com");
+		group.setPreferredLanguage(Language.ROMANIAN);
+		group.setHomePhone("444-5555-6666-77"); 
+		group.setNotes("This is a note created through patch group expanded");
+		group.setMobilePhone1("444-555-6666");
+		
+		gotPatched = clientService.patchGroup(groupExpanded);
+
+		if(gotPatched){
+			System.out.println("Patch operation on " + group.getGroupName() +" succeded");
+		}
+	}
+	
+	
 	public static void testGetGroupDetails() throws MambuApiException {
 		System.out.println("\nIn testGetGroupDetails");
 
@@ -721,6 +775,7 @@ public class DemoTestClientService {
 			// Add this role to group details
 			List<GroupRole> groupRoles = new ArrayList<GroupRole>();
 			groupRoles.add(useRole);
+			
 			groupDetails.setGroupRoles(groupRoles);
 		}
 
