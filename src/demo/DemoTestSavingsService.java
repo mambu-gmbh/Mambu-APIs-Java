@@ -114,10 +114,16 @@ public class DemoTestSavingsService {
 					testCreateSavingsAccount();
 					testPatchSavingsAccountTerms(); // Available since 3.12.2
 					testUpdateSavingsAccount(); // Available since 3.4
-					testCloseSavingsAccount(CLOSER_TYPE.REJECT); // Available since 3.4
+					// Test REJECT and REJECT transactions first
+					// Test Close and UNDO Close as REJECT and REJECT first (we cannot CLOSE pending accounts)
+					CLOSER_TYPE testTypes[] = { CLOSER_TYPE.REJECT, CLOSER_TYPE.WITHDRAW };
+					for (CLOSER_TYPE closerType : testTypes) {
+						SavingsAccount closedAccount = testCloseSavingsAccount(closerType); // Available since 3.4
+						testUndoCloseSavingsAccount(closedAccount); // Available since 4.2
+					}
 					testDeleteSavingsAccount(); // Available since 3.4
 
-					// Test savings operations
+					// Test savings operations. Create new account for these tests
 					testCreateSavingsAccount();
 					testApproveSavingsAccount(); // Available since 3.5
 					testUndoApproveSavingsAccount(); // Available since 3.5
@@ -158,8 +164,9 @@ public class DemoTestSavingsService {
 					testGetDocuments();// Available since 3.6
 
 					testUpdateDeleteCustomFields(); // Available since 3.8
-					// Test Closing accounts with obligations met
-					testCloseSavingsAccount(CLOSER_TYPE.CLOSE); // CLOSER_TYPE.CLOSE Available since 4.0
+					// Test Closing accounts with obligations met and UNDO CLOSE
+					SavingsAccount closedAccount = testCloseSavingsAccount(CLOSER_TYPE.CLOSE); // Available since 4.0
+					testUndoCloseSavingsAccount(closedAccount); // Available since 4.2
 
 				} catch (MambuApiException e) {
 					DemoUtil.logException(methodName, e);
@@ -566,6 +573,7 @@ public class DemoTestSavingsService {
 	public static void testPatchSavingsAccountTerms() throws MambuApiException {
 		System.out.println(methodName = "\nIn testPatchSavingsAccountTerms");
 
+		SavingsService service = MambuAPIFactory.getSavingsService();
 		// See MBU-10447 for a list of fields that can be updated (as of Mambu 3.14)
 		SavingsAccount savingsAccount = newAccount;
 		String productKey = savingsAccount.getProductTypeKey();
@@ -708,9 +716,10 @@ public class DemoTestSavingsService {
 
 		}
 		// Submit updated account to Mambu
-		SavingsService service = MambuAPIFactory.getSavingsService();
+
 		boolean status = service.patchSavingsAccount(savingsAccount);
 		System.out.println("Patched savings account status=" + status);
+
 	}
 
 	public static void testApproveSavingsAccount() throws MambuApiException {
@@ -767,9 +776,10 @@ public class DemoTestSavingsService {
 	 * 
 	 * @param closerType
 	 *            closer type. Must not be null. Supported closer types are: REJECT, WITHDRAW and CLOSE
+	 * @return closed account
 	 * @throws MambuApiException
 	 */
-	public static void testCloseSavingsAccount(CLOSER_TYPE closerType) throws MambuApiException {
+	public static SavingsAccount testCloseSavingsAccount(CLOSER_TYPE closerType) throws MambuApiException {
 		System.out.println(methodName = "\nIn testCloseSavingsAccount");
 
 		if (closerType == null) {
@@ -794,6 +804,38 @@ public class DemoTestSavingsService {
 
 		System.out.println("Closed account id:" + resultAaccount.getId() + "\tNew State="
 				+ resultAaccount.getAccountState().name());
+
+		return resultAaccount;
+	}
+
+	/**
+	 * Test Undo Closing Savings account
+	 * 
+	 * @param closedAccount
+	 *            closed savings account. Must not be null. Account must be closed with API supported closer types are:
+	 *            REJECT, WITHDRAW and CLOSE
+	 * @return updated account
+	 * @throws MambuApiException
+	 */
+	public static SavingsAccount testUndoCloseSavingsAccount(SavingsAccount closedAccount) throws MambuApiException {
+		System.out.println(methodName = "\nIn testUndoCloseSavingsAccount");
+		SavingsService savingsService = MambuAPIFactory.getSavingsService();
+
+		if (closedAccount == null || closedAccount.getId() == null) {
+			System.out.println("Account must be not null for testing undo closer");
+			return null;
+		}
+
+		String notes = "Undo notes";
+
+		System.out.println("Undo Closing account with Id=" + closedAccount.getId() + "\tState="
+				+ closedAccount.getAccountState() + "\tSubState=" + closedAccount.getAccountSubState());
+		SavingsAccount resultAaccount = savingsService.undoCloseSavingsAccount(closedAccount, notes);
+
+		System.out.println("Undid Closed account id:" + resultAaccount.getId() + "\tNew State="
+				+ resultAaccount.getAccountState().name() + "\tSubState=" + resultAaccount.getAccountSubState());
+
+		return resultAaccount;
 	}
 
 	public static void testGetDocuments() throws MambuApiException {
