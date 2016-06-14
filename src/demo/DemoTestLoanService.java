@@ -16,6 +16,7 @@ import com.mambu.accounts.shared.model.AccountState;
 import com.mambu.accounts.shared.model.InterestRateSource;
 import com.mambu.accounts.shared.model.PredefinedFee;
 import com.mambu.accounts.shared.model.PrincipalPaymentMethod;
+import com.mambu.accounts.shared.model.ProductSecuritySettings;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.accountsecurity.shared.model.Guaranty;
@@ -141,8 +142,14 @@ public class DemoTestLoanService {
 					testUndoApproveLoanAccount();
 					testUpdateLoanAccount();
 
-					// Test Reject transactions first
-					testCloseLoanAccount(CLOSER_TYPE.REJECT); // Available since 3.3
+					// Test REJECT and WITHDRAW transactions first
+					// Test Close and UNDO Close as REJECT and WITHDRAW first
+					CLOSER_TYPE testTypes[] = { CLOSER_TYPE.REJECT, CLOSER_TYPE.WITHDRAW };
+					for (CLOSER_TYPE closerType : testTypes) {
+						LoanAccount closedAccount = testCloseLoanAccount(closerType); // Available since 3.3
+						testUndoCloseLoanAccount(closedAccount); // Available since 4.2
+					}
+					// Test delete account
 					testDeleteLoanAccount();
 
 					// Create new account to test approve, undo approve, disburse, undo disburse, updating tranches and
@@ -156,6 +163,7 @@ public class DemoTestLoanService {
 					// Test Disburse and Undo disburse
 					testDisburseLoanAccount();
 					testUndoDisburseLoanAccount(); // Available since 3.9
+
 					testDisburseLoanAccount();
 					testApplyFeeToLoanAccount();
 					testGetLoanAccountTransactions();
@@ -165,9 +173,11 @@ public class DemoTestLoanService {
 
 					// Repay Loan account to test Close account
 					testRepayLoanAccount(true);
-					testCloseLoanAccount(CLOSER_TYPE.CLOSE);
+					LoanAccount closedAccount = testCloseLoanAccount(CLOSER_TYPE.CLOSE);
+					// Test UNDO Close
+					testUndoCloseLoanAccount(closedAccount); // Available since 4.2
 
-					// Test Other methods. Create new account
+					// Test Other methods. Create new account for these tests
 					testCreateJsonAccount();
 					testUpdatingAccountTranches(); // Available since 3.12.3
 					testUpdatingAccountFunds(); // Available since 3.13
@@ -1132,9 +1142,10 @@ public class DemoTestLoanService {
 	 * 
 	 * @param closerType
 	 *            closer type. Must not be null. Supported closer types are: REJECT, WITHDRAW and CLOSE
+	 * @return updated account
 	 * @throws MambuApiException
 	 */
-	public static void testCloseLoanAccount(CLOSER_TYPE closerType) throws MambuApiException {
+	public static LoanAccount testCloseLoanAccount(CLOSER_TYPE closerType) throws MambuApiException {
 		System.out.println(methodName = "\nIn testCloseLoanAccount");
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
@@ -1154,6 +1165,38 @@ public class DemoTestLoanService {
 
 		System.out.println("Closed account id:" + resultAaccount.getId() + "\tNew State="
 				+ resultAaccount.getAccountState().name() + "\tSubState=" + resultAaccount.getAccountSubState());
+
+		return resultAaccount;
+	}
+
+	/**
+	 * Test Undo Closing Loan account
+	 * 
+	 * @param closedAccount
+	 *            closed loan account. Must not be null. Account must be closed with API supported closer types are:
+	 *            REJECT, WITHDRAW and CLOSE
+	 * @return updated account
+	 * @throws MambuApiException
+	 */
+	public static LoanAccount testUndoCloseLoanAccount(LoanAccount closedAccount) throws MambuApiException {
+		System.out.println(methodName = "\nIn testUndoCloseLoanAccount");
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		if (closedAccount == null || closedAccount.getId() == null) {
+			System.out.println("Account must be not null for testing undo closer");
+			return null;
+		}
+
+		String notes = "Undo notes";
+
+		System.out.println("Undo Closing account with tId=" + closedAccount.getId() + "\tState="
+				+ closedAccount.getAccountState() + "\tSubState=" + closedAccount.getAccountSubState());
+		LoanAccount resultAaccount = loanService.undoCloseLoanAccount(closedAccount, notes);
+
+		System.out.println("Undid Closed account id:" + resultAaccount.getId() + "\tNew State="
+				+ resultAaccount.getAccountState().name() + "\tSubState=" + resultAaccount.getAccountSubState());
+
+		return resultAaccount;
 	}
 
 	public static void testUndoApproveLoanAccount() throws MambuApiException {
@@ -1353,6 +1396,7 @@ public class DemoTestLoanService {
 		// InterestRate
 		loanAccount.setInterestRate(null);
 		loanAccount.setInterestRateSource(null);
+		BigDecimal interestRate = null;
 		if (demoProduct.getRepaymentScheduleMethod() != RepaymentScheduleMethod.NONE) {
 			InterestProductSettings intRateSettings = demoProduct.getInterestRateSettings();
 			InterestRateSource rateSource = intRateSettings == null ? null : intRateSettings.getInterestRateSource();
@@ -1361,13 +1405,14 @@ public class DemoTestLoanService {
 			BigDecimal interestRateMin = intRateSettings == null ? null : intRateSettings.getMinInterestRate();
 			BigDecimal interestRateMax = intRateSettings == null ? null : intRateSettings.getMaxInterestRate();
 
-			BigDecimal interestRate = interestRateDef;
+			interestRate = interestRateDef;
 			interestRate = interestRate == null && interestRateMin != null ? interestRateMin : interestRate;
 			interestRate = interestRate == null && interestRateMax != null ? interestRateMax : interestRate;
 			if (interestRate == null) {
 				// Is still null, so no limits
 				interestRate = new BigDecimal(6.5f);
 			}
+
 			if (rateSource == InterestRateSource.INDEX_INTEREST_RATE) {
 				loanAccount.setInterestSpread(interestRate); // set the spread
 			} else {
@@ -1506,6 +1551,20 @@ public class DemoTestLoanService {
 			guarantySecurity.setGuarantorKey(demoClient.getEncodedKey());
 			guarantySecurity.setGuarantorType(demoClient.getAccountHolderType()); // Mambu now supports guarantor type
 			guarantees.add(guarantySecurity);
+
+			// Since 4.2 we may need also to set Interest Commission at account level, especially if there is no default
+			// in product. See MBU-13388
+			ProductSecuritySettings productSecuritySettings = demoProduct.getProductSecuritySettings();
+			// TODO: Check for allowed Interest Commission range (min/max/def). And the Interest
+			// Commission cannot be greater than the Interest rate itself
+			if (interestRate != null) {
+				// For testing (for now) set the interestCommission to be 1/3 of the actual interest rate.
+				BigDecimal interestCommission = interestRate.divide(new BigDecimal(3));
+				productSecuritySettings.setInterestCommission(interestCommission);
+			}
+
+			// TODO: set also custom interest commission for each funding source. See MBU-13391
+
 		}
 		if (demoProduct.isCollateralEnabled()) {
 			// GuarantyType.ASSET
