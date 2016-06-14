@@ -441,7 +441,7 @@ public class DemoTestOrganizationService {
 
 		Organization organization = jsonOrganization.getOrganization();
 		Address address = jsonOrganization.getAddress();
-//		System.out.println("Address=" + address.getLine1() + " " + address.getCity());
+		System.out.println("Address=" + address.getLine1() + " " + address.getCity());
 
 		System.out.println("Organization=" + organization.getName() + "\tTimeZoneId=" + organization.getTimeZoneID()
 				+ "\tPhone=" + organization.getPhoneNo() + "\tEmail=" + organization.getEmailAddress());
