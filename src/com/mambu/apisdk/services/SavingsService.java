@@ -628,6 +628,48 @@ public class SavingsService {
 		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
 	}
 
+	/****
+	 * Undo Close Savings account. Supports UNDO_REJECT, UNDO_WITHDRAWN, UNDO_CLOSE
+	 * 
+	 * @param savings
+	 *            closed savings account. Must not be null and must be in one of the supported closed states.
+	 * @param notes
+	 *            undo closer reason notes
+	 * @return savings account
+	 * 
+	 * @throws MambuApiException
+	 */
+
+	public SavingsAccount undoCloseSavingsAccount(SavingsAccount savingsAccount, String notes) throws MambuApiException {
+		// Available since Mambu 4.2. See MBU-13193 for details.
+		// Supports UNDO_REJECT, UNDO_WITHDRAWN, UNDO_CLOSE
+
+		// E.g. POST "type=UNDO_REJECT&notes=notes" /api/savings/ABCD123/transactions
+		// E.g. POST "type=UNDO_WITHDRAWN" /api/savings/ABCD123/transactions
+		// E.g. POST "type=UNDO_CLOSE" /api/savings/ABCD123/transactions
+
+		if (savingsAccount == null || savingsAccount.getId() == null || savingsAccount.getAccountState() == null) {
+			throw new IllegalArgumentException("Account, its ID and account state must not  be null");
+		}
+
+		// Get the transaction type based on how the account was closed
+		String undoCloserTransactionType = ServiceHelper.getUndoCloserTransactionType(savingsAccount);
+		if (undoCloserTransactionType == null) {
+			throw new IllegalArgumentException(
+					"Account is not in a state to perform UNDO close via API. Account State="
+							+ savingsAccount.getAccountState());
+		}
+
+		// Create params map with expected API's params
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, undoCloserTransactionType);
+		paramsMap.addParam(NOTES, notes);
+
+		// Execute API
+		String accountId = savingsAccount.getId();
+		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
+	}
+
 	/***
 	 * Get all the savings accounts for a given group
 	 * 

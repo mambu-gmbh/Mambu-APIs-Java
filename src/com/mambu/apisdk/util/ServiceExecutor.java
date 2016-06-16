@@ -13,6 +13,7 @@ import com.mambu.accounting.shared.model.GLJournalEntry;
 import com.mambu.accounts.shared.model.Account;
 import com.mambu.accounts.shared.model.DocumentTemplate;
 import com.mambu.accounts.shared.model.TransactionChannel;
+import com.mambu.admin.shared.model.ExchangeRate;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
 import com.mambu.api.server.handler.loan.model.JSONTransactionRequest;
@@ -558,6 +559,9 @@ public class ServiceExecutor {
 		}.getType());
 		// NotificationMessage
 		collectionTypesMap.put(NotificationMessage.class, new TypeToken<List<NotificationMessage>>() {
+		}.getType());
+		// Exchange Rates. See MBU-12628
+		collectionTypesMap.put(ExchangeRate.class, new TypeToken<List<ExchangeRate>>() {
 		}.getType());
 	}
 

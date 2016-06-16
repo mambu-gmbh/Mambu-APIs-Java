@@ -67,8 +67,13 @@ public class OrganizationService {
 	private final static ApiDefinition postIndexInterestRate = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
 			IndexRateSource.class, IndexRate.class);
 	
+	// Post exchange rates. Example: /api/currencies/{currencyCode}/rates See.MBU-12629
 	private final static ApiDefinition postExchangeRates = new ApiDefinition(ApiType.POST_OWNED_ENTITY, 
 			Currency.class, ExchangeRate.class);
+
+	// Get exchange rates. Example: /api/currencies/{currencyCode}/rates. See MBU-12628
+	private final static ApiDefinition getExchangeRates = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, Currency.class,
+			ExchangeRate.class);
 
 	/***
 	 * Create a new organization service
@@ -82,7 +87,31 @@ public class OrganizationService {
 	}
 
 	/**
-	 * Requests the organization currency
+	 * Requests organization currencies. Either getting all organization currencies or getting just the base currency
+	 * can be requested
+	 * 
+	 * @param getAllCurrencies
+	 *            a boolean indicating if all currencies should be returned (true) or if only the base currency needs to
+	 *            be returned (false)
+	 * @return the list of all currencies or only the base currency depending on a flag
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<Currency> getCurrencies(boolean getAllCurrencies) throws MambuApiException {
+		// Getting all currencies is available since 4.2. See MBU-4128 and MBU-13420
+		// Example: GET api/currencies?includeForeign=true or GET api/currencies?includeForeign=false
+
+		// Create Params Map specifying the "includeForeign" flag
+		String includeForeignParam = getAllCurrencies ? APIData.TRUE : APIData.FALSE;
+
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(APIData.INCLUDE_FOREIGN, includeForeignParam);
+		// Execute API request
+		return serviceExecutor.execute(getCurrencies, paramsMap);
+	}
+
+	/**
+	 * Convenience method to request the organization's base currency only
 	 * 
 	 * @return the Mambu base currency
 	 * 
@@ -92,13 +121,29 @@ public class OrganizationService {
 
 	public Currency getCurrency() throws MambuApiException {
 
-		List<Currency> currencies = serviceExecutor.execute(getCurrencies);
+		// Delegate the call to GET all currencies method and request only the base currency
+		List<Currency> currencies = getCurrencies(false);
 		if (currencies != null && currencies.size() > 0) {
 			return currencies.get(0);
 		} else {
 			// At least base currency must be defined for an organization
 			throw new MambuApiException(-1, baseCurrencyMustBeDefined);
 		}
+	}
+
+	/**
+	 * Convenience method to GET all organization currencies
+	 * 
+	 * @return the list of all currencies defined for the organization
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<Currency> getAllCurrencies() throws MambuApiException {
+		// Getting all currencies is available since 4.2. See MBU-4128 and MBU-13420
+		// Example: GET api/currencies?includeForeign=true
+
+		// Delegate the call to GET all currencies method and request all currencies
+		return getCurrencies(true);
 	}
 
 	/**
@@ -376,29 +421,101 @@ public class OrganizationService {
 		return serviceExecutor.execute(getIcon);
 	}
 	
+	
 	/**
-	 * Create a new exchange rate using a currency code and ExchangeRate object and sends it as a JSON api. 
+	 * Convenience method to create ExchangeRate.
 	 * 
-	 * 
-	 * @param currencyCode
-	 * 			the currency code 
+	 * @param currency
+	 * 			the Currency object. Must not be null or have a null currency code.
 	 * @param exchangeRate
-	 * 			the exchange rate to be created
+	 * 			the ExchangeRate to be created in Mambu. Must not be null.
+	 * @return newly created ExchangeRate 
+	 * @throws MambuApiException
+	 */
+	public ExchangeRate createExchangeRate(Currency currency, ExchangeRate exchangeRate) throws MambuApiException{
+		// POST /api/curencies/{curencyCode}/rates 
+		// Available since 4.2. See MBU-12629 
+	
+		if(null == currency || null == currency.getCode()){
+			throw new IllegalArgumentException("Currency and currency code must not be null");
+		}
+		
+		// Delegates execution
+		return createExchangeRate(currency.getCode(), exchangeRate);
+	}
+		
+	/**
+	 * Creates a new exchange rate using a currency code and ExchangeRate object and sends it as a JSON api. 
+	 *  
+	 * @param currencyCode
+	 * 			the currency code. Must not be null. 
+	 * @param exchangeRate
+	 * 			the exchange rate to be created. Must not be null.
 	 * @return newly created ExchangeRate
 	 * @throws MambuApiException
 	 * @throws IllegalArgumentException
 	 */
 	public ExchangeRate createExchangeRate(String currencyCode, ExchangeRate exchangeRate) throws MambuApiException{
-		/* POST /api/curencies/{curencyCode}/rates */
-		/* Available since 4.2. See MBU-12629 */
+		// POST /api/curencies/{curencyCode}/rates 
+		// Available since 4.2. See MBU-12629 
 
 		if (null == currencyCode || null == exchangeRate) {
 			throw new IllegalArgumentException("Currency code and Exchange rate must not  be null");
 		}
 		
+		// set the content type to be JSON
 		postExchangeRates.setContentType(ContentType.JSON);
+		// set the date format
 		postExchangeRates.setJsonDateTimeFormat(APIData.yyyyMmddFormat);
 		
+		// executes POST currency API
 		return serviceExecutor.executeJson(postExchangeRates, exchangeRate, currencyCode);
 	}
+
+	/**
+	 * Get paginated list of available exchange rates for a base currency
+	 * 
+	 * @param toCurrencyCode
+	 *            currency code to exchange to from the base currency. Must not be null. It should be a valid non-base
+	 *            currency code for a currency used by the organization
+	 * @param startDate
+	 *            start date in a "yyyy-MM=dd" format
+	 * @param endDate
+	 *            end date in a "yyyy-MM=dd" format. Note, startDate should be <= endDate, If both the startDate and the
+	 *            endDate are not specified the all available exchange rates are returned
+	 * @param offset
+	 *            the pagination offset of the response. If not set a value of 0 is used by default by Mambu
+	 * @param limit
+	 *            the maximum number of response entries. If not set a value of 50 is used by default by Mambu
+	 * 
+	 * @return a list of Exchange Rates
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<ExchangeRate> getExchangeRates(String toCurrencyCode, String startDate, String endDate, Integer offset,
+			Integer limit) throws MambuApiException {
+		// Available since Mambu 4.2. See MBU-12628
+		// Example: GET /api/currencies/{toCurrencyCode}/rates?from=2016-05-10&to=2016-05-14&offset=0&limit=40
+
+		if (startDate == null && endDate != null || startDate != null && endDate == null) {
+			throw new IllegalArgumentException("Start and End date must be either both present or both absent");
+		}
+
+		ParamsMap params = new ParamsMap();
+		// Add start and end dates. Expected
+		params.put(APIData.FROM, startDate);
+		params.put(APIData.TO, endDate);
+
+		// Add pagination params
+		if (offset != null) {
+			params.addParam(APIData.OFFSET, String.valueOf(offset));
+		}
+		if (limit != null) {
+			params.addParam(APIData.LIMIT, String.valueOf(limit));
+		}
+
+		// Execute API. The "toCurrencyCode" is the ID for the currency
+		return serviceExecutor.execute(getExchangeRates, toCurrencyCode, params);
+	}
+
 }
