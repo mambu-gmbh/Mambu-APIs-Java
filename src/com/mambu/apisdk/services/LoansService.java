@@ -470,6 +470,48 @@ public class LoansService {
 		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
 	}
 
+	/****
+	 * Undo Close Loan account. Supports UNDO_CLOSE, UNDO_WITHDRAWN, UNDO_REJECT
+	 * 
+	 * @param loanAccount
+	 *            closed loan account. Must not be null and must be in one of the supported closed states.
+	 * @param notes
+	 *            undo closer reason notes
+	 * @return loan account
+	 * 
+	 * @throws MambuApiException
+	 */
+
+	public LoanAccount undoCloseLoanAccount(LoanAccount loanAccount, String notes) throws MambuApiException {
+		// Available since Mambu 4.2. See MBU-13190 for details.
+		// Supports UNDO_CLOSE, UNDO_WITHDRAWN, UNDO_REJECT
+
+		// E.g. POST "type=UNDO_REJECT" /api/loans/KHGJ593/transactions
+		// E.g. POST "type=UNDO_WITHDRAWN" /api/loans/KHGJ593/transactions
+		// E.g. POST "type=UNDO_CLOSE" /api/loans/KHGJ593/transactions
+
+		if (loanAccount == null || loanAccount.getId() == null || loanAccount.getState() == null) {
+			throw new IllegalArgumentException("Account, its ID and account state must not  be null");
+		}
+
+		// Get the transaction type based on how the account was closed
+		String undoCloserTransactionType = ServiceHelper.getUndoCloserTransactionType(loanAccount);
+		if (undoCloserTransactionType == null) {
+			throw new IllegalArgumentException(
+					"Account is not in a state to perform UNDO close via API. Account State=" + loanAccount.getState()
+							+ " Sub-state=" + loanAccount.getSubState());
+		}
+
+		// Create params map with expected API's params
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, undoCloserTransactionType);
+		paramsMap.addParam(NOTES, notes);
+
+		// Execute API
+		String accountId = loanAccount.getId();
+		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
+	}
+
 	/**
 	 * Convenience method to Disburse loan account using JSON Transaction and specifying Disbursement Details. The JSON
 	 * disburse API request supports providing transaction details and disbursement fees. See MBU-11837
@@ -1304,7 +1346,7 @@ public class LoansService {
 	 *            the id or encoded key of the loan account. Mandatory
 	 * @param originalTransactionType
 	 *            Original transaction type to be reversed. The following transaction types can be currently reversed:
-	 *            PENALTY_APPLIED (in 3.13), REPAYMENT, INTEREST_APPLIED, WRITE_OFF (since 4.2). Must not be null.
+	 *            PENALTY_APPLIED (in 3.13), REPAYMENT, INTEREST_APPLIED, FEE, WRITE_OFF (since 4.2). Must not be null.
 	 * @param originalTransactionId
 	 *            the id or the encodedKey of the transaction to be reversed. Must not be null.
 	 * @param notes

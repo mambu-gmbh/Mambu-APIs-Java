@@ -10,6 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.mambu.accounts.shared.model.AccountState;
 import com.mambu.accounts.shared.model.PredefinedFee;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
@@ -26,6 +27,7 @@ import com.mambu.core.shared.model.Money;
 import com.mambu.loans.shared.model.CustomPredefinedFee;
 import com.mambu.loans.shared.model.DisbursementDetails;
 import com.mambu.loans.shared.model.LoanAccount;
+import com.mambu.savings.shared.model.SavingsAccount;
 
 /**
  * ServiceHelper class provides helper methods for validating and building parameters and API definitions required for
@@ -504,6 +506,92 @@ public class ServiceHelper {
 		default:
 			return null;
 
+		}
+	}
+
+	/**
+	 * Helper to determine the type of the Undo Closer Transaction for a closed loan account. The transaction type
+	 * needed in UNDO closer API transactions. Can be also used to determine ahead of time if the UNDO Closer
+	 * transaction can be performed via API for the specified account
+	 * 
+	 * See MBU-13190. As of Mambu 4.2 the following UNDO closer types are supported "UNDO_REJECT", "UNDO_WITHDRAWN",
+	 * "UNDO_CLOSE"
+	 * 
+	 * @param account
+	 *            loan account. Must not be null and its state must not be null.
+	 * @return UNDO close transaction type. Return null if account is not closed or if its closer type is not supported
+	 *         by Mambu API
+	 */
+	public static String getUndoCloserTransactionType(LoanAccount account) {
+		// UNDO Closing loan accounts is available since Mambu 4.4. See MBU-13190
+
+		if (account == null || account.getId() == null || account.getState() == null) {
+			throw new IllegalArgumentException("Account and its ID and its state must not be null");
+		}
+		// Get current state and sub-state
+		AccountState accountState = account.getState();
+		AccountState accountSubState = account.getSubState();
+		// Determine the UNDO Transaction Type parameter based on how the account was closed
+		switch (accountState) {
+		case CLOSED:
+			// Null sub-state is set by Mambu if for accounts closed with all obligations met
+			if (accountSubState == null) {
+				// Account was closed with all obligations met
+				return APIData.UNDO_CLOSE;
+			}
+			// WITHDRAW sub-state is supported by Mambu API for accounts in CLOSED state
+			switch (accountSubState) {
+			case WITHDRAWN:
+				// Account was closed withdrawn
+				return APIData.UNDO_WITHDRAWN;
+			default:
+				return null;
+			}
+		case CLOSED_REJECTED:
+			// Account was closed rejected. No need to check sub-state
+			return APIData.UNDO_REJECT;
+		default:
+			// Only CLOSED and CLOSED_REJECTED states are supported by loan API
+			return null;
+		}
+
+	}
+
+	/**
+	 * Helper to determine the type of the Undo Closer Transaction for a closed savings account. The transaction type
+	 * needed in UNDO closer API transactions. Can be also used to determine ahead of time if the UNDO Closer
+	 * transaction can be performed via API for the specified account
+	 * 
+	 * See MBU-13193. As of Mambu 4.2 the following UNDO closer types are supported "UNDO_REJECT", "UNDO_WITHDRAWN",
+	 * "UNDO_CLOSE"
+	 * 
+	 * @param account
+	 *            savings account. Must not be null and its state must not be null.
+	 * @return UNDO close transaction type. Return null if account is not closed or if its closer type is not supported
+	 *         by Mambu API
+	 */
+	public static String getUndoCloserTransactionType(SavingsAccount account) {
+		// UNDO Closing loan accounts is available since Mambu 4.4. See MBU-13193
+
+		if (account == null || account.getId() == null || account.getAccountState() == null) {
+			throw new IllegalArgumentException("Account and its ID and its state must not be null");
+		}
+		// Get current state and sub-state
+		AccountState accountState = account.getAccountState();
+		// Determine the UNDO Transaction Type parameter based on how the account was closed
+		switch (accountState) {
+		case CLOSED:
+			// Account was closed with all zero balance
+			return APIData.UNDO_CLOSE;
+		case WITHDRAWN:
+			// Account was closed withdrawn
+			return APIData.UNDO_WITHDRAWN;
+		case CLOSED_REJECTED:
+			// Account was closed rejected
+			return APIData.UNDO_REJECT;
+		default:
+			// Only CLOSED, WITHDRAWN and CLOSED_REJECTED states are supported by Savings API
+			return null;
 		}
 	}
 }

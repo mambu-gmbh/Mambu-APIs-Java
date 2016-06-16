@@ -21,7 +21,7 @@ import com.mambu.clients.shared.model.GroupRole;
 public class GroupExpandedPatchSerializer implements JsonSerializer<GroupExpanded> {
 
 	/**
-	 * A list of fields supported by PATCH Group API. See MBU-12985
+	 * A list of fields from GroupExpanded supported by PATCH Group API. See MBU-12985
 	 * 
 	 * As of Mambu 4.2 the following fields can be patched: id, groupName, notes, emailAddress, mobilePhone1
 	 * homePhone, preferredLanguage, assignedBranchKey, assignedCentreKey. And it also allows the replacing of 
@@ -32,18 +32,32 @@ public class GroupExpandedPatchSerializer implements JsonSerializer<GroupExpande
 			APIData.THE_GROUP, APIData.GROUP_MEMBERS, APIData.GROUP_ROLES
 			));
 	
+	/**
+	 * A list of fields from the Group class supported by PATCH group API.
+	 * 
+	 */
 	private final static Set<String> groupPatchFields = new HashSet<String>(Arrays.asList(APIData.ID,
 			APIData.GROUP_NAME, APIData.NOTES, APIData.EMAIL_ADDRESS, APIData.MOBILE_PHONE_1, APIData.HOME_PHONE,
 			APIData.PREFERRED_LANGUAGE, APIData.ASSIGNED_BRANCH_KEY, APIData.ASSIGNED_CENTRE_KEY 
 			));
 	
+	/**
+	 * A list of fields from the group roles supported by PATCH group API.
+	 * 
+	 */
 	private final static Set<String> groupRolesFields = new HashSet<String>(Arrays.asList(APIData.GROUP_ROLE_NAME_KEY,
 			APIData.CLIENT_KEY)); 
 	
+	/**
+	 * A list of fields from the group members supported by PATCH group API.
+	 * 
+	 */
 	private final static Set<String> groupMembersFields = new HashSet<String>(Arrays.asList(APIData.CLIENT_KEY));
 
 	private final static JsonFieldsInclusionStrategy groupExpandedPatchInclusionStrategy;
 	
+	// Create inclusion strategy for Group PATCH API. Include allowed Group, GroupMembers  
+	// and GroupRoles fields
 	static{
 		groupExpandedPatchInclusionStrategy = new JsonFieldsInclusionStrategy(GroupExpanded.class, groupExpandedPatchFields);
 		groupExpandedPatchInclusionStrategy.addInclusion(Group.class, groupPatchFields);
@@ -53,14 +67,20 @@ public class GroupExpandedPatchSerializer implements JsonSerializer<GroupExpande
 	public GroupExpandedPatchSerializer() {
 	}
 
+	// Serialize GroupExpanded using custom inclusion strategy as well as helper methods to adjust 
+	// the "theGroup" field.
 	@Override
 	public JsonElement serialize(GroupExpanded groupExpanded, Type type, JsonSerializationContext context) {
 		GsonBuilder gsonBuilder = GsonUtils.createGsonBuilder();
+		// Add our groupExpandedPatchInclusionStrategy
 		gsonBuilder.addSerializationExclusionStrategy(groupExpandedPatchInclusionStrategy);
 		Gson gson = gsonBuilder.create();
 		
 		JsonElement groupJsonElement = gson.toJsonTree(groupExpanded, type);
 		JsonObject groupExpandedObject = groupJsonElement.getAsJsonObject();
+		
+		// Adjust format for "theGroup" field, replaces it with "group" field 
+		// as the group API expects it  
 		adjustGroupElement(groupExpandedObject);
 	
 		return groupExpandedObject;

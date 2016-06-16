@@ -89,8 +89,8 @@ public class DemoTestClientService {
 			testUpdateGroup(createdGroup); // Available since 3.10
 			
 			testGetGroup();
-			testPatchGroup();
-			testPatchGroupExtended();
+			testPatchGroup(); // Available since 4.2. For more details see MBU-12985.
+			testPatchGroupExtended(); // Available since 4.2. For more details see MBU-12985.
 
 			testGetGroup();
 			testGetGroupDetails();
@@ -235,6 +235,7 @@ public class DemoTestClientService {
 		
 		Group group = clientService.getGroup(groupId);
 		
+		// change the group information
 		group.setGroupName("Patched Group");
 		group.setEmailAddress("test_group_patch5@mambu.com");
 		group.setPreferredLanguage(Language.ROMANIAN);
@@ -242,6 +243,7 @@ public class DemoTestClientService {
 		group.setNotes("this is a note created through patch group");
 		group.setMobilePhone1("777-888-9999");
 		
+		// patch it
 		gotPatched = clientService.patchGroup(group);
 
 		if(gotPatched){
@@ -257,9 +259,12 @@ public class DemoTestClientService {
 
 		boolean gotPatched = false;
 		
+		//get a GroupExpanded
 		GroupExpanded groupExpanded = clientService.getGroupDetails(groupId);
+		//get the group
 		Group group = groupExpanded.getGroup();
 		
+		// change the group informations
 		group.setGroupName("Patched GroupExpanded");
 		group.setEmailAddress("test_group_expanded_patch@mambu.com");
 		group.setPreferredLanguage(Language.ROMANIAN);
@@ -267,6 +272,7 @@ public class DemoTestClientService {
 		group.setNotes("This is a note created through patch group expanded");
 		group.setMobilePhone1("444-555-6666");
 		
+		//patch it
 		gotPatched = clientService.patchGroup(groupExpanded);
 
 		if(gotPatched){
