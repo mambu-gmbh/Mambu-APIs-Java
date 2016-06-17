@@ -406,6 +406,8 @@ public class DemoTestLoanService {
 		account.setPrincipalRepaymentInterval(theAccount.getPrincipalRepaymentInterval()); // principalRepaymentInterval
 		account.setPenaltyRate(theAccount.getPenaltyRate()); // penaltyRate
 		account.setPeriodicPayment(theAccount.getPeriodicPayment()); // periodicPayment
+		account.setLoanAmount(theAccount.getLoanAmount().add(new BigDecimal("55")));
+		
 
 		// Test Principal Payment for REVOLVING CREDIT. See MBU-12143
 

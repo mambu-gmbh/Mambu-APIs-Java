@@ -87,6 +87,10 @@ public class DemoTestClientService {
 
 			createdGroup = testCreateGroup(); // Available since 3.9
 			testUpdateGroup(createdGroup); // Available since 3.10
+			
+			testGetGroup();
+			testPatchGroup(); // Available since 4.2. For more details see MBU-12985.
+			testPatchGroupExtended(); // Available since 4.2. For more details see MBU-12985.
 
 			testGetGroup();
 			testGetGroupDetails();
@@ -221,6 +225,101 @@ public class DemoTestClientService {
 
 	}
 
+	// Test PATCH GroupExpanded fields API. This method patches existing created GroupExpended.
+	public static void testPatchGroup() throws MambuApiException{
+		System.out.println("\n In testPatchGroup");
+		String groupId = NEW_GROUP_ID;
+		
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		boolean patchStatus = false;
+		
+		Group group = setUpGroupForPatchingOperation(groupId, clientService);
+		
+		// patch it
+		patchStatus = clientService.patchGroup(group);
+
+		System.out.println("Update group status=" + patchStatus);
+		
+		Group patchedGroup = clientService.getGroup(group.getEncodedKey());
+		
+		logGroupDetails(patchedGroup);
+		
+	}
+
+	
+	
+	// Test PATCH GroupExpanded fields API. This method patches existing created GroupExpended.
+	public static void testPatchGroupExtended() throws MambuApiException{
+		System.out.println("\n In testPatchGroupExtended");
+		String groupId = NEW_GROUP_ID;
+		
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		boolean patchStatus;
+		
+		//get a GroupExpanded
+		GroupExpanded groupExpanded = clientService.getGroupDetails(groupId);
+	
+		//get group and prepare it for patch
+		setUpGroupForPatchingOperation(groupId, clientService);
+		
+		//patch it
+		patchStatus = clientService.patchGroup(groupExpanded);
+		
+		System.out.println("Update group status=" + patchStatus);
+		
+		GroupExpanded patchedGroup = clientService.getGroupDetails(groupExpanded.getEncodedKey());
+		
+		logGroupDetails(patchedGroup.getGroup());
+
+	}
+
+	/**
+	 * Calls ClientService to get a Group from Mambu for a given group id
+	 * and change some details on it and then returns it.
+	 *    
+	 * @param groupId
+	 *            the id of the group to be searched in Mambu 
+	 * @param clientService
+	 *            the ClientService    
+	 * @return a Group with changed details ready for patching 
+	 * @throws MambuApiException
+	 */
+	private static Group setUpGroupForPatchingOperation(String groupId, ClientsService clientService)
+			throws MambuApiException {
+		Group group = clientService.getGroup(groupId);
+		
+		if(group != null){
+			// change the group information
+			group.setGroupName("Patched Group");
+			group.setEmailAddress("test_group_patch5@mambu.com");
+			group.setPreferredLanguage(Language.ROMANIAN);
+			group.setHomePhone("333-4444-5555-66");
+			group.setNotes("this is a note created through patch group");
+			group.setMobilePhone1("777-888-9999");
+		}
+		return group;
+	}
+	
+	/**
+	 * Logs to the console the details of the group passed as parameter.
+	 *  
+	 * @param group
+	 *            the Group
+	 */
+	private static void logGroupDetails(Group group) {
+		if(group != null){
+			System.out.println("Group key: " + group.getEncodedKey());
+			System.out.println("Group name: " + group.getGroupName());
+			System.out.println("Group preferred language: " + group.getPreferredLanguage());
+			System.out.println("Group phone: " + group.getMobilePhone1());
+			System.out.println("Group notes: "+ group.getNotes());
+			System.out.println("Group homePhone: "+ group.getHomePhone());
+			System.out.println("Group emailAddress: "+ group.getEmailAddress());
+		}
+	}
+	
 	public static void testGetGroupDetails() throws MambuApiException {
 		System.out.println("\nIn testGetGroupDetails");
 
@@ -721,6 +820,7 @@ public class DemoTestClientService {
 			// Add this role to group details
 			List<GroupRole> groupRoles = new ArrayList<GroupRole>();
 			groupRoles.add(useRole);
+			
 			groupDetails.setGroupRoles(groupRoles);
 		}
 

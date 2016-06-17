@@ -12,6 +12,7 @@ import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.json.ClientPatchJsonSerializer;
+import com.mambu.apisdk.json.GroupExpandedPatchSerializer;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
@@ -73,6 +74,18 @@ public class ClientsService {
 		// Use ClientPatchJsonSerializer
 		patchClient.addJsonSerializer(Client.class, new ClientPatchJsonSerializer());
 	}
+	
+	// PATCH Group: PATCH: {"group":{"id":"445076768","groupName":"Village group update","notes":"some_notes after update",
+	//						"assignedUserKey":"40288a164c31ebec014c31ebf7200004","assignedCentreKey":"40288a164c31eca9014c31ef7e510005",
+	//						"assignedBranchKey":"40288a164c31eca9014c31ef7e4f0003"}}   
+	///api/groups/40288a164c31eca9014c31f1135103de
+	private final static ApiDefinition patchGroupExpanded;
+	static {
+		patchGroupExpanded = new ApiDefinition(ApiType.PATCH_ENTITY, GroupExpanded.class);
+		// Use GroupExpandedPatchSerializer
+		patchGroupExpanded.addJsonSerializer(GroupExpanded.class, new GroupExpandedPatchSerializer());
+	}
+			
 	// Create Group. POST JSON /api/groups
 	private final static ApiDefinition createGroup = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, GroupExpanded.class);
 	// Update Group. POST JSON /api/groups/groupId
@@ -879,4 +892,50 @@ public class ClientsService {
 		return serviceExecutor.execute(deleteClientProfileFile, clientId, documentType, null);
 
 	}
+	
+	/**
+	 * Patch Group fields.
+	 * 
+	 * @param group
+	 *            the Group to be patched. The Group and its encoded key must not be Null.
+	 * @return a boolean indicating if the patch was successful
+	 * @throws MambuApiException
+	 */
+	public boolean patchGroup(Group group) throws MambuApiException{
+		// e.g. PATCH /api/groups/40288a164c31eca9014c31f1135103de
+		// See MBU-12985 for more details
+		
+		if (group == null || (group.getEncodedKey() == null )) {
+			throw new IllegalArgumentException("Group and group's encoded key or id  must not be null");
+		}
+		
+		// delegates the execution 
+		return patchGroup(new GroupExpanded(group));
+	}
+	
+	/**
+	 * Patches Group fields through GroupExpanded. Pay attention, only the group information gets patched,
+	 * the other properties on the GroupExpanded like group members are replaced if they are supplied.
+	 * 
+	 * @param groupExpanded
+	 *            the GroupExpanded to be patched. The GroupExpanded and its encoded key must not be Null.
+	 * @return a boolean indicating if the patch was successful
+	 * @throws MambuApiException
+	 */
+	public boolean patchGroup(GroupExpanded groupExpanded) throws MambuApiException{
+		// e.g. PATCH /api/groups/40288a164c31eca9014c31f1135103de
+		// See MBU-12985 for more details
+		
+		if (groupExpanded == null || (groupExpanded.getEncodedKey() == null )) {
+			throw new IllegalArgumentException("Group and group's encoded key or id  must not be null");
+		}
+		
+		// get the id of the group
+		String groupId = groupExpanded.getEncodedKey() != null ? groupExpanded.getEncodedKey() : groupExpanded.getId();
+		
+		// Execute PATCH group API. 
+		return serviceExecutor.executeJson(patchGroupExpanded, groupExpanded, groupId);
+		
+	}
+	
 }

@@ -133,6 +133,18 @@ public class APIData {
 	public static final String DUE_DATE = "duedate";
 	public static final String CLIENT_ID = "clientid";
 	public static final String GROUP_ID = "groupid";
+	
+	// Group constants
+	// Added with 4.2, needed by GroupExpandedPatchSerializer
+	public static final String GROUP = "group";
+	public static final String GROUP_NAME = "groupName";
+	public static final String ASSIGNED_BRANCH_KEY = "assignedBranchKey";
+	public static final String ASSIGNED_CENTRE_KEY = "assignedCentreKey";
+	public static final String GROUP_MEMBERS = "groupMembers";
+	public static final String GROUP_ROLES = "groupRoles";
+	public static final String THE_GROUP = "theGroup";
+	public static final String GROUP_ROLE_NAME_KEY = "groupRoleNameKey";
+	public static final String CLIENT_KEY = "clientKey";
 
 	// Accounting API
 	public static final String GLACCOUNTS = "glaccounts";
@@ -150,6 +162,7 @@ public class APIData {
 	public static String BRANCHES = "branches";
 	public static String CENTRES = "centres";
 	public static String CURRENCIES = "currencies";
+	
 	// Flag for getting all currencies. See MBU-4128 and MBU-13420. Available since 4.2
 	public static String INCLUDE_FOREIGN = "includeForeign";
 	public static String TRUE = "true"; // values used for boolean flags, e.g. INCLUDE_FOREIGN, FULL_DETAILS
