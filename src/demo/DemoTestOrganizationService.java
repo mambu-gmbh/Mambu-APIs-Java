@@ -260,21 +260,11 @@ public class DemoTestOrganizationService {
 		Date start = new Date();
 		
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
-		//get all currencies
-		List<Currency> currencies = organizationService.getCurrencies(true);
 		
-		Currency currncyForTest = null;
-		//iterate over all currencies and pick one
-		for(Currency currency: currencies){
-			// pick one currency that is not the base currency
-			if(!currency.isBaseCurrency()){
-				currncyForTest = currency;
-				break;
-			}
-		}
+		Currency currncyForTest = getRandomCurrencyOtherThanBase(organizationService);
 
 		//return if there are no other currencies or just the base currency
-		if(null==currncyForTest){
+		if(currncyForTest == null){
 			return;
 		}
 		
@@ -303,18 +293,77 @@ public class DemoTestOrganizationService {
 		}
 			
 		//create the next day`s exchange rate for the currency 
+		ExchangeRate exchangeRate = createNextDayExchangeRate(currncyForTest, dateOfLastExchangeRate);
+		
+		//POST the exchange rate in Mambu
+		ExchangeRate postedExchangeRate = organizationService.createExchangeRate(currncyForTest, exchangeRate);
+		System.out.println("The details of the created ExchangeRate are: ");
+		logExchangeRateDetails(postedExchangeRate);
+		
+		Date end = new Date();
+		System.out.println("\nTestPostCurrency() took " + (end.getTime() - start.getTime()) + " miliseconds");
+	}
+
+	/**
+	 * Logs to console the details for the ExchangeRrate passed passed as argument
+	 * 
+	 * @param exchangeRate
+	 *            The ExchangeRate
+	 */
+	private static void logExchangeRateDetails(ExchangeRate exchangeRate) {
+		if(exchangeRate != null){
+			System.out.println("Key: " + exchangeRate.getEncodedKey());
+			System.out.println("SellRate: " + exchangeRate.getSellRate());
+			System.out.println("BuyRate: " + exchangeRate.getBuyRate());
+			System.out.println("StartDate: " + exchangeRate.getStartDate());
+			System.out.println("ToCurrency: " + exchangeRate.getToCurrencyCode());
+		}
+	}
+
+	/**
+	 * Iterates over all the currencies for the organization and gets the first one it finds
+	 * which is not base currency.
+	 * 
+	 * @param organizationService
+	 *             the OrgansisationService.
+	 * @return a currency or null if there are no other currencies than base currency or 
+	 * no currency at all. 
+	 * @throws MambuApiException
+	 */
+	private static Currency getRandomCurrencyOtherThanBase(OrganizationService organizationService)
+			throws MambuApiException {
+		//get all currencies
+		List<Currency> currencies = organizationService.getCurrencies(true);
+		
+		Currency currncyForTest = null;
+		//iterate over all currencies and pick one
+		for(Currency currency: currencies){
+			// pick one currency that is not the base currency
+			if(!currency.isBaseCurrency()){
+				currncyForTest = currency;
+				break;
+			}
+		}
+		return currncyForTest;
+	}
+
+	/**
+	 * Creates the exchange rate for the next day.
+	 * 
+	 * @param currncy
+	 *             The currency that the exchange rate is created for.
+	 * @param dateOfLastExchangeRate
+	 *             The date of the last known exchange rate.
+	 * @return Next`s day exchange rate.
+	 */
+	private static ExchangeRate createNextDayExchangeRate(Currency currncy, Calendar dateOfLastExchangeRate) {
 		dateOfLastExchangeRate.add(Calendar.DATE, 1);
 		ExchangeRate exchangeRate = new ExchangeRate(); 
 		exchangeRate.setBuyRate(new BigDecimal("3.00"));
-		exchangeRate.setToCurrencyCode(currncyForTest.getCode());
+		exchangeRate.setToCurrencyCode(currncy.getCode());
 		exchangeRate.setStartDate(dateOfLastExchangeRate.getTime());
 		exchangeRate.setSellRate(new BigDecimal("4.50"));
-		
-		//POST the exchange rate in Mambu
-		organizationService.createExchangeRate(currncyForTest, exchangeRate);
-
-		Date end = new Date();
-		System.out.println("testPostCurrency() took " + (end.getTime() - start.getTime()) + " miliseconds");
+		return exchangeRate;
 	}
 
 	// Get Custom Field by ID
