@@ -1622,7 +1622,6 @@ public class DemoTestLoanService {
 		// Disbursement Details are not available for REVOLVING_CREDIT products
 		if (productType == LoanProductType.REVOLVING_CREDIT) {
 			loanAccount.setDisbursementDetails(null);
-			loanAccount.setLoanAmount(new Money(999));
 		}
 
 		loanAccount.setNotes("Created by DemoTest on " + new Date());

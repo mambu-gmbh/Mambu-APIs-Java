@@ -18,6 +18,18 @@ import com.mambu.clients.shared.model.GroupExpanded;
 import com.mambu.clients.shared.model.GroupMember;
 import com.mambu.clients.shared.model.GroupRole;
 
+/**
+ * GroupExpandedPatchSerializer implements custom JsonSerializer for PATCH Group API requests. It specifies PATCH API
+ * fields inclusion strategy as well as providing custom JSON formating as expected by Mambu API specification for this
+ * API
+ * 
+ * For more details on Mambu PATCH Group API specification see MBU-11443, MBU-12985 and 
+ * {@link https://mambucom.jira.com/browse/MBU-12985}
+ * 
+ * @author acostros
+ * 
+ */
+
 public class GroupExpandedPatchSerializer implements JsonSerializer<GroupExpanded> {
 
 	/**
@@ -67,8 +79,13 @@ public class GroupExpandedPatchSerializer implements JsonSerializer<GroupExpande
 	public GroupExpandedPatchSerializer() {
 	}
 
-	// Serialize GroupExpanded using custom inclusion strategy as well as helper methods to adjust 
-	// the "theGroup" field.
+	/*
+	 * Serialize GroupExpanded using custom inclusion strategy as well as helper method to replace "theGroup" with "group"
+	 * as expected by Mambu group API.
+	 * 
+	 * (non-Javadoc)
+	 * @see com.google.gson.JsonSerializer#serialize(java.lang.Object, java.lang.reflect.Type, com.google.gson.JsonSerializationContext)
+	 */
 	@Override
 	public JsonElement serialize(GroupExpanded groupExpanded, Type type, JsonSerializationContext context) {
 		GsonBuilder gsonBuilder = GsonUtils.createGsonBuilder();
@@ -86,33 +103,20 @@ public class GroupExpandedPatchSerializer implements JsonSerializer<GroupExpande
 		return groupExpandedObject;
 	}
 
+	/**
+	 * Adjusts the GroupExpanded, JSON Object, by replacing "theGroup" element with "group" element.
+	 * Also copies all the properties from "theGroup" element into "group". 
+	 * Adjustment needed to be compliant with specifications for the Group API,
+	 * which expects "group" not "theGroup" element. 
+	 * 
+	 * @param groupExpandedObject
+	 *            GroupExpanded as JSON object
+	 */
 	private void adjustGroupElement(JsonObject groupExpandedObject) {
-		/* Adjustment needed to change the element "theGroup" to be "group" as per API input required */
 		JsonObject theGroup = groupExpandedObject.getAsJsonObject(APIData.THE_GROUP);
-		if(null != theGroup){
-			JsonObject newGroup= new JsonObject();
-			
-			JsonElement id =theGroup.get(APIData.ID);
-			JsonElement groupName =theGroup.get(APIData.GROUP_NAME);
-			JsonElement notes =theGroup.get(APIData.NOTES);
-			JsonElement emailAddress =theGroup.get(APIData.EMAIL_ADDRESS);
-			JsonElement mobilePhone1 =theGroup.get(APIData.MOBILE_PHONE_1);
-			JsonElement homePhone =theGroup.get(APIData.HOME_PHONE);
-			JsonElement preferredLanguage =theGroup.get(APIData.PREFERRED_LANGUAGE);
-			JsonElement assignedBranchKey =theGroup.get(APIData.ASSIGNED_BRANCH_KEY);
-			JsonElement assignedCentreKey =theGroup.get(APIData.ASSIGNED_CENTRE_KEY);
-			
-			JsonHelper.addValueIfNotNullValue(newGroup, APIData.ID, id);
-			JsonHelper.addValueIfNotNullValue(newGroup, APIData.GROUP_NAME, groupName);
-			JsonHelper.addValueIfNotNullValue(newGroup, APIData.NOTES, notes);
-			JsonHelper.addValueIfNotNullValue(newGroup, APIData.EMAIL_ADDRESS, emailAddress);
-			JsonHelper.addValueIfNotNullValue(newGroup, APIData.MOBILE_PHONE_1, mobilePhone1);
-			JsonHelper.addValueIfNotNullValue(newGroup, APIData.HOME_PHONE, homePhone);
-			JsonHelper.addValueIfNotNullValue(newGroup, APIData.PREFERRED_LANGUAGE, preferredLanguage);
-			JsonHelper.addValueIfNotNullValue(newGroup, APIData.ASSIGNED_BRANCH_KEY, assignedBranchKey);
-			JsonHelper.addValueIfNotNullValue(newGroup, APIData.ASSIGNED_CENTRE_KEY, assignedCentreKey);
-
-			groupExpandedObject.add(APIData.GROUP, newGroup);
+		if(theGroup != null){
+			JsonElement theGroupElement = groupExpandedObject.get(APIData.THE_GROUP);
+			groupExpandedObject.add(APIData.GROUP, theGroupElement);
 			groupExpandedObject.remove(APIData.THE_GROUP);
 		}
 	}

@@ -69,12 +69,22 @@ public class ClientsService {
 	// Patch Client: PATCH {"client":{ "state":"EXITED", "clientRoleId":"{roleID}","firstName":"jan", }}
 	// /api/clients/clientID
 	private final static ApiDefinition patchClient;
+	static {
+		patchClient = new ApiDefinition(ApiType.PATCH_ENTITY, Client.class);
+		// Use ClientPatchJsonSerializer
+		patchClient.addJsonSerializer(Client.class, new ClientPatchJsonSerializer());
+	}
 	
 	// PATCH Group: PATCH: {"group":{"id":"445076768","groupName":"Village group update","notes":"some_notes after update",
 	//						"assignedUserKey":"40288a164c31ebec014c31ebf7200004","assignedCentreKey":"40288a164c31eca9014c31ef7e510005",
 	//						"assignedBranchKey":"40288a164c31eca9014c31ef7e4f0003"}}   
 	///api/groups/40288a164c31eca9014c31f1135103de
 	private final static ApiDefinition patchGroupExpanded;
+	static {
+		patchGroupExpanded = new ApiDefinition(ApiType.PATCH_ENTITY, GroupExpanded.class);
+		// Use GroupExpandedPatchSerializer
+		patchGroupExpanded.addJsonSerializer(GroupExpanded.class, new GroupExpandedPatchSerializer());
+	}
 			
 	// Create Group. POST JSON /api/groups
 	private final static ApiDefinition createGroup = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, GroupExpanded.class);
@@ -104,17 +114,6 @@ public class ClientsService {
 	// or DELETE api/clients/client_id/documents/SIGNATURE
 	private final static ApiDefinition deleteClientProfileFile = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
 			Client.class, Document.class);
-	
-	static {
-		patchClient = new ApiDefinition(ApiType.PATCH_ENTITY, Client.class);
-		// Use ClientPatchJsonSerializer
-		patchClient.addJsonSerializer(Client.class, new ClientPatchJsonSerializer());
-		
-		patchGroupExpanded = new ApiDefinition(ApiType.PATCH_ENTITY, GroupExpanded.class);
-		// Use GroupExpandedPatchSerializer
-		patchGroupExpanded.addJsonSerializer(GroupExpanded.class, new GroupExpandedPatchSerializer());
-		
-	}
 
 	/***
 	 * Create a new client service
@@ -898,7 +897,7 @@ public class ClientsService {
 	 * Patch Group fields.
 	 * 
 	 * @param group
-	 * 			the Group to be patched. The Group and its encoded key must not be Null.
+	 *            the Group to be patched. The Group and its encoded key must not be Null.
 	 * @return a boolean indicating if the patch was successful
 	 * @throws MambuApiException
 	 */
@@ -910,16 +909,16 @@ public class ClientsService {
 			throw new IllegalArgumentException("Group and group's encoded key or id  must not be null");
 		}
 		
-		// delegate the execution 
+		// delegates the execution 
 		return patchGroup(new GroupExpanded(group));
 	}
 	
 	/**
-	 * Patch Group fields through GroupExpanded. Pay attention only the group information gets patched
-	 * the other properties on the GreoupExpanded like group members are replaced if they are supplied.
+	 * Patches Group fields through GroupExpanded. Pay attention, only the group information gets patched,
+	 * the other properties on the GroupExpanded like group members are replaced if they are supplied.
 	 * 
 	 * @param groupExpanded
-	 * 			the GroupExpanded to be patched. The GroupExpanded and its encoded key must not be Null.
+	 *            the GroupExpanded to be patched. The GroupExpanded and its encoded key must not be Null.
 	 * @return a boolean indicating if the patch was successful
 	 * @throws MambuApiException
 	 */
@@ -931,11 +930,11 @@ public class ClientsService {
 			throw new IllegalArgumentException("Group and group's encoded key or id  must not be null");
 		}
 		
-		// get the encoded key of the group
-		String encodedKey = groupExpanded.getEncodedKey();
+		// get the id of the group
+		String groupId = groupExpanded.getEncodedKey() != null ? groupExpanded.getEncodedKey() : groupExpanded.getId();
 		
 		// Execute PATCH group API. 
-		return serviceExecutor.executeJson(patchGroupExpanded, groupExpanded, encodedKey);
+		return serviceExecutor.executeJson(patchGroupExpanded, groupExpanded, groupId);
 		
 	}
 	
