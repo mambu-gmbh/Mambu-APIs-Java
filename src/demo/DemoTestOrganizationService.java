@@ -55,12 +55,15 @@ public class DemoTestOrganizationService {
 		try {
 			demoUser = DemoUtil.getDemoUser();
 			demoCentre = DemoUtil.getDemoCentre();
-			List<Currency> organizationCurrencies = testGetCurrency();
-			// Test GET exchange rates .// Available since 4.2
-			testGetEchangeRates(organizationCurrencies);
-			if (true)
-				return;
+
 			testGetOrganizationDetails();// Available since 3.11
+
+			// Test GET all currencies
+			List<Currency> organizationCurrencies = testGetCurrency(); // Available since 4.2
+			// Test GET exchange rates
+			testGetExchangeRates(organizationCurrencies); // Available since 4.2
+			// Test POST exchange rate
+			testPostExchangeRate(organizationCurrencies); // Available since 4.2
 
 			testPostIndexInterestRate(); // Available since 3.10
 
@@ -73,15 +76,6 @@ public class DemoTestOrganizationService {
 
 			testGetCentresByPage();
 			testGetCentre();
-
-			testGetCurrency();
-			
-			testPostCurrency(); //Available since 4.2
-
-			// Test GET all currencies. // Available since 4.2
-			// List<Currency> organizationCurrencies = testGetCurrency();
-			// Test GET exchange rates .// Available since 4.2
-			// testGetEchangeRates(organizationCurrencies);
 
 			testGetAllBranches();
 			testGetCentresByBranch();
@@ -253,55 +247,62 @@ public class DemoTestOrganizationService {
 
 		return organizationCurrencies;
 	}
-	
-	//Tests creating of next`s day exchange currency for a currency  
-	private static void testPostCurrency() throws MambuApiException {
-		System.out.println(methodName = "\nIn testPostCurrency");
-		Date start = new Date();
-		
-		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
-		
-		Currency currncyForTest = getRandomCurrencyOtherThanBase(organizationService);
 
-		//return if there are no other currencies or just the base currency
-		if(currncyForTest == null){
+	// Tests creating of next`s day exchange currency for a currency
+	private static void testPostExchangeRate(List<Currency> organizationCurrencies) throws MambuApiException {
+		System.out.println(methodName = "\nIn testPostExchangeRate");
+		Date start = new Date();
+
+		// Get one currency to test POST exchange rate
+		Currency currncyForTest = getRandomCurrencyOtherThanBase(organizationCurrencies);
+
+		// return if there are no other currencies or just the base currency
+		if (currncyForTest == null) {
+			System.out.println("WARNING: No Foreign Currency found to test POST Exchange Rate API ");
 			return;
 		}
-		
+
 		Calendar startDate = Calendar.getInstance();
 		// set start date to be one month before
 		startDate.add(Calendar.MONTH, -1);
 		Calendar endDate = Calendar.getInstance();
-		int offset = 0; 
-		int limit = 31;
-		
-		String oneMonthBefore = DateUtils.format(startDate.getTime()); 
-		String now = DateUtils.format(endDate.getTime());
-		
-		//get all exchange rates in one month period
-		List<ExchangeRate> exchangeRates = organizationService.getExchangeRates(currncyForTest.getCode(), oneMonthBefore, now, offset, limit);
+		// Need to add a few more days to see future rates too: otherwise exchange rates created for Today or for
+		// tomorrow may NOT be returned
+		final int futureDaysLookup = 30;
+		endDate.add(Calendar.DAY_OF_MONTH, futureDaysLookup);
+		Integer offset = 0;
+		Integer limit = null;
 
-		//check for last exchange rate
+		String oneMonthBefore = DateUtils.format(startDate.getTime());
+		String futureDate = DateUtils.format(endDate.getTime());
+
+		// get all exchange rates in from one month before to to 30 days into the future
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+		List<ExchangeRate> exchangeRates = organizationService.getExchangeRates(currncyForTest.getCode(),
+				oneMonthBefore, futureDate, offset, limit);
+
+		// check for last exchange rate
 		startDate.add(Calendar.DAY_OF_MONTH, -1);
 		Calendar dateOfLastExchangeRate = Calendar.getInstance();
 		dateOfLastExchangeRate.setTime(startDate.getTime());
-		
-		for(ExchangeRate exchangeRate: exchangeRates){
-			if((exchangeRate.getStartDate().after(dateOfLastExchangeRate.getTime()))){
+
+		for (ExchangeRate exchangeRate : exchangeRates) {
+			if ((exchangeRate.getStartDate().after(dateOfLastExchangeRate.getTime()))) {
 				dateOfLastExchangeRate.setTime(exchangeRate.getStartDate());
 			}
 		}
-			
-		//create the next day`s exchange rate for the currency 
+
+		// create the next day`s exchange rate for the currency
 		ExchangeRate exchangeRate = createNextDayExchangeRate(currncyForTest, dateOfLastExchangeRate);
-		
-		//POST the exchange rate in Mambu
+
+		// POST the exchange rate in Mambu
 		ExchangeRate postedExchangeRate = organizationService.createExchangeRate(currncyForTest, exchangeRate);
 		System.out.println("The details of the created ExchangeRate are: ");
 		logExchangeRateDetails(postedExchangeRate);
-		
+
 		Date end = new Date();
-		System.out.println("\nTestPostCurrency() took " + (end.getTime() - start.getTime()) + " miliseconds");
+		System.out.println("\n" + methodName + " took " + (end.getTime() - start.getTime()) + " milliseconds");
+
 	}
 
 	/**
@@ -311,7 +312,7 @@ public class DemoTestOrganizationService {
 	 *            The ExchangeRate
 	 */
 	private static void logExchangeRateDetails(ExchangeRate exchangeRate) {
-		if(exchangeRate != null){
+		if (exchangeRate != null) {
 			System.out.println("Key: " + exchangeRate.getEncodedKey());
 			System.out.println("SellRate: " + exchangeRate.getSellRate());
 			System.out.println("BuyRate: " + exchangeRate.getBuyRate());
@@ -321,25 +322,24 @@ public class DemoTestOrganizationService {
 	}
 
 	/**
-	 * Iterates over all the currencies for the organization and gets the first one it finds
-	 * which is not base currency.
+	 * Iterates over all the currencies for the organization and gets the first one it finds which is not base currency.
 	 * 
-	 * @param organizationService
-	 *             the OrgansisationService.
-	 * @return a currency or null if there are no other currencies than base currency or 
-	 * no currency at all. 
+	 * @param currencies
+	 *            all organization currencies
+	 * @return a currency or null if there are no other currencies than base currency or no currency at all.
 	 * @throws MambuApiException
 	 */
-	private static Currency getRandomCurrencyOtherThanBase(OrganizationService organizationService)
-			throws MambuApiException {
-		//get all currencies
-		List<Currency> currencies = organizationService.getCurrencies(true);
-		
+	private static Currency getRandomCurrencyOtherThanBase(List<Currency> currencies) throws MambuApiException {
+
+		if (currencies == null) {
+			System.out.println("WARNING:NULL currencies, cannot get foreign currency");
+			return null;
+		}
 		Currency currncyForTest = null;
-		//iterate over all currencies and pick one
-		for(Currency currency: currencies){
+		// iterate over all currencies and pick one
+		for (Currency currency : currencies) {
 			// pick one currency that is not the base currency
-			if(!currency.isBaseCurrency()){
+			if (!currency.isBaseCurrency()) {
 				currncyForTest = currency;
 				break;
 			}
@@ -351,14 +351,14 @@ public class DemoTestOrganizationService {
 	 * Creates the exchange rate for the next day.
 	 * 
 	 * @param currncy
-	 *             The currency that the exchange rate is created for.
+	 *            The currency that the exchange rate is created for.
 	 * @param dateOfLastExchangeRate
-	 *             The date of the last known exchange rate.
+	 *            The date of the last known exchange rate.
 	 * @return Next`s day exchange rate.
 	 */
 	private static ExchangeRate createNextDayExchangeRate(Currency currncy, Calendar dateOfLastExchangeRate) {
 		dateOfLastExchangeRate.add(Calendar.DATE, 1);
-		ExchangeRate exchangeRate = new ExchangeRate(); 
+		ExchangeRate exchangeRate = new ExchangeRate();
 		exchangeRate.setBuyRate(new BigDecimal("3.00"));
 		exchangeRate.setToCurrencyCode(currncy.getCode());
 		exchangeRate.setStartDate(dateOfLastExchangeRate.getTime());
@@ -594,8 +594,8 @@ public class DemoTestOrganizationService {
 	 *            available organization currencies. Must not be null
 	 * @throws MambuApiException
 	 */
-	public static void testGetEchangeRates(List<Currency> organizationCurrencies) throws MambuApiException {
-		System.out.println(methodName = "\nIn testGetEchangeRates");
+	public static void testGetExchangeRates(List<Currency> organizationCurrencies) throws MambuApiException {
+		System.out.println(methodName = "\nIn testGetExchangeRates");
 
 		if (organizationCurrencies == null || organizationCurrencies.size() < 2) {
 			System.out.println("WARNING: cannot test GET exchange rates with no non-base currencies");
@@ -606,11 +606,12 @@ public class DemoTestOrganizationService {
 		final long thirtyDays = 30 * oneDay;
 		// Create startDate and endDate for our test
 		Date now = new Date();
-		Date tomorrow = new Date(now.getTime() + oneDay);
+		final int futureDaysLookup = 30;
+		Date futureDate = new Date(now.getTime() + futureDaysLookup * oneDay);
 		// Create test start date about 30 days before now and the endDate to be tomorrow (to see all as of today
 		// exchange rates)
 		String startDate = DateUtils.format(new Date(now.getTime() - thirtyDays));
-		String endDate = DateUtils.format(tomorrow);
+		String endDate = DateUtils.format(futureDate);
 
 		// Set test pagination params
 		Integer offset = 0;
