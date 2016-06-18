@@ -918,36 +918,46 @@ public class ClientsService {
 	 * Patch Group fields.
 	 * 
 	 * @param group
-	 *            the Group to be patched. The Group and its encoded key must not be Null.
+	 *            the Group to be patched. The Group and its encoded key or id must not be Null.
 	 * @return a boolean indicating if the patch was successful
 	 * @throws MambuApiException
 	 */
 	public boolean patchGroup(Group group) throws MambuApiException {
-		// e.g. PATCH /api/groups/40288a164c31eca9014c31f1135103de
+		// e.g. PATCH {GroupExpandedJson} /api/groups/40288a164c31eca9014c31f1135103de
 		// See MBU-12985 for more details
 
-		if (group == null || (group.getEncodedKey() == null)) {
-			throw new IllegalArgumentException("Group and group's encoded key or id  must not be null");
+		if (group == null) {
+			throw new IllegalArgumentException("Group must not be null");
 		}
+		// Create Group Expanded with this group and delegate the call to PATCH GroupExapnded
+		GroupExpanded groupExpanded = new GroupExpanded(group);
+		// Mambu model constructor for GroupExpanded creates empty arrays for group members and group roles. We need to
+		// have them set to null in JSON (not to remove the existent group assignments and roles with our PATCH request)
+		groupExpanded.setGroupMembers(null);
+		groupExpanded.setGroupRoles(null);
+		// These following fields are ignored by Mambu in PATCH API but we should set them to null anyway to avoid
+		// sending unnecessary empty arrays
+		groupExpanded.setAddresses(null);
+		groupExpanded.setCustomFieldValues(null);
 
-		// delegates the execution
-		return patchGroup(new GroupExpanded(group));
+		// Delegate the execution
+		return patchGroup(groupExpanded);
 	}
 
 	/**
 	 * Patches Group fields through GroupExpanded. Pay attention, only the group information gets patched, the other
-	 * properties on the GroupExpanded like group members are replaced if they are supplied.
+	 * properties on the GroupExpanded like group members and group roles are replaced if they are supplied.
 	 * 
 	 * @param groupExpanded
-	 *            the GroupExpanded to be patched. The GroupExpanded and its encoded key must not be Null.
+	 *            the GroupExpanded to be patched. The GroupExpanded and its encoded key or id must not be null.
 	 * @return a boolean indicating if the patch was successful
 	 * @throws MambuApiException
 	 */
 	public boolean patchGroup(GroupExpanded groupExpanded) throws MambuApiException {
-		// e.g. PATCH /api/groups/40288a164c31eca9014c31f1135103de
+		// e.g. PATCH {GroupExpandedJson} /api/groups/40288a164c31eca9014c31f1135103de
 		// See MBU-12985 for more details
 
-		if (groupExpanded == null || (groupExpanded.getEncodedKey() == null)) {
+		if (groupExpanded == null || groupExpanded.getEncodedKey() == null && groupExpanded.getId() == null) {
 			throw new IllegalArgumentException("Group and group's encoded key or id  must not be null");
 		}
 

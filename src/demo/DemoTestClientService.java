@@ -255,14 +255,13 @@ public class DemoTestClientService {
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
-		boolean patchStatus = false;
-
+		// TODO: need to add support for testing PATCHing groupId
 		Group group = setUpGroupForPatchingOperation(groupId, clientService);
 
 		// patch it
-		patchStatus = clientService.patchGroup(group);
+		boolean patchStatus = clientService.patchGroup(group);
 
-		System.out.println("Update group status=" + patchStatus);
+		System.out.println("PATCHed group status=" + patchStatus);
 
 		Group patchedGroup = clientService.getGroup(group.getEncodedKey());
 
@@ -277,18 +276,17 @@ public class DemoTestClientService {
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
-		boolean patchStatus;
-
 		// get a GroupExpanded
 		GroupExpanded groupExpanded = clientService.getGroupDetails(groupId);
 
 		// get group and prepare it for patch
+		// TODO: need to add support for testing PATCHing group members and group roles
 		setUpGroupForPatchingOperation(groupId, clientService);
 
 		// patch it
-		patchStatus = clientService.patchGroup(groupExpanded);
+		boolean patchStatus = clientService.patchGroup(groupExpanded);
 
-		System.out.println("Update group status=" + patchStatus);
+		System.out.println("PATCHed group status=" + patchStatus);
 
 		GroupExpanded patchedGroup = clientService.getGroupDetails(groupExpanded.getEncodedKey());
 
