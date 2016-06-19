@@ -66,12 +66,12 @@ public class OrganizationService {
 	// Post Index Interest Rate
 	private final static ApiDefinition postIndexInterestRate = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
 			IndexRateSource.class, IndexRate.class);
-	
+
 	// Post exchange rates. Example: /api/currencies/{currencyCode}/rates (e.g. POST {"buyRate":"3.41231232",
-	// "sellRate":"3.4256546","startDate":"2016-02-12T00:00:00+0000"} /api/currencies/EUR/rates) 
+	// "sellRate":"3.4256546","startDate":"2016-02-12T00:00:00+0000"} /api/currencies/EUR/rates)
 	// For more details see MBU-12629.
-	private final static ApiDefinition postExchangeRates = new ApiDefinition(ApiType.POST_OWNED_ENTITY, 
-			Currency.class, ExchangeRate.class);
+	private final static ApiDefinition postExchangeRates = new ApiDefinition(ApiType.POST_OWNED_ENTITY, Currency.class,
+			ExchangeRate.class);
 
 	// Get exchange rates. Example: /api/currencies/{currencyCode}/rates. See MBU-12628
 	private final static ApiDefinition getExchangeRates = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, Currency.class,
@@ -422,53 +422,55 @@ public class OrganizationService {
 				ApiReturnFormat.OBJECT);
 		return serviceExecutor.execute(getIcon);
 	}
-	
-	
+
 	/**
 	 * Convenience method to create ExchangeRate.
 	 * 
 	 * @param currency
 	 *            the Currency object. Must not be null or have a null currency code.
 	 * @param exchangeRate
-	 *            the ExchangeRate to be created in Mambu. Must not be null.
-	 * @return newly created ExchangeRate 
+	 *            the ExchangeRate to be created in Mambu. Must not be null. The required start date should be provided
+	 *            in the startDate as the date in UTC at midnight
+	 * @return newly created ExchangeRate
 	 * @throws MambuApiException
 	 */
-	public ExchangeRate createExchangeRate(Currency currency, ExchangeRate exchangeRate) throws MambuApiException{
-		// POST /api/curencies/{curencyCode}/rates 
-		// Available since 4.2. See MBU-12629 
-	
-		if(currency == null || currency.getCode() == null){
+	public ExchangeRate createExchangeRate(Currency currency, ExchangeRate exchangeRate) throws MambuApiException {
+		// POST /api/currencies/{curencyCode}/rates
+		// Available since 4.2. See MBU-12629
+
+		if (currency == null || currency.getCode() == null) {
 			throw new IllegalArgumentException("Currency and currency code must not be null");
 		}
-		
+
 		// Delegates execution
 		return createExchangeRate(currency.getCode(), exchangeRate);
 	}
-		
+
 	/**
-	 * Creates a new exchange rate using a currency code and ExchangeRate object and sends it as a JSON api. 
-	 *  
+	 * Creates a new exchange rate using a currency code and ExchangeRate object and sends it as a JSON api.
+	 * 
 	 * @param currencyCode
-	 *            the currency code. Must not be null. 
+	 *            the currency code. Must not be null.
 	 * @param exchangeRate
-	 *            the exchange rate to be created. Must not be null.
+	 *            the exchange rate to be created. Must not be null. The required start date should be provided in the
+	 *            startDate as the date in UTC at midnight
 	 * @return newly created ExchangeRate
 	 * @throws MambuApiException
 	 * @throws IllegalArgumentException
 	 */
-	public ExchangeRate createExchangeRate(String currencyCode, ExchangeRate exchangeRate) throws MambuApiException{
-		// POST /api/curencies/{curencyCode}/rates 
-		// e.g. POST {"buyRate":"3.41231232","sellRate":"3.4256546","startDate":"2016-02-12T00:00:00+0000"} /api/currencies/EUR/rates
-		// Available since 4.2. See MBU-12629 
+	public ExchangeRate createExchangeRate(String currencyCode, ExchangeRate exchangeRate) throws MambuApiException {
+		// POST /api/currencies/{curencyCode}/rates
+		// e.g. POST {"buyRate":"3.41231232","sellRate":"3.4256546","startDate":"2016-02-12T00:00:00+0000"}
+		// /api/currencies/EUR/rates
+		// Available since 4.2. See MBU-12629
 
 		if (currencyCode == null || exchangeRate == null) {
 			throw new IllegalArgumentException("Currency code and Exchange rate must not  be null");
 		}
-		
+
 		// set the content type to be JSON
 		postExchangeRates.setContentType(ContentType.JSON);
-		
+
 		// executes POST currency API
 		return serviceExecutor.executeJson(postExchangeRates, exchangeRate, currencyCode);
 	}
@@ -489,7 +491,7 @@ public class OrganizationService {
 	 * @param limit
 	 *            the maximum number of response entries. If not set a value of 50 is used by default by Mambu
 	 * 
-	 * @return a list of Exchange Rates
+	 * @return a list of Exchange Rates. Note, the dates in startDate and endDate are returned as dates in UTC
 	 * 
 	 * @throws MambuApiException
 	 */
