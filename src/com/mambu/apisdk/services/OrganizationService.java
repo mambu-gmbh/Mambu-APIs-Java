@@ -209,11 +209,20 @@ public class OrganizationService {
 	/**
 	 * Get Transaction Channels
 	 * 
+	 * Note: since Mambu 4.1 the returned transaction channels also contain a list of custom fields applicable to this
+	 * channel and channel's accounting rule. See MBU-12226- As a Developer, I want to GET transaction channels with
+	 * custom fields via APIs
+	 * 
 	 * @return List of all Transaction Channels for the organization
 	 * 
 	 * @throws MambuApiException
 	 */
 	public List<TransactionChannel> getTransactionChannels() throws MambuApiException {
+		// Example: GET /api/transactionchannels
+		// See MBU-6407 and MBU-12226
+		// Since Mambu 4.1 the returned transaction channels also include custom field definitions applicable to each
+		// channel and the accounting rule. See MBU-12226
+
 		ParamsMap params = null;
 		return serviceExecutor.execute(getTransactionChannels, params);
 	}

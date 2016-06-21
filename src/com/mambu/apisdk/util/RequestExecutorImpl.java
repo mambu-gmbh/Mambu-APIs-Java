@@ -53,6 +53,12 @@ public class RequestExecutorImpl implements RequestExecutor {
 	private final static String APPLICATION_KEY = APIData.APPLICATION_KEY; // as per JIRA issue MBU-3236
 
 	private final static Logger LOGGER = Logger.getLogger(RequestExecutorImpl.class.getName());
+	// Specify Logger Levels to be used for logging API request, response details as well as Mambu exceptions
+	private final static Level requesLogLevel = Level.FINER; // Logging API Request level
+	private final static Level responseLogLevel = Level.FINER; // Logging API Response level
+	private final static Level exceptionLogLevel = Level.WARNING; // Logging Mambu exceptions level
+	// Log curl template (equivalent to the actual API request) at FINEST level
+	private final static Level curlRequestTemplateLogLevel = Level.FINEST;
 
 	@Inject
 	public RequestExecutorImpl(URLHelper urlHelper) {
@@ -97,7 +103,14 @@ public class RequestExecutorImpl implements RequestExecutor {
 		urlString = urlHelper.addJsonPaginationParams(urlString, method, contentTypeFormat, params);
 
 		// Log API Request details
-		logApiRequest(method, contentTypeFormat, urlString, params);
+		if (LOGGER.isLoggable(requesLogLevel)) {
+			logApiRequest(requesLogLevel, method, contentTypeFormat, urlString, params);
+		}
+		// Optionally log a template for the "curl" command as if it would be executed with the request specific API
+		// params
+		if (LOGGER.isLoggable(curlRequestTemplateLogLevel)) {
+			logCurlCommandForRequest(method, contentTypeFormat, urlString, params);
+		}
 
 		// Add 'Application Key', if it was set by the application
 		// Mambu may handle API requests differently for different Application Keys
@@ -117,24 +130,28 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		HttpClient httpClient = new DefaultHttpClient();
 		String response = "";
+		HttpResponse httpResponse = null;
 		try {
 			switch (method) {
 			case GET:
-				response = executeGetRequest(httpClient, urlString, params);
+				httpResponse = executeGetRequest(httpClient, urlString, params);
 				break;
 			case POST:
-				response = executePostRequest(httpClient, urlString, params, contentTypeFormat);
+				httpResponse = executePostRequest(httpClient, urlString, params, contentTypeFormat);
 				break;
 			case PATCH:
-				response = executePatchRequest(httpClient, urlString, params);
+				httpResponse = executePatchRequest(httpClient, urlString, params);
 				break;
 			case DELETE:
-				response = executeDeleteRequest(httpClient, urlString, params);
+				httpResponse = executeDeleteRequest(httpClient, urlString, params);
 				break;
 			default:
-				throw new IllegalArgumentException("Only methods GET, POST and DELETE are supported, not "
+				throw new IllegalArgumentException("Only methods GET, POST PATCH and DELETE are supported, not "
 						+ method.name() + ".");
 			}
+			// Process response
+			response = processResponse(httpResponse, method, contentTypeFormat, urlString, params);
+
 		} catch (MalformedURLException e) {
 			LOGGER.severe("MalformedURLException: " + e.getMessage());
 			throw new MambuApiException(e);
@@ -151,7 +168,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	/**
 	 * Executes a POST request as per the interface specification
 	 */
-	private String executePostRequest(HttpClient httpClient, String urlString, ParamsMap params,
+	private HttpResponse executePostRequest(HttpClient httpClient, String urlString, ParamsMap params,
 			ContentType contentTypeFormat) throws MalformedURLException, IOException, MambuApiException {
 
 		// Get properly formatted ContentType
@@ -189,17 +206,14 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// execute
 		HttpResponse httpResponse = httpClient.execute(httpPost);
 
-		// Process response
-		String response = processResponse(httpResponse, urlString);
-
-		return response;
+		return httpResponse;
 
 	}
 
 	/**
 	 * Executes a PATCH request as per the interface specification
 	 */
-	private String executePatchRequest(HttpClient httpClient, String urlString, ParamsMap params)
+	private HttpResponse executePatchRequest(HttpClient httpClient, String urlString, ParamsMap params)
 			throws MalformedURLException, IOException, MambuApiException {
 
 		// PATCH request is using json ContentType
@@ -217,22 +231,26 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// execute
 		HttpResponse httpResponse = httpClient.execute(httpPatch);
 
-		// Process response
-		String response = processResponse(httpResponse, urlString);
-		return response;
+		return httpResponse;
 
 	}
 
 	/***
 	 * Execute a GET request as per the interface specification
 	 * 
+	 * @param httpClient
+	 *            http client
 	 * @param urlString
+	 *            url string
+	 * @param params
+	 *            Params Map
+	 * @return Http Response
 	 */
-	private String executeGetRequest(HttpClient httpClient, String urlString, ParamsMap params)
+	private HttpResponse executeGetRequest(HttpClient httpClient, String urlString, ParamsMap params)
 			throws MalformedURLException, IOException, MambuApiException {
 
 		if (params != null && params.size() > 0) {
-			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
+			urlString = new String((URLHelper.makeUrlWithParams(urlString, params)));
 		}
 
 		HttpGet httpGet = new HttpGet(urlString);
@@ -243,26 +261,27 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// execute
 		HttpResponse httpResponse = httpClient.execute(httpGet);
 
-		// Process response
-		String response = processResponse(httpResponse, urlString);
-
-		return response;
+		return httpResponse;
 
 	}
 
 	/***
 	 * Execute a DELETE request as per the interface specification
 	 * 
+	 * @param httpClient
+	 *            http client
+	 * 
 	 * @param urlString
 	 * 
 	 * @param params
 	 *            ParamsMap with parameters
+	 * @return Http Response
 	 */
-	private String executeDeleteRequest(HttpClient httpClient, String urlString, ParamsMap params)
+	private HttpResponse executeDeleteRequest(HttpClient httpClient, String urlString, ParamsMap params)
 			throws MalformedURLException, IOException, MambuApiException {
 
 		if (params != null && params.size() > 0) {
-			urlString = new String((urlHelper.createUrlWithParams(urlString, params)));
+			urlString = new String((URLHelper.makeUrlWithParams(urlString, params)));
 		}
 
 		HttpDelete httpDelete = new HttpDelete(urlString);
@@ -271,10 +290,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// execute
 		HttpResponse httpResponse = httpClient.execute(httpDelete);
 
-		// Process response
-		String response = processResponse(httpResponse, urlString);
-
-		return response;
+		return httpResponse;
 
 	}
 
@@ -307,16 +323,23 @@ public class RequestExecutorImpl implements RequestExecutor {
 	}
 
 	/**
-	 * Process and return the response to an HTTP request. Throw MambuApiException if request failed
+	 * Process and return the response to an HTTP request. Throw MambuApiException if request failed. Log response
 	 * 
 	 * @param httpResponse
 	 *            HTTP response
+	 * @param method
+	 *            method
+	 * @param contentType
+	 *            content type
+	 * 
 	 * @param urlString
 	 *            URL string for the HTTP request
+	 * @param params
+	 *            Params Map
 	 * @return HTTP response string
 	 */
-	private static String processResponse(HttpResponse httpResponse, String urlString) throws IOException,
-			MambuApiException {
+	private static String processResponse(HttpResponse httpResponse, Method method, ContentType contentType,
+			String urlString, ParamsMap params) throws IOException, MambuApiException {
 
 		// get status
 		int status = httpResponse.getStatusLine().getStatusCode();
@@ -326,7 +349,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		// Get the response Entity
 		HttpEntity entity = httpResponse.getEntity();
-
 		if (entity != null) {
 			content = entity.getContent();
 			if (content != null) {
@@ -335,7 +357,9 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 
 		// Log Mambu response
-		logApiResponse(urlString, status, response);
+		if (LOGGER.isLoggable(responseLogLevel)) {
+			logApiResponse(responseLogLevel, urlString, status, response);
+		}
 
 		// if status is Ok - return the response
 		if (status == HttpURLConnection.HTTP_OK || status == HttpURLConnection.HTTP_CREATED) {
@@ -346,14 +370,24 @@ public class RequestExecutorImpl implements RequestExecutor {
 		Integer errorCode = status;
 
 		// Log raising exception
-		if (LOGGER.isLoggable(Level.WARNING)) {
+		if (LOGGER.isLoggable(exceptionLogLevel)) {
 			// Remove appKey from the URL string when logging exception
 			String urlLogString = urlString;
 			String appKeyValue = MambuAPIFactory.getApplicationKey();
 			if (appKeyValue != null) {
 				urlLogString = urlLogString.replace(appKeyValue, "...");
 			}
-			LOGGER.warning("Creating exception, error code=" + errorCode + " for url=" + urlLogString);
+			LOGGER.log(exceptionLogLevel, "Creating exception, error code=" + errorCode + " for url=" + urlLogString);
+			// if response was not logged - log it now with the exception
+			if (!LOGGER.isLoggable(responseLogLevel)) {
+				LOGGER.log(exceptionLogLevel, "Mambu Response: " + response);
+			}
+			// If the request was not logged yet - log it now for this exception to see all needed request details
+			if (!LOGGER.isLoggable(requesLogLevel)) {
+				// Request was not log. Log it now with the exception
+				LOGGER.log(exceptionLogLevel, "Request causing Mambu exception:");
+				logApiRequest(exceptionLogLevel, method, contentType, urlLogString, params);
+			}
 		}
 		// pass to MambuApiException the content that goes with the error code
 		throw new MambuApiException(errorCode, response);
@@ -453,6 +487,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * Log API request details. This is a helper method for using consistent formating when using Java Logger to print
 	 * the details of the API request
 	 * 
+	 * @param logerLevel
+	 *            allowed logger level
 	 * @param method
 	 *            request's method
 	 * @param contentType
@@ -465,23 +501,24 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 *            The method shall be invoked before the appKey is added to the map to avoid printing appKey details
 	 * 
 	 */
-	private void logApiRequest(Method method, ContentType contentType, String urlString, ParamsMap params) {
+	private static void logApiRequest(Level logerLevel, Method method, ContentType contentType, String urlString,
+			ParamsMap params) {
 
-		if (!LOGGER.isLoggable(Level.INFO) || method == null) {
+		if (!LOGGER.isLoggable(logerLevel) || method == null) {
 			return;
 		}
 
 		// Log Method and URL.
 		// Log params if applicable
 		// Log Json for Json requests
-		String logDetails = method.name() + " with URL=";
+		String requestDetails = method.name() + " with URL=";
 		String jsonString = null;
 		String urlWithParams = null;
 		switch (method) {
 		case GET:
 			// For GET add params to the url as in to be sent request itself
-			urlWithParams = new String((urlHelper.createUrlWithParams(urlString, params)));
-			logDetails = logDetails + urlWithParams;
+			urlWithParams = new String((URLHelper.makeUrlWithParams(urlString, params)));
+			requestDetails = requestDetails + urlWithParams;
 			break;
 
 		case POST:
@@ -489,15 +526,15 @@ public class RequestExecutorImpl implements RequestExecutor {
 			switch (contentType) {
 			case WWW_FORM:
 				// Log URL and params as separate items
-				logDetails = logDetails + urlString;
+				requestDetails = requestDetails + urlString;
 				if (params != null) {
 					String postParams = params.getURLString();
-					logDetails = logDetails + "\nParams=" + postParams;
+					requestDetails = requestDetails + "\nParams=" + postParams;
 				}
 				break;
 			case JSON:
 				// Log URL and Json string
-				logDetails = logDetails + urlString;
+				requestDetails = requestDetails + urlString;
 				if (params != null) {
 					jsonString = params.get(APIData.JSON_OBJECT);
 				}
@@ -507,8 +544,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 			break;
 		case DELETE:
 			// For DELETE ads params to the url as in to be sent request itself
-			urlWithParams = new String((urlHelper.createUrlWithParams(urlString, params)));
-			logDetails = logDetails + urlWithParams;
+			urlWithParams = new String((URLHelper.makeUrlWithParams(urlString, params)));
+			requestDetails = requestDetails + urlWithParams;
 			break;
 
 		default:
@@ -517,18 +554,18 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 		// Add content type to logging, if not NULL
 		if (contentType != null) {
-			logDetails = logDetails + " (contentType=" + contentType + ")";
+			requestDetails = requestDetails + " (contentType=" + contentType + ")";
 		}
-
+		// Remove appKey from the URL string when logging exception
+		String appKeyValue = MambuAPIFactory.getApplicationKey();
+		if (requestDetails != null && appKeyValue != null) {
+			requestDetails = requestDetails.replace(appKeyValue, "...");
+		}
 		// Now we can Log URL and Params
-		LOGGER.info(logDetails);
+		LOGGER.log(logerLevel, requestDetails);
 		// For Jsons - log the Json string
 		if (jsonString != null) {
-			logJsonInput(jsonString);
-		}
-		// Optionally log a template for a curl command if it would be built with the provided API params
-		if (LOGGER.isLoggable(Level.FINEST)) {
-			logCurlCommandForRequest(method, contentType, urlString, params);
+			logJsonInput(logerLevel, jsonString);
 		}
 
 	}
@@ -558,7 +595,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	private static void logCurlCommandForRequest(Method method, ContentType contentType, String urlString,
 			ParamsMap params) {
 
-		if (!LOGGER.isLoggable(Level.FINEST) || method == null) {
+		if (method == null) {
 			return;
 		}
 		// Make method options and url string
@@ -629,7 +666,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		// Make final curl command and log it on a separate line
 		curlCommand = "\n" + curlCommand + " '" + url + "'";
-		LOGGER.info(curlCommand);
+		LOGGER.log(curlRequestTemplateLogLevel, curlCommand);
 
 	}
 
@@ -646,13 +683,15 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * Log Json string details. This is a helper method for modifying the original Json string to remove details that
 	 * are needed for logging (for example, encoded data when sending documents via Json)
 	 * 
+	 * @param logerLevel
+	 *            allowed logger level for logging JSON content
 	 * @param jsonString
 	 *            json string in the API request
 	 * 
 	 */
-	private static void logJsonInput(String jsonString) {
+	private static void logJsonInput(Level logerLevel, String jsonString) {
 
-		if (!LOGGER.isLoggable(Level.INFO) || jsonString == null) {
+		if (!LOGGER.isLoggable(logerLevel) || jsonString == null) {
 			return;
 		}
 
@@ -673,7 +712,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 			}
 		}
 
-		LOGGER.info("Input JsonString=" + jsonString);
+		LOGGER.log(logerLevel, "Input JsonString=" + jsonString);
 
 	}
 
@@ -681,6 +720,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * Log API response details. This is a helper method for using consistent formating when using Java Logger to print
 	 * the details of the API response
 	 * 
+	 * @param logerLevel
+	 *            allowed logger level
 	 * @param urlString
 	 *            url request string
 	 * @param status
@@ -688,16 +729,16 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * @param response
 	 *            response string
 	 */
-	private static void logApiResponse(String urlString, int status, String response) {
+	private static void logApiResponse(Level logerLevel, String urlString, int status, String response) {
 
-		if (!LOGGER.isLoggable(Level.INFO)) {
-			return;
-		}
 		// Log response details
 		if (status != HttpURLConnection.HTTP_OK && status != HttpURLConnection.HTTP_CREATED) {
 			// Error status. Log as error
-			LOGGER.info("Error status=" + status + " Error response=" + response);
+			LOGGER.log(exceptionLogLevel, "Error status=" + status + " Error response=" + response);
 		} else {
+			if (!LOGGER.isLoggable(logerLevel)) {
+				return;
+			}
 			// Log success Response.
 			// Handle special cases where response contains encoded strings which we don't need to see in the logger
 			// (for example, base64 encoded data when getting images and files)
@@ -720,7 +761,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 			}
 
 			// Log API response Status and the Response string
-			LOGGER.info("Response Status=" + status + "\nResponse message=" + response);
+			LOGGER.log(logerLevel, "Response Status=" + status + "\tMessage length=" + response.length()
+					+ "\nResponse message=" + response + "");
 		}
 
 	}
@@ -734,14 +776,14 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 */
 	private static void logAppKey(String applicationKey) {
 
-		if (!LOGGER.isLoggable(Level.INFO)) {
+		if (!LOGGER.isLoggable(Level.FINEST)) {
 			return;
 		}
 		final int keyLength = applicationKey.length();
 		final int printLength = 3;
 		// Mambu App Keys are very long but just to prevent any errors need to ensure there is enough to print
 		if (keyLength >= printLength) {
-			LOGGER.info("Added Application key=" + applicationKey.substring(0, printLength) + "..."
+			LOGGER.finest("Added Application key=" + applicationKey.substring(0, printLength) + "..."
 					+ applicationKey.substring(keyLength - printLength, keyLength));
 		}
 

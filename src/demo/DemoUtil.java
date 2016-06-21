@@ -7,12 +7,15 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -21,8 +24,11 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Base64;
 
+import com.mambu.accounts.shared.model.HasPredefinedFees;
+import com.mambu.accounts.shared.model.PredefinedFee;
+import com.mambu.accounts.shared.model.PredefinedFee.AmountCalculationMethod;
+import com.mambu.accounts.shared.model.PredefinedFee.Trigger;
 import com.mambu.accounts.shared.model.TransactionChannel;
-import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.MambuAPIServiceFactory;
@@ -47,10 +53,13 @@ import com.mambu.core.shared.model.CustomFieldSet.Usage;
 import com.mambu.core.shared.model.CustomFieldType;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.CustomFilterConstraint;
+import com.mambu.core.shared.model.Money;
 import com.mambu.core.shared.model.User;
+import com.mambu.loans.shared.model.CustomPredefinedFee;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
 import com.mambu.loans.shared.model.LoanProductType;
+import com.mambu.loans.shared.model.LoanTransaction;
 import com.mambu.organization.shared.model.Branch;
 import com.mambu.organization.shared.model.Centre;
 import com.mambu.savings.shared.model.SavingsAccount;
@@ -784,6 +793,37 @@ public class DemoUtil {
 	}
 
 	/**
+	 * Get demo loan transaction by loan accountID
+	 * 
+	 * @param accountId
+	 *            account ID. Can be null. If null, then "demoLaonAccountId" parameter specified in the configuration
+	 *            file is used. If the configuration parameter is absent (or is empty) then random loan account is
+	 *            retrieved. See {@link #getDemoLoanAccount())}
+	 * @return loan transaction for the loan account
+	 * @throws MambuApiException
+	 */
+	public static LoanTransaction getDemoLoanTransaction(String accountId) throws MambuApiException {
+		System.out.println("\nIn getDemoLoanTransaction by ID-" + accountId);
+
+		// If provided ID is null and nothing is specified in the configuration file then get a random one
+		if (accountId == null && demoLaonAccountId == null) {
+			// Both are null, use a random one
+			LoanAccount account = getDemoLoanAccount();
+			accountId = account.getId();
+
+		}
+		// Use the provided ID if it is not null, otherwise use the one defined in the configuration file
+		accountId = (accountId != null) ? accountId : demoLaonAccountId;
+		LoansService service = MambuAPIFactory.getLoanService();
+		List<LoanTransaction> loanTransactions = service.getLoanAccountTransactions(accountId, null, "5");
+		if (loanTransactions == null) {
+			return null;
+		}
+
+		return loanTransactions.get(0);
+	}
+
+	/**
 	 * Get random savings account
 	 * 
 	 * @return savings account
@@ -874,7 +914,7 @@ public class DemoUtil {
 	 *            initial custom field value
 	 * @return custom field value
 	 */
-	private static CustomFieldValue makeNewCustomFieldValue(CustomFieldSet set, CustomField customField,
+	public static CustomFieldValue makeNewCustomFieldValue(CustomFieldSet set, CustomField customField,
 			CustomFieldValue initialField) {
 
 		if (customField == null) {
@@ -888,6 +928,10 @@ public class DemoUtil {
 		// Set group index from current value
 		Integer groupIndex = (initialField == null) ? null : initialField.getCustomFieldSetGroupIndex();
 		value.setCustomFieldSetGroupIndex(groupIndex);
+		// Clear fields not needed in API requests
+		value.setSkipUniqueValidation(null);
+		value.setIndexInList(null);
+		value.setToBeDeleted(null);
 
 		// For Grouped custom field values we need also to set Group Index. See MBU-7511
 		if (groupIndex == null && set != null && set.getUsage() == Usage.GROUPED) {
@@ -908,7 +952,7 @@ public class DemoUtil {
 				newValue = newValue.replaceAll("\\$", "B");
 			} else {
 				// Set demo string with the current date
-				newValue = "Updated by API on " + new Date().toString();
+				newValue = "API:" + new Date().toString();
 			}
 			break;
 		case NUMBER:
@@ -1054,6 +1098,9 @@ public class DemoUtil {
 			List<CustomFieldValue> customInformation = new ArrayList<CustomFieldValue>();
 
 			for (CustomField field : forEntityCustomFields) {
+				if (field.isDeactivated()) {
+					continue;
+				}
 				// return only required fields if requested so
 				if (requiredOnly && !field.isRequired(entityKey)) {
 					continue;
@@ -1083,6 +1130,10 @@ public class DemoUtil {
 	 */
 	public static void logCustomFieldValues(List<CustomFieldValue> customFieldValues, String name, String entityId) {
 		System.out.println("\nCustom Field Values for entity " + name + " with id=" + entityId);
+		if (customFieldValues == null) {
+			System.out.println("NULL custom field values");
+			return;
+		}
 		for (CustomFieldValue fieldValue : customFieldValues) {
 
 			System.out.println("\nCustom Field Name=" + fieldValue.getCustomField().getName() + "\tValue="
@@ -1128,8 +1179,9 @@ public class DemoUtil {
 		}
 		String activeId = null;
 		System.out.println("Field ID=" + field.getId() + "\tField Name=" + field.getName() + "\tDataType="
-				+ field.getDataType().toString() + "\tIsDefault=" + field.isDefault().toString() + "\tType="
-				+ field.getType().toString() + "\tIs Active=" + !field.isDeactivated());
+				+ field.getDataType().toString() + "\tBuiltInCustomFieldId=" + field.getBuiltInCustomFieldId()
+				+ "\tIsDefault=" + field.isDefault().toString() + "\tType=" + field.getType().toString()
+				+ "\tIs Active=" + !field.isDeactivated());
 
 		// Remember one of the active CustomFields for testing testGetCustomField()
 		if (!field.isDeactivated()) {
@@ -1149,14 +1201,14 @@ public class DemoUtil {
 			String entityLinkedKey = link.getEntityLinkedKey();
 			boolean isLinkDefault = link.isDefault();
 			boolean isLinkRequired = link.isRequired();
-			System.out.println("Link Data. Type=" + linkType + "\tEntity Key=" + entityLinkedKey + "\tRequired="
+			System.out.println("\tLink Data. Type=" + linkType + "\tEntity Key=" + entityLinkedKey + "\tRequired="
 					+ isLinkRequired + "\tDefault=" + isLinkDefault);
 
 			// Test Get field properties for this entity
 			boolean isAvailableForEntity = field.isAvailableForEntity(entityLinkedKey);
 			boolean isRequiredForEntity = field.isRequired(entityLinkedKey);
 			boolean isDefaultForEntity = field.isDefault(entityLinkedKey);
-			System.out.println("Available =" + isAvailableForEntity + "\tRequired=" + isRequiredForEntity
+			System.out.println("\tAvailable =" + isAvailableForEntity + "\tRequired=" + isRequiredForEntity
 					+ "\tDefault=" + isDefaultForEntity);
 		}
 		// Log Custom Field selection options and dependencies
@@ -1166,14 +1218,14 @@ public class DemoUtil {
 			for (CustomFieldSelection option : customFieldSelectionOptions) {
 				System.out.println("\nSelection Options:");
 				String value = option.getValue();
-				System.out.println("Value =" + value + "\tKey=" + option.getEncodedKey());
+				System.out.println("\tValue =" + value + "\tKey=" + option.getEncodedKey());
 				CustomFilterConstraint constraint = option.getConstraint();
 				if (constraint != null) {
 					if (!field.isDeactivated()) {
 						activeId = field.getId();
 					}
-					System.out.println("Value =" + value + "\tdepends on field=" + constraint.getCustomFieldKey()
-							+ "\twith valueKey=" + constraint.getValue());
+					System.out.println("\t\tDepends on field=" + constraint.getCustomFieldKey() + "\twith valueKey="
+							+ constraint.getValue());
 				}
 			}
 		}
@@ -1214,43 +1266,82 @@ public class DemoUtil {
 		if (channel == null) {
 			return null;
 		}
+		// Since 4.1 transaction details do not have channel fields, Just set the channel
+		return new TransactionDetails(channel);
+	}
 
-		// Create demo TransactionDetails
-		TransactionDetails transactionDetails = new TransactionDetails(channel);
-		List<ChannelField> channelFields = channel.getChannelFields();
-		if (channelFields == null || channelFields.size() == 0) {
-			return transactionDetails;
+	// Allow getting product Fee for one of this test categories
+	public enum FeeCategory {
+		DISBURSEMENT, MANUAL
+	}
+
+	/**
+	 * Helper to specify Predefined fees as expected by Mambu API. See MBU-8811, MBU-12272, MBU-12273. Product Fees with
+	 * pre-defined amounts should NOT have this amount specified in the API request
+	 * 
+	 * @param product
+	 *            loan or savings product
+	 * @param feeCategories
+	 *            fee categories
+	 * @return custom predefined fees from product for the specified fee categories
+	 */
+	public static List<CustomPredefinedFee> makeDemoPredefinedFees(HasPredefinedFees product,
+			Set<FeeCategory> feeCategories) {
+		if (product == null) {
+			return new ArrayList<>();
 		}
-		// Create random number for this transactionDetails values
-		String randomNumber = String.valueOf((int) (Math.random() * 100000));
-		for (ChannelField field : channelFields) {
-			switch (field) {
-			case ACCOUNT_NAME:
-				transactionDetails.setAccountName("Account Name demo " + randomNumber);
+		// Get product fees
+		List<PredefinedFee> predefinedFees = product.getFees();
+		if (predefinedFees == null || predefinedFees.size() == 0) {
+			System.out.println("No predefined fees for product ");
+			return new ArrayList<>();
+		}
+		if (feeCategories == null) {
+			feeCategories = new HashSet<>();
+		}
+		// Get only fees for the requested categories
+		boolean addDisbursement = feeCategories.contains(FeeCategory.DISBURSEMENT);
+		boolean addManual = feeCategories.contains(FeeCategory.MANUAL);
+
+		// Make CustomPredefinedFees
+		List<CustomPredefinedFee> demoFees = new ArrayList<>();
+		for (PredefinedFee fee : predefinedFees) {
+			if (addDisbursement && !fee.isDisbursementFee()) {
+				continue;
+			}
+			if (addManual && fee.getTrigger() != Trigger.MANUAL) {
+				continue;
+			}
+			AmountCalculationMethod amountMethod = fee.getAmountCalculationMethod();
+			if (amountMethod == null) {
+				continue;
+			}
+			Money amount = null;
+			// Amount must not be specified if it is set in the product. See MBU-8811
+			switch (amountMethod) {
+			case FLAT:
+				if (fee.getAmount() == null || fee.getAmount().getAmount() == null) {
+					// no product value. Specify amount
+					amount = new Money(15.50);
+				}
 				break;
-			case ACCOUNT_NUMBER:
-				transactionDetails.setAccountNumber("Account Number demo " + randomNumber);
+			case LOAN_AMOUNT_PERCENTAGE:
+				// Check if percentage is specified (though percentage is mandatory in Mambu, so should be not null)
+				BigDecimal percent = fee.getPercentageAmount();
+				if (percent == null) {
+					amount = new Money(1.2);
+				}
 				break;
-			case BANK_NUMBER:
-				transactionDetails.setBankNumber("Bank Number demo " + randomNumber);
-				break;
-			case CHECK_NUMBER:
-				transactionDetails.setCheckNumber("Check Number demo " + randomNumber);
-				break;
-			case IDENTIFIER:
-				transactionDetails.setIdentifier("Identifier demo " + randomNumber);
-				break;
-			case RECEPIT_NUMBER:
-				transactionDetails.setReceiptNumber("Receipt Number demo " + randomNumber);
-				break;
-			case ROUTING_NUMBER:
-				transactionDetails.setRoutingNumber("Routing Number demo " + randomNumber);
-				break;
+			case REPAYMENT_PRINCIPAL_AMOUNT_PERCENTAGE:
+				continue;
 
 			}
-
+			CustomPredefinedFee customFee = new CustomPredefinedFee(fee, amount);
+			demoFees.add(customFee);
 		}
-		return transactionDetails;
+
+		return demoFees;
+
 	}
 
 	/**

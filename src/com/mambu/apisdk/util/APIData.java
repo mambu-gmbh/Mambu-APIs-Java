@@ -19,7 +19,9 @@ public class APIData {
 
 	// Loans and Savings API
 	public static final String LOANS = "loans";
+	public static final String LOAN_ACCOUNT = "loanAccount";
 	public static final String SAVINGS = "savings";
+	public static final String SAVINGS_ACCOUNT = "savingsAccount";
 	public static final String CLIENTS = "clients";
 	public static final String GROUPS = "groups";
 	public static final String FULL_DETAILS = "fullDetails";
@@ -74,6 +76,10 @@ public class APIData {
 	public static final String TYPE_TRANSFER_ADJUSTMENT = "TRANSFER_ADJUSTMENT";
 
 	public static final String DISBURSEMENT_DETAILS = "disbursementDetails"; // Added in 4.0. See MBU-11481
+
+	public static final String ACTION = "action"; // Added in 4.1. See MBU-12051 and MBU-12052
+	public static final String RESCHEDULE = "RESCHEDULE"; // Added in 4.1. See MBU-12051
+	public static final String REFINANCE = "REFINANCE"; // Added in 4.1. See MBU-12052
 
 	// Users branch assignment type: assigned or managing. Available since 4.0. See MBU-11769
 	public static final String BRANCH_ID_TYPE = "branchIdType";
@@ -149,7 +155,8 @@ public class APIData {
 	// Custom fields and Custom Field Sets
 	public static String CUSTOM_FIELDS = "customfields";
 	public static String CUSTOM_FIELD_SETS = "customfieldsets";
-	public static String CUSTOM_INFORMATION = "custominformation";
+	public static String CUSTOM_INFORMATION = "custominformation"; // custom fields API end point
+	public static String CUSTOM_INFORMATION_FIELD = "customInformation"; // custom information object in JSON messages
 	public static String CUSTOM_FIELD_SETS_TYPE = "type";
 
 	// Repayments
@@ -169,11 +176,15 @@ public class APIData {
 	public static final String REPAYMENT_PERIOD_UNIT = "repaymentPeriodUnit";
 	public static final String REPAYMENT_PERIOD_COUNT = "repaymentPeriodCount";
 	public static final String PRNICIPAL_REPAYMENT_INTERVAL = "principalRepaymentInterval";
+	public static final String PRINCIPAL_PAYMENT_SETTINGS = "principalPaymentSettings"; // PATCH Loan API. See MBU-12143
+	public static final String PERCENTAGE = "percentage"; // PATCH Loan API. See MBU-12143
 	public static final String PERIODIC_PAYMENT = "periodicPayment";
 	public static final String PENALTY_RATE = "penaltyRate";
 	public static final String FIXED_DAYS_OF_MONTH = "fixedDaysOfMonth"; // supported since 3.14. See MBU-10802
 
 	// Parameters supported by SavingsAccount PATCH API
+	public static final String INTEREST_SETTINGS = "interestSettings"; // added in 4.1. See MBU-12039
+	public static final String OVERDRAFT_INTEREST_SETTINGS = "overdraftInterestSettings"; // added in 4.1. See MBU-12039
 	public static final String OVERDRAFT_LIMIT = "overdraftLimit";
 	public static final String OVERDRAFT_INTEREST_RATE = "overdraftInterestRate";
 	public static final String OVERDRAFT_SPREAD = "overdraftInterestSpread";
@@ -230,10 +241,22 @@ public class APIData {
 	public static final String USER_ID = "userID";
 
 	// Client fields
+	public static String CLIENT = "client";
+	public static final String CLIENT_ROLE = "clientRole"; // ClientRole field for PATCH API. See MBU-11868
+	public static final String CLIENT_ROLE_ID = "clientRoleId"; // ClientRole Id field for PATCH API. See MBU-11868
 	public static String FIRST_NAME = "firstName";
 	public static String LAST_NAME = "lastName";
 	public static String BIRTH_DATE = "birthdate";
 	public static String ID_DOCUMENT = "idDocument";
+	// Client fields supported by PATCH Client API since 4.1. See MBU-11443, MBU-11868
+	public static String STATE = "state";
+	public static String MIDDLE_NAME = "middleName";
+	public static String HOME_PHONE = "homePhone";
+	public static String MOBILE_PHONE_1 = "mobilePhone1";
+	public static String EMAIL_ADDRESS = "emailAddress";
+	public static String ID = "id";
+	public static String GENDER = "gender";
+	public static String PREFERRED_LANGUAGE = "preferredLanguage";
 
 	// Api endpoint for Organisational Settings. Available since 3.10.5
 	public static String SETTINGS = "settings";
