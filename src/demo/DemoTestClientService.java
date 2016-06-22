@@ -90,7 +90,7 @@ public class DemoTestClientService {
 
 			testGetGroup();
 			testPatchGroup(); // Available since 4.2. For more details see MBU-12985.
-			testPatchGroupExtended(); // Available since 4.2. For more details see MBU-12985.
+			testPatchGroupExpanded(); // Available since 4.2. For more details see MBU-12985.
 
 			testGetGroup();
 			testGetGroupDetails();
@@ -255,22 +255,25 @@ public class DemoTestClientService {
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
-		// TODO: need to add support for testing PATCHing groupId
-		Group group = setUpGroupForPatchingOperation(groupId, clientService);
+		String patchFieldSuffix = "group_patch_test";
 
-		// patch it
+		Group group = setUpGroupForPatchingOperation(groupId, clientService, patchFieldSuffix);
+		// reset the value for group id. Might be needed by other tests
+		NEW_GROUP_ID = group.getId();
+
+		// PATCH the group
 		boolean patchStatus = clientService.patchGroup(group);
 
-		System.out.println("PATCHed group status=" + patchStatus);
+		System.out.println("Update group status=" + patchStatus);
 
-		Group patchedGroup = clientService.getGroup(group.getEncodedKey());
+		GroupExpanded groupExpanded = clientService.getGroupDetails(group.getEncodedKey());
 
-		logGroupDetails(patchedGroup);
+		logGroupDetails(groupExpanded.getGroup());
 
 	}
 
 	// Test PATCH GroupExpanded fields API. This method patches existing created GroupExpended.
-	public static void testPatchGroupExtended() throws MambuApiException {
+	public static void testPatchGroupExpanded() throws MambuApiException {
 		System.out.println("\n In testPatchGroupExtended");
 		String groupId = NEW_GROUP_ID;
 
@@ -279,19 +282,58 @@ public class DemoTestClientService {
 		// get a GroupExpanded
 		GroupExpanded groupExpanded = clientService.getGroupDetails(groupId);
 
-		// get group and prepare it for patch
-		// TODO: need to add support for testing PATCHing group members and group roles
-		setUpGroupForPatchingOperation(groupId, clientService);
+		String patchFieldSuffix = "group_expanded_patch_test";
 
-		// patch it
+		// get group and prepare it for PATCH
+		Group group = setUpGroupForPatchingOperation(groupId, clientService, patchFieldSuffix);
+		groupExpanded.setGroup(group);
+		// reset the value for group id. might be needed by other tests
+		NEW_GROUP_ID = group.getId();
+
+		addTestClientAsGroupMamber(groupExpanded);
+
+		replaceExistingRoleList(groupExpanded);
+
+		// PATCH the group expanded
 		boolean patchStatus = clientService.patchGroup(groupExpanded);
 
-		System.out.println("PATCHed group status=" + patchStatus);
+		System.out.println("Update group expanded status=" + patchStatus);
 
 		GroupExpanded patchedGroup = clientService.getGroupDetails(groupExpanded.getEncodedKey());
 
 		logGroupDetails(patchedGroup.getGroup());
+	}
 
+	/**
+	 * Replaces the list of roles from GroupExpanded received as parameter to this method with a new list containing
+	 * only the test client
+	 * 
+	 * @param groupExpanded
+	 *            The GroupExpanded to be updated with a new list of roles.
+	 */
+	private static void replaceExistingRoleList(GroupExpanded groupExpanded) {
+		// replace the existing role list
+		List<GroupRole> groupRoles = groupExpanded.getGroupRoles();
+		GroupRole groupRole = groupRoles.get(0);
+		groupRole.setClientKey(demoClient.getEncodedKey());
+		// set the role(replace the existing one)
+		groupExpanded.setGroupRoles(groupRoles);
+	}
+
+	/**
+	 * Adds the test client to the list of existing roles on the GroupExpanded passed as parameter to this method.
+	 * 
+	 * @param groupExpanded
+	 *            The GroupExpanded to be updated with a new list of members (including the existing ones)
+	 */
+	private static void addTestClientAsGroupMamber(GroupExpanded groupExpanded) {
+		// add a new member
+		List<GroupMember> groupMembers = groupExpanded.getGroupMembers();
+		GroupMember groupMember = new GroupMember();
+		groupMember.setClientKey(demoClient.getEncodedKey());
+		groupMember.setCreationDate(new Date());
+		groupMembers.add(groupMember);
+		groupExpanded.setGroupMembers(groupMembers);
 	}
 
 	/**
@@ -302,20 +344,25 @@ public class DemoTestClientService {
 	 *            the id of the group to be searched in Mambu
 	 * @param clientService
 	 *            the ClientService
+	 * @param patchFieldSuffix
+	 *            the suffix that will be added on some fields of the group. Needed for differentiating the patch group
+	 *            against patch group expanded operation.
 	 * @return a Group with changed details ready for patching
 	 * @throws MambuApiException
 	 */
-	private static Group setUpGroupForPatchingOperation(String groupId, ClientsService clientService)
-			throws MambuApiException {
+	private static Group setUpGroupForPatchingOperation(String groupId, ClientsService clientService,
+			String patchFieldSuffix) throws MambuApiException {
 		Group group = clientService.getGroup(groupId);
 
 		if (group != null) {
+			String randomIndex = Integer.toString((int) (Math.random() * 1000000));
 			// change the group information
-			group.setGroupName("Patched Group");
-			group.setEmailAddress("test_group_patch5@mambu.com");
+			group.setId("99999_" + randomIndex);
+			group.setGroupName("Patched Group " + patchFieldSuffix);
+			group.setEmailAddress("test_group_patch5" + patchFieldSuffix + "@mambu.com");
 			group.setPreferredLanguage(Language.ROMANIAN);
 			group.setHomePhone("333-4444-5555-66");
-			group.setNotes("this is a note created through patch group");
+			group.setNotes("this is a note created through patch group " + patchFieldSuffix);
 			group.setMobilePhone1("777-888-9999");
 		}
 		return group;
@@ -325,7 +372,7 @@ public class DemoTestClientService {
 	 * Logs to the console the details of the group passed as parameter.
 	 * 
 	 * @param group
-	 *            the Group
+	 *            the Group, whose details will be printed to the console.
 	 */
 	private static void logGroupDetails(Group group) {
 		if (group != null) {
@@ -423,8 +470,8 @@ public class DemoTestClientService {
 		idDocs.add(doc);
 		clExpanded.setIdDocuments(idDocs);
 		// Use helper to make test custom fields which are valid for the client's role
-		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(
-				CustomFieldType.CLIENT_INFO, cientRole.getEncodedKey());
+		List<CustomFieldValue> clientCustomInformation = DemoUtil
+				.makeForEntityCustomFieldValues(CustomFieldType.CLIENT_INFO, cientRole.getEncodedKey());
 		// Add All custom fields
 		clExpanded.setCustomFieldValues(clientCustomInformation);
 
@@ -510,8 +557,8 @@ public class DemoTestClientService {
 		System.out.println("Update status=" + stateUpdated);
 
 		// Test restoring client's state back to its previous state
-		System.out.println("Updating State back from " + newState + " to " + currentState + " for client ID="
-				+ clientId);
+		System.out
+				.println("Updating State back from " + newState + " to " + currentState + " for client ID=" + clientId);
 		boolean stateUpdated2 = clientService.patchClientState(clientId, currentState);
 		System.out.println("Update status=" + stateUpdated2);
 
@@ -595,9 +642,9 @@ public class DemoTestClientService {
 		if (groups != null)
 			System.out.println("Got  Groups for the branch, officer, total groups=" + groups.size());
 		for (Group group : groups) {
-			System.out.println("Group Name=" + group.getGroupName() + "\tBranchId=" + group.getAssignedBranchKey()
-					+ "\tCentreId=" + group.getAssignedCentreKey() + "\tCredit Officer id="
-					+ group.getAssignedUserKey());
+			System.out.println(
+					"Group Name=" + group.getGroupName() + "\tBranchId=" + group.getAssignedBranchKey() + "\tCentreId="
+							+ group.getAssignedCentreKey() + "\tCredit Officer id=" + group.getAssignedUserKey());
 		}
 	}
 
@@ -822,8 +869,8 @@ public class DemoTestClientService {
 		// Set Custom Fields
 
 		// Make test custom fields for our group role
-		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(
-				CustomFieldType.GROUP_INFO, groupType.getEncodedKey());
+		List<CustomFieldValue> clientCustomInformation = DemoUtil
+				.makeForEntityCustomFieldValues(CustomFieldType.GROUP_INFO, groupType.getEncodedKey());
 		// Add All custom fields
 		groupDetails.setCustomFieldValues(clientCustomInformation);
 
