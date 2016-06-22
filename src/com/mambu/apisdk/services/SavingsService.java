@@ -48,9 +48,13 @@ import com.mambu.savings.shared.model.SavingsTransactionType;
 public class SavingsService {
 
 	private static final String TYPE = APIData.TYPE;
+	private static final String TYPE_DEPOSIT = APIData.TYPE_DEPOSIT;
+	private static final String TYPE_WITHDRAWAL = APIData.TYPE_WITHDRAWAL;
 	private static final String TYPE_TRANSFER = APIData.TYPE_TRANSFER;
 	private static final String TYPE_FEE = APIData.TYPE_FEE;
 	private static final String TYPE_DEPOSIT_ADJUSTMENT = APIData.TYPE_DEPOSIT_ADJUSTMENT;
+	private static final String TYPE_WITHDRAWAL_ADJUSTMENT = APIData.TYPE_WITHDRAWAL_ADJUSTMENT;
+	private static final String TYPE_TRANSFER_ADJUSTMENT = APIData.TYPE_TRANSFER_ADJUSTMENT;
 
 	private static final String ORIGINAL_TRANSACTION_ID = APIData.ORIGINAL_TRANSACTION_ID;
 
@@ -271,6 +275,38 @@ public class SavingsService {
 	 * Make a withdrawal from an account.
 	 * 
 	 * @param accountId
+	 *            account ID
+	 * @param amount
+	 *            transaction amount
+	 * @param date
+	 *            transaction date
+	 * @param notes
+	 *            transaction notes
+	 * @param transactionDetails
+	 *            transaction details, including transaction channel and channel fields
+	 * 
+	 * @return Savings Transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	@Deprecated
+	public SavingsTransaction makeWithdrawal(String accountId, String amount, String date, String notes,
+			TransactionDetails transactionDetails) throws MambuApiException {
+
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, TYPE_WITHDRAWAL);
+
+		// Add transactionDetails to the paramsMap
+		ServiceHelper.addAccountTransactionParams(paramsMap, amount, date, notes, transactionDetails);
+
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
+
+	}
+
+	/****
+	 * Make a withdrawal from an account.
+	 * 
+	 * @param accountId
 	 *            account ID or encoded key. Must not be null
 	 * @param amount
 	 *            transaction amount
@@ -296,6 +332,39 @@ public class SavingsService {
 
 		return serviceExecutor.executeJSONTransactionRequest(accountId, transactionRequest, Type.SAVINGS,
 				SavingsTransactionType.WITHDRAWAL.name());
+	}
+
+	/****
+	 * Make a deposit to an account.
+	 * 
+	 * @deprecated since Mambu 4.1 use method supporting transaction custom fields
+	 *             {@link #makeDeposit(String, Money, Date, TransactionDetails, List, String)}
+	 * @param accountId
+	 *            account ID
+	 * @param amount
+	 *            transaction amount
+	 * @param date
+	 *            transaction date
+	 * @param notes
+	 *            transaction notes
+	 * @param transactionDetails
+	 *            transaction details, including transaction channel and channel fields
+	 * 
+	 * @return Savings Transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	@Deprecated
+	public SavingsTransaction makeDeposit(String accountId, String amount, String date, String notes,
+			TransactionDetails transactionDetails) throws MambuApiException {
+
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, TYPE_DEPOSIT);
+
+		// Add transactionDetails to the paramsMap
+		ServiceHelper.addAccountTransactionParams(paramsMap, amount, date, notes, transactionDetails);
+
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
 	}
 
 	/****
@@ -483,7 +552,7 @@ public class SavingsService {
 	 *            the id of the savings account. Mandatory
 	 * @param originalTransactionType
 	 *            Original transaction type to be reversed. The following transaction types can be reversed: DEPOSIT,
-	 *            WITHDRAWAL, TRANSFER, FEE. Mandatory.
+	 *            WITHDRAWAL and TRANSFER. Mandatory.
 	 * @param originalTransactionId
 	 *            the id or the encodedKey of the transaction to be reversed. Mandatory
 	 * @param notes
@@ -498,9 +567,6 @@ public class SavingsService {
 
 		// Available since 3.10. See MBU-7933, MBU-7935, MBU-7936 for more details
 		// Example POST "type=DEPOSIT_ADJUSTMENT&notes=reason&originalTransactionId=123" /api/savings/67/transactions/
-
-		// Available since 4.2 for FEE reversal. See MBU-13192. type":"FEE_ADJUSTED"
-
 		// Note: When posting reversal transaction to Mambu the required reversal transaction type is supplied by the
 		// wrapper : DEPOSIT_ADJUSTMENT, WITHDRAWAL_ADJUSTMENT or TRANSFER_ADJUSTMENT
 
@@ -516,20 +582,13 @@ public class SavingsService {
 		String transactionTypeParam;
 		switch (originalTransactionType) {
 		case DEPOSIT:
-			// TODO: we cannot use SavingsTransactionType for DEPOSIT reversal: the API expects this string:
-			// DEPOSIT_ADJUSTMENT but the SavingsTransactionType defines it as ADJUSTMENT
-			// (i.e.SavingsTransactionType.ADJUSTMENT). So it cannot be used. Define "DEPOSIT_ADJUSTMENT" in ApiData.
 			transactionTypeParam = TYPE_DEPOSIT_ADJUSTMENT;
 			break;
 		case WITHDRAWAL:
-			transactionTypeParam = SavingsTransactionType.WITHDRAWAL_ADJUSTMENT.name();
+			transactionTypeParam = TYPE_WITHDRAWAL_ADJUSTMENT;
 			break;
 		case TRANSFER:
-			transactionTypeParam = SavingsTransactionType.TRANSFER_ADJUSTMENT.name();
-			break;
-		case FEE_APPLIED:
-			// See MBU-13192 in 4.2
-			transactionTypeParam = SavingsTransactionType.FEE_ADJUSTED.name();
+			transactionTypeParam = TYPE_TRANSFER_ADJUSTMENT;
 			break;
 		default:
 			throw new IllegalArgumentException("Reversal for Savings Transaction Type "
@@ -558,7 +617,6 @@ public class SavingsService {
 			throws MambuApiException {
 
 		// Available since 3.10. See MBU-7933, MBU-7935, MBU-7936 for more details
-		// Available since 4.2 for FEE reversal. See MBU-13192. type":"FEE_ADJUSTED"
 		// Example. POST "type=TYPE_WITHDRAWAL_ADJUSTMENT&notes=reason&originalTransactionId=123"
 		// /api/savings/67/transactions/
 
@@ -625,48 +683,6 @@ public class SavingsService {
 		paramsMap.addParam(TYPE, closerType.name());
 		paramsMap.addParam(NOTES, notes);
 
-		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
-	}
-
-	/****
-	 * Undo Close Savings account. Supports UNDO_REJECT, UNDO_WITHDRAWN, UNDO_CLOSE
-	 * 
-	 * @param savings
-	 *            closed savings account. Must not be null and must be in one of the supported closed states.
-	 * @param notes
-	 *            undo closer reason notes
-	 * @return savings account
-	 * 
-	 * @throws MambuApiException
-	 */
-
-	public SavingsAccount undoCloseSavingsAccount(SavingsAccount savingsAccount, String notes) throws MambuApiException {
-		// Available since Mambu 4.2. See MBU-13193 for details.
-		// Supports UNDO_REJECT, UNDO_WITHDRAWN, UNDO_CLOSE
-
-		// E.g. POST "type=UNDO_REJECT&notes=notes" /api/savings/ABCD123/transactions
-		// E.g. POST "type=UNDO_WITHDRAWN" /api/savings/ABCD123/transactions
-		// E.g. POST "type=UNDO_CLOSE" /api/savings/ABCD123/transactions
-
-		if (savingsAccount == null || savingsAccount.getId() == null || savingsAccount.getAccountState() == null) {
-			throw new IllegalArgumentException("Account, its ID and account state must not  be null");
-		}
-
-		// Get the transaction type based on how the account was closed
-		String undoCloserTransactionType = ServiceHelper.getUndoCloserTransactionType(savingsAccount);
-		if (undoCloserTransactionType == null) {
-			throw new IllegalArgumentException(
-					"Account is not in a state to perform UNDO close via API. Account State="
-							+ savingsAccount.getAccountState());
-		}
-
-		// Create params map with expected API's params
-		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.addParam(TYPE, undoCloserTransactionType);
-		paramsMap.addParam(NOTES, notes);
-
-		// Execute API
-		String accountId = savingsAccount.getId();
 		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
 	}
 

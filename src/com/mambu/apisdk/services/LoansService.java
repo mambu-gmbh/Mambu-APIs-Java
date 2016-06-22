@@ -65,6 +65,7 @@ public class LoansService {
 	private static final String TYPE = APIData.TYPE;
 	private static final String NOTES = APIData.NOTES;
 	//
+	private static final String TYPE_REPAYMENT = APIData.TYPE_REPAYMENT;
 	private static final String TYPE_APPROVAL = APIData.TYPE_APPROVAL;
 	private static final String TYPE_REQUEST_APPROVAL = APIData.TYPE_REQUEST_APPROVAL;
 	private static final String TYPE_UNDO_APPROVAL = APIData.TYPE_UNDO_APPROVAL;
@@ -72,6 +73,8 @@ public class LoansService {
 	private static final String TYPE_LOCK = APIData.TYPE_LOCK;
 	private static final String TYPE_UNLOCK = APIData.TYPE_UNLOCK;
 	private static final String TYPE_WRITE_OFF = APIData.TYPE_WRITE_OFF;
+	private static final String TYPE_DISBURSMENT_ADJUSTMENT = APIData.TYPE_DISBURSMENT_ADJUSTMENT;
+	private static final String TYPE_PENALTY_ADJUSTMENT = APIData.TYPE_PENALTY_ADJUSTMENT;
 	private static final String ORIGINAL_TRANSACTION_ID = APIData.ORIGINAL_TRANSACTION_ID;
 
 	private static final String AMOUNT = APIData.AMOUNT;
@@ -470,48 +473,6 @@ public class LoansService {
 		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
 	}
 
-	/****
-	 * Undo Close Loan account. Supports UNDO_CLOSE, UNDO_WITHDRAWN, UNDO_REJECT
-	 * 
-	 * @param loanAccount
-	 *            closed loan account. Must not be null and must be in one of the supported closed states.
-	 * @param notes
-	 *            undo closer reason notes
-	 * @return loan account
-	 * 
-	 * @throws MambuApiException
-	 */
-
-	public LoanAccount undoCloseLoanAccount(LoanAccount loanAccount, String notes) throws MambuApiException {
-		// Available since Mambu 4.2. See MBU-13190 for details.
-		// Supports UNDO_CLOSE, UNDO_WITHDRAWN, UNDO_REJECT
-
-		// E.g. POST "type=UNDO_REJECT" /api/loans/KHGJ593/transactions
-		// E.g. POST "type=UNDO_WITHDRAWN" /api/loans/KHGJ593/transactions
-		// E.g. POST "type=UNDO_CLOSE" /api/loans/KHGJ593/transactions
-
-		if (loanAccount == null || loanAccount.getId() == null || loanAccount.getState() == null) {
-			throw new IllegalArgumentException("Account, its ID and account state must not  be null");
-		}
-
-		// Get the transaction type based on how the account was closed
-		String undoCloserTransactionType = ServiceHelper.getUndoCloserTransactionType(loanAccount);
-		if (undoCloserTransactionType == null) {
-			throw new IllegalArgumentException(
-					"Account is not in a state to perform UNDO close via API. Account State=" + loanAccount.getState()
-							+ " Sub-state=" + loanAccount.getSubState());
-		}
-
-		// Create params map with expected API's params
-		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.addParam(TYPE, undoCloserTransactionType);
-		paramsMap.addParam(NOTES, notes);
-
-		// Execute API
-		String accountId = loanAccount.getId();
-		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
-	}
-
 	/**
 	 * Convenience method to Disburse loan account using JSON Transaction and specifying Disbursement Details. The JSON
 	 * disburse API request supports providing transaction details and disbursement fees. See MBU-11837
@@ -601,7 +562,7 @@ public class LoansService {
 		// Available since Mambu 3.9. See MBU-7189
 
 		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.addParam(TYPE, LoanTransactionType.DISBURSMENT_ADJUSTMENT.name());
+		paramsMap.addParam(TYPE, TYPE_DISBURSMENT_ADJUSTMENT);
 		paramsMap.addParam(NOTES, notes);
 
 		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
@@ -1010,6 +971,40 @@ public class LoansService {
 	}
 
 	/****
+	 * Make Repayment for a loan account
+	 * 
+	 * @deprecated starting form 4.1. use method supporting transaction custom fields
+	 *             {@link #makeLoanRepayment(String, Money, Date, TransactionDetails, List, String)}
+	 * @param accountId
+	 *            account ID
+	 * @param amount
+	 *            transaction amount
+	 * @param date
+	 *            transaction date
+	 * @param notes
+	 *            transaction notes
+	 * @param transactionDetails
+	 *            transaction details, including transaction channel and channel fields
+	 * 
+	 * @return LoanTransaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	@Deprecated
+	public LoanTransaction makeLoanRepayment(String accountId, String amount, String date, String notes,
+			TransactionDetails transactionDetails) throws MambuApiException {
+
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.addParam(TYPE, TYPE_REPAYMENT);
+
+		// Add transactionDetails to the paramsMap
+		ServiceHelper.addAccountTransactionParams(paramsMap, amount, date, notes, transactionDetails);
+
+		return serviceExecutor.execute(postAccountTransaction, accountId, paramsMap);
+
+	}
+
+	/****
 	 * Make Repayment for a loan account. POST as JSON transaction
 	 * 
 	 * @param accountId
@@ -1346,7 +1341,7 @@ public class LoansService {
 	 *            the id or encoded key of the loan account. Mandatory
 	 * @param originalTransactionType
 	 *            Original transaction type to be reversed. The following transaction types can be currently reversed:
-	 *            PENALTY_APPLIED (in 3.13), REPAYMENT, INTEREST_APPLIED, FEE, WRITE_OFF (since 4.2). Must not be null.
+	 *            PENALTY_APPLIED. Must not be null.
 	 * @param originalTransactionId
 	 *            the id or the encodedKey of the transaction to be reversed. Must not be null.
 	 * @param notes
@@ -1355,19 +1350,11 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	// TODO: this method is using the www=form method. Can update it to use JSON API version, would need to create an
-	// object with input params
 	public LoanTransaction reverseLoanTransaction(String accountId, LoanTransactionType originalTransactionType,
 			String originalTransactionId, String notes) throws MambuApiException {
 
 		// PENALTY_APPLIED reversal is available since 3.13. See MBU-9998 for more details
 		// POST "type=PENALTY_ADJUSTMENT&notes=reason&originalTransactionId=123" /api/loans/{id}/transactions/
-
-		// Since 4.2 reversing REPAYMENT, INTEREST_APPLIED, WRITE_OFF is available
-		// See MBU-13187, MBU-13188,MBU-13189, MBU-13191
-
-		// Example: POST {"type": "repayment_ADJUSTMENT","originalTransactionId": "2", "notes": "cancel repayment" }
-		// api/loans/{ID}/transactions
 
 		// originalTransactionType is mandatory
 		if (originalTransactionType == null) {
@@ -1381,24 +1368,7 @@ public class LoansService {
 		String transactionTypeParam;
 		switch (originalTransactionType) {
 		case PENALTY_APPLIED:
-			// 3.13 See MBU-9998
-			transactionTypeParam = LoanTransactionType.PENALTY_ADJUSTMENT.name();
-			break;
-		case REPAYMENT:
-			// 4.2 See MBU-13187
-			transactionTypeParam = LoanTransactionType.REPAYMENT_ADJUSTMENT.name();
-			break;
-		case FEE:
-			// 4.2 See MBU-13188
-			transactionTypeParam = LoanTransactionType.FEE_ADJUSTMENT.name();
-			break;
-		case INTEREST_APPLIED:
-			// 4.2 See MBU-13189
-			transactionTypeParam = LoanTransactionType.INTEREST_APPLIED_ADJUSTMENT.name();
-			break;
-		case WRITE_OFF:
-			// 4.2 See MBU-13191
-			transactionTypeParam = LoanTransactionType.WRITE_OFF_ADJUSTMENT.name();
+			transactionTypeParam = TYPE_PENALTY_ADJUSTMENT;
 			break;
 
 		default:
@@ -1429,9 +1399,6 @@ public class LoansService {
 
 		// PENALTY_APPLIED reversal is available since 3.13. See MBU-9998 for more details
 		// Example: POST "type=PENALTY_ADJUSTMENT&notes=reason&originalTransactionId=123" /api/loans/{id}/transactions/
-
-		// Since 4.2 reversing REPAYMENT, INTEREST_APPLIED, WRITE_OFF is available
-		// See MBU-13187, MBU-13188,MBU-13189, MBU-13191
 
 		if (originalTransaction == null) {
 			throw new IllegalArgumentException("Original Transaction cannot be null");

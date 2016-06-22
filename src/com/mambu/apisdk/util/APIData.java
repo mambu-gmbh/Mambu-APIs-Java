@@ -57,10 +57,14 @@ public class APIData {
 	public static final String TRANSACTIONS = "transactions";
 	public static final String TYPE_REPAYMENT = "REPAYMENT";
 	public static final String TYPE_DISBURSEMENT = "DISBURSEMENT"; // Spelling corrected in 3.11 See MBU-7004
+	public static final String TYPE_DISBURSMENT_ADJUSTMENT = "DISBURSMENT_ADJUSTMENT"; // added in 3.9
+	public static final String TYPE_PENALTY_ADJUSTMENT = "PENALTY_ADJUSTMENT"; // added in 3.13. See MBU-9998
 	public static final String TYPE_REQUEST_APPROVAL = "PENDING_APPROVAL"; // added in 13.3. See MBU-9814
 	public static final String TYPE_APPROVAL = "APPROVAL";
 	public static final String TYPE_UNDO_APPROVAL = "UNDO_APPROVAL";
 	public static final String TYPE_FEE = "FEE";
+	public static final String TYPE_DEPOSIT = "DEPOSIT";
+	public static final String TYPE_WITHDRAWAL = "WITHDRAWAL";
 	public static final String TYPE_TRANSFER = "TRANSFER";
 	public static final String TYPE_LOCK = "LOCK";
 	public static final String TYPE_UNLOCK = "UNLOCK";
@@ -68,15 +72,14 @@ public class APIData {
 	public static final String TYPE_WRITE_OFF = "WRITE_OFF"; // added in 3.14. See MBU-10423
 	// Savings reversal transactions
 	public static final String TYPE_DEPOSIT_ADJUSTMENT = "DEPOSIT_ADJUSTMENT";
+	public static final String TYPE_WITHDRAWAL_ADJUSTMENT = "WITHDRAWAL_ADJUSTMENT";
+	public static final String TYPE_TRANSFER_ADJUSTMENT = "TRANSFER_ADJUSTMENT";
+
 	public static final String DISBURSEMENT_DETAILS = "disbursementDetails"; // Added in 4.0. See MBU-11481
 
 	public static final String ACTION = "action"; // Added in 4.1. See MBU-12051 and MBU-12052
 	public static final String RESCHEDULE = "RESCHEDULE"; // Added in 4.1. See MBU-12051
 	public static final String REFINANCE = "REFINANCE"; // Added in 4.1. See MBU-12052
-	// UNDO Closer transaction types
-	public static final String UNDO_REJECT = "UNDO_REJECT"; // Added in 4.2 See MBU-13190 and MBU-13193
-	public static final String UNDO_WITHDRAWN = "UNDO_WITHDRAWN"; // Added in 4.2 See MBU-13190 and MBU-13193
-	public static final String UNDO_CLOSE = "UNDO_CLOSE"; // Added in 4.2 See MBU-13190 and MBU-13193
 
 	// Users branch assignment type: assigned or managing. Available since 4.0. See MBU-11769
 	public static final String BRANCH_ID_TYPE = "branchIdType";
@@ -121,8 +124,6 @@ public class APIData {
 	public static final String INDEXRATESOURCES = "indexratesources";
 	public static final String INDEXRATES = "indexrates";
 
-	public static final String RATES = "rates"; // Added in 4.2. See MBU-12628 and MBU-12629
-
 	// Comments (available since 3.11)
 	public static final String COMMENTS = "comments";
 
@@ -133,18 +134,6 @@ public class APIData {
 	public static final String DUE_DATE = "duedate";
 	public static final String CLIENT_ID = "clientid";
 	public static final String GROUP_ID = "groupid";
-	
-	// Group constants
-	// Added with 4.2, needed by GroupExpandedPatchSerializer
-	public static final String GROUP = "group";
-	public static final String GROUP_NAME = "groupName";
-	public static final String ASSIGNED_BRANCH_KEY = "assignedBranchKey";
-	public static final String ASSIGNED_CENTRE_KEY = "assignedCentreKey";
-	public static final String GROUP_MEMBERS = "groupMembers";
-	public static final String GROUP_ROLES = "groupRoles";
-	public static final String THE_GROUP = "theGroup";
-	public static final String GROUP_ROLE_NAME_KEY = "groupRoleNameKey";
-	public static final String CLIENT_KEY = "clientKey";
 
 	// Accounting API
 	public static final String GLACCOUNTS = "glaccounts";
@@ -162,11 +151,6 @@ public class APIData {
 	public static String BRANCHES = "branches";
 	public static String CENTRES = "centres";
 	public static String CURRENCIES = "currencies";
-	
-	// Flag for getting all currencies. See MBU-4128 and MBU-13420. Available since 4.2
-	public static String INCLUDE_FOREIGN = "includeForeign";
-	public static String TRUE = "true"; // values used for boolean flags, e.g. INCLUDE_FOREIGN, FULL_DETAILS
-	public static String FALSE = "false"; // values used for boolean flags, e.g. INCLUDE_FOREIGN, FULL_DETAILS
 
 	// Custom fields and Custom Field Sets
 	public static String CUSTOM_FIELDS = "customfields";
