@@ -3,12 +3,10 @@ package demo;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -26,8 +24,6 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Base64;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import com.mambu.accounts.shared.model.HasPredefinedFees;
 import com.mambu.accounts.shared.model.PredefinedFee;
 import com.mambu.accounts.shared.model.PredefinedFee.AmountCalculationMethod;
@@ -142,14 +138,10 @@ public class DemoUtil {
 
 		Properties prop = new Properties();
 		String appKeyValue = null;
-		final String configFileName = "config.properties"; // Our test data configuration file name
-		File configFile = new File(configFileName);
 		try {
+			InputStream configFile = new FileInputStream("config.properties");
 
-			// Use Reader to support UTF-8 parameters
-			Reader reader = Files.newReader(configFile, Charsets.UTF_8);
-
-			prop.load(reader);
+			prop.load(configFile);
 
 			appKeyValue = prop.getProperty("APPLICATION_KEY");
 			if (appKeyValue == null)
@@ -158,7 +150,7 @@ public class DemoUtil {
 				System.out.println("DemoUtil: APP KEY specified");
 
 			// Get IDs for demo entities defined in the property file
-			getDemoEntitiesIDs(prop);
+			getDemoEntities(prop);
 
 		} catch (IOException e) {
 			System.out.println("  Exception reading config.properties file in Demo Util Service");
@@ -184,7 +176,7 @@ public class DemoUtil {
 	public static final String demoLogPrefix = "DemoUtil data: ";
 
 	// Get IDs for the demo entities defined in the Properties file
-	private static void getDemoEntitiesIDs(Properties properties) {
+	private static void getDemoEntities(Properties properties) {
 		if (properties == null) {
 			System.out.println("Null  Properties file, cannot obtain demo data");
 			return;
@@ -192,7 +184,7 @@ public class DemoUtil {
 
 		// Get Properties. For domain, user and demo client we can also use hardcoded defaults if not provided
 		domain = properties.getProperty("domain", domain);
-		user = properties.getProperty("user", user);
+		user = properties.getProperty("user", domain);
 		password = properties.getProperty("password", password);
 		System.out.println(demoLogPrefix + "Domain=" + domain + "\tUser=" + user);
 
@@ -1314,9 +1306,6 @@ public class DemoUtil {
 		// Make CustomPredefinedFees
 		List<CustomPredefinedFee> demoFees = new ArrayList<>();
 		for (PredefinedFee fee : predefinedFees) {
-			if (!fee.getActive()) {
-				continue;
-			}
 			if (addDisbursement && !fee.isDisbursementFee()) {
 				continue;
 			}
@@ -1343,13 +1332,9 @@ public class DemoUtil {
 					amount = new Money(1.2);
 				}
 				break;
-
 			case REPAYMENT_PRINCIPAL_AMOUNT_PERCENTAGE:
 				continue;
 
-			case LOAN_AMOUNT_PERCENTAGE_NUMBER_OF_INSTALLMENTS:
-				// See MBU-12658 in 4.2.
-				continue;
 			}
 			CustomPredefinedFee customFee = new CustomPredefinedFee(fee, amount);
 			demoFees.add(customFee);

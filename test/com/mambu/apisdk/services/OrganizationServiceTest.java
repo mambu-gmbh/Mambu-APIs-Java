@@ -32,11 +32,8 @@ public class OrganizationServiceTest extends MambuAPIServiceTest {
 	@Test
 	public void testGetCurrency() throws MambuApiException {
 
-		ParamsMap params = new ParamsMap();
-		params.put(APIData.INCLUDE_FOREIGN, APIData.FALSE);
 		// execute
 		try {
-
 			service.getCurrency();
 		} catch (MambuApiException e) {
 			// Check if we received an expected exception and, if so, ignore it
@@ -49,7 +46,7 @@ public class OrganizationServiceTest extends MambuAPIServiceTest {
 			}
 		}
 		// verify
-		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/currencies", params, Method.GET,
+		Mockito.verify(executor).executeRequest("https://demo.mambutest.com/api/currencies", null, Method.GET,
 				ContentType.WWW_FORM);
 	}
 

@@ -2,6 +2,7 @@ package com.mambu.apisdk.json;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -87,7 +88,7 @@ public class LoanAccountPatchJsonSerializer implements JsonSerializer<LoanAccoun
 
 		// Adjust format for EXPECTED_DISBURSEMENT_DATE and FIRST_REPAYMENT_DATE fields to get them from the
 		// DisbursementDetails.class and place at loan account level
-		adjustDisbursementDetails(loanResult);
+		adjustDisbursementDetails(loanAccount, loanResult);
 
 		// Return as "{\"loanAccount\":" +{ accountFields + "}}";
 		JsonObject loanSubsetObject = new JsonObject();
@@ -99,22 +100,20 @@ public class LoanAccountPatchJsonSerializer implements JsonSerializer<LoanAccoun
 	 * Get EXPECTED_DISBURSEMENT_DATE and FIRST_REPAYMENT_DATE fields from the disbursementDetails and not from the
 	 * LoanAccount (deprecated fields) and place these at account level
 	 * 
+	 * @param loanAccount
+	 *            loan account
 	 * @param jsonResult
 	 *            JSON object with the date fields copied from the disbursementDetails into the account level
 	 */
-	private void adjustDisbursementDetails(JsonObject jsonResult) {
+	private void adjustDisbursementDetails(LoanAccount loanAccount, JsonObject jsonResult) {
 
-		JsonObject disbursementDetails = jsonResult.getAsJsonObject(APIData.DISBURSEMENT_DETAILS);
+		DisbursementDetails disbursementDetails = loanAccount.getDisbursementDetails();
 		if (disbursementDetails != null) {
-			// Get expectedDisbursementDate
-			JsonElement expectedDisbursementDate = disbursementDetails.get(APIData.EXPECTED_DISBURSEMENT_DATE);
-			// Get firstRepaymentDate
-			JsonElement firstRepaymentDate = disbursementDetails.get(APIData.FIRST_REPAYMENT_DATE);
-
+			Date expectedDisbursementDate = disbursementDetails.getExpectedDisbursementDate();
+			Date firstRepaymentDate = disbursementDetails.getFirstRepaymentDate();
 			// Add fields from DisbursementDetails
 			JsonHelper.addValueIfNotNullValue(jsonResult, APIData.EXPECTED_DISBURSEMENT_DATE, expectedDisbursementDate);
 			JsonHelper.addValueIfNotNullValue(jsonResult, APIData.FIRST_REPAYMENT_DATE, firstRepaymentDate);
-
 			// Remove the disbursementDetails:{}, it is not allowed in a Loan PATCH API
 			jsonResult.remove(APIData.DISBURSEMENT_DETAILS);
 		}

@@ -74,8 +74,9 @@ public class ClientPatchJsonSerializer implements JsonSerializer<Client> {
 	 * Adjust ClientRole ID field: ClientRole's encoded key must be specified in a separate field, "clientRoleId" field.
 	 * See MBU-11868
 	 * 
+	 * 
 	 * @param client
-	 *            client
+	 *            client role
 	 * @param jsonResult
 	 *            JSON object where the whole "ClientRole" object is replaced with "clientRoleId":"123"
 	 */
@@ -84,7 +85,7 @@ public class ClientPatchJsonSerializer implements JsonSerializer<Client> {
 		if (clientRole != null) {
 			String clientRoleKey = clientRole.getEncodedKey();
 			// Add role's encoded key as clientRoleId. Example: "clientRoleId:"12345"
-			jsonResult.addProperty(APIData.CLIENT_ROLE_ID, clientRoleKey);
+			JsonHelper.addValueIfNotNullValue(jsonResult, APIData.CLIENT_ROLE_ID, clientRoleKey);
 			// Now we need to remove "clientRole" object
 			jsonResult.remove(APIData.CLIENT_ROLE);
 		}

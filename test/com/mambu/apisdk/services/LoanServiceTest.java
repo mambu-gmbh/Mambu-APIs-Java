@@ -31,7 +31,6 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 
 	@Override
 	public void setUp() throws MambuApiException {
-
 		super.setUp();
 
 		service = new LoansService(super.mambuApiService);
@@ -120,8 +119,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 						+ "\"principalRepaymentInterval\":1,"
 						+ "\"interestRateSource\":\"FIXED_INTEREST_RATE\","
 						+ "\"accruedInterest\":0,"
-						+ "\"accruedPenalty\":0,\"loanPenaltyCalculationMethod\":\"NONE\","
-						+ "\"arrearsTolerancePeriod\":0}," // Added in 4.2: defaults to zero in the model
+						+ "\"accruedPenalty\":0,\"loanPenaltyCalculationMethod\":\"NONE\"},"
 						+ "\"customInformation\":["
 						+ "{\"value\":\"My Loan Purpose 5\",\"indexInList\":-1,\"toBeDeleted\":false,\"customFieldID\":\"Loan_Purpose_Loan_Accounts\"},"
 						+ "{\"value\":\"Trust\",\"indexInList\":-1,\"toBeDeleted\":false,\"customFieldID\":\"Loan_Originator_Loan_Accounts\"}"

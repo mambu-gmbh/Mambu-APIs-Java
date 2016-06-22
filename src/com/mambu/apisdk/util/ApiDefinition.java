@@ -14,7 +14,6 @@ import com.mambu.accounts.shared.model.DocumentTemplate;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.accountsecurity.shared.model.Guaranty;
 import com.mambu.accountsecurity.shared.model.InvestorFund;
-import com.mambu.admin.shared.model.ExchangeRate;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.coments.model.JSONComment;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
@@ -554,12 +553,10 @@ public class ApiDefinition {
 		apiEndPointsMap.put(IdentificationDocumentTemplate.class, APIData.ID_DOCUMENT_TEMPLATES);
 		// Document Template
 		apiEndPointsMap.put(DocumentTemplate.class, APIData.TEMPLATES);
-		//Organization
+		// Organization
 		apiEndPointsMap.put(Organization.class, APIData.ORGANIZATION);
 		apiEndPointsMap.put(GeneralSettings.class, APIData.GENERAL);
 		apiEndPointsMap.put(ObjectLabel.class, APIData.LABELS);
-		apiEndPointsMap.put(ExchangeRate.class, APIData.RATES); // "rates" api endpoint. Available since 4.2. For more details see MBU-12629
-		
 		// Lines Of Credit
 		apiEndPointsMap.put(LineOfCredit.class, APIData.LINES_OF_CREDIT);
 		apiEndPointsMap.put(LineOfCreditExpanded.class, APIData.LINES_OF_CREDIT);
@@ -568,6 +565,7 @@ public class ApiDefinition {
 		apiEndPointsMap.put(InvestorFund.class, APIData.FUNDS); // "funds" api end point
 		apiEndPointsMap.put(Guaranty.class, APIData.GUARANTEES); // "guarantees" api end point
 		apiEndPointsMap.put(Role.class, APIData.USER_ROLES); // "userroles" api end point
+
 	}
 
 	// Get an Api endpoint for a Mambu class
