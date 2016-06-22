@@ -1,7 +1,7 @@
 package com.mambu.apisdk.json;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.mambu.api.server.helper.json.JsonUtils;
 
 /**
  * A helper class to support commonly used JSON processing methods
@@ -14,10 +14,6 @@ public class JsonHelper {
 	/**
 	 * Add value to jsonResult if value is not null.
 	 * 
-	 * 
-	 * NOTE: The addValueIfNotNullValue() method is copied from Mambu model classes (it's defined a a private method in
-	 * there)
-	 * 
 	 * @param jsonResult
 	 *            json result
 	 * @param propertyName
@@ -25,9 +21,10 @@ public class JsonHelper {
 	 * @param value
 	 *            value for the propertyName
 	 */
-	public static void addValueIfNotNullValue(JsonObject jsonResult, String propertyName, Object value) {
+	public static void addValueIfNotNullValue(JsonObject jsonResult, String propertyName, JsonElement value) {
 		if (value != null) {
-			jsonResult.add(propertyName, JsonUtils.toJson(value));
+			jsonResult.add(propertyName, value);
 		}
 	}
+
 }

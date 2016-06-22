@@ -12,6 +12,7 @@ import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.json.ClientPatchJsonSerializer;
+import com.mambu.apisdk.json.GroupExpandedPatchSerializer;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
@@ -73,6 +74,22 @@ public class ClientsService {
 		// Use ClientPatchJsonSerializer
 		patchClient.addJsonSerializer(Client.class, new ClientPatchJsonSerializer());
 	}
+
+	// PATCH Group: PATCH:
+	// {"group":{"id":"445076768","groupName":"Village group update","notes":"some_notes after update",
+	// "assignedUserKey":"40288a164c31ebec014c31ebf7200004","assignedCentreKey":"40288a164c31eca9014c31ef7e510005",
+	// "assignedBranchKey":"40288a164c31eca9014c31ef7e4f0003"}}
+	// /api/groups/40288a164c31eca9014c31f1135103de
+	private final static ApiDefinition patchGroupExpanded;
+	static {
+		patchGroupExpanded = new ApiDefinition(ApiType.PATCH_ENTITY, GroupExpanded.class);
+		// Use GroupExpandedPatchSerializer
+		patchGroupExpanded.addJsonSerializer(GroupExpanded.class, new GroupExpandedPatchSerializer());
+	}
+
+	// Delete Client DELETE /api/clients/{clientId}
+	private final static ApiDefinition deleteClient = new ApiDefinition(ApiType.DELETE_ENTITY, Client.class);
+
 	// Create Group. POST JSON /api/groups
 	private final static ApiDefinition createGroup = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, GroupExpanded.class);
 	// Update Group. POST JSON /api/groups/groupId
@@ -415,6 +432,23 @@ public class ClientsService {
 		// Create an object to be use for PATCH client JSON
 		// execute Patch API request
 		return serviceExecutor.executeJson(patchClient, client, clientId);
+	}
+
+	/***
+	 * Delete Client. Note, clients which have open accounts, have assigned tasks, or are assigned to groups, to linked
+	 * custom fields or are guarantors cannot be deleted. Requires "Delete Clients" permission
+	 * 
+	 * @param clientId
+	 *            client id or encoded key. Must not be null
+	 * 
+	 * @return status returns true if client was deleted successfully
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean deleteClient(String clientId) throws MambuApiException {
+		// Available since Mambu 4.2. See MBU-12684
+		// Example: DELETE /api/clients/{clientID}
+		return serviceExecutor.execute(deleteClient, clientId);
 	}
 
 	/***
@@ -879,4 +913,60 @@ public class ClientsService {
 		return serviceExecutor.execute(deleteClientProfileFile, clientId, documentType, null);
 
 	}
+
+	/**
+	 * Patch Group fields.
+	 * 
+	 * @param group
+	 *            the Group to be patched. The Group and its encoded key or id must not be Null.
+	 * @return a boolean indicating if the patch was successful
+	 * @throws MambuApiException
+	 */
+	public boolean patchGroup(Group group) throws MambuApiException {
+		// e.g. PATCH {GroupExpandedJson} /api/groups/40288a164c31eca9014c31f1135103de
+		// See MBU-12985 for more details
+
+		if (group == null) {
+			throw new IllegalArgumentException("Group must not be null");
+		}
+		// Create Group Expanded with this group and delegate the call to PATCH GroupExapnded
+		GroupExpanded groupExpanded = new GroupExpanded(group);
+		// Mambu model constructor for GroupExpanded creates empty arrays for group members and group roles. We need to
+		// have them set to null in JSON (not to remove the existent group assignments and roles with our PATCH request)
+		groupExpanded.setGroupMembers(null);
+		groupExpanded.setGroupRoles(null);
+		// These following fields are ignored by Mambu in PATCH API but we should set them to null anyway to avoid
+		// sending unnecessary empty arrays
+		groupExpanded.setAddresses(null);
+		groupExpanded.setCustomFieldValues(null);
+
+		// Delegate the execution
+		return patchGroup(groupExpanded);
+	}
+
+	/**
+	 * Patches Group fields through GroupExpanded. Pay attention, only the group information gets patched, the other
+	 * properties on the GroupExpanded like group members and group roles are replaced if they are supplied.
+	 * 
+	 * @param groupExpanded
+	 *            the GroupExpanded to be patched. The GroupExpanded and its encoded key or id must not be null.
+	 * @return a boolean indicating if the patch was successful
+	 * @throws MambuApiException
+	 */
+	public boolean patchGroup(GroupExpanded groupExpanded) throws MambuApiException {
+		// e.g. PATCH {GroupExpandedJson} /api/groups/40288a164c31eca9014c31f1135103de
+		// See MBU-12985 for more details
+
+		if (groupExpanded == null || groupExpanded.getEncodedKey() == null && groupExpanded.getId() == null) {
+			throw new IllegalArgumentException("Group and group's encoded key or id  must not be null");
+		}
+
+		// get the id of the group
+		String groupId = groupExpanded.getEncodedKey() != null ? groupExpanded.getEncodedKey() : groupExpanded.getId();
+
+		// Execute PATCH group API.
+		return serviceExecutor.executeJson(patchGroupExpanded, groupExpanded, groupId);
+
+	}
+
 }
