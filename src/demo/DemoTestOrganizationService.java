@@ -96,6 +96,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetAllBranches() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetAllBranches");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -118,6 +119,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetBranchesByPage() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetBranchesByPage");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -143,6 +145,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetBranch() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetBranch");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -156,6 +159,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetCentre() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetCentre");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -173,6 +177,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetCentresByPage() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetCentresByPage");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -199,6 +204,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetCentresByBranch() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetCentresByBranch");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -228,6 +234,7 @@ public class DemoTestOrganizationService {
 	 * @throws MambuApiException
 	 */
 	public static List<Currency> testGetCurrency() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetCurrency");
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
@@ -249,6 +256,7 @@ public class DemoTestOrganizationService {
 
 	// Tests creating of next`s day exchange currency for a currency
 	private static void testPostExchangeRate(List<Currency> organizationCurrencies) throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testPostExchangeRate");
 		Date start = new Date();
 
@@ -311,11 +319,13 @@ public class DemoTestOrganizationService {
 	 *            The ExchangeRate
 	 */
 	private static void logExchangeRateDetails(ExchangeRate exchangeRate) {
+
 		if (exchangeRate != null) {
 			System.out.println("Key: " + exchangeRate.getEncodedKey());
 			System.out.println("SellRate: " + exchangeRate.getSellRate());
 			System.out.println("BuyRate: " + exchangeRate.getBuyRate());
 			System.out.println("StartDate: " + exchangeRate.getStartDate());
+			System.out.println("EndDate: " + exchangeRate.getEndDate());
 			System.out.println("ToCurrency: " + exchangeRate.getToCurrencyCode());
 		}
 	}
@@ -356,6 +366,7 @@ public class DemoTestOrganizationService {
 	 * @return Next`s day exchange rate.
 	 */
 	private static ExchangeRate createNextDayExchangeRate(Currency currncy, Calendar dateOfLastExchangeRate) {
+
 		dateOfLastExchangeRate.add(Calendar.DATE, 1);
 		ExchangeRate exchangeRate = new ExchangeRate();
 		exchangeRate.setBuyRate(new BigDecimal("3.00"));
@@ -418,6 +429,7 @@ public class DemoTestOrganizationService {
 	// Test getting transaction channels API
 	// Since Mambu 4.1 this API returns also applicable custom fields for each channel. See MBU-12226
 	public static void testGetTransactionChannels() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetTransactionChannels");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -468,6 +480,7 @@ public class DemoTestOrganizationService {
 
 	// Update Custom Field values for the demo Branch and for demo Centre and delete the first custom field
 	public static void testUpdateDeleteCustomFields() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testUpdateDeleteCustomFields");
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
@@ -480,6 +493,7 @@ public class DemoTestOrganizationService {
 
 	// Test Posting Index Interest Rates. Available since 3.10
 	public static void testPostIndexInterestRate() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testPostIndexInterestRate");
 		// Note that there is no API yet to get Index Rate Sources. API developers need to know the rate source key to
 		// post new rates. These keys can be obtained from Mambu. They can also be looked up from the getProduct API
@@ -507,6 +521,7 @@ public class DemoTestOrganizationService {
 
 	// Test getting Identification Document Templates
 	public static void testGetIDDocumentTemplates() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetIDDocumentTemplates");
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
@@ -525,6 +540,7 @@ public class DemoTestOrganizationService {
 
 	// Get Organization details. Available since 3.11
 	public static void testGetOrganizationDetails() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetOrganization");
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
@@ -589,6 +605,7 @@ public class DemoTestOrganizationService {
 	 * @throws MambuApiException
 	 */
 	public static void testGetExchangeRates(List<Currency> organizationCurrencies) throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetExchangeRates");
 
 		if (organizationCurrencies == null || organizationCurrencies.size() < 2) {
