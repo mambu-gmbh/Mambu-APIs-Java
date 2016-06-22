@@ -8,7 +8,6 @@ import java.util.List;
 import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.accounting.shared.model.GLAccountingRule;
 import com.mambu.accounts.shared.model.TransactionChannel;
-import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
 import com.mambu.admin.shared.model.ExchangeRate;
 import com.mambu.api.server.handler.settings.organization.model.JSONOrganization;
 import com.mambu.apisdk.MambuAPIFactory;
@@ -464,11 +463,6 @@ public class DemoTestOrganizationService {
 			} else {
 				System.out.println("No GLAccountingRule");
 			}
-
-			// Predefined channel fields were deprecated in 4.1. See MBU-11800
-			List<ChannelField> deprecatedFields = channel.getChannelFields();
-			int deprecatedlFieldsCount = (deprecatedFields == null) ? 0 : deprecatedFields.size();
-			System.out.println("\tTotal Deprecated Fields=" + deprecatedlFieldsCount);
 		}
 	}
 
