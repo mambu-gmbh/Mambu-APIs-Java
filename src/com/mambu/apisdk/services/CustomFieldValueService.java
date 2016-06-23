@@ -154,6 +154,7 @@ public class CustomFieldValueService {
 	 * @return api custom field value
 	 */
 	private CustomFieldValue makePatchApiCustomField(CustomFieldValue customFieldValue) {
+
 		CustomFieldValue apiField = new CustomFieldValue(customFieldValue);
 
 		// Only "value" and "linkedEntityKeyValue" fields need to be present in API request, if defined
@@ -428,6 +429,7 @@ public class CustomFieldValueService {
 	 * @return custom field id path
 	 */
 	private String makeCustomFieldIdPath(CustomFieldValue customFieldValue) {
+
 		if (customFieldValue == null || customFieldValue.getCustomFieldId() == null) {
 			throw new IllegalArgumentException("Custom Field Value and its Field ID cannot be null");
 		}
@@ -464,6 +466,7 @@ public class CustomFieldValueService {
 	 */
 	private String makeOwnedEntityUrlPath(MambuEntityType parentEntity, String parentEntityId,
 			MambuEntityType ownedEntity, String ownedEntityId, String customFieldId) {
+
 		if (parentEntity == null || parentEntityId == null || ownedEntity == null || ownedEntityId == null) {
 			throw new IllegalArgumentException("Parameters must not be null");
 		}
@@ -500,7 +503,8 @@ public class CustomFieldValueService {
 			throw new IllegalArgumentException("Parameters must not be null");
 		}
 		// Make URL path
-		String urlPath = makeOwnedEntityUrlPath(parentEntity, parentEntityId, ownedEntity, ownedEntityId, customFieldId);
+		String urlPath = makeOwnedEntityUrlPath(parentEntity, parentEntityId, ownedEntity, ownedEntityId,
+				customFieldId);
 
 		// Create ApiDefintion
 		return new ApiDefinition(urlPath, ContentType.JSON, Method.PATCH, Boolean.class, ApiReturnFormat.BOOLEAN);
@@ -529,7 +533,8 @@ public class CustomFieldValueService {
 			throw new IllegalArgumentException("Parameters must not be null");
 		}
 
-		String urlPath = makeOwnedEntityUrlPath(parentEntity, parentEntityId, ownedEntity, ownedEntityId, customFieldId);
+		String urlPath = makeOwnedEntityUrlPath(parentEntity, parentEntityId, ownedEntity, ownedEntityId,
+				customFieldId);
 
 		return new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.DELETE, Boolean.class, ApiReturnFormat.BOOLEAN);
 
@@ -545,7 +550,8 @@ public class CustomFieldValueService {
 	// TODO: in future updates consider changing implementation to using custom serializer in ApiDefitnion for
 	// generating JSON for Custom Field Value API
 	private ParamsMap makeCustomInformationParams(List<CustomFieldValue> customFieldValues) {
-		// customInformation":[{ "customFieldID":"IBAN","value":"DE123456789121243546783"},{ "customFieldID":"BIC","value":"1234566441"}]
+		// customInformation":[{ "customFieldID":"IBAN","value":"DE123456789121243546783"},{
+		// "customFieldID":"BIC","value":"1234566441"}]
 
 		Gson gson = GsonUtils.createGson();
 		JsonElement customFieldsJson = gson.toJsonTree(customFieldValues);
@@ -568,6 +574,7 @@ public class CustomFieldValueService {
 	 * @return supported entities
 	 */
 	public static MambuEntityType[] getSupportedEntities() {
+
 		return supportedEntities;
 	}
 
@@ -579,6 +586,7 @@ public class CustomFieldValueService {
 	 * @return true if supported
 	 */
 	public static boolean isSupported(MambuEntityType parentEntityType) {
+
 		if (parentEntityType == null) {
 			return false;
 		}
@@ -598,6 +606,62 @@ public class CustomFieldValueService {
 	public static CustomFieldType getCustomFieldType(MambuEntityType mambuEntityType) {
 
 		return mambuEntityType != null ? customFieldTypes.get(mambuEntityType) : null;
+	}
+
+	/**
+	 * Patches a list of custom fields provided as parameter to this method for the parent entity passed as parameter
+	 * with given entity id.
+	 * 
+	 * @param parentEntity
+	 * 
+	 * @param parentEntityId
+	 * @param customFieldValues
+	 * @return
+	 * @throws MambuApiException
+	 */
+	public boolean update(MambuEntityType parentEntity, String parentEntityId, List<CustomFieldValue> customFieldValues)
+			throws MambuApiException {
+
+		if (null == parentEntity || null == parentEntityId || null == customFieldValues
+				|| customFieldValues.isEmpty()) {
+			throw new IllegalArgumentException("Parameters must not be null");
+		}
+
+		// Create API definition
+		ApiDefinition patchOwnedEntityApiDefinition = new ApiDefinition(ApiType.PATCH_OWNED_ENTITIES,
+				parentEntity.getEntityClass(), serviceEntity.getEntityClass());
+		patchOwnedEntityApiDefinition.setApiReturnFormat(ApiReturnFormat.BOOLEAN);
+
+		List<CustomFieldValue> apiCustomFieldValues = makePatchGroupApiCustomFields(customFieldValues, true);
+
+		// TODO Remove this method once MBU-13603 is fixed
+		adjustLinkedCustomFields(apiCustomFieldValues);
+
+		// Create JSON for customFieldValues and add it to the ParamsMap
+		ParamsMap paramsMap = makeCustomInformationParams(apiCustomFieldValues);
+
+		return serviceExecutor.execute(patchOwnedEntityApiDefinition, parentEntityId, paramsMap);
+	}
+
+	/**
+	 * Adjusts a list of custom field values (temporary fix). Iterates over all the values in the list and in case the
+	 * value on "LinkedEntityKeyValue" different than null moves it to "Value" field.
+	 * 
+	 * @param customFieldValues
+	 *            The list of custom field values to be adjusted
+	 */
+	private void adjustLinkedCustomFields(List<CustomFieldValue> customFieldValues) {
+
+		for (CustomFieldValue customFieldValue : customFieldValues) {
+			// customFieldValue.getCustomField().getDataItemType();
+			// for anything than null on LinkedEntityKeyValue means Linked CF
+			if (customFieldValue.getLinkedEntityKeyValue() != null) {
+				// move the value to value field
+				customFieldValue.setValue(customFieldValue.getLinkedEntityKeyValue());
+				// set the value to be null
+				customFieldValue.setLinkedEntityKeyValue(null);
+			}
+		}
 	}
 
 }
