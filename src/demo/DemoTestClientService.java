@@ -117,6 +117,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetClient() throws MambuApiException {
+
 		System.out.println("\nIn testGetClient");
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
@@ -138,6 +139,7 @@ public class DemoTestClientService {
 	 * @throws MambuApiException
 	 */
 	public static void testDeleteClient(String clientId) throws MambuApiException {
+
 		System.out.println("\nIn testDeleteClient");
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
@@ -148,6 +150,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetClients() {
+
 		try {
 			System.out.println("\nIn testGetClients");
 			ClientsService clientService = MambuAPIFactory.getClientService();
@@ -164,6 +167,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetClientbyFullName() throws MambuApiException {
+
 		System.out.println("\nIn testGetClientbyFullName");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -182,6 +186,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetClientByLastNameBirthday() throws MambuApiException {
+
 		System.out.println("\nIn testGetClientByLastNameBirthday");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -201,6 +206,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetClientDetails() throws MambuApiException {
+
 		System.out.println("\nIn testGetClientDetails");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -214,6 +220,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetClientByDocIdLastName() throws MambuApiException {
+
 		System.out.println("\nIn testGetClientByDocIdLastName");
 
 		String lastName = demoClient.getLastName();
@@ -240,6 +247,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetGroup() throws MambuApiException {
+
 		System.out.println("\nIn testGetGroup");
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
@@ -250,6 +258,7 @@ public class DemoTestClientService {
 
 	// Test PATCH GroupExpanded fields API. This method patches existing created GroupExpended.
 	public static void testPatchGroup() throws MambuApiException {
+
 		System.out.println("\n In testPatchGroup");
 		String groupId = NEW_GROUP_ID;
 
@@ -268,12 +277,13 @@ public class DemoTestClientService {
 
 		GroupExpanded groupExpanded = clientService.getGroupDetails(group.getEncodedKey());
 
-		logGroupDetails(groupExpanded.getGroup());
+		logGroupExpandedDetails(groupExpanded);
 
 	}
 
 	// Test PATCH GroupExpanded fields API. This method patches existing created GroupExpended.
 	public static void testPatchGroupExpanded() throws MambuApiException {
+
 		System.out.println("\n In testPatchGroupExtended");
 		String groupId = NEW_GROUP_ID;
 
@@ -301,7 +311,7 @@ public class DemoTestClientService {
 
 		GroupExpanded patchedGroup = clientService.getGroupDetails(groupExpanded.getEncodedKey());
 
-		logGroupDetails(patchedGroup.getGroup());
+		logGroupExpandedDetails(patchedGroup);
 	}
 
 	/**
@@ -312,12 +322,15 @@ public class DemoTestClientService {
 	 *            The GroupExpanded to be updated with a new list of roles.
 	 */
 	private static void replaceExistingRoleList(GroupExpanded groupExpanded) {
-		// replace the existing role list
-		List<GroupRole> groupRoles = groupExpanded.getGroupRoles();
-		GroupRole groupRole = groupRoles.get(0);
-		groupRole.setClientKey(demoClient.getEncodedKey());
-		// set the role(replace the existing one)
-		groupExpanded.setGroupRoles(groupRoles);
+
+		if (groupExpanded != null && groupExpanded.getGroupRoles() != null) {
+			// replace the existing role list
+			List<GroupRole> groupRoles = groupExpanded.getGroupRoles();
+			GroupRole groupRole = groupRoles.get(0);
+			groupRole.setClientKey(demoClient.getEncodedKey());
+			// set the role(replace the existing one)
+			groupExpanded.setGroupRoles(groupRoles);
+		}
 	}
 
 	/**
@@ -327,13 +340,16 @@ public class DemoTestClientService {
 	 *            The GroupExpanded to be updated with a new list of members (including the existing ones)
 	 */
 	private static void addTestClientAsGroupMamber(GroupExpanded groupExpanded) {
-		// add a new member
-		List<GroupMember> groupMembers = groupExpanded.getGroupMembers();
-		GroupMember groupMember = new GroupMember();
-		groupMember.setClientKey(demoClient.getEncodedKey());
-		groupMember.setCreationDate(new Date());
-		groupMembers.add(groupMember);
-		groupExpanded.setGroupMembers(groupMembers);
+
+		if (groupExpanded != null && groupExpanded.getGroupMembers() != null) {
+			// add a new member
+			List<GroupMember> groupMembers = groupExpanded.getGroupMembers();
+			GroupMember groupMember = new GroupMember();
+			groupMember.setClientKey(demoClient.getEncodedKey());
+			groupMember.setCreationDate(new Date());
+			groupMembers.add(groupMember);
+			groupExpanded.setGroupMembers(groupMembers);
+		}
 	}
 
 	/**
@@ -352,8 +368,8 @@ public class DemoTestClientService {
 	 */
 	private static Group setUpGroupForPatchingOperation(String groupId, ClientsService clientService,
 			String patchFieldSuffix) throws MambuApiException {
-		Group group = clientService.getGroup(groupId);
 
+		Group group = clientService.getGroup(groupId);
 		if (group != null) {
 			String randomIndex = Integer.toString((int) (Math.random() * 1000000));
 			// change the group information
@@ -371,22 +387,70 @@ public class DemoTestClientService {
 	/**
 	 * Logs to the console the details of the group passed as parameter.
 	 * 
-	 * @param group
-	 *            the Group, whose details will be printed to the console.
+	 * @param groupExpanded
+	 *            the GroupExpanded, whose details will be printed to the console.
 	 */
-	private static void logGroupDetails(Group group) {
+	private static void logGroupExpandedDetails(GroupExpanded groupExpanded) {
+
+		Group group = groupExpanded.getGroup();
 		if (group != null) {
-			System.out.println("Group key: " + group.getEncodedKey());
-			System.out.println("Group name: " + group.getGroupName());
-			System.out.println("Group preferred language: " + group.getPreferredLanguage());
-			System.out.println("Group phone: " + group.getMobilePhone1());
-			System.out.println("Group notes: " + group.getNotes());
-			System.out.println("Group homePhone: " + group.getHomePhone());
-			System.out.println("Group emailAddress: " + group.getEmailAddress());
+			System.out.println("Group details:");
+			System.out.println("\tGroup key: " + group.getEncodedKey());
+			System.out.println("\tGroup name: " + group.getGroupName());
+			System.out.println("\tGroup preferred language: " + group.getPreferredLanguage());
+			System.out.println("\tGroup phone: " + group.getMobilePhone1());
+			System.out.println("\tGroup notes: " + group.getNotes());
+			System.out.println("\tGroup homePhone: " + group.getHomePhone());
+			System.out.println("\tGroup emailAddress: " + group.getEmailAddress());
+		}
+
+		logMembersOfTheGroupExpanded(groupExpanded);
+
+		logRolesOfTheGroupExpanded(groupExpanded);
+	}
+
+	/**
+	 * Takes as parameter a GroupExpanded and logs to the console some details about its group roles if there are any
+	 * roles.
+	 * 
+	 * @param groupExpanded
+	 *            The GroupExpanded whose group roles will be printed to the console.
+	 */
+	private static void logRolesOfTheGroupExpanded(GroupExpanded groupExpanded) {
+
+		List<GroupRole> roles = groupExpanded.getGroupRoles();
+		if (roles != null && !roles.isEmpty()) {
+			System.out.println("Group roles:");
+			for (GroupRole role : roles) {
+				System.out.println("\tRole`s encoded key " + role.getEncodedKey());
+				System.out.println("\tRole`s name " + role.getRoleName());
+			}
+			System.out.println("Roles count = " + roles.size());
+		}
+	}
+
+	/**
+	 * Takes as parameter a GroupExpanded and logs to the console some details about its group members if there are any
+	 * members.
+	 * 
+	 * @param groupExpanded
+	 *            The GroupExpanded whose group members will be printed to the console.
+	 */
+	private static void logMembersOfTheGroupExpanded(GroupExpanded groupExpanded) {
+
+		List<GroupMember> members = groupExpanded.getGroupMembers();
+		if (members != null && !members.isEmpty()) {
+			System.out.println("Group mambers:");
+			for (GroupMember member : members) {
+				System.out.println("\tMember`s encoded key " + member.getEncodedKey());
+				System.out.println("\tMember`s parent key " + member.getParentKey());
+			}
+			System.out.println("Members count = " + members.size());
 		}
 	}
 
 	public static void testGetGroupDetails() throws MambuApiException {
+
 		System.out.println("\nIn testGetGroupDetails");
 
 		String groupId = NEW_GROUP_ID;
@@ -411,6 +475,7 @@ public class DemoTestClientService {
 	 * @throws MambuApiException
 	 */
 	public static String testCreateJsonClient() throws MambuApiException {
+
 		System.out.println("\nIn testCreateJsonClient");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -492,6 +557,7 @@ public class DemoTestClientService {
 
 	// Test update client. This method updates previously created client saved in clientCreated object
 	public static ClientExpanded testUpdateClient() throws MambuApiException {
+
 		System.out.println("\nIn testUpdateClient");
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
@@ -540,6 +606,7 @@ public class DemoTestClientService {
 
 	// Test updating client's state API
 	public static void testUpdateClientState(Client client) throws MambuApiException {
+
 		System.out.println("\nIn testUpdateClientState");
 		if (client == null) {
 			System.out.println("WARNING:cannot test updating state for a  null client");
@@ -573,6 +640,7 @@ public class DemoTestClientService {
 	 * @throws MambuApiException
 	 */
 	public static String testPatchClient(Client client) throws MambuApiException {
+
 		System.out.println("\nIn testPatchClient");
 
 		client.setFirstName(client.getFirstName()); // keep the same to continue using our demo client
@@ -603,6 +671,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetClientsByBranchCentreOfficerState() throws MambuApiException {
+
 		System.out.println("\nIn testGetClientsByBranchCentreOfficerState");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -627,6 +696,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetGroupsByBranchCentreOfficer() throws MambuApiException {
+
 		System.out.println("\nIn testGetGroupsByBranchCentreOfficer");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -649,6 +719,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetGroupsRoles() throws MambuApiException {
+
 		System.out.println("\nIn testGetGroupsRoles");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -671,6 +742,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetDocuments() throws MambuApiException {
+
 		System.out.println("\nIn testGetDocuments");
 
 		Integer offset = 0;
@@ -695,6 +767,7 @@ public class DemoTestClientService {
 
 	// Update Custom Field values for the client and for the group and delete the first custom field
 	public static void testUpdateDeleteCustomFields() throws MambuApiException {
+
 		System.out.println("\nIn testUpdateDeleteCustomFields");
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
@@ -707,6 +780,7 @@ public class DemoTestClientService {
 
 	// Test getting client types
 	public static void testGetClientTypes() throws MambuApiException {
+
 		System.out.println("\nIn testGetClientTypes");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -748,6 +822,7 @@ public class DemoTestClientService {
 
 	// Test getting client profile picture and client profile signature file
 	public static void getClientProfileFiles() throws MambuApiException {
+
 		System.out.println("\nIn getClientProfileFiles");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -767,6 +842,7 @@ public class DemoTestClientService {
 
 	// Test uploading client profile picture and signature files
 	public static void uploadClientProfileFiles() throws MambuApiException {
+
 		System.out.println("\nIn uploadClientProfileFiles");
 		// Our Test file to upload.
 		final String filePath = "./test/data/IMG_1.JPG";
@@ -817,6 +893,7 @@ public class DemoTestClientService {
 
 	// Test deleting client profile picture and client profile signature file
 	public static void deleteClientProfileFiles() throws MambuApiException {
+
 		System.out.println("\nIn deleteClientProfileFiles");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -836,6 +913,7 @@ public class DemoTestClientService {
 
 	// Test Creating new group. Return new group on success
 	public static GroupExpanded testCreateGroup() throws MambuApiException {
+
 		System.out.println("\nIn testCreateGroup");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -920,6 +998,7 @@ public class DemoTestClientService {
 
 	// Test updating Group. Pass existent group as a parameter
 	public static void testUpdateGroup(GroupExpanded groupExpanded) throws MambuApiException {
+
 		System.out.println("\nIn testUpdateGroup");
 
 		if (groupExpanded == null || groupExpanded.getGroup() == null) {
