@@ -28,8 +28,8 @@ public class DemoTestCustomFiledValueService {
 		DemoUtil.setUp();
 
 		try {
-			// testUpdateAndDeleteCustomFieldValues();
-			// testUpdateAndDeleteTransactionCustomFieldValues(); // Available since Mambu 4.1
+			testUpdateAndDeleteCustomFieldValues();
+			testUpdateAndDeleteTransactionCustomFieldValues(); // Available since Mambu 4.1
 			testUpdateMultiplaCustomFields(); // Available since 4.2. For more details see 12231
 
 			// Available since 3.8
