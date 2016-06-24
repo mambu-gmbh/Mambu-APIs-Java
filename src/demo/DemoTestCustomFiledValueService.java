@@ -75,8 +75,8 @@ public class DemoTestCustomFiledValueService {
 		String parentId = entityParams.getId();
 		String parentName = entityParams.getName();
 
-		System.out.println(
-				"\n\nTesting Custom Fields APIs for " + parentEntity + " " + parentName + " with ID=" + parentId);
+		System.out.println("\n\nTesting Custom Fields APIs for " + parentEntity + " " + parentName + " with ID="
+				+ parentId);
 		// Execute test cases to update and delete custom fields
 		testUpdateAdddDeleteEntityCustomFields(parentEntity, entityParams);
 	}
@@ -90,7 +90,7 @@ public class DemoTestCustomFiledValueService {
 	 * @entityParams entity params. Must be not null and have not null entity id
 	 * @throws MambuApiException
 	 */
-	public static void testUpdateAdddDeleteEntityCustomFields(MambuEntityType parentEntity ,
+	public static void testUpdateAdddDeleteEntityCustomFields(MambuEntityType parentEntity,
 			DemoEntityParams entityParams) throws MambuApiException {
 
 		System.out.println("\nIn testUpdateAdddDeleteEntityCustomFields");
@@ -102,8 +102,8 @@ public class DemoTestCustomFiledValueService {
 		String parentId = entityParams.getId();
 		String parentName = entityParams.getName();
 
-		System.out.println(
-				"\n\nTesting Custom Fields APIs for " + parentEntity + " " + parentName + " with ID=" + parentId);
+		System.out.println("\n\nTesting Custom Fields APIs for " + parentEntity + " " + parentName + " with ID="
+				+ parentId);
 		// Test Update API
 		List<CustomFieldValue> customFieldValues = updateCustomFieldValues(parentEntity, entityParams);
 
@@ -140,8 +140,8 @@ public class DemoTestCustomFiledValueService {
 					channelKey, false);
 		}
 		if (transactionFields == null || transactionFields.size() == 0) {
-			System.out.println(
-					"WARNING: no custom fields available for transaction " + transactionId + " channel=" + channelKey);
+			System.out.println("WARNING: no custom fields available for transaction " + transactionId + " channel="
+					+ channelKey);
 			return;
 		}
 		// Update custom fields values
@@ -151,13 +151,13 @@ public class DemoTestCustomFiledValueService {
 		System.out.println("Update status=" + updateFieldstatus);
 
 		// Test Deleting Custom Field Value. Delete the first one
-		boolean deleteStatus = service.delete(MambuEntityType.LOAN_ACCOUNT, accountId, MambuEntityType.LOAN_TRANSACTION,
-				transactionId, transactionFields.get(0));
+		boolean deleteStatus = service.delete(MambuEntityType.LOAN_ACCOUNT, accountId,
+				MambuEntityType.LOAN_TRANSACTION, transactionId, transactionFields.get(0));
 		System.out.println("Delete status=" + deleteStatus);
 	}
 
 	// Test Adding new Grouped custom fields API. Available since 4.1. See MBU-12228
-	private static void testAddGroupedCustomFields(MambuEntityType parentEntity , DemoEntityParams entityParams)
+	private static void testAddGroupedCustomFields(MambuEntityType parentEntity, DemoEntityParams entityParams)
 			throws MambuApiException {
 
 		System.out.println("\nIn testAddGroupedCustomFields");
@@ -222,7 +222,7 @@ public class DemoTestCustomFiledValueService {
 	 * @return custom field values for a demo entity
 	 * @throws MambuApiException
 	 */
-	private static List<CustomFieldValue> updateCustomFieldValues(MambuEntityType parentEntity ,
+	private static List<CustomFieldValue> updateCustomFieldValues(MambuEntityType parentEntity,
 			DemoEntityParams entityParams) throws MambuApiException {
 
 		System.out.println("\nIn updateCustomFieldValues");
@@ -250,8 +250,8 @@ public class DemoTestCustomFiledValueService {
 
 			// Update Custom Field value
 			boolean updateStatus;
-			System.out.println(
-					"\nUpdating Custom Field with ID=" + fieldId + " for " + entityName + " with ID=" + entityId);
+			System.out.println("\nUpdating Custom Field with ID=" + fieldId + " for " + entityName + " with ID="
+					+ entityId);
 
 			// Test API to update Custom Fields Value
 			updateStatus = customFieldsService.update(parentEntity, entityId, customFieldValue);
@@ -293,8 +293,8 @@ public class DemoTestCustomFiledValueService {
 		System.out.println("\nIn testUpdateFieldsForParentEntity()");
 		DemoEntityParams entityParams = DemoEntityParams.getEntityParams(parentEntityType);
 
-		List<CustomFieldValue> customFieldValues = DemoEntityParams.getCustomFieldValues(parentEntityType,
-				entityParams);
+		List<CustomFieldValue> customFieldValues = DemoEntityParams
+				.getCustomFieldValues(parentEntityType, entityParams);
 
 		// the updated custom field values
 		List<CustomFieldValue> updatedCustomFieldValues = new ArrayList<>();
@@ -310,8 +310,10 @@ public class DemoTestCustomFiledValueService {
 					entityParams.getLinkedTypeKey(), false);
 			// Add All custom fields
 			updatedCustomFieldValues.addAll(clientCustomInformation);
-			if (clientCustomInformation.isEmpty())
+			if (clientCustomInformation.isEmpty()) {
+				System.out.println("WARNING: cannot test update, no custom fields defined for " + parentEntityType);
 				return;
+			}
 		} else {
 			for (CustomFieldValue customFieldValue : customFieldValues) {
 				customFieldValue = DemoUtil.makeNewCustomFieldValue(customFieldValue);
@@ -338,7 +340,7 @@ public class DemoTestCustomFiledValueService {
 	 *            custom field values for this entity. The first one will be deleted
 	 * @throws MambuApiException
 	 */
-	private static void deleteCustomField(MambuEntityType parentEntity , String entityId ,
+	private static void deleteCustomField(MambuEntityType parentEntity, String entityId,
 			List<CustomFieldValue> customFieldValues) throws MambuApiException {
 
 		System.out.println("\nIn deleteCustomField");
@@ -364,8 +366,8 @@ public class DemoTestCustomFiledValueService {
 			boolean deleteStatus = customFieldsService.delete(parentEntity, entityId, customFieldValue);
 			// Log results
 			String statusMessage = (deleteStatus) ? "Success" : "Failure";
-			System.out.println(statusMessage + " deleting Custom Field, ID=" + customFieldId + " for demo " + entityName
-					+ " with ID=" + entityId);
+			System.out.println(statusMessage + " deleting Custom Field, ID=" + customFieldId + " for demo "
+					+ entityName + " with ID=" + entityId);
 		} catch (MambuApiException e) {
 			System.out.println("Exception deleting field: " + customFieldId + " Message:" + e.getMessage());
 		}
