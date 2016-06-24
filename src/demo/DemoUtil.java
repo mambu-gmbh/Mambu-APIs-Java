@@ -127,6 +127,7 @@ public class DemoUtil {
 	public static String exceptionLogPrefix = "*** Exception *** ";
 
 	public static void setUp() {
+
 		// get Logging properties file
 		try {
 
@@ -177,6 +178,7 @@ public class DemoUtil {
 	}
 
 	private static void initData() {
+
 		loansProductsMap = null;
 		savingsProductsMap = null;
 	}
@@ -185,6 +187,7 @@ public class DemoUtil {
 
 	// Get IDs for the demo entities defined in the Properties file
 	private static void getDemoEntitiesIDs(Properties properties) {
+
 		if (properties == null) {
 			System.out.println("Null  Properties file, cannot obtain demo data");
 			return;
@@ -236,6 +239,7 @@ public class DemoUtil {
 	// This would allow leaving undefined properties blank in the configuration file instead of commenting them out each
 	// time
 	private static String makeNullIfEmpty(String param) {
+
 		if (param == null || param.trim().length() == 0) {
 			return null;
 		}
@@ -248,6 +252,7 @@ public class DemoUtil {
 	 * @return
 	 */
 	public static MambuAPIServiceFactory getAPIServiceFactory() {
+
 		return getAPIServiceFactory(false);
 	}
 
@@ -260,6 +265,7 @@ public class DemoUtil {
 	 * @return
 	 */
 	public static MambuAPIServiceFactory getAPIServiceFactory(boolean secondaryDomain) {
+
 		if (!secondaryDomain) {
 			return MambuAPIServiceFactory.getFactory(domain, user, password);
 		} else {
@@ -275,6 +281,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static User getDemoUser() throws MambuApiException {
+
 		System.out.println("\nIn getDemoUser");
 
 		UsersService usersService = MambuAPIFactory.getUsersService();
@@ -290,6 +297,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static Branch getDemoBranch() throws MambuApiException {
+
 		System.out.println("\nIn getDemoBranch");
 
 		OrganizationService orgService = MambuAPIFactory.getOrganizationService();
@@ -309,6 +317,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static Centre getDemoCentre() throws MambuApiException {
+
 		System.out.println("\nIn getDemoCentre");
 
 		OrganizationService orgService = MambuAPIFactory.getOrganizationService();
@@ -329,6 +338,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static Client getDemoClient() throws MambuApiException {
+
 		return getDemoClient(false);
 	}
 
@@ -343,6 +353,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static Client getDemoClient(boolean secondaryDomain) throws MambuApiException {
+
 		System.out.println("\nIn getDemoClient with secondaryDomain flag=" + secondaryDomain);
 
 		ClientsService clientsService = (secondaryDomain) ? getAPIServiceFactory(true).getClientService()
@@ -380,6 +391,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static Client getDemoClient(String clientId) throws MambuApiException {
+
 		System.out.println("\nIn getDemoClient for id=" + clientId);
 
 		// If clientId ID is null and nothing is specified in the configuration file then get by the first and last name
@@ -409,6 +421,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static ClientExpanded getDemoClientDetails(String clientId) throws MambuApiException {
+
 		System.out.println("\nIn getDemoClient with details for id=" + clientId);
 
 		ClientsService clientsService = MambuAPIFactory.getClientService();
@@ -436,6 +449,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static Group getDemoGroup() throws MambuApiException {
+
 		System.out.println("\nIn getDemoGroup");
 
 		ClientsService clientsService = MambuAPIFactory.getClientService();
@@ -464,6 +478,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static Group getDemoGroup(String groupId) throws MambuApiException {
+
 		System.out.println("\nIn getDemoGroup for id=" + groupId);
 
 		// If groupId ID is null and nothing is specified in the configuration file then get a random one
@@ -492,6 +507,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static GroupExpanded getDemoGroupDetails(String groupId) throws MambuApiException {
+
 		System.out.println("\nIn getDemoGroup for id=" + groupId);
 
 		ClientsService clientsService = MambuAPIFactory.getClientService();
@@ -518,6 +534,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static LoanProduct getDemoLoanProduct() throws MambuApiException {
+
 		System.out.println("\nIn getDemoLoanProduct");
 
 		LoansService service = MambuAPIFactory.getLoanService();
@@ -556,6 +573,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static LoanProduct getDemoLoanProduct(String productId) throws MambuApiException {
+
 		System.out.println("\nIn getDemoLoanProduct by ID=" + productId);
 
 		// If provided ID is null and nothing is specified in the configuration file then get a random one
@@ -589,6 +607,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static LoanProduct getDemoLoanProduct(LoanProductType productType) throws MambuApiException {
+
 		if (productType == null) {
 			return null;
 		}
@@ -642,6 +661,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static SavingsProduct getDemoSavingsProduct(SavingsType productType) throws MambuApiException {
+
 		if (productType == null) {
 			return null;
 		}
@@ -693,6 +713,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static SavingsProduct getDemoSavingsProduct() throws MambuApiException {
+
 		System.out.println("\nIn getDemoSavingsProduct");
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
@@ -729,6 +750,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static SavingsProduct getDemoSavingsProduct(String productId) throws MambuApiException {
+
 		System.out.println("\nIn getDemoSavingsProduct by ID=" + productId);
 
 		// If provided ID is null and nothing is specified in the configuration file then get a random one
@@ -758,6 +780,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static LoanAccount getDemoLoanAccount() throws MambuApiException {
+
 		System.out.println("\nIn getDemoLoanAccount");
 
 		LoansService service = MambuAPIFactory.getLoanService();
@@ -784,6 +807,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static LoanAccount getDemoLoanAccount(String accountId) throws MambuApiException {
+
 		System.out.println("\nIn getDemoLoanAccount by ID-" + accountId);
 
 		// If provided ID is null and nothing is specified in the configuration file then get a random one
@@ -801,17 +825,16 @@ public class DemoUtil {
 	}
 
 	/**
-	 * Get demo loan transaction by loan accountID
+	 * Get the first 10 loan transactions for a loan account
 	 * 
 	 * @param accountId
-	 *            account ID. Can be null. If null, then "demoLaonAccountId" parameter specified in the configuration
-	 *            file is used. If the configuration parameter is absent (or is empty) then random loan account is
-	 *            retrieved. See {@link #getDemoLoanAccount())}
+	 *            loan account id
 	 * @return loan transaction for the loan account
 	 * @throws MambuApiException
 	 */
-	public static LoanTransaction getDemoLoanTransaction(String accountId) throws MambuApiException {
-		System.out.println("\nIn getDemoLoanTransaction by ID-" + accountId);
+	public static List<LoanTransaction> getLoanTransactions(String accountId) throws MambuApiException {
+
+		System.out.println("\nIn getLoanTransactions by ID-" + accountId);
 
 		// If provided ID is null and nothing is specified in the configuration file then get a random one
 		if (accountId == null && demoLaonAccountId == null) {
@@ -823,12 +846,57 @@ public class DemoUtil {
 		// Use the provided ID if it is not null, otherwise use the one defined in the configuration file
 		accountId = (accountId != null) ? accountId : demoLaonAccountId;
 		LoansService service = MambuAPIFactory.getLoanService();
-		List<LoanTransaction> loanTransactions = service.getLoanAccountTransactions(accountId, null, "5");
+		return service.getLoanAccountTransactions(accountId, null, "10");
+	}
+	/**
+	 * Get demo loan transaction by loan accountID
+	 * 
+	 * @param accountId
+	 *            account ID. Can be null. If null, then "demoLaonAccountId" parameter specified in the configuration
+	 *            file is used. If the configuration parameter is absent (or is empty) then random loan account is
+	 *            retrieved. See {@link #getDemoLoanAccount())}
+	 * @return loan transaction for the loan account
+	 * @throws MambuApiException
+	 */
+	public static LoanTransaction getDemoLoanTransaction(String accountId) throws MambuApiException {
+
+		System.out.println("\nIn getDemoLoanTransaction by ID-" + accountId);
+		// Use get transactions helper
+		List<LoanTransaction> loanTransactions = getLoanTransactions(accountId);
+		return loanTransactions != null ? loanTransactions.get(0) : null;
+
+	}
+
+	/**
+	 * Get demo loan transaction containing transaction details by loan accountID. Use this method to test operations
+	 * requiring transaction channel, which is present only in transactions supporting transaction details. For example
+	 * loan transaction INTEREST_APPLIED will not contain transaction details
+	 * 
+	 * @param accountId
+	 *            account ID. Can be null. If null, then "demoLaonAccountId" parameter specified in the configuration
+	 *            file is used. If the configuration parameter is absent (or is empty) then random loan account is
+	 *            retrieved. See {@link #getDemoLoanAccount())}
+	 * @return loan transaction with transaction details
+	 * @throws MambuApiException
+	 */
+	public static LoanTransaction getDemoLoanTransactionWithDetails(String accountId) throws MambuApiException {
+
+		System.out.println("\nIn getDemoLoanTransactionWithDetails by ID-" + accountId);
+		// Use get transactions helper
+		List<LoanTransaction> loanTransactions = getLoanTransactions(accountId);
+
 		if (loanTransactions == null) {
 			return null;
 		}
 
-		return loanTransactions.get(0);
+		// Find transaction with the non-null transaction details
+		for (LoanTransaction loanTransaction : loanTransactions) {
+			if (loanTransaction.getDetails() != null) {
+				return loanTransaction;
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -838,6 +906,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static SavingsAccount getDemoSavingsAccount() throws MambuApiException {
+
 		System.out.println("\nIn getDemoSavingsAccount");
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
@@ -865,6 +934,7 @@ public class DemoUtil {
 	 * @throws MambuApiException
 	 */
 	public static SavingsAccount getDemoSavingsAccount(String accountId) throws MambuApiException {
+
 		System.out.println("\nIn getDemoSavingsAccount by ID=" + accountId);
 		// If provided ID is null and nothing is specified in the configuration file then get a random one
 		if (accountId == null && demoSavingsAccountId == null) {
@@ -890,6 +960,7 @@ public class DemoUtil {
 	 * @return new custom field value
 	 */
 	public static CustomFieldValue makeNewCustomFieldValue(CustomFieldSet set, CustomFieldValue value) {
+
 		if (value == null) {
 			return new CustomFieldValue();
 		}
@@ -904,6 +975,7 @@ public class DemoUtil {
 	 * @return new custom field value
 	 */
 	public static CustomFieldValue makeNewCustomFieldValue(CustomFieldValue value) {
+
 		if (value == null) {
 			return new CustomFieldValue();
 		}
@@ -1071,6 +1143,7 @@ public class DemoUtil {
 	 */
 	public static List<CustomFieldValue> makeForEntityCustomFieldValues(CustomFieldType customFieldType,
 			String entityKey) throws MambuApiException {
+
 		boolean requiredOnly = true;
 
 		return makeForEntityCustomFieldValues(customFieldType, entityKey, requiredOnly);
@@ -1137,6 +1210,7 @@ public class DemoUtil {
 	 *            entity id
 	 */
 	public static void logCustomFieldValues(List<CustomFieldValue> customFieldValues, String name, String entityId) {
+
 		System.out.println("\nCustom Field Values for entity " + name + " with id=" + entityId);
 		if (customFieldValues == null) {
 			System.out.println("NULL custom field values");
@@ -1165,6 +1239,7 @@ public class DemoUtil {
 	 *            custom fields set
 	 */
 	public static void logCustomFieldSet(CustomFieldSet set) {
+
 		List<CustomField> customFields = set.getCustomFields();
 		System.out.println("\nSet Name=" + set.getName() + "\tType=" + set.getType().toString() + "  Total Fields="
 				+ customFields.size() + "\tUsage=" + set.getUsage());
@@ -1182,6 +1257,7 @@ public class DemoUtil {
 	 * @return field id for one of the active fields or null if not an active field
 	 */
 	public static String logCustomField(CustomField field) {
+
 		if (field == null) {
 			return null;
 		}
@@ -1295,6 +1371,7 @@ public class DemoUtil {
 	 */
 	public static List<CustomPredefinedFee> makeDemoPredefinedFees(HasPredefinedFees product,
 			Set<FeeCategory> feeCategories) {
+
 		if (product == null) {
 			return new ArrayList<>();
 		}
@@ -1367,6 +1444,7 @@ public class DemoUtil {
 	 * @return
 	 */
 	public static String encodeFileIntoBase64String(String absolutePath) {
+
 		final String methodName = "encodeFileIntoBase64String";
 
 		System.out.println("Encoding image file=" + absolutePath);
@@ -1423,6 +1501,7 @@ public class DemoUtil {
 	 * @return byte array
 	 */
 	public static byte[] decodeBase64IntoBytes(String inputStringBase64) {
+
 		System.out.println("\nIn decodeBase64IntoBytes");
 		if (inputStringBase64 == null) {
 			System.out.println("Input is NULL");
@@ -1451,6 +1530,7 @@ public class DemoUtil {
 	 * @throws IOException
 	 */
 	public static BufferedImage decodeBase64(String inputStringBase64) throws IOException {
+
 		System.out.println("\nIn decodeBase64");
 
 		byte[] decodedBytes = decodeBase64IntoBytes(inputStringBase64);
@@ -1471,6 +1551,7 @@ public class DemoUtil {
 	 * @return UTC midnight date
 	 */
 	public static Calendar getCalendarForMidnightUTC() {
+
 		Calendar date = Calendar.getInstance();
 		date.set(date.get(Calendar.YEAR), date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
 		date.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -1483,6 +1564,7 @@ public class DemoUtil {
 	 * @return UTC midnight date
 	 */
 	public static Date getAsMidnightUTC() {
+
 		return getCalendarForMidnightUTC().getTime();
 
 	}
@@ -1492,6 +1574,7 @@ public class DemoUtil {
 	 */
 
 	public static void logException(String methodName, MambuApiException exception) {
+
 		if (exception == null) {
 			return;
 		}
