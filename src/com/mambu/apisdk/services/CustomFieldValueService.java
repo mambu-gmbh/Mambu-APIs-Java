@@ -612,8 +612,7 @@ public class CustomFieldValueService {
 	}
 
 	/**
-	 * Updates a list of custom fields provided as parameter to this method for the parent entity passed as parameter
-	 * with given entity id.
+	 * Update a list of custom fields
 	 * 
 	 * @param parentEntity
 	 *            The parent Mambu entity for which the custom field values will be updated. Must not be null. Example:
@@ -621,8 +620,11 @@ public class CustomFieldValueService {
 	 * @param parentEntityId
 	 *            The entity id or encoded key for the parent entity (e.g. client id). Must not be null.
 	 * @param customFieldValues
-	 *            A list containing the custom fields values to be updated. Must not be null or empty.
-	 * @return
+	 *            A list containing the custom fields values to be updated. Must not be null or empty. Existent custom
+	 *            field values will be updated. If the provided custom field value was not present before - it will be
+	 *            added. Existent custom field values not present in the request will remain unchanged (they will NOT be
+	 *            deleted)
+	 * @return true if custom field values were updated successfully
 	 * @throws MambuApiException
 	 */
 	public boolean update(MambuEntityType parentEntity, String parentEntityId, List<CustomFieldValue> customFieldValues)
