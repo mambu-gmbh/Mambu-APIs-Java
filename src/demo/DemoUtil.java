@@ -28,6 +28,7 @@ import org.apache.commons.codec.binary.Base64;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import com.mambu.accounts.shared.model.DecimalIntervalConstraints;
 import com.mambu.accounts.shared.model.HasPredefinedFees;
 import com.mambu.accounts.shared.model.PredefinedFee;
 import com.mambu.accounts.shared.model.PredefinedFee.AmountCalculationMethod;
@@ -1581,4 +1582,49 @@ public class DemoUtil {
 		System.out.println(exceptionLogPrefix + " " + methodName + " Message: " + exception.getMessage());
 	}
 
+	/**
+	 * Helper to return a value to to be within the specified limits. Return a non-null default or a non-null limit
+	 * value. Return the provided noLimitsValue if no constraints were specified
+	 * 
+	 * @param defaultValue
+	 *            default value
+	 * @param min
+	 *            minimum possible value
+	 * @param max
+	 *            maximum possible value
+	 * @param noLimitsValue
+	 *            value to be returned if no default or limits are defined (all null)
+	 * @return any non null constraint or noLimitsValue value
+	 */
+	public static <T> T getValueMatchingConstraints(T defaultValue, T min, T max, T noLimitsValue) {
+
+		if (defaultValue == null && min == null && max == null) {
+			return noLimitsValue;
+		}
+		// return first non null constraint reviewing in default, min, max sequence
+		return defaultValue != null ? defaultValue : min != null ? min : max;
+
+	}
+
+	/**
+	 * Helper to return a value to to be within the specified DecimalIntervalConstraints. Return the provided
+	 * noLimitsValue if no constraints were specified
+	 * 
+	 * @param constraints
+	 *            Decimal Interval Constraints
+	 * @param noLimitsValue
+	 *            value to be returned if no constraints
+	 * @return any non null constraint or noLimitsValue value
+	 */
+	public static BigDecimal getValueMatchingConstraints(DecimalIntervalConstraints constraints,
+			BigDecimal noLimitsValue) {
+
+		if (constraints == null) {
+			return noLimitsValue;
+		}
+		// return first non null constraint reviewing in default, min, max sequence
+		return getValueMatchingConstraints(constraints.getDefaultValue(), constraints.getMinValue(),
+				constraints.getMaxValue(), noLimitsValue);
+
+	}
 }
