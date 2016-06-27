@@ -13,6 +13,7 @@ import java.util.TimeZone;
 import com.mambu.accounting.shared.model.GLAccountingRule;
 import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.accounts.shared.model.AccountState;
+import com.mambu.accounts.shared.model.DecimalIntervalConstraints;
 import com.mambu.accounts.shared.model.InterestRateSource;
 import com.mambu.accounts.shared.model.PredefinedFee;
 import com.mambu.accounts.shared.model.PrincipalPaymentMethod;
@@ -31,6 +32,7 @@ import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.services.LoansService;
+import com.mambu.apisdk.services.RepaymentsService;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.APIData.CLOSER_TYPE;
@@ -57,10 +59,12 @@ import com.mambu.loans.shared.model.LoanTranche;
 import com.mambu.loans.shared.model.LoanTransaction;
 import com.mambu.loans.shared.model.LoanTransactionType;
 import com.mambu.loans.shared.model.PrincipalPaymentAccountSettings;
+import com.mambu.loans.shared.model.ProductArrearsSettings;
 import com.mambu.loans.shared.model.Repayment;
 import com.mambu.loans.shared.model.RepaymentScheduleMethod;
 import com.mambu.loans.shared.model.ScheduleDueDatesMethod;
 import com.mambu.savings.shared.model.SavingsAccount;
+import com.mambu.savings.shared.model.SavingsType;
 
 import demo.DemoUtil.FeeCategory;
 
@@ -141,6 +145,7 @@ public class DemoTestLoanService {
 					testApproveLoanAccount();
 					testUndoApproveLoanAccount();
 					testUpdateLoanAccount();
+					testApplyFeeToLoanAccount();
 
 					// Test REJECT and WITHDRAW transactions first
 					// Test Close and UNDO Close as REJECT and WITHDRAW first
@@ -157,15 +162,11 @@ public class DemoTestLoanService {
 					testCreateJsonAccount();
 					testRequestApprovalLoanAccount(); // Available since 3.13
 					testApproveLoanAccount();
-					testUpdatingAccountTranches(); // Available since 3.12.3
-					testUpdatingAccountFunds(); // Available since 3.13
 
 					// Test Disburse and Undo disburse
 					testDisburseLoanAccount();
 					testUndoDisburseLoanAccount(); // Available since 3.9
-
 					testDisburseLoanAccount();
-					testApplyFeeToLoanAccount();
 					testGetLoanAccountTransactions();
 
 					testLockLoanAccount(); // Available since 3.6
@@ -336,7 +337,7 @@ public class DemoTestLoanService {
 
 	}
 
-	// Update Loan account
+	// Update Loan account. Currently API supports only udtaing custom fields for the loan account
 	public static void testUpdateLoanAccount() throws MambuApiException {
 
 		System.out.println(methodName = "\nIn testUpdateLoanAccount");
@@ -348,18 +349,24 @@ public class DemoTestLoanService {
 		List<CustomFieldValue> customFields = newAccount.getCustomFieldValues();
 		List<CustomFieldValue> updatedFields = new ArrayList<CustomFieldValue>();
 
-		if (customFields != null) {
+		if (customFields != null && customFields.size() > 0) {
 			for (CustomFieldValue value : customFields) {
 				value = DemoUtil.makeNewCustomFieldValue(value);
 				updatedFields.add(value);
 			}
 		} else {
-			System.out.println("WARNING: no custom fields to update for account " + updatedAccount.getId());
+			System.out.println("Adding new custom fields to the account " + updatedAccount.getId());
+			updatedFields = DemoUtil.makeForEntityCustomFieldValues(CustomFieldType.LOAN_ACCOUNT_INFO,
+					newAccount.getProductTypeKey(), false);
 		}
+		updatedAccount.setCustomFieldValues(updatedFields);
 
-		// Update account in Mambu
+		// TODO: Temporary clear interest rate fields when updating fields for Funded Investor account: Mambu rejects
+		// the request if interest rate fields are present
+		clearInterestRateFieldsForFunderAccounts(demoProduct, updatedAccount);
+
+		// Submit API request to Update account in Mambu
 		LoanAccount updatedAccountResult = loanService.updateLoanAccount(updatedAccount);
-
 		System.out.println("Loan Update OK, ID=" + updatedAccountResult.getId() + "\tAccount Name="
 				+ updatedAccountResult.getName());
 
@@ -908,8 +915,18 @@ public class DemoTestLoanService {
 		boolean needRepaymentNumber = productType == LoanProductType.FIXED_TERM_LOAN
 				|| productType == LoanProductType.PAYMENT_PLAN;
 		Integer repaymentNumber = needRepaymentNumber ? 3 : null;
-		String notes = "Fee Notes";
+		// TODO: For fixed interest commission product schedule is not defined until all funds are assigned and interest
+		// rate is calculated. Check wither if rate is greater than zero or if the scheule exists
+		if (needRepaymentNumber) {
+			RepaymentsService repayemntService = MambuAPIFactory.getRepaymentsService();
+			List<Repayment> repaymnts = repayemntService.getLoanAccountRepayments(NEW_LOAN_ACCOUNT_ID, null, null);
+			if (repaymnts == null || repaymnts.size() == 0) {
+				System.out.println("WARNING: cannot set repayment number for Apply Fee: NO schedule is available");
+				return;
+			}
+		}
 
+		String notes = "Fee Notes";
 		// Create demo fees to apply. Get Manual fees only
 		List<CustomPredefinedFee> productFees = DemoUtil.makeDemoPredefinedFees(demoProduct,
 				new HashSet<>(Collections.singletonList(FeeCategory.MANUAL)));
@@ -955,7 +972,6 @@ public class DemoTestLoanService {
 		}
 
 	}
-
 	public static void testApplyInterestToLoanAccount() throws MambuApiException {
 
 		System.out.println(methodName = "\nIn testApplyInterestToLoanAccount");
@@ -1336,8 +1352,10 @@ public class DemoTestLoanService {
 		System.out.println("Product=" + product.getName() + "\tId=" + product.getId() + "\tProduct Type="
 				+ product.getLoanProductType() + "\tAccountingRules=" + totalAccountingRules);
 
-	}
+		// Log product Security Settings for Funded Account
+		logProductSecuritySettings(product.getProductSecuritySettings());
 
+	}
 	public static void testGetLoanProductSchedule() throws MambuApiException {
 
 		System.out.println(methodName = "\nIn testGetLoanProductSchedule");
@@ -1421,17 +1439,9 @@ public class DemoTestLoanService {
 		DisbursementDetails disbursementDetails = new DisbursementDetails();
 		loanAccount.setDisbursementDetails(disbursementDetails);
 
-		// LoanAmount
-		Money amountDef = demoProduct.getDefaultLoanAmount();
-		Money amountMin = demoProduct.getMinLoanAmount();
-		Money amountMax = demoProduct.getMaxLoanAmount();
-		Money amount = amountDef;
-		amount = amount == null && amountMin != null ? amountMin : amount;
-		amount = amount == null && amountMax != null ? amountMax : amount;
-		if (amount == null) {
-			// Is still null, so no limits
-			amount = new Money(3000.00f);
-		}
+		// LoanAmount. Set within product limits
+		Money amount = DemoUtil.getValueMatchingConstraints(demoProduct.getDefaultLoanAmount(),
+				demoProduct.getMinLoanAmount(), demoProduct.getMaxLoanAmount(), new Money(3000.00f));
 		loanAccount.setLoanAmount(amount); // Mandatory
 
 		// Add periodic payment: required and is mandatory for BALLOON_PAYMENTS products
@@ -1447,24 +1457,22 @@ public class DemoTestLoanService {
 		if (demoProduct.getRepaymentScheduleMethod() != RepaymentScheduleMethod.NONE) {
 			InterestProductSettings intRateSettings = demoProduct.getInterestRateSettings();
 			InterestRateSource rateSource = intRateSettings == null ? null : intRateSettings.getInterestRateSource();
-
-			BigDecimal interestRateDef = intRateSettings == null ? null : intRateSettings.getDefaultInterestRate();
-			BigDecimal interestRateMin = intRateSettings == null ? null : intRateSettings.getMinInterestRate();
-			BigDecimal interestRateMax = intRateSettings == null ? null : intRateSettings.getMaxInterestRate();
-
-			interestRate = interestRateDef;
-			interestRate = interestRate == null && interestRateMin != null ? interestRateMin : interestRate;
-			interestRate = interestRate == null && interestRateMax != null ? interestRateMax : interestRate;
-			if (interestRate == null) {
-				// Is still null, so no limits
-				interestRate = new BigDecimal(6.5f);
-			}
+			// Create blank new InterestProductSettings if null for convenience
+			intRateSettings = intRateSettings != null ? intRateSettings : new InterestProductSettings();
+			// Set within product limits
+			interestRate = DemoUtil.getValueMatchingConstraints(intRateSettings.getDefaultInterestRate(),
+					intRateSettings.getMinInterestRate(), intRateSettings.getMaxInterestRate(), new BigDecimal(6.5f));
 
 			if (rateSource == InterestRateSource.INDEX_INTEREST_RATE) {
 				loanAccount.setInterestSpread(interestRate); // set the spread
 			} else {
 				loanAccount.setInterestRate(interestRate); // set the rate
 			}
+
+			loanAccount.setInterestRateSource(rateSource);
+
+			// Interest Rate fields should not be set for some accounts with Funding Sources enabled
+			clearInterestRateFieldsForFunderAccounts(demoProduct, loanAccount);
 		}
 
 		// Set PrincipalPaymentSettings from product: needed for Revolving Credit products since 3.14
@@ -1482,21 +1490,16 @@ public class DemoTestLoanService {
 			PrincipalPaymentMethod method = productPaymentSettings.getPrincipalPaymentMethod();
 			switch (method) {
 			case FLAT:
-				Money defAmount = productPaymentSettings.getDefaultAmount();
-				Money minAmount = productPaymentSettings.getMinAmount();
-				Money maxAmount = productPaymentSettings.getMaxAmount();
-				Money principalAmount = defAmount != null ? defAmount : minAmount;
-				principalAmount = principalAmount != null ? principalAmount : maxAmount;
-				principalAmount = principalAmount != null ? principalAmount : new Money(100);
+				// Set principalAmount to be within product settings
+				Money principalAmount = DemoUtil.getValueMatchingConstraints(productPaymentSettings.getDefaultAmount(),
+						productPaymentSettings.getMinAmount(), productPaymentSettings.getMaxAmount(), new Money(100));
 				principlaAccountSettings.setAmount(principalAmount);
 				break;
 			case OUTSTANDING_PRINCIPAL_PERCENTAGE:
-				BigDecimal defPercent = productPaymentSettings.getDefaultPercentage();
-				BigDecimal minPercent = productPaymentSettings.getMinPercentage();
-				BigDecimal maxPercent = productPaymentSettings.getMaxPercentage();
-				BigDecimal principalPercent = defPercent != null ? defPercent : minPercent;
-				principalPercent = principalPercent != null ? principalPercent : maxPercent;
-				principalPercent = principalPercent != null ? principalPercent : new BigDecimal(2);
+				// Set principalPercent to be within product settings
+				BigDecimal principalPercent = DemoUtil.getValueMatchingConstraints(
+						productPaymentSettings.getDefaultPercentage(), productPaymentSettings.getMinPercentage(),
+						productPaymentSettings.getMaxPercentage(), new BigDecimal(2));
 				principlaAccountSettings.setPercentage(principalPercent);
 				break;
 			}
@@ -1549,14 +1552,11 @@ public class DemoTestLoanService {
 		}
 
 		// RepaymentInstallments
-		Integer repaymentInsatllments = demoProduct.getDefaultNumInstallments();
-		repaymentInsatllments = repaymentInsatllments == null ? demoProduct.getMinNumInstallments()
-				: repaymentInsatllments;
-		repaymentInsatllments = repaymentInsatllments == null ? demoProduct.getMaxNumInstallments()
-				: repaymentInsatllments;
+		Integer repaymentInsatllments = DemoUtil.getValueMatchingConstraints(demoProduct.getDefaultNumInstallments(),
+				demoProduct.getMinNumInstallments(), demoProduct.getMaxNumInstallments(), 12);
 		// # of RepaymentInsatllments is not applicable to REVOLVING_CREDIT
-		if (repaymentInsatllments == null && productType != LoanProductType.REVOLVING_CREDIT) {
-			repaymentInsatllments = 10;
+		if (productType == LoanProductType.REVOLVING_CREDIT) {
+			repaymentInsatllments = null;
 		}
 		loanAccount.setRepaymentInstallments(repaymentInsatllments);
 		// PrincipalRepaymentInterval
@@ -1568,24 +1568,16 @@ public class DemoTestLoanService {
 		// Penalty Rate
 		loanAccount.setPenaltyRate(null);
 		if (demoProduct.getLoanPenaltyCalculationMethod() != LoanPenaltyCalculationMethod.NONE) {
-			BigDecimal defPenaltyRate = demoProduct.getDefaultPenaltyRate();
-			BigDecimal minPenaltyRate = demoProduct.getMinPenaltyRate();
-			BigDecimal maxPenaltyRate = demoProduct.getMaxPenaltyRate();
-			BigDecimal penaltyRate = defPenaltyRate;
-			penaltyRate = (penaltyRate == null && minPenaltyRate != null) ? minPenaltyRate : penaltyRate;
-			penaltyRate = (penaltyRate == null && maxPenaltyRate != null) ? maxPenaltyRate : penaltyRate;
+			BigDecimal penaltyRate = DemoUtil.getValueMatchingConstraints(demoProduct.getDefaultPenaltyRate(),
+					demoProduct.getMinPenaltyRate(), demoProduct.getMaxPenaltyRate(), new BigDecimal(0.5f));
 			loanAccount.setPenaltyRate(penaltyRate);
 		}
 
 		// GracePeriod
 		loanAccount.setGracePeriod(null);
 		if (demoProduct.getGracePeriodType() != GracePeriodType.NONE) {
-			Integer defGrace = demoProduct.getDefaultGracePeriod();
-			Integer minGrace = demoProduct.getMinGracePeriod();
-			Integer maxGrace = demoProduct.getMaxGracePeriod();
-			Integer gracePeriod = defGrace;
-			gracePeriod = (gracePeriod == null && minGrace != null) ? minGrace : gracePeriod;
-			gracePeriod = (gracePeriod == null && maxGrace != null) ? maxGrace : gracePeriod;
+			Integer gracePeriod = DemoUtil.getValueMatchingConstraints(demoProduct.getDefaultGracePeriod(),
+					demoProduct.getMinGracePeriod(), demoProduct.getMaxGracePeriod(), null);
 			loanAccount.setGracePeriod(gracePeriod);
 
 		}
@@ -1598,19 +1590,6 @@ public class DemoTestLoanService {
 			guarantySecurity.setGuarantorKey(demoClient.getEncodedKey());
 			guarantySecurity.setGuarantorType(demoClient.getAccountHolderType()); // Mambu now supports guarantor type
 			guarantees.add(guarantySecurity);
-
-			// Since 4.2 we may need also to set Interest Commission at account level, especially if there is no default
-			// in product. See MBU-13388
-			ProductSecuritySettings productSecuritySettings = demoProduct.getProductSecuritySettings();
-			// TODO: Check for allowed Interest Commission range (min/max/def). And the Interest
-			// Commission cannot be greater than the Interest rate itself
-			if (interestRate != null) {
-				// For testing (for now) set the interestCommission to be 1/3 of the actual interest rate.
-				BigDecimal interestCommission = interestRate.divide(new BigDecimal(3));
-				productSecuritySettings.setInterestCommission(interestCommission);
-			}
-
-			// TODO: set also custom interest commission for each funding source. See MBU-13391
 
 		}
 		if (demoProduct.isCollateralEnabled()) {
@@ -1631,21 +1610,44 @@ public class DemoTestLoanService {
 			try {
 				SavingsService savingsService = MambuAPIFactory.getSavingsService();
 				List<SavingsAccount> clientSavings = savingsService.getSavingsAccountsForClient(demoClient.getId());
-				SavingsAccount savingsAccount = clientSavings != null && clientSavings.size() > 0 ? clientSavings
-						.get(0) : null;
-				savingsAccountKey = savingsAccount != null ? savingsAccount.getEncodedKey() : null;
-			} catch (MambuApiException e) {
+				// Only savings of SavingsType.INVESTOR_ACCOUNT can be investors
+				if (clientSavings != null) {
+					for (SavingsAccount account : clientSavings) {
+						if (account.getAccountType() == SavingsType.INVESTOR_ACCOUNT
+								&& account.getCurrency().isBaseCurrency()
+								&& account.getAccountState() == AccountState.ACTIVE && account.getBalance() != null
+								&& account.getBalance().isPositive()) {
+							savingsAccountKey = account.getEncodedKey();
+							break;
 
+						}
+					}
+				}
+
+			} catch (MambuApiException e) {
+				DemoUtil.logException(methodName, e);
 			}
-			InvestorFund investor = new InvestorFund();
-			investor.setAmount(loanAccount.getLoanAmount());
-			investor.setSavingsAccountKey(savingsAccountKey);
-			// Mambu Supports both Client and Groups as investors since 4.0. See MBU-11403
-			investor.setGuarantorKey(demoClient.getEncodedKey());
-			investor.setGuarantorType(demoClient.getAccountHolderType());
-			funds.add(investor);
+
+			if (savingsAccountKey != null) {
+				InvestorFund investor = new InvestorFund();
+				investor.setAmount(loanAccount.getLoanAmount());
+				investor.setSavingsAccountKey(savingsAccountKey);
+				// Mambu Supports both Client and Groups as investors since 4.0. See MBU-11403
+				investor.setGuarantorKey(demoClient.getEncodedKey());
+				investor.setGuarantorType(demoClient.getAccountHolderType());
+				// Since Mambu 4.2 we may also need to set Funder's commission. See MBU-13388 and MBU-13407
+				setFunderInterestCommission(demoProduct, investor);
+				funds.add(investor);
+			} else {
+				System.out
+						.println("WARNING:cannot find Savings Funding account: add applicable INVESTOR_ACCOUNT accounts");
+			}
+
+			// Since 4.2 we should set the Interest Commission at account level, especially if there is no product
+			// default. See MBU-13407 and MBU-13388
+			setOrganizationInterestCommission(demoProduct, loanAccount);
 		}
-		// loanAccount.setFunds(funds);
+		loanAccount.setFunds(funds);
 
 		// Set first repayment date
 		Date firstRepaymentDate = makeFirstRepaymentDate(loanAccount, demoProduct, false);
@@ -1667,6 +1669,15 @@ public class DemoTestLoanService {
 		if (productType == LoanProductType.REVOLVING_CREDIT) {
 			loanAccount.setDisbursementDetails(null);
 		}
+
+		// Set the Arrears Tolerance Period. Since 4.2 the product may specify the constraints, See MBU-13376
+		Integer arrearsTolerancePeriod = null;
+		ProductArrearsSettings arrearsSettings = demoProduct.getArrearsSettings();
+		if (arrearsSettings != null) {
+			arrearsTolerancePeriod = DemoUtil.getValueMatchingConstraints(arrearsSettings.getDefaultTolerancePeriod(),
+					arrearsSettings.getMinTolerancePeriod(), arrearsSettings.getMaxTolerancePeriod(), 0);
+		}
+		loanAccount.setArrearsTolerancePeriod(arrearsTolerancePeriod);
 
 		loanAccount.setNotes("Created by DemoTest on " + new Date());
 		return loanAccount;
@@ -1769,7 +1780,7 @@ public class DemoTestLoanService {
 		if (account == null || product == null) {
 			return null;
 		}
-		// Get current date first, if avaiable
+		// Get current date first, if available
 		DisbursementDetails disbursementDetails = account.getDisbursementDetails();
 		Date disbDate = disbursementDetails != null ? disbursementDetails.getExpectedDisbursementDate() : null;
 		if (disbDate == null) {
@@ -1911,6 +1922,128 @@ public class DemoTestLoanService {
 				}
 				System.out.println("\tPredefinedFee=" + fee.getEncodedKey() + "\tAmount=" + fee.getAmount());
 			}
+		}
+	}
+
+	/**
+	 * Log Loan product ProductSecuritySettings details
+	 * 
+	 * @param settings
+	 *            Product Security Settings
+	 */
+	private static void logProductSecuritySettings(ProductSecuritySettings settings) {
+
+		if (settings == null) {
+			System.out.println("\tNULL ProductSecuritySettings");
+			return;
+		}
+		// What is enabled
+		System.out.println("\tEnabled: InvestorFunds=" + settings.isInvestorFundsEnabled() + "\tGuarantors="
+				+ settings.isGuarantorsEnabled() + "\tCollateral=" + settings.isCollateralEnabled());
+		// Values
+		System.out.println("\tRequired Guarantees:" + settings.getRequiredGuaranties() + "\tRequired Funds="
+				+ settings.getRequiredInvestorFunds());
+		// Organization Interest Commission
+		DecimalIntervalConstraints organizationLimits = settings.getOrganizationInterestCommission();
+		if (organizationLimits != null) {
+			System.out.println("\tOrganization Commission:\tDefault=" + organizationLimits.getDefaultValue() + "\tMin="
+					+ organizationLimits.getMinValue() + "\tMax=" + organizationLimits.getMaxValue());
+		}
+		// Funder Interest Commission
+		System.out.println("\tFinder Commission Type=" + settings.getFunderInterestCommissionAllocationType());
+		DecimalIntervalConstraints funderLimits = settings.getOrganizationInterestCommission();
+		if (funderLimits != null) {
+			System.out.println("\tFinder Commission:\tDefault=" + funderLimits.getDefaultValue() + "\tMin="
+					+ funderLimits.getMinValue() + "\tMax=" + funderLimits.getMaxValue());
+		}
+
+	}
+
+	/**
+	 * Helper to set Organization Interest Rate Commission field for loan account according to the product settings
+	 * 
+	 * @param product
+	 *            loan product for the loan account
+	 * @param account
+	 *            loan account in which to set the commission rate
+	 */
+	private static void setOrganizationInterestCommission(LoanProduct product, LoanAccount account) {
+
+		// Set Organization Interest Rate Commission field base don product settings. See MBU-13407
+		if (account == null || product == null || product.getProductSecuritySettings() == null) {
+			return;
+		}
+
+		ProductSecuritySettings settings = product.getProductSecuritySettings();
+		// Get product Organization Interest Commission settings and the value to the non-null limit value
+		DecimalIntervalConstraints organizationLimits = settings.getOrganizationInterestCommission();
+		if (organizationLimits != null) {
+
+			// Set Organization Interest Commission to match product restrictions
+			BigDecimal orgInterestCommission = DemoUtil.getValueMatchingConstraints(organizationLimits, new BigDecimal(
+					0.1f));
+
+			// Check our value against the current interest rate. It cannot be greater
+			BigDecimal interestRate = account.getInterestRate();
+			if (interestRate != null && interestRate.compareTo(orgInterestCommission) <= 0) {
+				orgInterestCommission = interestRate.subtract(new BigDecimal(0.1f));
+			}
+			// Set Organization Interest Commission
+			account.setInterestCommission(orgInterestCommission);
+
+		}
+	}
+
+	/**
+	 * Clear Interest Rate Fields for Loan Accounts with Funding Sources enabled and with FIXED_INTEREST_COMMISSIONS
+	 * FunderInterestCommissionAllocationType
+	 * 
+	 * @param product
+	 *            loan product for the loan account
+	 * 
+	 * @param account
+	 *            loan account in which to clear the interest rate fields
+	 */
+	private static void clearInterestRateFieldsForFunderAccounts(LoanProduct product, LoanAccount account) {
+
+		if (account == null || product == null) {
+			return;
+		}
+
+		// For Fixed Funder Interest Commission the Interest Rate itself must be set to null until all funds are
+		// determined. Note the interest rate for such products is calculated by Mambu. See MBU-13391
+		if (product.isFixedFunderInterestCommission()) {
+			account.setInterestRate(null);
+			account.setInterestRateSource(null);
+		}
+	}
+	/**
+	 * Helper to set Funder Interest Rate commission field for loan account according to the product settings
+	 * 
+	 * @param product
+	 *            loan product for the loan account
+	 * @param investorFund
+	 *            investor Fund for which to set his individual commission rate
+	 */
+	private static void setFunderInterestCommission(LoanProduct product, InvestorFund investorFund) {
+
+		// Set FunderInterest according to the product settings
+		if (investorFund == null || product == null || product.getProductSecuritySettings() == null) {
+			return;
+		}
+
+		// Only FIXED_INTEREST_COMMISSIONS funder needs a funder specific interest commission to be set
+		if (!product.isFixedFunderInterestCommission()) {
+			return;
+		}
+		ProductSecuritySettings settings = product.getProductSecuritySettings();
+		// Get product Funder Interest Commission settings and set the value to the non-null default or limit value
+		DecimalIntervalConstraints funderLimits = settings.getFunderInterestCommission();
+		if (funderLimits != null) {
+			BigDecimal funderInterestCommission = DemoUtil.getValueMatchingConstraints(funderLimits, new BigDecimal(
+					0.1f));
+			// Set Funder Interest Commission
+			investorFund.setInterestCommission(funderInterestCommission);
 		}
 	}
 }
