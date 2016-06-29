@@ -68,7 +68,6 @@ public class AccountingService {
 	 * @throws MambuApiException
 	 */
 	public GLAccount getGLAccount(String glCode) throws MambuApiException {
-
 		// Example GET/api/glaccount/1234123
 		// See MBU-1543
 		return serviceExecutor.execute(getGLAccount, glCode);
@@ -85,7 +84,6 @@ public class AccountingService {
 	 * @throws MambuApiException
 	 */
 	public GLAccount getGLAccount(String glCode, String fromDate, String toDate) throws MambuApiException {
-
 		// Example GET /api/glaccount/1234123?from=2011-10-04&to=2011-11-04
 		// See MBU-1543
 		ParamsMap params = new ParamsMap();
@@ -135,7 +133,6 @@ public class AccountingService {
 	 */
 	public List<GLJournalEntry> getGLJournalEntries(String branchId, Date fromDate, Date toDate)
 			throws MambuApiException {
-
 		// GET /api/gljournalentries?from=1875-05-20&to=1875-05-25&branchID=ABC123
 		// See MBU-1736
 		return (this.getGLJournalEntries(branchId, fromDate, toDate, -1, -1));
@@ -162,7 +159,6 @@ public class AccountingService {
 	 */
 	public List<GLJournalEntry> getGLJournalEntries(String branchID, Date fromDate, Date toDate, Integer offset,
 			Integer limit) throws MambuApiException {
-
 		// GET /api/gljournalentries?from=1875-05-20&to=1875-05-25&branchID=ABC123&offset=50&limit=50
 		// See MBU-1736
 		if (fromDate == null || toDate == null) {
