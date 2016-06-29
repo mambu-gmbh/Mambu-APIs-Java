@@ -9,12 +9,14 @@ import java.util.List;
 import java.util.Map;
 
 import com.mambu.accounting.shared.column.TransactionsDataField;
+import com.mambu.accounting.shared.model.GLJournalEntry;
 import com.mambu.accounts.shared.model.AccountState;
 import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraint;
 import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
 import com.mambu.api.server.handler.core.dynamicsearch.model.JSONSortDetails;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.services.AccountingService;
 import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.services.SavingsService;
@@ -298,7 +300,7 @@ public class DemoTestSearchService {
 		// Test Get Loan Accounts by account ID's first char and account state
 		LoanAccount demoLoanAccount = DemoUtil.getDemoLoanAccount();
 		LoansService loansService = MambuAPIFactory.getLoanService();
-		;
+		
 		constraints = new ArrayList<JSONFilterConstraint>();
 		constraint1 = new JSONFilterConstraint();
 
@@ -374,7 +376,6 @@ public class DemoTestSearchService {
 		// Test Get Savings Accounts Created in the last 20 days
 		SavingsService savingsService = MambuAPIFactory.getSavingsService();
 		constraints = new ArrayList<JSONFilterConstraint>();
-		constraint1 = new JSONFilterConstraint();
 
 		// Filter for Account Creation date to be in the last 20 days
 		constraint1 = new JSONFilterConstraint();
@@ -383,7 +384,7 @@ public class DemoTestSearchService {
 		constraint1.setFilterSelection(SavingsDataField.CREATION_DATE.name());
 		constraint1.setFilterElement(FilterElement.BETWEEN.name());
 		Date now = new Date();
-		final long offsetDays = 20 * 24 * 60 * 60 * 1000; // 20 days
+		long offsetDays = 20 * 24 * 60 * 60 * 1000; // 20 days
 		Date from = new Date(now.getTime() - offsetDays);
 		DateFormat df = new SimpleDateFormat(DateUtils.DATE_FORMAT);
 		constraint1.setValue(df.format(from));
@@ -424,6 +425,41 @@ public class DemoTestSearchService {
 		} else {
 			System.out.println("Warning: Cannot test savings transactions: no savings accounts returned");
 		}
+		
+		//GL Journal Entries
+		AccountingService accountingService = MambuAPIFactory.getAccountingService();
+		constraints = new ArrayList<>();
+		
+		// Filter for amount greater than 1000
+		constraint1 = new JSONFilterConstraint();
+		constraint1.setDataFieldType(DataFieldType.NATIVE.name());
+		constraint1.setDataItemType(DataItemType.SAVINGS_TRANSACTION.name());
+		constraint1.setFilterSelection(TransactionsDataField.AMOUNT.name());
+		constraint1.setFilterElement(FilterElement.EQUALS.name());
+		constraint1.setValue("1000");
+
+		constraints.add(constraint1);
+		
+		// Filter for creation date to be in the last 10 days
+		constraint2 = new JSONFilterConstraint();
+		constraint2.setDataFieldType(DataFieldType.NATIVE.name());
+		constraint2.setFilterSelection(SavingsDataField.CREATION_DATE.name());
+		constraint2.setFilterElement(FilterElement.BETWEEN.name());
+		now = new Date();
+		offsetDays = 10 * 24 * 60 * 60 * 1000; // 10 days
+		from = new Date(now.getTime() - offsetDays);
+		df = new SimpleDateFormat(DateUtils.DATE_FORMAT);
+		constraint2.setValue(df.format(from));
+		constraint2.setSecondValue(df.format(now));
+		
+		constraints.add(constraint2);
+
+		filterConstraints = new JSONFilterConstraints();
+		filterConstraints.setFilterConstraints(constraints);
+		
+		System.out.println("\nTesting Get GL Journal Entries by filters:");
+		List<GLJournalEntry> journalEntries = accountingService.getGLJournalEntries(filterConstraints, offset, limit);
+		System.out.println("Total journal entries returned = " + journalEntries.size());
 	}
 
 	// Test Search Notification Messages by on the Fly filter API
