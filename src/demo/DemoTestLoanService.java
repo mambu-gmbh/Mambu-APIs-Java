@@ -510,9 +510,23 @@ public class DemoTestLoanService {
 		}
 
 		// Test updating existent funds first
+		BigDecimal changeByAmount = new BigDecimal(50.0);
+		// Total amount for all funds should not exceed loan amount to avoid
+		// INVESTORS_TOTAL_AMOUNT_MORE_THAN_LOAN_AMOUNT exception
+		Money loanAmount = theAccount.getLoanAmount();
+		Money fundsTotal = Money.zero();
 		for (InvestorFund fund : funds) {
-			fund.setAmount(fund.getAmount().add(new BigDecimal(50.0)));
-
+			Money currentAmount = fund.getAmount();
+			// Add changeByAmount to the current fund's amount
+			Money newFundAmount = currentAmount == null ? new Money(changeByAmount.doubleValue()) : currentAmount
+					.add(changeByAmount);
+			// Check if we are exceeding total and adjust to match Loan amount total
+			if (fundsTotal.add(newFundAmount).isMoreThan(loanAmount)) {
+				newFundAmount = loanAmount.subtract(fundsTotal);
+			}
+			fund.setAmount(newFundAmount);
+			// Retain running total for all funds
+			fundsTotal = fundsTotal.add(newFundAmount);
 		}
 		System.out.println("\nUpdating existent funds");
 		LoansService loanService = MambuAPIFactory.getLoanService();
@@ -542,7 +556,6 @@ public class DemoTestLoanService {
 		System.out.println("Loan Funds deleted and added for account " + accountId + " Total New Funds="
 				+ result2.getFunds().size());
 	}
-
 	// Test getting Savings Settlement Accounts for a loan account.
 	public static void testGetLoanWithSettlemntAccounts() throws MambuApiException {
 
@@ -787,7 +800,9 @@ public class DemoTestLoanService {
 				+ transaction.getTransactionId());
 
 		// Test reversing this transaction
-		testReverseLoanAccountTransactions(Collections.singletonList(transaction));
+		// TODO: Uncomment call to testReverseLoanAccountTransactions() when support for WTITE_OFF reversal is
+		// implemented. See MBU-13191.
+		// testReverseLoanAccountTransactions(Collections.singletonList(transaction));
 	}
 
 	public static List<LoanTransaction> testGetLoanAccountTransactions() throws MambuApiException {
@@ -807,7 +822,7 @@ public class DemoTestLoanService {
 	}
 
 	// Test Reversing loan transactions. Available since 3.13 for PENALTY_APPLIED transaction. See MBU-9998
-	// Available since 4.2 for REPAYMENT, INTEREST_APPLIED, WRITE_OFF, see
+	// Available since 4.2 for REPAYMENT, FEE, INTEREST_APPLIED. See MBU-13187, MBU-13188, MBU-13189
 	public static void testReverseLoanAccountTransactions(List<LoanTransaction> transactions) throws MambuApiException {
 
 		System.out.println(methodName = "\nIn testReverseLoanAccountTransactions");
@@ -827,13 +842,15 @@ public class DemoTestLoanService {
 			}
 			LoanTransactionType originalTransactionType = transaction.getType();
 			// as of Mambu 3.13 PENALTY_APPLIED transaction can be reversed
-			// As of Mambu 4.2 REPAYMENT, INTEREST_APPLIED, WRITE_OFF can be reversed
+			// As of Mambu 4.2 REPAYMENT, FEE, INTEREST_APPLIED can be reversed
 			switch (originalTransactionType) {
 			case PENALTY_APPLIED:
 			case REPAYMENT:
 			case FEE:
 			case INTEREST_APPLIED:
-			case WRITE_OFF:
+				// TODO: Uncomment the case WRITE_OF line below and test WRITE_OFF reversal when support for WTITE_OFF
+				// reversal is implemented. See MBU-13191.
+				// case WRITE_OFF:
 				reversalTested = true;
 				// Try reversing supported transaction type
 				// Catch exceptions: For example, if there were later transactions logged after this one then Mambu
@@ -916,7 +933,7 @@ public class DemoTestLoanService {
 				|| productType == LoanProductType.PAYMENT_PLAN;
 		Integer repaymentNumber = needRepaymentNumber ? 3 : null;
 		// TODO: For fixed interest commission product schedule is not defined until all funds are assigned and interest
-		// rate is calculated. Check wither if rate is greater than zero or if the scheule exists
+		// rate is calculated. Check if the schedule exists. See MBU-13391
 		if (needRepaymentNumber) {
 			RepaymentsService repayemntService = MambuAPIFactory.getRepaymentsService();
 			List<Repayment> repaymnts = repayemntService.getLoanAccountRepayments(NEW_LOAN_ACCOUNT_ID, null, null);
