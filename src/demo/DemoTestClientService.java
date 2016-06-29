@@ -109,6 +109,9 @@ public class DemoTestClientService {
 			// Test deleting newly created client
 			testDeleteClient(NEW_CLIENT_ID); // Available since 4.2
 
+			testDeleteGroupRolesThroughPatch(); // Available since 4.2. See MBU-13763
+			testDeleteGroupMembersThroughPatch(); /// Available since 4.2. See MBU-13763
+
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Clients");
 			System.out.println("Error code=" + e.getErrorCode());
@@ -1066,6 +1069,62 @@ public class DemoTestClientService {
 		GroupExpanded updatedGroupExpaneded = clientService.updateGroup(groupExpanded);
 		System.out.println("Group Updated. Name=" + groupExpanded.getGroup().getGroupNameWithId() + "\tName and Id="
 				+ updatedGroupExpaneded.getGroup().getGroupNameWithId());
+	}
+
+	// tests group members deletion through patch operation
+	public static void testDeleteGroupMembersThroughPatch() throws MambuApiException {
+
+		System.out.println("\nIn testDeleteGroupThroughPatch");
+		String groupId = NEW_GROUP_ID;
+
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		// get a GroupExpanded
+		GroupExpanded groupExpanded = clientService.getGroupDetails(groupId);
+		// create an empty list of members
+		List<GroupMember> groupMembers = new ArrayList<>();
+		groupExpanded.setGroupMembers(groupMembers);
+
+		// PATCH the group expanded
+		boolean patchStatus = clientService.patchGroup(groupExpanded);
+
+		System.out.println("Update group expanded status=" + patchStatus);
+
+		GroupExpanded patchedGroup = clientService.getGroupDetails(groupExpanded.getEncodedKey());
+
+		logGroupExpandedDetails(patchedGroup);
+
+		if (!patchedGroup.getGroupMembers().isEmpty()) {
+			throw new MambuApiException(new Exception("Members weren`t deleted!"));
+		}
+	}
+
+	// tests group roles deletion through patch operation
+	public static void testDeleteGroupRolesThroughPatch() throws MambuApiException {
+
+		System.out.println("\nIn testDeleteRolesThroughPatch");
+		String groupId = NEW_GROUP_ID;
+
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		// get a GroupExpanded
+		GroupExpanded groupExpanded = clientService.getGroupDetails(groupId);
+		// create an empty list of roles
+		List<GroupRole> groupRoles = new ArrayList<>();
+		groupExpanded.setGroupRoles(groupRoles);
+
+		// PATCH the group expanded
+		boolean patchStatus = clientService.patchGroup(groupExpanded);
+
+		System.out.println("Update group expanded status=" + patchStatus);
+
+		GroupExpanded patchedGroup = clientService.getGroupDetails(groupExpanded.getEncodedKey());
+
+		logGroupExpandedDetails(patchedGroup);
+
+		if (!patchedGroup.getGroupRoles().isEmpty()) {
+			throw new MambuApiException(new Exception("Roles weren`t deleted!"));
+		}
 	}
 
 }
