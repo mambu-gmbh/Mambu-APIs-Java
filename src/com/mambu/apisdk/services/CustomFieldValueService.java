@@ -466,7 +466,7 @@ public class CustomFieldValueService {
 	 *            the id or encoded key of the owned entity
 	 * @param customFieldId
 	 *            custom field id
-	 * @return URL patch for DELETE custom field values API
+	 * @return URL path for DELETE custom field values API
 	 */
 	private String makeOwnedEntityUrlPath(MambuEntityType parentEntity, String parentEntityId,
 			MambuEntityType ownedEntity, String ownedEntityId, String customFieldId) {
@@ -482,6 +482,33 @@ public class CustomFieldValueService {
 		// Example: /api/loans/{accountId}/transactions/{id}/custominformation/{customFieldId}
 		String urlPath = entityPath + "/" + parentEntityId + "/" + relatedEentityPath + "/" + ownedEntityId + "/"
 				+ APIData.CUSTOM_INFORMATION + "/" + customFieldId;
+		return urlPath;
+	}
+
+	/**
+	 * Helper method to make URL path for getting parent entity`s field values.
+	 * 
+	 * Path example: /api/client/{clientId}/custominformation/{customFieldId}
+	 * 
+	 * @param parentEntity
+	 *            parent entity. Example MambuEntityType.CLIENT. Must not be NULL.
+	 * @param parentEntityId
+	 *            the id or encoded key of the parent entity. Must not be NULL.
+	 * @param customFieldId
+	 *            custom field id
+	 * @return URL path for GET custom field values API
+	 */
+	private String makeEntityUrlPath(MambuEntityType parentEntity, String parentEntityId, String customFieldId) {
+
+		if (parentEntity == null || parentEntityId == null) {
+			throw new IllegalArgumentException("Parameters must not be null");
+		}
+
+		// Get API end point for parent (e.g. "loans")
+		String entityPath = ApiDefinition.getApiEndPoint(parentEntity.getEntityClass());
+
+		// Example: /api/loans/{accountId}/custominformation/{customFieldId}
+		String urlPath = entityPath + "/" + parentEntityId + "/" + APIData.CUSTOM_INFORMATION + "/" + customFieldId;
 		return urlPath;
 	}
 
@@ -507,7 +534,8 @@ public class CustomFieldValueService {
 			throw new IllegalArgumentException("Parameters must not be null");
 		}
 		// Make URL path
-		String urlPath = makeOwnedEntityUrlPath(parentEntity, parentEntityId, ownedEntity, ownedEntityId, customFieldId);
+		String urlPath = makeOwnedEntityUrlPath(parentEntity, parentEntityId, ownedEntity, ownedEntityId,
+				customFieldId);
 
 		// Create ApiDefintion
 		return new ApiDefinition(urlPath, ContentType.JSON, Method.PATCH, Boolean.class, ApiReturnFormat.BOOLEAN);
@@ -536,7 +564,8 @@ public class CustomFieldValueService {
 			throw new IllegalArgumentException("Parameters must not be null");
 		}
 
-		String urlPath = makeOwnedEntityUrlPath(parentEntity, parentEntityId, ownedEntity, ownedEntityId, customFieldId);
+		String urlPath = makeOwnedEntityUrlPath(parentEntity, parentEntityId, ownedEntity, ownedEntityId,
+				customFieldId);
 
 		return new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.DELETE, Boolean.class, ApiReturnFormat.BOOLEAN);
 
@@ -635,7 +664,8 @@ public class CustomFieldValueService {
 		// e.g. PATCH { "customInformation": [{"customFieldID" : "IBAN", "value" :
 		// "DE123456789121243546783"},{"customFieldID" : "BANK_ACCOUNT_TYPE","value" : "Current Account"}]}
 
-		if (parentEntity == null || parentEntityId == null || customFieldValues == null || customFieldValues.isEmpty()) {
+		if (parentEntity == null || parentEntityId == null || customFieldValues == null
+				|| customFieldValues.isEmpty()) {
 			throw new IllegalArgumentException("Parameters must not be null");
 		}
 
@@ -676,6 +706,84 @@ public class CustomFieldValueService {
 				customFieldValue.setLinkedEntityKeyValue(null);
 			}
 		}
+	}
+
+	/**
+	 * Gets a list of CustomFieldValue for the corresponding parent entity type, parent entity id and custom field id.
+	 * 
+	 * @param parentEntity
+	 *            The parent entity type. Must not be null.
+	 * @param parentEntityId
+	 *            The id of the parent entity. Must not be null.
+	 * @param customFieldId
+	 *            The id of the custom field. Must not be null.
+	 * @return a list of custom field values registered for the parent entity or empty list if there are no custom
+	 *         fields for the specified custom field id.
+	 * @throws MambuApiException
+	 */
+	public List<CustomFieldValue> getCustomField(MambuEntityType parentEntity, String parentEntityId,
+			String customFieldId) throws MambuApiException {
+
+		// GET /api/clients/{clientId}/custominformation/{customFieldId}
+		// GET /api/loans/{loanId}/custominformation/{customFieldId}
+		// Available since 4.2. More details on MBU13211
+
+		// Parameters must not be null since they are used to compose the URL for the call
+		if (parentEntity == null || parentEntityId == null || customFieldId == null) {
+			throw new IllegalArgumentException("Paramns must not be null");
+		}
+
+		// constructing the URL
+		String urlPath = makeEntityUrlPath(parentEntity, parentEntityId, customFieldId);
+
+		// make apiDefinition
+		ApiDefinition apiDefinition = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET,
+				CustomFieldValue.class, ApiReturnFormat.COLLECTION);
+
+		// delegate execution to service executor
+		return serviceExecutor.execute(apiDefinition);
+	}
+
+	/**
+	 * Gets a list of CustomFieldValue for the corresponding parent entity type, parentEntityId, ownedEntity type, owned
+	 * entity id and custom field id.
+	 * 
+	 * @param parentEntity
+	 *            The parent entity type. Must not be null
+	 * @param parentEntityId
+	 *            The id of the parent entity. Must not be null.
+	 * @param ownedEntity
+	 *            The owned entity type. Must not be null.
+	 * @param ownedEntityId
+	 *            The id of the owned entity. Must not be null.
+	 * @param customFieldId
+	 *            The id of the custom field. Must not be null.
+	 * @return a list of custom field values registered for the owned entity or empty list if there are no custom fields
+	 *         for the specified custom field id.
+	 * @throws MambuApiException
+	 */
+	public List<CustomFieldValue> getCustomField(MambuEntityType parentEntity, String parentEntityId,
+			MambuEntityType ownedEntity, String ownedEntityId, String customFieldId) throws MambuApiException {
+
+		// GET /api/loans/{loanId}/transactions/{transactionId}/custominformation/{customFieldId}
+		// i.e. GET
+		// /api/loans/1467191564274/transactions/8a80863c559af41b01559b6fbca20270/custominformation/selection_tr_Transactions
+		// Available since 4.2. More details on MBU13211
+
+		// Parameters must not be null since they are used to compose the URL for the call
+		if (parentEntity == null || parentEntityId == null || customFieldId == null) {
+			throw new IllegalArgumentException("Paramns must not be null");
+		}
+
+		String urlPath = makeOwnedEntityUrlPath(parentEntity, parentEntityId, ownedEntity, ownedEntityId,
+				customFieldId);
+
+		// make apiDefinition
+		ApiDefinition apiDefinition = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET,
+				CustomFieldValue.class, ApiReturnFormat.COLLECTION);
+
+		// delegate execution to service executor
+		return serviceExecutor.execute(apiDefinition);
 	}
 
 }
