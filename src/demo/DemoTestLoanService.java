@@ -761,8 +761,8 @@ public class DemoTestLoanService {
 			System.out.println("Disbursed OK: Transaction Id=" + transaction.getTransactionId() + " amount="
 					+ transaction.getAmount());
 
-			// Since 4.2 . More details on MBU13211
-			testGetCustomFieldForTransaction(account, transaction);
+			// Since 4.2. More details on MBU-13211
+			testGetCustomFieldForLoanTransaction(account, transaction);
 
 		} catch (MambuApiException e) {
 
@@ -771,8 +771,8 @@ public class DemoTestLoanService {
 	}
 
 	/**
-	 * Gets the custom field values from the transaction passed as argument to this method, and then iterates over them
-	 * and call Mambu to get the details and logs them to the console.
+	 * Gets the custom field values from the loan transaction passed as argument to this method, and then iterates over
+	 * them and call Mambu to get the details and logs them to the console.
 	 * 
 	 * @param account
 	 *            The account (loan account) holding the transaction
@@ -780,17 +780,23 @@ public class DemoTestLoanService {
 	 *            The transaction holding the custom field details
 	 * @throws MambuApiException
 	 */
-	private static void testGetCustomFieldForTransaction(LoanAccount account, LoanTransaction transaction)
+	private static void testGetCustomFieldForLoanTransaction(LoanAccount account, LoanTransaction transaction)
 			throws MambuApiException {
 
 		// Available since 4.2. More details on MBU-13211
 		System.out.println(methodName = "\nIn testGetCustomFieldForTransaction");
 
+		if (account == null || transaction == null) {
+			System.out.println("Warning!! Account or transaction was found null,"
+					+ " testGetCustomFieldForTransaction() method couldn`t run");
+			return;
+		}
+
 		// get the service for custom fields
 		CustomFieldValueService customFieldValueService = MambuAPIFactory.getCustomFieldValueService();
 
 		for (CustomFieldValue customFieldValue : transaction.getCustomFieldValues()) {
-			List<CustomFieldValue> retrievedCustomFieldValues = customFieldValueService.getCustomField(
+			List<CustomFieldValue> retrievedCustomFieldValues = customFieldValueService.getCustomFieldValue(
 					MambuEntityType.LOAN_ACCOUNT, account.getId(), MambuEntityType.LOAN_TRANSACTION,
 					transaction.getEncodedKey(), customFieldValue.getCustomFieldId());
 			// logs the details to the console

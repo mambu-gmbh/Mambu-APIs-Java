@@ -718,19 +718,20 @@ public class CustomFieldValueService {
 	 * @param customFieldId
 	 *            The id of the custom field. Must not be null.
 	 * @return a list of custom field values registered for the parent entity or empty list if there are no custom
-	 *         fields for the specified custom field id.
+	 *         fields for the specified custom field id. Usually a single value is expected for standard custom fields
+	 *         and multiple values for grouped custom fields.
 	 * @throws MambuApiException
 	 */
-	public List<CustomFieldValue> getCustomField(MambuEntityType parentEntity, String parentEntityId,
+	public List<CustomFieldValue> getCustomFieldValue(MambuEntityType parentEntity, String parentEntityId,
 			String customFieldId) throws MambuApiException {
 
 		// GET /api/clients/{clientId}/custominformation/{customFieldId}
 		// GET /api/loans/{loanId}/custominformation/{customFieldId}
-		// Available since 4.2. More details on MBU13211
+		// Available since 4.2. More details on MBU-13211
 
 		// Parameters must not be null since they are used to compose the URL for the call
 		if (parentEntity == null || parentEntityId == null || customFieldId == null) {
-			throw new IllegalArgumentException("Paramns must not be null");
+			throw new IllegalArgumentException("Parameters must not be null");
 		}
 
 		// constructing the URL
@@ -759,20 +760,22 @@ public class CustomFieldValueService {
 	 * @param customFieldId
 	 *            The id of the custom field. Must not be null.
 	 * @return a list of custom field values registered for the owned entity or empty list if there are no custom fields
-	 *         for the specified custom field id.
+	 *         for the specified custom field id. Usually a single value is expected for standard custom fields and
+	 *         multiple values for grouped custom fields.
 	 * @throws MambuApiException
 	 */
-	public List<CustomFieldValue> getCustomField(MambuEntityType parentEntity, String parentEntityId,
+	public List<CustomFieldValue> getCustomFieldValue(MambuEntityType parentEntity, String parentEntityId,
 			MambuEntityType ownedEntity, String ownedEntityId, String customFieldId) throws MambuApiException {
 
 		// GET /api/loans/{loanId}/transactions/{transactionId}/custominformation/{customFieldId}
 		// i.e. GET
 		// /api/loans/1467191564274/transactions/8a80863c559af41b01559b6fbca20270/custominformation/selection_tr_Transactions
-		// Available since 4.2. More details on MBU13211
+		// Available since 4.2. More details on MBU-13211
 
 		// Parameters must not be null since they are used to compose the URL for the call
-		if (parentEntity == null || parentEntityId == null || customFieldId == null) {
-			throw new IllegalArgumentException("Paramns must not be null");
+		if (parentEntity == null || parentEntityId == null || customFieldId == null || ownedEntity == null
+				|| ownedEntityId == null) {
+			throw new IllegalArgumentException("Parameters must not be null");
 		}
 
 		String urlPath = makeOwnedEntityUrlPath(parentEntity, parentEntityId, ownedEntity, ownedEntityId,
