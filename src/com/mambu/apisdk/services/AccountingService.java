@@ -193,7 +193,7 @@ public class AccountingService {
 	 */
 	public List<GLJournalEntry> getGLJournalEntries(JSONFilterConstraints filterConstraints, String offset,
 			String limit) throws MambuApiException {
-		//POST api/gljournalentries/search
+		//POST {JSONFilterConstraints} /api/gljournalentries/search?offset=0&limit=5
 		//See MBU-12099
 		ApiDefinition apiDefinition = SearchService
 				.makeApiDefinitionforSearchByFilter(MambuEntityType.GL_JOURNAL_ENTRY);
