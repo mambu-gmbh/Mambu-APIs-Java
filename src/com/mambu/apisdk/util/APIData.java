@@ -133,7 +133,7 @@ public class APIData {
 	public static final String DUE_DATE = "duedate";
 	public static final String CLIENT_ID = "clientid";
 	public static final String GROUP_ID = "groupid";
-	
+
 	// Group constants
 	// Added with 4.2, needed by GroupExpandedPatchSerializer
 	public static final String GROUP = "group";
@@ -162,7 +162,7 @@ public class APIData {
 	public static String BRANCHES = "branches";
 	public static String CENTRES = "centres";
 	public static String CURRENCIES = "currencies";
-	
+
 	// Flag for getting all currencies. See MBU-4128 and MBU-13420. Available since 4.2
 	public static String INCLUDE_FOREIGN = "includeForeign";
 	public static String TRUE = "true"; // values used for boolean flags, e.g. INCLUDE_FOREIGN, FULL_DETAILS
@@ -197,6 +197,8 @@ public class APIData {
 	public static final String PERIODIC_PAYMENT = "periodicPayment";
 	public static final String PENALTY_RATE = "penaltyRate";
 	public static final String FIXED_DAYS_OF_MONTH = "fixedDaysOfMonth"; // supported since 3.14. See MBU-10802
+	public static final String ARREARS_TOLERANCE_PERIOD = "arrearsTolerancePeriod"; // supported since 4.2. See
+																					// MBU-13376
 
 	// Parameters supported by SavingsAccount PATCH API
 	public static final String INTEREST_SETTINGS = "interestSettings"; // added in 4.1. See MBU-12039

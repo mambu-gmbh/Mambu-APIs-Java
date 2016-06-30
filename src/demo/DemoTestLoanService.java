@@ -421,6 +421,9 @@ public class DemoTestLoanService {
 		account.setPeriodicPayment(theAccount.getPeriodicPayment()); // periodicPayment
 		account.setLoanAmount(theAccount.getLoanAmount().add(new BigDecimal("55")));
 
+		// test update ArrearsTolerancePeriod, available since 4.2, see MBU-13376
+		account.setArrearsTolerancePeriod(theAccount.getArrearsTolerancePeriod());
+
 		// Test Principal Payment for REVOLVING CREDIT. See MBU-12143
 
 		account.setPrincipalPaymentSettings(theAccount.getPrincipalPaymentSettings());
