@@ -12,6 +12,7 @@ import com.mambu.accounting.shared.model.EntryType;
 import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.accounting.shared.model.GLAccountType;
 import com.mambu.accounting.shared.model.GLJournalEntry;
+import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.ApiGLJournalEntry;
@@ -20,10 +21,12 @@ import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.DateUtils;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.apisdk.util.ServiceExecutor;
+import com.mambu.apisdk.util.ServiceHelper;
 
 /**
  * Service class which handles the API operations available for the accounting
@@ -174,6 +177,30 @@ public class AccountingService {
 		}
 
 		return serviceExecutor.execute(getGLJournalEntries, params);
+	}
+
+	/**
+	 * Get GL journal entries by specifying filter constraints
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * @return list of GL journal entries matching filter constraints
+	 * @throws MambuApiException
+	 */
+	public List<GLJournalEntry> getGLJournalEntries(JSONFilterConstraints filterConstraints, String offset,
+			String limit) throws MambuApiException {
+		//POST {JSONFilterConstraints} /api/gljournalentries/search?offset=0&limit=5
+		//See MBU-12099
+		ApiDefinition apiDefinition = SearchService
+				.makeApiDefinitionforSearchByFilter(MambuEntityType.GL_JOURNAL_ENTRY);
+
+		// POST Filter JSON with pagination params map
+		return serviceExecutor.executeJson(apiDefinition, filterConstraints, null, null,
+				ServiceHelper.makePaginationParams(offset, limit));
 	}
 
 	/**

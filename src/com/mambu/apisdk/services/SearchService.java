@@ -176,10 +176,10 @@ public class SearchService {
 
 		// Specify Api definition for searching with filter constraints.
 		Class<?> returnEntityClass = searchEntityType.getEntityClass();
-		ApiDefinition apiDefintition = new ApiDefinition(searchUrl, ContentType.JSON, Method.POST, returnEntityClass,
+		ApiDefinition apiDefinition = new ApiDefinition(searchUrl, ContentType.JSON, Method.POST, returnEntityClass,
 				ApiReturnFormat.COLLECTION);
 
-		return apiDefintition;
+		return apiDefinition;
 
 	}
 
@@ -220,6 +220,9 @@ public class SearchService {
 		case NOTIFICATION_MESSAGE:
 			// Example: /api/notifications/messages/search. See MBU-10646
 			entityUrl = APIData.NOTIFICATIONS + apiDelimiter + APIData.MESSAGES;
+			break;
+		case GL_JOURNAL_ENTRY:
+			entityUrl = APIData.GLJOURNALENTRIES;
 			break;
 
 		default:
