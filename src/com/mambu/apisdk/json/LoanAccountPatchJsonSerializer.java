@@ -30,7 +30,7 @@ import com.mambu.loans.shared.model.PrincipalPaymentAccountSettings;
 public class LoanAccountPatchJsonSerializer implements JsonSerializer<LoanAccount> {
 
 	/**
-	 * A list of fields supported by the PATCH loan account API. See MBU-7758, MBU-11481 and MBU-12143
+	 * A list of fields supported by the PATCH loan account API. See MBU-7758, MBU-11481, MBU-12143, MBU-13376
 	 * 
 	 * Note, since 4.0 the EXPECTED_DISBURSEMENT_DATE and FIRST_REPAYMENT_DATE are part of the
 	 * DisbursementDetails.class, see MBU-11481
@@ -40,7 +40,7 @@ public class LoanAccountPatchJsonSerializer implements JsonSerializer<LoanAccoun
 			APIData.LOAN_AMOUNT, APIData.INTEREST_RATE, APIData.INTEREST_RATE_SPREAD, APIData.REPAYMENT_INSTALLMENTS,
 			APIData.REPAYMENT_PERIOD_COUNT, APIData.REPAYMENT_PERIOD_UNIT, APIData.GRACE_PERIOD,
 			APIData.PRNICIPAL_REPAYMENT_INTERVAL, APIData.PENALTY_RATE, APIData.PERIODIC_PAYMENT,
-			APIData.DISBURSEMENT_DETAILS, APIData.PRINCIPAL_PAYMENT_SETTINGS));
+			APIData.DISBURSEMENT_DETAILS, APIData.PRINCIPAL_PAYMENT_SETTINGS, APIData.ARREARS_TOLERANCE_PERIOD));
 
 	/**
 	 * A list of fields from the DisbursementDetails class supported by PATCH loan account API.
@@ -48,8 +48,8 @@ public class LoanAccountPatchJsonSerializer implements JsonSerializer<LoanAccoun
 	 * See MBU-11515 and MBU-11481: Should specify the "expectedDisbursementDate" and "firstRepaymentDate", as before,
 	 * at loan account level
 	 */
-	private final static Set<String> disbursementFields = new HashSet<String>(Arrays.asList(
-			APIData.EXPECTED_DISBURSEMENT_DATE, APIData.FIRST_REPAYMENT_DATE));
+	private final static Set<String> disbursementFields = new HashSet<String>(
+			Arrays.asList(APIData.EXPECTED_DISBURSEMENT_DATE, APIData.FIRST_REPAYMENT_DATE));
 
 	/**
 	 * A list of fields from PrincipalPaymentAccountSettings supported by the PATCH loan API.
@@ -57,8 +57,8 @@ public class LoanAccountPatchJsonSerializer implements JsonSerializer<LoanAccoun
 	 * See MBU-12143: "principalPaymentSettings":{"amount":"100.00"} and
 	 * "principalPaymentSettings":{"percentage":"20.00"}
 	 */
-	private final static Set<String> principalPaymentSettingsFields = new HashSet<String>(Arrays.asList(APIData.AMOUNT,
-			APIData.PERCENTAGE));
+	private final static Set<String> principalPaymentSettingsFields = new HashSet<String>(
+			Arrays.asList(APIData.AMOUNT, APIData.PERCENTAGE));
 
 	// Create inclusion strategy for Loan PATCH API. Include allowed LoanAccount, DisbursementDetails and
 	// PrincipalPaymentAccountSettings fields

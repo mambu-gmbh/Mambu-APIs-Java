@@ -36,6 +36,7 @@ import com.mambu.core.shared.model.Comment;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldSet;
+import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.CustomView;
 import com.mambu.core.shared.model.ObjectLabel;
 import com.mambu.core.shared.model.Role;
@@ -200,6 +201,7 @@ public class ServiceExecutor {
 	 */
 
 	public <R> R execute(ApiDefinition apiDefinition, String objectId, ParamsMap paramsMap) throws MambuApiException {
+
 		String relatedEntityId = null;
 		return execute(apiDefinition, objectId, relatedEntityId, paramsMap);
 	}
@@ -218,6 +220,7 @@ public class ServiceExecutor {
 	 * @throws MambuApiException
 	 */
 	public <R> R execute(ApiDefinition apiDefinition, String objectId) throws MambuApiException {
+
 		ParamsMap paramsMap = null;
 		return execute(apiDefinition, objectId, paramsMap);
 	}
@@ -236,6 +239,7 @@ public class ServiceExecutor {
 	 * @throws MambuApiException
 	 */
 	public <R> R execute(ApiDefinition apiDefinition, ParamsMap paramsMap) throws MambuApiException {
+
 		String objectId = null;
 		return execute(apiDefinition, objectId, paramsMap);
 	}
@@ -254,6 +258,7 @@ public class ServiceExecutor {
 	 * @throws MambuApiException
 	 */
 	public <R> R execute(ApiDefinition apiDefinition) throws MambuApiException {
+
 		ParamsMap paramsMap = null;
 		String objectId = null;
 		return execute(apiDefinition, objectId, paramsMap);
@@ -312,6 +317,7 @@ public class ServiceExecutor {
 	 * @throws MambuApiException
 	 */
 	public <R, T> R executeJson(ApiDefinition apiDefinition, T object, String objectId) throws MambuApiException {
+
 		String relatedEntityId = null;
 		ParamsMap paramsMap = null;
 		return executeJson(apiDefinition, object, objectId, relatedEntityId, paramsMap);
@@ -330,6 +336,7 @@ public class ServiceExecutor {
 	 * @throws MambuApiException
 	 */
 	public <R, T> R executeJson(ApiDefinition apiDefinition, T object) throws MambuApiException {
+
 		String objectId = null;
 		String relatedEntityId = null;
 		ParamsMap paramsMap = null;
@@ -350,6 +357,7 @@ public class ServiceExecutor {
 	 *            an id of the relatedEntity (optional, must be null if not used)
 	 */
 	private String getApiPath(ApiDefinition apiDefinition, String objectId, String relatedEntityId) {
+
 		if (apiDefinition == null) {
 			throw new IllegalArgumentException("Api definition cannot be null");
 		}
@@ -399,6 +407,7 @@ public class ServiceExecutor {
 	 */
 	@SuppressWarnings("unchecked")
 	private <R> R getObject(String jsonResponse, ApiDefinition apiDefinition) {
+
 		// Create Gson with optional deserializers as per ApiDefinition
 		Gson gson = GsonUtils.createDeserializerGson(apiDefinition);
 		// Get return class from ApiDefinition
@@ -418,6 +427,7 @@ public class ServiceExecutor {
 	 * @return object this object represents a list of entities and must be case to the object's list type
 	 */
 	private <R> R getCollection(String jsonResponse, ApiDefinition apiDefinition) {
+
 		// Create Gson with optional deserializers as per ApiDefinition
 		Gson gson = GsonUtils.createDeserializerGson(apiDefinition);
 		Class<?> returnClass = apiDefinition.getReturnClass();
@@ -449,120 +459,84 @@ public class ServiceExecutor {
 	static {
 		collectionTypesMap = new HashMap<Class<?>, Type>();
 		// Client
-		collectionTypesMap.put(Client.class, new TypeToken<List<Client>>() {
-		}.getType());
+		collectionTypesMap.put(Client.class, new TypeToken<List<Client>>() {}.getType());
 		// ClientExpanded
-		collectionTypesMap.put(ClientExpanded.class, new TypeToken<List<ClientExpanded>>() {
-		}.getType());
+		collectionTypesMap.put(ClientExpanded.class, new TypeToken<List<ClientExpanded>>() {}.getType());
 		// Group
-		collectionTypesMap.put(Group.class, new TypeToken<List<Group>>() {
-		}.getType());
+		collectionTypesMap.put(Group.class, new TypeToken<List<Group>>() {}.getType());
 		// GroupExpanded
-		collectionTypesMap.put(GroupExpanded.class, new TypeToken<List<GroupExpanded>>() {
-		}.getType());
+		collectionTypesMap.put(GroupExpanded.class, new TypeToken<List<GroupExpanded>>() {}.getType());
 		// LoanAccount
-		collectionTypesMap.put(LoanAccount.class, new TypeToken<List<LoanAccount>>() {
-		}.getType());
+		collectionTypesMap.put(LoanAccount.class, new TypeToken<List<LoanAccount>>() {}.getType());
 		// JSONLoanAccount
-		collectionTypesMap.put(JSONLoanAccount.class, new TypeToken<List<JSONLoanAccount>>() {
-		}.getType());
+		collectionTypesMap.put(JSONLoanAccount.class, new TypeToken<List<JSONLoanAccount>>() {}.getType());
 		// LoanTransaction
-		collectionTypesMap.put(LoanTransaction.class, new TypeToken<List<LoanTransaction>>() {
-		}.getType());
+		collectionTypesMap.put(LoanTransaction.class, new TypeToken<List<LoanTransaction>>() {}.getType());
 		// SavingsAccount
-		collectionTypesMap.put(SavingsAccount.class, new TypeToken<List<SavingsAccount>>() {
-		}.getType());
+		collectionTypesMap.put(SavingsAccount.class, new TypeToken<List<SavingsAccount>>() {}.getType());
 		// JSONSavingsAccount
-		collectionTypesMap.put(JSONSavingsAccount.class, new TypeToken<List<JSONSavingsAccount>>() {
-		}.getType());
+		collectionTypesMap.put(JSONSavingsAccount.class, new TypeToken<List<JSONSavingsAccount>>() {}.getType());
 		// SavingsTransaction
-		collectionTypesMap.put(SavingsTransaction.class, new TypeToken<List<SavingsTransaction>>() {
-		}.getType());
+		collectionTypesMap.put(SavingsTransaction.class, new TypeToken<List<SavingsTransaction>>() {}.getType());
 		// Repayment
-		collectionTypesMap.put(Repayment.class, new TypeToken<List<Repayment>>() {
-		}.getType());
+		collectionTypesMap.put(Repayment.class, new TypeToken<List<Repayment>>() {}.getType());
 		// LoanProduct
-		collectionTypesMap.put(LoanProduct.class, new TypeToken<List<LoanProduct>>() {
-		}.getType());
+		collectionTypesMap.put(LoanProduct.class, new TypeToken<List<LoanProduct>>() {}.getType());
 		// SavingsProduct
-		collectionTypesMap.put(SavingsProduct.class, new TypeToken<List<SavingsProduct>>() {
-		}.getType());
+		collectionTypesMap.put(SavingsProduct.class, new TypeToken<List<SavingsProduct>>() {}.getType());
 		// Branch
-		collectionTypesMap.put(Branch.class, new TypeToken<List<Branch>>() {
-		}.getType());
+		collectionTypesMap.put(Branch.class, new TypeToken<List<Branch>>() {}.getType());
 		// Centre
-		collectionTypesMap.put(Centre.class, new TypeToken<List<Centre>>() {
-		}.getType());
+		collectionTypesMap.put(Centre.class, new TypeToken<List<Centre>>() {}.getType());
 		// User
-		collectionTypesMap.put(User.class, new TypeToken<List<User>>() {
-		}.getType());
+		collectionTypesMap.put(User.class, new TypeToken<List<User>>() {}.getType());
 		// Currency
-		collectionTypesMap.put(Currency.class, new TypeToken<List<Currency>>() {
-		}.getType());
+		collectionTypesMap.put(Currency.class, new TypeToken<List<Currency>>() {}.getType());
 		// CustomFieldSet
-		collectionTypesMap.put(CustomFieldSet.class, new TypeToken<List<CustomFieldSet>>() {
-		}.getType());
+		collectionTypesMap.put(CustomFieldSet.class, new TypeToken<List<CustomFieldSet>>() {}.getType());
 		// CustomField
-		collectionTypesMap.put(CustomField.class, new TypeToken<List<CustomField>>() {
-		}.getType());
+		collectionTypesMap.put(CustomField.class, new TypeToken<List<CustomField>>() {}.getType());
 		// Task
-		collectionTypesMap.put(Task.class, new TypeToken<List<Task>>() {
-		}.getType());
+		collectionTypesMap.put(Task.class, new TypeToken<List<Task>>() {}.getType());
 		// CustomView
-		collectionTypesMap.put(CustomView.class, new TypeToken<List<CustomView>>() {
-		}.getType());
+		collectionTypesMap.put(CustomView.class, new TypeToken<List<CustomView>>() {}.getType());
 		// JSONActivity
-		collectionTypesMap.put(JSONActivity.class, new TypeToken<List<JSONActivity>>() {
-		}.getType());
+		collectionTypesMap.put(JSONActivity.class, new TypeToken<List<JSONActivity>>() {}.getType());
 		// Document
-		collectionTypesMap.put(Document.class, new TypeToken<List<Document>>() {
-		}.getType());
+		collectionTypesMap.put(Document.class, new TypeToken<List<Document>>() {}.getType());
 		// TransactionChannel
-		collectionTypesMap.put(TransactionChannel.class, new TypeToken<List<TransactionChannel>>() {
-		}.getType());
+		collectionTypesMap.put(TransactionChannel.class, new TypeToken<List<TransactionChannel>>() {}.getType());
 		// SearchResult. Note Search API returns Map<SearchType, List<SearchResult>>
-		collectionTypesMap.put(SearchResult.class, new TypeToken<Map<SearchType, List<SearchResult>>>() {
-		}.getType());
+		collectionTypesMap.put(SearchResult.class, new TypeToken<Map<SearchType, List<SearchResult>>>() {}.getType());
 		// Indicator. Note Indicator API returns HashMap<String, String>
-		collectionTypesMap.put(Indicator.class, new TypeToken<HashMap<String, String>>() {
-		}.getType());
+		collectionTypesMap.put(Indicator.class, new TypeToken<HashMap<String, String>>() {}.getType());
 		// ClientRole
-		collectionTypesMap.put(ClientRole.class, new TypeToken<List<ClientRole>>() {
-		}.getType());
+		collectionTypesMap.put(ClientRole.class, new TypeToken<List<ClientRole>>() {}.getType());
 		// Group Role
-		collectionTypesMap.put(GroupRoleName.class, new TypeToken<List<GroupRoleName>>() {
-		}.getType());
+		collectionTypesMap.put(GroupRoleName.class, new TypeToken<List<GroupRoleName>>() {}.getType());
 		// Comment
-		collectionTypesMap.put(Comment.class, new TypeToken<List<Comment>>() {
-		}.getType());
+		collectionTypesMap.put(Comment.class, new TypeToken<List<Comment>>() {}.getType());
 		// IdentificationDocumentTemplate
 		collectionTypesMap.put(IdentificationDocumentTemplate.class,
-				new TypeToken<List<IdentificationDocumentTemplate>>() {
-				}.getType());
+				new TypeToken<List<IdentificationDocumentTemplate>>() {}.getType());
 		// DocuementTemplate
-		collectionTypesMap.put(DocumentTemplate.class, new TypeToken<List<DocumentTemplate>>() {
-		}.getType());
+		collectionTypesMap.put(DocumentTemplate.class, new TypeToken<List<DocumentTemplate>>() {}.getType());
 		// Object Labels
-		collectionTypesMap.put(ObjectLabel.class, new TypeToken<List<ObjectLabel>>() {
-		}.getType());
+		collectionTypesMap.put(ObjectLabel.class, new TypeToken<List<ObjectLabel>>() {}.getType());
 		// Lines of Credit
-		collectionTypesMap.put(LineOfCredit.class, new TypeToken<List<LineOfCredit>>() {
-		}.getType());
+		collectionTypesMap.put(LineOfCredit.class, new TypeToken<List<LineOfCredit>>() {}.getType());
 		// GLJournalEntry
-		collectionTypesMap.put(GLJournalEntry.class, new TypeToken<List<GLJournalEntry>>() {
-		}.getType());
+		collectionTypesMap.put(GLJournalEntry.class, new TypeToken<List<GLJournalEntry>>() {}.getType());
 		// GLAccount
-		collectionTypesMap.put(GLAccount.class, new TypeToken<List<GLAccount>>() {
-		}.getType());
+		collectionTypesMap.put(GLAccount.class, new TypeToken<List<GLAccount>>() {}.getType());
 		// Role
-		collectionTypesMap.put(Role.class, new TypeToken<List<Role>>() {
-		}.getType());
+		collectionTypesMap.put(Role.class, new TypeToken<List<Role>>() {}.getType());
 		// NotificationMessage
-		collectionTypesMap.put(NotificationMessage.class, new TypeToken<List<NotificationMessage>>() {
-		}.getType());
+		collectionTypesMap.put(NotificationMessage.class, new TypeToken<List<NotificationMessage>>() {}.getType());
 		// Exchange Rates. See MBU-12628
-		collectionTypesMap.put(ExchangeRate.class, new TypeToken<List<ExchangeRate>>() {
-		}.getType());
+		collectionTypesMap.put(ExchangeRate.class, new TypeToken<List<ExchangeRate>>() {}.getType());
+		//
+		collectionTypesMap.put(CustomFieldValue.class, new TypeToken<List<CustomFieldValue>>() {}.getType());
 	}
 
 	//
@@ -605,7 +579,8 @@ public class ServiceExecutor {
 	 * @throws MambuApiException
 	 */
 	public <R> R getOwnedEntities(MambuEntityType parentEntity, String parentId, MambuEntityType ownedEntity,
-			ParamsMap params) throws MambuApiException {
+			String relatedEntityId, ParamsMap params) throws MambuApiException {
+
 		if (parentEntity == null || ownedEntity == null) {
 			throw new IllegalArgumentException("Parent Entity and Owned Entity cannot be null");
 		}
@@ -613,7 +588,8 @@ public class ServiceExecutor {
 		Class<?> ownedClass = ownedEntity.getEntityClass();
 
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, parentClass, ownedClass);
-		return execute(apiDefinition, parentId, params);
+
+		return execute(apiDefinition, parentId, relatedEntityId, params);
 	}
 
 	/**
@@ -635,6 +611,7 @@ public class ServiceExecutor {
 	 */
 	public <R> R getOwnedEntities(MambuEntityType parentEntity, String parentId, MambuEntityType ownedEntity,
 			Integer offset, Integer limit) throws MambuApiException {
+
 		ParamsMap params = new ParamsMap();
 		if (offset != null) {
 			params.addParam(APIData.OFFSET, String.valueOf(offset));
@@ -643,7 +620,7 @@ public class ServiceExecutor {
 			params.addParam(APIData.LIMIT, String.valueOf(limit));
 		}
 
-		return getOwnedEntities(parentEntity, parentId, ownedEntity, params);
+		return getOwnedEntities(parentEntity, parentId, ownedEntity, null, params);
 
 	}
 
@@ -667,6 +644,7 @@ public class ServiceExecutor {
 	 */
 	public <R> R getOwnedEntity(MambuEntityType parentEntity, String parentId, MambuEntityType ownedEntity,
 			String ownedEntityId, ParamsMap params) throws MambuApiException {
+
 		if (parentEntity == null) {
 			throw new IllegalArgumentException("Parent Entity cannot be null");
 		}
@@ -692,6 +670,7 @@ public class ServiceExecutor {
 	 */
 	public <T> T createOwnedEntity(MambuEntityType parentEntity, String parentId, T postEntity)
 			throws MambuApiException {
+
 		if (parentEntity == null || postEntity == null) {
 			throw new IllegalArgumentException("Parent Class and Owned Entity cannot be null");
 		}
@@ -722,6 +701,7 @@ public class ServiceExecutor {
 	 */
 	public <R, T> R createOwnedEntity(MambuEntityType parentEntity, String parentId, T postEntity, Class<?> resultClass)
 			throws MambuApiException {
+
 		if (parentEntity == null || postEntity == null) {
 			throw new IllegalArgumentException("Parent Class and Owned Entity cannot be null");
 		}
@@ -747,8 +727,9 @@ public class ServiceExecutor {
 	 * @return updated owned entity
 	 * @throws MambuApiException
 	 */
-	public <R, T> R updateOwnedEntity(MambuEntityType parentEntity, String parentId, T ownedEntity, String ownedEntityId)
-			throws MambuApiException {
+	public <R, T> R updateOwnedEntity(MambuEntityType parentEntity, String parentId, T ownedEntity,
+			String ownedEntityId) throws MambuApiException {
+
 		if (parentEntity == null || ownedEntity == null) {
 			throw new IllegalArgumentException("Parent Class and Owned Entity cannot be null");
 		}
@@ -775,6 +756,7 @@ public class ServiceExecutor {
 	 */
 	public <R> Boolean deleteOwnedEntity(MambuEntityType mambuEntity, String parentId, MambuEntityType ownedEntity,
 			String ownedEntityId) throws MambuApiException {
+
 		Class<?> parentClass = mambuEntity.getEntityClass();
 		Class<?> ownedClass = ownedEntity.getEntityClass();
 		// Create ApiDefinition for DELETE_OWNED_ENTITY
@@ -812,6 +794,7 @@ public class ServiceExecutor {
 	 * @throws MambuApiException
 	 */
 	public <R> List<R> getList(MambuEntityType mambuEntity, ParamsMap params) throws MambuApiException {
+
 		Class<?> clazz = mambuEntity.getEntityClass();
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.GET_LIST, clazz);
 		return execute(apiDefinition, params);
@@ -831,6 +814,7 @@ public class ServiceExecutor {
 	 */
 	public <R> List<R> getPaginatedList(MambuEntityType mambuEntity, Integer offset, Integer limit)
 			throws MambuApiException {
+
 		Class<?> clazz = mambuEntity.getEntityClass();
 
 		ParamsMap params = new ParamsMap();
@@ -853,6 +837,7 @@ public class ServiceExecutor {
 	 * @throws MambuApiException
 	 */
 	public <R> R createEntity(Class<R> entity) throws MambuApiException {
+
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, entity.getClass());
 		return executeJson(apiDefinition, entity);
 	}
@@ -868,6 +853,7 @@ public class ServiceExecutor {
 	 * @throws MambuApiException
 	 */
 	public <R> R updateEntity(Class<R> entity, String entityId) throws MambuApiException {
+
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.POST_ENTITY, entity.getClass());
 		return executeJson(apiDefinition, entity, entityId);
 	}
@@ -883,6 +869,7 @@ public class ServiceExecutor {
 	 * @throws MambuApiException
 	 */
 	public <R> Boolean deleteEntity(MambuEntityType mambuEntity, String entityId) throws MambuApiException {
+
 		Class<?> clazz = mambuEntity.getEntityClass();
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.DELETE_ENTITY, clazz);
 		return executeJson(apiDefinition, entityId);
@@ -904,6 +891,7 @@ public class ServiceExecutor {
 	 */
 	public <R> R executeJSONTransactionRequest(String accountId, JSONTransactionRequest request,
 			Account.Type accountType, String transactionTypeName) throws MambuApiException {
+
 		if (request == null || transactionTypeName == null || accountType == null || accountId == null) {
 			throw new IllegalArgumentException("All input parameters must not be null");
 		}
