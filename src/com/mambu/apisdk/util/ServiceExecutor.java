@@ -112,6 +112,7 @@ public class ServiceExecutor {
 	 */
 	@Inject
 	public ServiceExecutor(MambuAPIService mambuAPIService) {
+
 		this.mambuAPIService = mambuAPIService;
 	}
 
@@ -573,6 +574,8 @@ public class ServiceExecutor {
 	 *            encoded key or id of the parent entity
 	 * @param ownedEntity
 	 *            Mambu owned entity. Example, MambuEntityType.COMMENT
+	 * @param relatedEntityId
+	 *            related entity id. Can be null if not required
 	 * @param params
 	 *            params map with filtering parameters
 	 * @return list of owned entities
@@ -727,8 +730,8 @@ public class ServiceExecutor {
 	 * @return updated owned entity
 	 * @throws MambuApiException
 	 */
-	public <R, T> R updateOwnedEntity(MambuEntityType parentEntity, String parentId, T ownedEntity,
-			String ownedEntityId) throws MambuApiException {
+	public <R, T> R updateOwnedEntity(MambuEntityType parentEntity, String parentId, T ownedEntity, String ownedEntityId)
+			throws MambuApiException {
 
 		if (parentEntity == null || ownedEntity == null) {
 			throw new IllegalArgumentException("Parent Class and Owned Entity cannot be null");
