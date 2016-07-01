@@ -507,8 +507,7 @@ public class CustomFieldValueService {
 			throw new IllegalArgumentException("Parameters must not be null");
 		}
 		// Make URL path
-		String urlPath = makeOwnedEntityUrlPath(parentEntity, parentEntityId, ownedEntity, ownedEntityId,
-				customFieldId);
+		String urlPath = makeOwnedEntityUrlPath(parentEntity, parentEntityId, ownedEntity, ownedEntityId, customFieldId);
 
 		// Create ApiDefintion
 		return new ApiDefinition(urlPath, ContentType.JSON, Method.PATCH, Boolean.class, ApiReturnFormat.BOOLEAN);
@@ -537,8 +536,7 @@ public class CustomFieldValueService {
 			throw new IllegalArgumentException("Parameters must not be null");
 		}
 
-		String urlPath = makeOwnedEntityUrlPath(parentEntity, parentEntityId, ownedEntity, ownedEntityId,
-				customFieldId);
+		String urlPath = makeOwnedEntityUrlPath(parentEntity, parentEntityId, ownedEntity, ownedEntityId, customFieldId);
 
 		return new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.DELETE, Boolean.class, ApiReturnFormat.BOOLEAN);
 
@@ -637,8 +635,7 @@ public class CustomFieldValueService {
 		// e.g. PATCH { "customInformation": [{"customFieldID" : "IBAN", "value" :
 		// "DE123456789121243546783"},{"customFieldID" : "BANK_ACCOUNT_TYPE","value" : "Current Account"}]}
 
-		if (parentEntity == null || parentEntityId == null || customFieldValues == null
-				|| customFieldValues.isEmpty()) {
+		if (parentEntity == null || parentEntityId == null || customFieldValues == null || customFieldValues.isEmpty()) {
 			throw new IllegalArgumentException("Parameters must not be null");
 		}
 
@@ -707,11 +704,9 @@ public class CustomFieldValueService {
 			throw new IllegalArgumentException("Parameters must not be null");
 		}
 
-		ParamsMap params = new ParamsMap();
-
 		// delegate execution to service executor
 		return serviceExecutor.getOwnedEntities(parentEntity, parentEntityId, MambuEntityType.CUSTOM_FIELD_VALUE,
-				customFieldId, params);
+				customFieldId, null);
 
 	}
 
@@ -748,8 +743,7 @@ public class CustomFieldValueService {
 			throw new IllegalArgumentException("Parameters must not be null");
 		}
 
-		String urlPath = makeOwnedEntityUrlPath(parentEntity, parentEntityId, ownedEntity, ownedEntityId,
-				customFieldId);
+		String urlPath = makeOwnedEntityUrlPath(parentEntity, parentEntityId, ownedEntity, ownedEntityId, customFieldId);
 
 		// make apiDefinition
 		ApiDefinition apiDefinition = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET,
