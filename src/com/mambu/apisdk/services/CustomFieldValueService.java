@@ -486,33 +486,6 @@ public class CustomFieldValueService {
 	}
 
 	/**
-	 * Helper method to make URL path for getting parent entity`s field values.
-	 * 
-	 * Path example: /api/client/{clientId}/custominformation/{customFieldId}
-	 * 
-	 * @param parentEntity
-	 *            parent entity. Example MambuEntityType.CLIENT. Must not be NULL.
-	 * @param parentEntityId
-	 *            the id or encoded key of the parent entity. Must not be NULL.
-	 * @param customFieldId
-	 *            custom field id
-	 * @return URL path for GET custom field values API
-	 */
-	private String makeEntityUrlPath(MambuEntityType parentEntity, String parentEntityId, String customFieldId) {
-
-		if (parentEntity == null || parentEntityId == null) {
-			throw new IllegalArgumentException("Parameters must not be null");
-		}
-
-		// Get API end point for parent (e.g. "loans")
-		String entityPath = ApiDefinition.getApiEndPoint(parentEntity.getEntityClass());
-
-		// Example: /api/loans/{accountId}/custominformation/{customFieldId}
-		String urlPath = entityPath + "/" + parentEntityId + "/" + APIData.CUSTOM_INFORMATION + "/" + customFieldId;
-		return urlPath;
-	}
-
-	/**
 	 * Helper to make ApiDefinition for patching owned custom field values
 	 * 
 	 * @param parentEntity
@@ -734,15 +707,12 @@ public class CustomFieldValueService {
 			throw new IllegalArgumentException("Parameters must not be null");
 		}
 
-		// constructing the URL
-		String urlPath = makeEntityUrlPath(parentEntity, parentEntityId, customFieldId);
-
-		// make apiDefinition
-		ApiDefinition apiDefinition = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET,
-				CustomFieldValue.class, ApiReturnFormat.COLLECTION);
+		ParamsMap params = new ParamsMap();
 
 		// delegate execution to service executor
-		return serviceExecutor.execute(apiDefinition);
+		return serviceExecutor.getOwnedEntities(parentEntity, parentEntityId, MambuEntityType.CUSTOM_FIELD_VALUE,
+				customFieldId, params);
+
 	}
 
 	/**
