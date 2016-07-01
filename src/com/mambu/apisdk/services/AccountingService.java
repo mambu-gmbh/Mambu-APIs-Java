@@ -54,6 +54,7 @@ public class AccountingService {
 	 */
 	@Inject
 	public AccountingService(MambuAPIService mambuAPIService) {
+
 		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
@@ -68,6 +69,7 @@ public class AccountingService {
 	 * @throws MambuApiException
 	 */
 	public GLAccount getGLAccount(String glCode) throws MambuApiException {
+
 		// Example GET/api/glaccount/1234123
 		// See MBU-1543
 		return serviceExecutor.execute(getGLAccount, glCode);
@@ -84,6 +86,7 @@ public class AccountingService {
 	 * @throws MambuApiException
 	 */
 	public GLAccount getGLAccount(String glCode, String fromDate, String toDate) throws MambuApiException {
+
 		// Example GET /api/glaccount/1234123?from=2011-10-04&to=2011-11-04
 		// See MBU-1543
 		ParamsMap params = new ParamsMap();
@@ -104,6 +107,7 @@ public class AccountingService {
 	 * @throws MambuApiException
 	 */
 	public List<GLAccount> getGLAccounts(GLAccountType accountType) throws MambuApiException {
+
 		// Example GET /api/glaccount?type=ASSET
 		// See MBU-1543.
 
@@ -133,6 +137,7 @@ public class AccountingService {
 	 */
 	public List<GLJournalEntry> getGLJournalEntries(String branchId, Date fromDate, Date toDate)
 			throws MambuApiException {
+
 		// GET /api/gljournalentries?from=1875-05-20&to=1875-05-25&branchID=ABC123
 		// See MBU-1736
 		return (this.getGLJournalEntries(branchId, fromDate, toDate, -1, -1));
@@ -159,6 +164,7 @@ public class AccountingService {
 	 */
 	public List<GLJournalEntry> getGLJournalEntries(String branchID, Date fromDate, Date toDate, Integer offset,
 			Integer limit) throws MambuApiException {
+
 		// GET /api/gljournalentries?from=1875-05-20&to=1875-05-25&branchID=ABC123&offset=50&limit=50
 		// See MBU-1736
 		if (fromDate == null || toDate == null) {
@@ -191,10 +197,11 @@ public class AccountingService {
 	 * @return list of GL journal entries matching filter constraints
 	 * @throws MambuApiException
 	 */
-	public List<GLJournalEntry> getGLJournalEntries(JSONFilterConstraints filterConstraints, String offset,
-			String limit) throws MambuApiException {
-		//POST {JSONFilterConstraints} /api/gljournalentries/search?offset=0&limit=5
-		//See MBU-12099
+	public List<GLJournalEntry> getGLJournalEntries(JSONFilterConstraints filterConstraints, String offset, String limit)
+			throws MambuApiException {
+
+		// POST {JSONFilterConstraints} /api/gljournalentries/search?offset=0&limit=5
+		// See MBU-12099
 		ApiDefinition apiDefinition = SearchService
 				.makeApiDefinitionforSearchByFilter(MambuEntityType.GL_JOURNAL_ENTRY);
 
@@ -222,6 +229,7 @@ public class AccountingService {
 	 */
 	public List<GLJournalEntry> postGLJournalEntries(List<ApiGLJournalEntry> entries, String branchId, String date,
 			String notes) throws MambuApiException {
+
 		// POST "branchId=2&date=2010-02-03&debitAccount1=100001&debitAmount1=30&creditAccount1=100002&creditAmount1=30"
 		// /api/gljournalentries
 		// See MBU-1737
