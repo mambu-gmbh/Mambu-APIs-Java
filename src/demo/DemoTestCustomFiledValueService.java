@@ -332,7 +332,7 @@ public class DemoTestCustomFiledValueService {
 			System.out.println(
 					"Update a list of custom fields for " + parentEntityType + " status = " + updateCustomFieldStatus);
 
-			testGetCustomFields(parentEntityType, entityParams, updatedCustomFieldValues);
+			testGetCustomFieldValues(parentEntityType, entityParams, updatedCustomFieldValues);
 
 		} catch (MambuApiException e) {
 			DemoUtil.logException(methodName, e);
@@ -352,7 +352,7 @@ public class DemoTestCustomFiledValueService {
 	 *            A list of custom field values
 	 * @throws MambuApiException
 	 */
-	private static void testGetCustomFields(MambuEntityType parentEntityType, DemoEntityParams entityParams,
+	private static void testGetCustomFieldValues(MambuEntityType parentEntityType, DemoEntityParams entityParams,
 			List<CustomFieldValue> customFieldValues) throws MambuApiException {
 
 		// Available since 4.2. More details on MBU-13211
@@ -362,7 +362,7 @@ public class DemoTestCustomFiledValueService {
 
 		for (CustomFieldValue customFieldValue : customFieldValues) {
 			// call Mambu to get the details of the custom field
-			List<CustomFieldValue> updatedCustomFieldValue = customFieldsService.getCustomField(parentEntityType,
+			List<CustomFieldValue> updatedCustomFieldValue = customFieldsService.getCustomFieldValue(parentEntityType,
 					entityParams.getId(), customFieldValue.getCustomFieldId());
 
 			DemoUtil.logCustomFieldValues(updatedCustomFieldValue, parentEntityType.toString(),

@@ -579,7 +579,7 @@ public class ServiceExecutor {
 	 * @throws MambuApiException
 	 */
 	public <R> R getOwnedEntities(MambuEntityType parentEntity, String parentId, MambuEntityType ownedEntity,
-			ParamsMap params) throws MambuApiException {
+			String relatedEntityId, ParamsMap params) throws MambuApiException {
 
 		if (parentEntity == null || ownedEntity == null) {
 			throw new IllegalArgumentException("Parent Entity and Owned Entity cannot be null");
@@ -588,7 +588,8 @@ public class ServiceExecutor {
 		Class<?> ownedClass = ownedEntity.getEntityClass();
 
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, parentClass, ownedClass);
-		return execute(apiDefinition, parentId, params);
+
+		return execute(apiDefinition, parentId, relatedEntityId, params);
 	}
 
 	/**
@@ -619,7 +620,7 @@ public class ServiceExecutor {
 			params.addParam(APIData.LIMIT, String.valueOf(limit));
 		}
 
-		return getOwnedEntities(parentEntity, parentId, ownedEntity, params);
+		return getOwnedEntities(parentEntity, parentId, ownedEntity, null, params);
 
 	}
 
