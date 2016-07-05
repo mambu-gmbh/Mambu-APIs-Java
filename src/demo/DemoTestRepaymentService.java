@@ -144,6 +144,8 @@ public class DemoTestRepaymentService {
 
 		}
 
+		// Since revolving credit loans can have predefined schedules with only due dates, they should allow adding new
+		// installments via PATCH Schedule API. See MBU-13382.
 		LoansService loansService = MambuAPIFactory.getLoanService();
 		String productTypeKey = demoLoanAccount.getProductTypeKey();
 		LoanProductType loanProductType = loansService.getLoanProduct(productTypeKey).getLoanProductType();
