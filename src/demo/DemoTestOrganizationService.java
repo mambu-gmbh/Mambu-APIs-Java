@@ -213,8 +213,8 @@ public class DemoTestOrganizationService {
 		String branchId = BRANCH_ID;
 		String offset = "0";
 		String limit = "500";
-		System.out.println(
-				"\nIn testGetCentresByBranch" + "  BranchID=" + branchId + "  Offset=" + offset + "  Limit=" + limit);
+		System.out.println("\nIn testGetCentresByBranch" + "  BranchID=" + branchId + "  Offset=" + offset + "  Limit="
+				+ limit);
 
 		Date d1 = new Date();
 		List<Centre> centres = organizationService.getCentres(branchId, offset, limit);
@@ -339,16 +339,16 @@ public class DemoTestOrganizationService {
 		}
 
 		// Get the current exchange rate
-		List<ExchangeRate> exchangeRates = organizationService
-				.getExchangeRates(lastPostedExchangeRate.getToCurrencyCode(), null, null, 0, 1);
+		List<ExchangeRate> exchangeRates = organizationService.getExchangeRates(
+				lastPostedExchangeRate.getToCurrencyCode(), null, null, 0, 1);
 
 		ExchangeRate currentExchangeRate;
 		if (exchangeRates != null && !exchangeRates.isEmpty() && exchangeRates.get(0).getEndDate() == null) {
 			currentExchangeRate = exchangeRates.get(0);
 			logExchangeRateDetails(currentExchangeRate);
 		} else {
-			throw new MambuApiException(new Exception(
-					"Current exchange rate for " + lastPostedExchangeRate.getToCurrencyCode() + " was not found"));
+			throw new MambuApiException(new Exception("Current exchange rate for "
+					+ lastPostedExchangeRate.getToCurrencyCode() + " was not found"));
 		}
 
 		// test to see the identity of the exchange rate using encoded keys
@@ -420,6 +420,8 @@ public class DemoTestOrganizationService {
 		exchangeRate.setToCurrencyCode(currncy.getCode());
 		exchangeRate.setStartDate(currentDate.getTime());
 		exchangeRate.setSellRate(new BigDecimal("4.50"));
+		System.out.println("Created exchange Rate with Start date=" + exchangeRate.getStartDate() + "\tCurrent Time="
+				+ new Date());
 		return exchangeRate;
 	}
 
@@ -485,8 +487,8 @@ public class DemoTestOrganizationService {
 		for (TransactionChannel channel : transactionChannels) {
 			String channelName = channel.getName();
 			String channelId = channel.getId();
-			System.out.println(
-					"\nChannel Key=" + channel.getEncodedKey() + "\tName=" + channelName + "\tId=" + channelId);
+			System.out.println("\nChannel Key=" + channel.getEncodedKey() + "\tName=" + channelName + "\tId="
+					+ channelId);
 
 			// Transaction channels also have UsageRights since Mambu 3.13. See MBU-9562
 			String demoUserRoleKey = (demoUser.getRole() == null) ? null : demoUser.getRole().getEncodedKey();
@@ -517,8 +519,8 @@ public class DemoTestOrganizationService {
 			if (accountingRue != null) {
 				GLAccount glAccount = accountingRue.getAccount();
 				String accountName = glAccount.getLongName();
-				System.out.println(
-						"GLAccount=" + accountName + "\tFinancialResource=" + accountingRue.getFinancialResource());
+				System.out.println("GLAccount=" + accountName + "\tFinancialResource="
+						+ accountingRue.getFinancialResource());
 			} else {
 				System.out.println("No GLAccountingRule");
 			}
