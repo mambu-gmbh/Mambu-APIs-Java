@@ -306,7 +306,7 @@ public class DemoTestOrganizationService {
 				.getExchangeRates(lastPostedExchangeRate.getToCurrencyCode(), null, null, 0, 1);
 
 		ExchangeRate currentExchangeRate;
-		if (exchangeRates != null && !exchangeRates.isEmpty()) {
+		if (exchangeRates != null && !exchangeRates.isEmpty() && exchangeRates.get(0).getEndDate() == null) {
 			currentExchangeRate = exchangeRates.get(0);
 			logExchangeRateDetails(currentExchangeRate);
 		} else {
@@ -315,13 +315,13 @@ public class DemoTestOrganizationService {
 		}
 
 		// test to see the identity of the exchange rate using encoded keys
-		if (lastPostedExchangeRate.getEncodedKey().equals(currentExchangeRate.getEncodedKey())) {
-			return;
-		} else {
+		if (!lastPostedExchangeRate.getEncodedKey().equals(currentExchangeRate.getEncodedKey())) {
 			System.out.println("POST: " + lastPostedExchangeRate.getEncodedKey());
 			System.out.println("GET:  " + currentExchangeRate.getEncodedKey());
-			throw new MambuApiException(new Exception("POSTed and GET(got) exchange rate is not he same"));
+			throw new MambuApiException(new Exception("POSTed and GET(got) exchange rate is not the same"));
 		}
+
+		System.out.println("Current exchange rate was successfully retrieved from Mambu");
 	}
 
 	/**
