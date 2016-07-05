@@ -64,6 +64,8 @@ public class DemoTestOrganizationService {
 			// Test POST exchange rate
 			testPostExchangeRate(organizationCurrencies); // Available since 4.2
 
+			testPostExchangeRateWithNullStartDate(organizationCurrencies); // Available since 4.2
+
 			testPostIndexInterestRate(); // Available since 3.10
 
 			testGetTransactionChannels(); // Available since 3.7
@@ -280,6 +282,41 @@ public class DemoTestOrganizationService {
 
 		Date end = new Date();
 		System.out.println("\n" + methodName + " took " + (end.getTime() - start.getTime()) + " milliseconds");
+
+		testGetCurrentExchangeRate(postedExchangeRate);
+	}
+
+	/**
+	 * 
+	 * Tests POSTing in Mambu of a exchange rate with null start date.
+	 * 
+	 * @param organizationCurrencies
+	 *            A list of all currencies available for the organization
+	 * @throws MambuApiException
+	 */
+	private static void testPostExchangeRateWithNullStartDate(List<Currency> organizationCurrencies)
+			throws MambuApiException {
+
+		System.out.println(methodName = "\nIn testPostExchangeRateWithNullStartDate");
+
+		// Get one currency to test POST exchange rate
+		Currency currncyForTest = getRandomCurrencyOtherThanBase(organizationCurrencies);
+
+		// return if there are no other currencies or just the base currency
+		if (currncyForTest == null) {
+			System.out.println("WARNING: No Foreign Currency found to test POST Exchange Rate API ");
+			return;
+		}
+		ExchangeRate exchangeRate = createExchangeRate(currncyForTest);
+		// set the startDate to be null
+		exchangeRate.setStartDate(null);
+
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+
+		// POST the exchange rate in Mambu
+		ExchangeRate postedExchangeRate = organizationService.createExchangeRate(currncyForTest, exchangeRate);
+		System.out.println("The details of the created ExchangeRate are: ");
+		logExchangeRateDetails(postedExchangeRate);
 
 		testGetCurrentExchangeRate(postedExchangeRate);
 	}

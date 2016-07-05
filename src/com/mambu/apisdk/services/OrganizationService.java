@@ -179,6 +179,7 @@ public class OrganizationService {
 	 * @throws MambuApiException
 	 */
 	public Branch getBranch(String branchId) throws MambuApiException {
+
 		return serviceExecutor.execute(getBranchDetails, branchId);
 	}
 
@@ -192,6 +193,7 @@ public class OrganizationService {
 	 * @throws MambuApiException
 	 */
 	public Centre getCentre(String centreId) throws MambuApiException {
+
 		return serviceExecutor.execute(getCentreDetails, centreId);
 	}
 
@@ -230,6 +232,7 @@ public class OrganizationService {
 	 * @throws MambuApiException
 	 */
 	public CustomField getCustomField(String fieldId) throws MambuApiException {
+
 		return serviceExecutor.execute(getCustomField, fieldId);
 	}
 
@@ -430,7 +433,8 @@ public class OrganizationService {
 	 *            the Currency object. Must not be null or have a null currency code.
 	 * @param exchangeRate
 	 *            the ExchangeRate to be created in Mambu. Must not be null. The required start date should be provided
-	 *            in the startDate as the date in UTC at midnight
+	 *            in the startDate as the date in UTC at midnight. The startDate of the exchangeRate can be left null
+	 *            and the API will handle the setting of this field using the organization current date/time.
 	 * @return newly created ExchangeRate
 	 * @throws MambuApiException
 	 */
@@ -453,7 +457,8 @@ public class OrganizationService {
 	 *            the currency code. Must not be null.
 	 * @param exchangeRate
 	 *            the exchange rate to be created. Must not be null. The required start date should be provided in the
-	 *            startDate as the date in UTC at midnight
+	 *            startDate as the date in UTC at midnight. The startDate of the exchangeRate can be left null and the
+	 *            API will handle the setting of this field using the organization current date/time.
 	 * @return newly created ExchangeRate
 	 * @throws MambuApiException
 	 * @throws IllegalArgumentException
@@ -491,7 +496,8 @@ public class OrganizationService {
 	 * @param limit
 	 *            the maximum number of response entries. If not set a value of 50 is used by default by Mambu
 	 * 
-	 * @return a list of Exchange Rates. Note, the dates in startDate and endDate are returned as dates in UTC
+	 * @return a list of Exchange Rates. Note, the dates in startDate and endDate are returned as dates in UTC. And also
+	 *         the exchange rates from the list are sorted descending by start date.
 	 * 
 	 * @throws MambuApiException
 	 */
