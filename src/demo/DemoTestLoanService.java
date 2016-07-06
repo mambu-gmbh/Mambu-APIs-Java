@@ -140,6 +140,7 @@ public class DemoTestLoanService {
 				}
 
 				try {
+
 					// Create account to test patch, approve, undo approve, reject, close
 					testCreateJsonAccount();
 					testPatchLoanAccountTerms(); // Available since 3.9.3
@@ -165,6 +166,8 @@ public class DemoTestLoanService {
 
 					// Test Disburse and Undo disburse
 					testDisburseLoanAccount();
+					// Edit the loan amount only for active revolving credit loans
+					testEditLoanAmountForActiveRevolvingCreditLoans();
 					testUndoDisburseLoanAccount(); // Available since 3.9
 					testDisburseLoanAccount();
 					testGetLoanAccountTransactions();
@@ -242,6 +245,44 @@ public class DemoTestLoanService {
 			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
 		}
 
+	}
+
+	// Edit the loan amount for active revolving credit loans. See MBU-12661
+	private static void testEditLoanAmountForActiveRevolvingCreditLoans() throws MambuApiException {
+
+		System.out.println(methodName = "\nIn testEditLoanAmountForActiveRevolvingCreditLoans");
+
+		LoanProductType loanProductType = demoProduct.getLoanProductType();
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		// Get the updated state of the loan account
+		AccountState accountState = loanService.getLoanAccount(NEW_LOAN_ACCOUNT_ID).getAccountState();
+
+		// Edit the loan amount for active revolving credit loan
+		if (loanProductType.equals(LoanProductType.REVOLVING_CREDIT) && accountState.equals(AccountState.ACTIVE)) {
+
+			// Due to the fact that the PATCH operation for loan accounts accepts only the loan amount as request body,
+			// the unnecessary default values for a loan account should be updated to null. The newly created loan
+			// account object should have values only for the id and loanAmount fields
+			LoanAccount newLoanAccount = new LoanAccount();
+			newLoanAccount.setId(NEW_LOAN_ACCOUNT_ID);
+			newLoanAccount.setLoanAmount(newAccount.getLoanAmount().add(new BigDecimal("55")));
+			newLoanAccount.setPeriodicPayment((BigDecimal) null);
+			newLoanAccount.setRepaymentInstallments(null);
+			newLoanAccount.setGracePeriod(null);
+			newLoanAccount.setPrincipalRepaymentInterval(null);
+			newLoanAccount.setArrearsTolerancePeriod(null);
+
+			// Edit the loan amount
+			boolean patchResult = loanService.patchLoanAccount(newLoanAccount);
+
+			System.out.println("The loan amount was edited for the loan account " + NEW_LOAN_ACCOUNT_ID + ". Status: "
+					+ patchResult);
+		} else {
+			System.out.println(
+					"The loan amount does not meet the prerequisites, therefore its loan amount will not be updated.");
+		}
 	}
 
 	public static void testGetLoanAccount() throws MambuApiException {
