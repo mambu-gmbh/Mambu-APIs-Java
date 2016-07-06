@@ -235,10 +235,10 @@ public class DemoTestSavingsService {
 	}
 
 	/**
-	 * Helper method creates three transactions for the account received as parameter to this method
+	 * Helper method, creates three transactions for the account received as parameter to this method
 	 * 
 	 * @param newAccount
-	 *            the saving account
+	 *            The saving account
 	 * @return
 	 * @throws MambuApiException
 	 */
