@@ -164,6 +164,8 @@ public class DemoTestSavingsService {
 					testCreateSavingsAccount();
 					testDeleteSavingsAccount(); // Available since 3.4
 
+					testBulkReverseOnSavingTransactions(); // Available since 4.2
+
 					// Test rejecting an account now
 					CLOSER_TYPE testTypes[] = { CLOSER_TYPE.WITHDRAW, CLOSER_TYPE.REJECT };
 					for (CLOSER_TYPE closerType : testTypes) {
@@ -191,6 +193,86 @@ public class DemoTestSavingsService {
 		}
 
 	}
+
+	// tests bulk reverse on saving transactions
+	private static void testBulkReverseOnSavingTransactions() throws MambuApiException {
+
+		// create saving account
+		System.out.println(methodName = "\nIn testReverseBulkTransactions");
+
+		SavingsService service = MambuAPIFactory.getSavingsService();
+
+		SavingsAccount savingsAccount = makeSavingsAccountForDemoProduct();
+		// Create Account in Mambu
+		SavingsAccount newAccount = service.createSavingsAccount(savingsAccount);
+
+		if (newAccount == null) {
+			System.out.println("Saving account couldn`t be created");
+			return;
+		}
+		// approve it
+		newAccount = service.approveSavingsAccount(newAccount.getId(), "Approve savings account demo notes");
+
+		SavingsService savingsService = MambuAPIFactory.getSavingsService();
+
+		// create 3 transactions
+		List<SavingsTransaction> transactions = createThreeSavingTransactionsForBulkReversalTest(newAccount);
+
+		if (transactions != null && (transactions.size() == 3)) {
+			// reverse second transaction
+			String notes = "Reversed by Demo API";
+			SavingsTransaction Transaction = savingsService.reverseSavingsTransaction(transactions.get(1), notes);
+
+			System.out.println("Reversed Transaction=" + Transaction.getType() + "\tReversed Amount="
+					+ Transaction.getAmount().toString() + "\tBalance =" + Transaction.getBalance().toString()
+					+ "Transaction Type=" + Transaction.getType() + "\tAccount key="
+					+ Transaction.getParentAccountKey());
+		} else {
+			DemoUtil.logException(methodName,
+					new MambuApiException(new Exception("Saving transaction couldn`t be reverted")));
+		}
+
+	}
+
+	/**
+	 * Helper method, creates three transactions for the account received as parameter to this method
+	 * 
+	 * @param newAccount
+	 *            The saving account
+	 * @return
+	 * @throws MambuApiException
+	 */
+	private static List<SavingsTransaction> createThreeSavingTransactionsForBulkReversalTest(SavingsAccount newAccount)
+			throws MambuApiException {
+
+		if (newAccount == null) {
+			throw new IllegalArgumentException("Saving account can`t be null");
+		}
+
+		SavingsService savingsService = MambuAPIFactory.getSavingsService();
+
+		List<SavingsTransaction> transactions = new ArrayList<>();
+
+		// create 3 saving transactions
+		for (int i = 1; i <= 3; i++) {
+			Money amount = new Money(150.00 * i);
+			Date date = null;
+			String notes = "Deposit notes - API - Transaction No" + i;
+
+			// Make demo transactionDetails with the valid channel fields
+			TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
+
+			SavingsTransaction transaction = savingsService.makeDeposit(newAccount.getId(), amount, date,
+					transactionDetails, null, notes);
+
+			System.out.println("Made Deposit To Savings for account with the " + newAccount.getId() + " id:"
+					+ ". Amount=" + transaction.getAmount() + " Balance =" + transaction.getBalance());
+			transactions.add(transaction);
+		}
+
+		return transactions;
+	}
+
 	public static void testGetSavingsAccount() throws MambuApiException {
 
 		System.out.println(methodName = "\nIn testGetSavingsAccount");
