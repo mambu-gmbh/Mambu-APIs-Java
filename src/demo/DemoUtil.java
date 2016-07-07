@@ -125,6 +125,11 @@ public class DemoUtil {
 
 	static String demoLineOfCreditId = null;
 
+	// Demo test cron
+	public static int demoCronStartHour;
+	public static int demoCronStartMinute;
+	public static int demoCronStartSecond;
+
 	public static String exceptionLogPrefix = "*** Exception *** ";
 
 	public static void setUp() {
@@ -221,8 +226,8 @@ public class DemoUtil {
 		// Get Demo Loan and Demo Savings Product IDs
 		demoLaonAccountId = makeNullIfEmpty(properties.getProperty("demoLaonAccountId")); // account
 		demoLaonProductId = makeNullIfEmpty(properties.getProperty("demoLaonProductId")); // product
-		System.out.println(demoLogPrefix + "Loan Account ID=" + demoLaonAccountId + "\tLoan Product ID="
-				+ demoLaonProductId);
+		System.out.println(
+				demoLogPrefix + "Loan Account ID=" + demoLaonAccountId + "\tLoan Product ID=" + demoLaonProductId);
 
 		// Get Demo Savings Account Demo Savings Product IDs
 		demoSavingsAccountId = makeNullIfEmpty(properties.getProperty("demoSavingsAccountId")); // account
@@ -234,6 +239,38 @@ public class DemoUtil {
 		demoLineOfCreditId = makeNullIfEmpty(properties.getProperty("demoLineOfCreditId"));
 		System.out.println(demoLogPrefix + "Line of Credit ID=" + demoLineOfCreditId);
 
+		// Get Demo Test Cron time properties
+
+		demoCronStartHour = getIntValueOrDefault(properties.getProperty("demoCronStartHour"), 0);
+		System.out.println(demoLogPrefix + "Cron start hour=" + demoCronStartHour);
+		demoCronStartMinute = getIntValueOrDefault(properties.getProperty("demoCronStartMinute"), 0);
+		System.out.println(demoLogPrefix + "Cron start minute=" + demoCronStartMinute);
+		demoCronStartSecond = getIntValueOrDefault(properties.getProperty("demoCronStartsecond"), 0);
+		System.out.println(demoLogPrefix + "Cron start second=" + demoCronStartSecond);
+
+	}
+
+	/**
+	 * Helper method, gets a integer as string and tries to parse into an integer and return it. If it fails to parse it
+	 * returns the default passed as parameter to the method.
+	 * 
+	 * @param stringProperty
+	 *            a property
+	 * @param defaultIntValue
+	 *            Default integer value to be returned by the method in case NumberFormatException is thrown during
+	 *            parsing the property.
+	 * @return
+	 */
+	private static int getIntValueOrDefault(String stringProperty, int defaultIntValue) {
+
+		int intValue = 0;
+		try {
+			intValue = Integer.parseInt(stringProperty);
+		} catch (NumberFormatException nfe) {
+			intValue = defaultIntValue;
+		}
+
+		return intValue;
 	}
 
 	// Helper to set properties parameter value to null if it is empty.
@@ -1049,8 +1086,8 @@ public class DemoUtil {
 			// For selection fields use CustomFieldSelection class, available since 3.10, see MBU-7914
 			List<CustomFieldSelection> selectionOptions = customField.getCustomFieldSelectionOptions();
 			if (selectionOptions == null || selectionOptions.size() == 0) {
-				System.out.println("WARNING: Cannot update selection value as no values are now defined for field ID="
-						+ fieldId);
+				System.out.println(
+						"WARNING: Cannot update selection value as no values are now defined for field ID=" + fieldId);
 				newValue = null;
 				break switchloop;
 			}
@@ -1061,8 +1098,8 @@ public class DemoUtil {
 					break switchloop;
 				}
 			}
-			System.out.println("WARNING: Cannot update selection value as only one value is defined for field ID="
-					+ fieldId);
+			System.out.println(
+					"WARNING: Cannot update selection value as only one value is defined for field ID=" + fieldId);
 			newValue = null;
 			break;
 		case DATE:
@@ -1627,4 +1664,5 @@ public class DemoUtil {
 				constraints.getMaxValue(), noLimitsValue);
 
 	}
+
 }

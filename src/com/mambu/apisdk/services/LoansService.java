@@ -512,9 +512,8 @@ public class LoansService {
 		// Get the transaction type based on how the account was closed
 		String undoCloserTransactionType = ServiceHelper.getUndoCloserTransactionType(loanAccount);
 		if (undoCloserTransactionType == null) {
-			throw new IllegalArgumentException(
-					"Account is not in a state to perform UNDO close via API. Account State=" + loanAccount.getState()
-							+ " Sub-state=" + loanAccount.getSubState());
+			throw new IllegalArgumentException("Account is not in a state to perform UNDO close via API. Account State="
+					+ loanAccount.getState() + " Sub-state=" + loanAccount.getSubState());
 		}
 
 		// Create params map with expected API's params
@@ -554,8 +553,8 @@ public class LoansService {
 		// fees": [{"encodedKey":"feeKey1"}, {encodedKey":"feeKey2", "amount":"100.00"}], "notes":"notes"}
 
 		// Get Transaction custom information
-		List<CustomFieldValue> customInformation = disbursementDetails != null ? disbursementDetails
-				.getCustomFieldValues() : null;
+		List<CustomFieldValue> customInformation = disbursementDetails != null
+				? disbursementDetails.getCustomFieldValues() : null;
 		// Get JSONTransaction and return LoanAccount
 		return disburseLoanAccount(accountId, amount, disbursementDetails, customInformation, notes);
 
@@ -885,7 +884,8 @@ public class LoansService {
 	 * @throws MambuApiException
 	 * @throws IllegalArgumentException
 	 */
-	public LoanAccount updateLoanAccountTranches(String accountId, List<LoanTranche> tranches) throws MambuApiException {
+	public LoanAccount updateLoanAccountTranches(String accountId, List<LoanTranche> tranches)
+			throws MambuApiException {
 
 		// Available since Mambu 3.12.3. See MBU-9996
 
@@ -935,9 +935,10 @@ public class LoansService {
 		// // edit a fund
 		// {"encodedKey": "40288a5d4f3fbac9014f3fd02745001d",
 		// "guarantorKey": "40288a5d4f273153014f2731afe40102", "savingsAccountKey":
-		// "40288a5d4f3fbac9014f3fcf822c0014","amount": "50"},
+		// "40288a5d4f3fbac9014f3fcf822c0014","amount": "50", "interestCommission":"3"},
 		// add a fund
-		// {guarantorKey": "40288a5d4f273153014f2731afe40103","savingsAccountKey": "40288a5d4f3fbac9014f3fcf822c0015","amount": "100"}
+		// {guarantorKey": "40288a5d4f273153014f2731afe40103","savingsAccountKey":
+		// "40288a5d4f3fbac9014f3fcf822c0015","amount": "100" ,"interestCommission":"3"}
 		// ]}
 
 		if (funds == null) {
@@ -1364,8 +1365,8 @@ public class LoansService {
 			throw new IllegalArgumentException("Loan Account cannot be null");
 		}
 		if (account.getLoanAmount() == null || account.getLoanAmount().isZero()) {
-			throw new IllegalArgumentException("Loan Amount must be not null and not zero. It is "
-					+ account.getLoanAmount());
+			throw new IllegalArgumentException(
+					"Loan Amount must be not null and not zero. It is " + account.getLoanAmount());
 		}
 
 		// Add applicable params to the map
@@ -1437,14 +1438,14 @@ public class LoansService {
 			// TODO: Remove IllegalArgumentException to support reverse for WRITE_OFF when MBU-13191 is implemented and
 			// un-comment the code below setting transactionTypeParam. Also update method documentation by adding
 			// WRITE_OFF_ADJUSTMENT for MBU-13191
-			throw new IllegalArgumentException("Reversal for Loan Transaction Type " + originalTransactionType.name()
-					+ " is not supported");
+			throw new IllegalArgumentException(
+					"Reversal for Loan Transaction Type " + originalTransactionType.name() + " is not supported");
 			// transactionTypeParam = LoanTransactionType.WRITE_OFF_ADJUSTMENT.name();
 			// break;
 
 		default:
-			throw new IllegalArgumentException("Reversal for Loan Transaction Type " + originalTransactionType.name()
-					+ " is not supported");
+			throw new IllegalArgumentException(
+					"Reversal for Loan Transaction Type " + originalTransactionType.name() + " is not supported");
 		}
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, transactionTypeParam);
