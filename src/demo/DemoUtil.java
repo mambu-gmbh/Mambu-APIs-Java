@@ -226,8 +226,8 @@ public class DemoUtil {
 		// Get Demo Loan and Demo Savings Product IDs
 		demoLaonAccountId = makeNullIfEmpty(properties.getProperty("demoLaonAccountId")); // account
 		demoLaonProductId = makeNullIfEmpty(properties.getProperty("demoLaonProductId")); // product
-		System.out.println(
-				demoLogPrefix + "Loan Account ID=" + demoLaonAccountId + "\tLoan Product ID=" + demoLaonProductId);
+		System.out.println(demoLogPrefix + "Loan Account ID=" + demoLaonAccountId + "\tLoan Product ID="
+				+ demoLaonProductId);
 
 		// Get Demo Savings Account Demo Savings Product IDs
 		demoSavingsAccountId = makeNullIfEmpty(properties.getProperty("demoSavingsAccountId")); // account
@@ -245,7 +245,7 @@ public class DemoUtil {
 		System.out.println(demoLogPrefix + "Cron start hour=" + demoCronStartHour);
 		demoCronStartMinute = getIntValueOrDefault(properties.getProperty("demoCronStartMinute"), 0);
 		System.out.println(demoLogPrefix + "Cron start minute=" + demoCronStartMinute);
-		demoCronStartSecond = getIntValueOrDefault(properties.getProperty("demoCronStartsecond"), 0);
+		demoCronStartSecond = getIntValueOrDefault(properties.getProperty("demoCronStartSecond"), 0);
 		System.out.println(demoLogPrefix + "Cron start second=" + demoCronStartSecond);
 
 	}
@@ -1086,8 +1086,8 @@ public class DemoUtil {
 			// For selection fields use CustomFieldSelection class, available since 3.10, see MBU-7914
 			List<CustomFieldSelection> selectionOptions = customField.getCustomFieldSelectionOptions();
 			if (selectionOptions == null || selectionOptions.size() == 0) {
-				System.out.println(
-						"WARNING: Cannot update selection value as no values are now defined for field ID=" + fieldId);
+				System.out.println("WARNING: Cannot update selection value as no values are now defined for field ID="
+						+ fieldId);
 				newValue = null;
 				break switchloop;
 			}
@@ -1098,8 +1098,8 @@ public class DemoUtil {
 					break switchloop;
 				}
 			}
-			System.out.println(
-					"WARNING: Cannot update selection value as only one value is defined for field ID=" + fieldId);
+			System.out.println("WARNING: Cannot update selection value as only one value is defined for field ID="
+					+ fieldId);
 			newValue = null;
 			break;
 		case DATE:
