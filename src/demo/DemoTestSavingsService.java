@@ -198,7 +198,7 @@ public class DemoTestSavingsService {
 	private static void testBulkReverseOnSavingTransactions() throws MambuApiException {
 
 		// create saving account
-		System.out.println(methodName = "\nIn testReverseBulkTransactions");
+		System.out.println(methodName = "\nIn testBulkReverseOnSavingTransactions");
 
 		SavingsService service = MambuAPIFactory.getSavingsService();
 
@@ -228,8 +228,8 @@ public class DemoTestSavingsService {
 					+ "Transaction Type=" + Transaction.getType() + "\tAccount key="
 					+ Transaction.getParentAccountKey());
 		} else {
-			DemoUtil.logException(methodName,
-					new MambuApiException(new Exception("Saving transaction couldn`t be reverted")));
+			System.out.println(
+					"WARNING: Unable to create the saving transactions required by testBulkReverseOnSavingTransactions() test method");
 		}
 
 	}
@@ -245,29 +245,28 @@ public class DemoTestSavingsService {
 	private static List<SavingsTransaction> createThreeSavingTransactionsForBulkReversalTest(SavingsAccount newAccount)
 			throws MambuApiException {
 
-		if (newAccount == null) {
-			throw new IllegalArgumentException("Saving account can`t be null");
-		}
-
-		SavingsService savingsService = MambuAPIFactory.getSavingsService();
-
 		List<SavingsTransaction> transactions = new ArrayList<>();
 
-		// create 3 saving transactions
-		for (int i = 1; i <= 3; i++) {
-			Money amount = new Money(150.00 * i);
-			Date date = null;
-			String notes = "Deposit notes - API - Transaction No" + i;
+		if (newAccount != null) {
 
-			// Make demo transactionDetails with the valid channel fields
-			TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
+			SavingsService savingsService = MambuAPIFactory.getSavingsService();
 
-			SavingsTransaction transaction = savingsService.makeDeposit(newAccount.getId(), amount, date,
-					transactionDetails, null, notes);
+			// create 3 saving transactions
+			for (int i = 1; i <= 3; i++) {
+				Money amount = new Money(150.00 * i);
+				Date date = null;
+				String notes = "Deposit notes - API - Transaction No" + i;
 
-			System.out.println("Made Deposit To Savings for account with the " + newAccount.getId() + " id:"
-					+ ". Amount=" + transaction.getAmount() + " Balance =" + transaction.getBalance());
-			transactions.add(transaction);
+				// Make demo transactionDetails with the valid channel fields
+				TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
+
+				SavingsTransaction transaction = savingsService.makeDeposit(newAccount.getId(), amount, date,
+						transactionDetails, null, notes);
+
+				System.out.println("Made Deposit To Savings for account with the " + newAccount.getId() + " id:"
+						+ ". Amount=" + transaction.getAmount() + " Balance =" + transaction.getBalance());
+				transactions.add(transaction);
+			}
 		}
 
 		return transactions;
