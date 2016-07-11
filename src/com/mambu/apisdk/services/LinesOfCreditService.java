@@ -6,6 +6,8 @@ import com.google.inject.Inject;
 import com.mambu.accounts.shared.model.Account.Type;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.json.LineOfCreditPostSerializer;
+import com.mambu.apisdk.json.LoanAccountPatchJsonSerializer;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.MambuEntityType;
@@ -44,6 +46,13 @@ public class LinesOfCreditService {
 	private ServiceExecutor serviceExecutor;
 	// MambuEntity managed by this service
 	private static final MambuEntityType serviceEntity = MambuEntityType.LINE_OF_CREDIT;
+	// create line of credit API definition
+	private final static ApiDefinition createLineOfCredit;
+	static {
+		createLineOfCredit = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, LineOfCredit.class);
+		// Use LineOfCreditPostSerializer to make the expected format
+		createLineOfCredit.addJsonSerializer(LineOfCredit.class, new LineOfCreditPostSerializer());
+	}
 
 	/***
 	 * Create a new Lines Of Credit service
@@ -244,8 +253,8 @@ public class LinesOfCreditService {
 	public boolean deleteAccount(String lineofcreditId, Type accountType, String accountId) throws MambuApiException {
 
 		if (accountType == null || accountId == null) {
-			throw new IllegalArgumentException("Account Type and Account ID must not be null. Type=" + accountType
-					+ " Id=" + accountId);
+			throw new IllegalArgumentException(
+					"Account Type and Account ID must not be null. Type=" + accountType + " Id=" + accountId);
 		}
 		MambuEntityType ownedEentityType = (accountType == Type.LOAN) ? MambuEntityType.LOAN_ACCOUNT
 				: MambuEntityType.SAVINGS_ACCOUNT;
@@ -253,6 +262,30 @@ public class LinesOfCreditService {
 		return serviceExecutor.deleteOwnedEntity(MambuEntityType.LINE_OF_CREDIT, lineofcreditId, ownedEentityType,
 				accountId);
 
+	}
+
+	/**
+	 * Creates a line of credit (Credit arrangement) for a client or a group, depending on the key set on the
+	 * LineOfCredit.
+	 * 
+	 * @param lineOfCredit
+	 *            The line of credit to be created in Mambu
+	 * @return Newly created line of credit
+	 * 
+	 * @throws MambuApiException
+	 */
+	public LineOfCredit createLineOfCredit(LineOfCredit lineOfCredit) throws MambuApiException {
+
+		// Example: POST /api/linesofcredit
+		// Request example:{"lineOfCredit":{"id": "XXX007","clientKey": "8a80862b5590e1cb015591b12d100e8c",
+		// "startDate": "2016-07-20T00:00:00+0000","expireDate": "2016-10-30T00:00:00+0000","amount": "100000",
+		// "notes": "some line of credit notes"}}
+		// Available since 4.2. See MBU-13767
+		if (lineOfCredit == null) {
+			throw new IllegalArgumentException("Line of credit must not be null.");
+		}
+
+		return serviceExecutor.executeJson(createLineOfCredit, lineOfCredit);
 	}
 
 	/**
@@ -265,6 +298,7 @@ public class LinesOfCreditService {
 	 * @return true if success
 	 */
 	public boolean deleteLoanAccount(String lineofcreditId, String loanAccountId) throws MambuApiException {
+
 		// Example: DELETE /api/linesofcredit/{LOC_ID}/loans/{ACCOUNT_ID}
 		// Available since 3.12.2. See MBU-9873
 		return deleteAccount(lineofcreditId, Type.LOAN, loanAccountId);
