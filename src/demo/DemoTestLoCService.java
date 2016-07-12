@@ -4,6 +4,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import com.mambu.api.server.handler.linesofcredit.model.JSONLineOfCredit;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.LinesOfCreditService;
@@ -124,17 +125,19 @@ public class DemoTestLoCService {
 	 */
 	private static void logLineOfCreditDetails(LineOfCredit lineOfCredit) {
 
-		System.out.println("Line of credit details:");
-		System.out.println("\tID:" + lineOfCredit.getId());
-		System.out.println("\tClientKey:" + lineOfCredit.getClientKey());
-		System.out.println("\tGroupKey:" + lineOfCredit.getGroupKey());
-		System.out.println("\tStatrDate:" + lineOfCredit.getStartDate());
-		System.out.println("\tExpireDate:" + lineOfCredit.getExpireDate());
-		System.out.println("\tAmount:" + lineOfCredit.getAmount());
-		System.out.println("\tState:" + lineOfCredit.getState());
-		System.out.println("\tCreationDate:" + lineOfCredit.getCreationDate());
-		System.out.println("\tLastModifiedDate:" + lineOfCredit.getLastModifiedDate());
-		System.out.println("\tNotes:" + lineOfCredit.getNotes());
+		if (lineOfCredit != null) {
+			System.out.println("Line of credit details:");
+			System.out.println("\tID:" + lineOfCredit.getId());
+			System.out.println("\tClientKey:" + lineOfCredit.getClientKey());
+			System.out.println("\tGroupKey:" + lineOfCredit.getGroupKey());
+			System.out.println("\tStatrDate:" + lineOfCredit.getStartDate());
+			System.out.println("\tExpireDate:" + lineOfCredit.getExpireDate());
+			System.out.println("\tAmount:" + lineOfCredit.getAmount());
+			System.out.println("\tState:" + lineOfCredit.getState());
+			System.out.println("\tCreationDate:" + lineOfCredit.getCreationDate());
+			System.out.println("\tLastModifiedDate:" + lineOfCredit.getLastModifiedDate());
+			System.out.println("\tNotes:" + lineOfCredit.getNotes());
+		}
 	}
 
 	/**
