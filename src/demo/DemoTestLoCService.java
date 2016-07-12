@@ -67,6 +67,7 @@ public class DemoTestLoCService {
 
 		// log line of credit details
 		logLineOfCreditDetails(postedLineOfCredit);
+		System.out.println("LineOfCredit created today: " + new Date());
 	}
 
 	/**
@@ -89,6 +90,7 @@ public class DemoTestLoCService {
 		LineOfCredit postedLineOfCredit = linesOfCreditService.createLineOfCredit(lineOfCredit);
 		// log the details to the console
 		logLineOfCreditDetails(postedLineOfCredit);
+		System.out.println("LineOfCredit created today: " + new Date());
 
 	}
 
@@ -105,7 +107,6 @@ public class DemoTestLoCService {
 
 		String notes = "Line of credit note created via API " + now.getTime();
 		lineOfCredit.setId("LOC" + now.getTimeInMillis());
-		now.add(Calendar.DAY_OF_MONTH, 1);
 		lineOfCredit.setStartDate(now.getTime());
 		now.add(Calendar.MONTH, 6);
 		lineOfCredit.setExpiryDate(now.getTime());

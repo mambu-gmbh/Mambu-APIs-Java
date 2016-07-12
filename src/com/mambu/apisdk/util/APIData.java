@@ -145,7 +145,6 @@ public class APIData {
 	public static final String THE_GROUP = "theGroup";
 	public static final String GROUP_ROLE_NAME_KEY = "groupRoleNameKey";
 	public static final String CLIENT_KEY = "clientKey";
-	public static final String GROUP_KEY = "groupKey";
 
 	// Accounting API
 	public static final String GLACCOUNTS = "glaccounts";
@@ -233,10 +232,7 @@ public class APIData {
 	// Document Template API
 	public static String TEMPLATES = "templates"; // /api/loans/{LOAN_ID}/templates/
 	public static String START_DATE = "startDate";
-	public static String EXPIRE_DATE = "expireDate";
 	public static String END_DATE = "endDate";
-	public static String CREATION_DATE = "creationDate";
-	public static String LAST_MODIFIED_DATE = "lastModifiedDate";
 
 	// API endpoints for uploading client profile picture and signature. Available since 3.9
 	public static String PROFILE_PICTURE = "PROFILE_PICTURE";

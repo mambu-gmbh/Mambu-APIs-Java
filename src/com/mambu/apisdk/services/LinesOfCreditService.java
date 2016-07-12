@@ -269,7 +269,7 @@ public class LinesOfCreditService {
 	 * LineOfCredit.
 	 * 
 	 * @param lineOfCredit
-	 *            The line of credit to be created in Mambu
+	 *            The line of credit to be created in Mambu. Must not be null.
 	 * @return Newly created line of credit
 	 * 
 	 * @throws MambuApiException
