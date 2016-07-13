@@ -4,7 +4,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import com.mambu.api.server.handler.linesofcredit.model.JSONLineOfCredit;
+import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.LinesOfCreditService;
@@ -27,8 +27,10 @@ public class DemoTestLoCService {
 		DemoUtil.setUp();
 
 		try {
-			testCreateLineOfCreditForAGroup(); // Available since 4.2
-			testCreateLineOfCreditForAClient(); // Available since 4.2
+			// tests creating LoC for a client
+			testCreateLineOfCreditForAnAccountHolder(AccountHolderType.CLIENT); // Available since 4.2
+			// tests creating LoC for a group
+			testCreateLineOfCreditForAnAccountHolder(AccountHolderType.GROUP); // Available since 4.2
 			testGetLinesOfCredit(); // Available since 3.11
 
 			testGetCustomerLinesOfCredit(); // Available since 3.11
@@ -48,46 +50,29 @@ public class DemoTestLoCService {
 	}
 
 	/**
-	 * Test creating a line of credit for a client
+	 * Tests creating a line of credit for the account holder passed as parameter to this method. Currently it supports
+	 * the GROUP and CLIENT as AccountHolderType.
 	 * 
 	 * @throws MambuApiException
 	 */
-	private static void testCreateLineOfCreditForAClient() throws MambuApiException {
-
-		System.out.println("\nIn testCreateLineOfCreditForAClient");
-
-		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
-
-		String clientKey = DemoUtil.getDemoClient().getClientKey();
-
-		LineOfCredit lineOfCredit = createLineOfCreditObjectForPost();
-		// set the clientKey
-		lineOfCredit.setClientKey(clientKey);
-
-		LineOfCredit postedLineOfCredit = linesOfCreditService.createLineOfCredit(lineOfCredit);
-
-		// log line of credit details
-		logLineOfCreditDetails(postedLineOfCredit);
-		System.out.println("LineOfCredit created today: " + new Date());
-	}
-
-	/**
-	 * Tests creating a line of credit for a group
-	 * 
-	 * @throws MambuApiException
-	 */
-	private static void testCreateLineOfCreditForAGroup() throws MambuApiException {
+	private static void testCreateLineOfCreditForAnAccountHolder(AccountHolderType accountHolderType)
+			throws MambuApiException {
 
 		System.out.println("\nIn testCreateLineOfCreditForAGroup");
 
 		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
 
-		String groupKey = DemoUtil.getDemoGroup().getGroupKey();
-
 		LineOfCredit lineOfCredit = createLineOfCreditObjectForPost();
-		// set the group key
-		lineOfCredit.setGroupKey(groupKey);
 
+		if (accountHolderType.equals(AccountHolderType.GROUP)) {
+			// set the group key
+			lineOfCredit.setGroupKey(DemoUtil.getDemoGroup().getGroupKey());
+		} else if (accountHolderType.equals(AccountHolderType.CLIENT)) {
+			// set the client key
+			lineOfCredit.setClientKey(DemoUtil.getDemoClient().getClientKey());
+		}
+
+		// POST the LoC in Mambu
 		LineOfCredit postedLineOfCredit = linesOfCreditService.createLineOfCredit(lineOfCredit);
 		// log the details to the console
 		logLineOfCreditDetails(postedLineOfCredit);
