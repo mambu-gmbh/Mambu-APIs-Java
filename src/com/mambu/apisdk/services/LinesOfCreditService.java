@@ -45,7 +45,7 @@ public class LinesOfCreditService {
 	private ServiceExecutor serviceExecutor;
 	// MambuEntity managed by this service
 	private static final MambuEntityType serviceEntity = MambuEntityType.LINE_OF_CREDIT;
-	// create line of credit API definition
+	// Create line of credit API definition. Example: POST {"lineOfCredit" :{LoC fields}"} /api/linesofcredit
 	private final static ApiDefinition createLineOfCredit = new ApiDefinition(ApiType.CREATE_JSON_ENTITY,
 			JSONLineOfCredit.class, LineOfCredit.class);
 
@@ -57,6 +57,7 @@ public class LinesOfCreditService {
 	 */
 	@Inject
 	public LinesOfCreditService(MambuAPIService mambuAPIService) {
+
 		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
@@ -71,6 +72,7 @@ public class LinesOfCreditService {
 	 * @throws MambuApiException
 	 */
 	public List<LineOfCredit> getAllLinesOfCredit(Integer offset, Integer limit) throws MambuApiException {
+
 		// GET api/linesofcredit
 		// Available since 3.11. See MBU-8414
 
@@ -87,6 +89,7 @@ public class LinesOfCreditService {
 	 * @throws MambuApiException
 	 */
 	public LineOfCredit getLineOfCredit(String lineofcreditId) throws MambuApiException {
+
 		// GET api/linesofcredit/{id}
 		// Response example: {"lineOfCredit":{"encodedKey":"abc123","id":"FVT160", "amount":"5000",.. }}
 		// Available since 3.11. See MBU-8417
@@ -116,6 +119,7 @@ public class LinesOfCreditService {
 	 */
 	public List<LineOfCredit> getLinesOfCredit(MambuEntityType customerType, String customerId, Integer offset,
 			Integer limit) throws MambuApiException {
+
 		// Example: GET /api/clients/{clientId}/linesofcredit or GET /api/groups/{groupId}/linesofcredit
 		// Available since 3.11. See MBU-8413
 
@@ -146,6 +150,7 @@ public class LinesOfCreditService {
 	 */
 	public List<LineOfCredit> getClientLinesOfCredit(String clientId, Integer offset, Integer limit)
 			throws MambuApiException {
+
 		// Example: GET /api/clients/{clientId}/linesofcredit
 		// Available since 3.11. See MBU-8413
 
@@ -166,6 +171,7 @@ public class LinesOfCreditService {
 	 */
 	public List<LineOfCredit> getGroupLinesOfCredit(String groupId, Integer offset, Integer limit)
 			throws MambuApiException {
+
 		// Example: GET /api/groups/{groupId}/linesofcredit
 		// Available since 3.11. See MBU-8413
 
@@ -182,6 +188,7 @@ public class LinesOfCreditService {
 	 * @throws MambuApiException
 	 */
 	public AccountsFromLineOfCredit getAccountsForLineOfCredit(String lineofcreditId) throws MambuApiException {
+
 		// Example: GET /api/linesofcredit/{ID}/accounts
 		// Available since 3.11. See MBU-8415
 
@@ -200,6 +207,7 @@ public class LinesOfCreditService {
 	 * @return added loan account
 	 */
 	public LoanAccount addLoanAccount(String lineofcreditId, String loanAccountId) throws MambuApiException {
+
 		// Example: POST /api/linesofcredit/{LOC_ID}/loans/{ACCOUNT_ID}
 		// Available since 3.12.2. See MBU-9864
 
@@ -222,6 +230,7 @@ public class LinesOfCreditService {
 	 * @return added savings account
 	 */
 	public SavingsAccount addSavingsAccount(String lineofcreditId, String savingsAccountId) throws MambuApiException {
+
 		// Example: POST /api/linesofcredit/{LOC_ID}/savings/{ACCOUNT_ID}
 		// Available since 3.12.2. See MBU-9864
 
@@ -248,8 +257,8 @@ public class LinesOfCreditService {
 	public boolean deleteAccount(String lineofcreditId, Type accountType, String accountId) throws MambuApiException {
 
 		if (accountType == null || accountId == null) {
-			throw new IllegalArgumentException(
-					"Account Type and Account ID must not be null. Type=" + accountType + " Id=" + accountId);
+			throw new IllegalArgumentException("Account Type and Account ID must not be null. Type=" + accountType
+					+ " Id=" + accountId);
 		}
 		MambuEntityType ownedEentityType = (accountType == Type.LOAN) ? MambuEntityType.LOAN_ACCOUNT
 				: MambuEntityType.SAVINGS_ACCOUNT;
@@ -310,6 +319,7 @@ public class LinesOfCreditService {
 	 * @return true if success
 	 */
 	public boolean deleteSavingsAccount(String lineofcreditId, String savingsAccountId) throws MambuApiException {
+
 		// Example: DELETE /api/linesofcredit/{LOC_ID}/savings/{ACCOUNT_ID}
 		// Available since 3.12.2. See MBU-9873
 

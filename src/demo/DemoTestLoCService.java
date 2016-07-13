@@ -53,6 +53,8 @@ public class DemoTestLoCService {
 	 * Tests creating a line of credit for the account holder passed as parameter to this method. Currently it supports
 	 * the GROUP and CLIENT as AccountHolderType.
 	 * 
+	 * @param accountHolderType
+	 *            account holder type. Must not be null
 	 * @throws MambuApiException
 	 */
 	private static void testCreateLineOfCreditForAnAccountHolder(AccountHolderType accountHolderType)
@@ -64,15 +66,19 @@ public class DemoTestLoCService {
 
 		LineOfCredit lineOfCredit = createLineOfCreditObjectForPost();
 
-		if (accountHolderType.equals(AccountHolderType.GROUP)) {
-			// set the group key
-			lineOfCredit.setGroupKey(DemoUtil.getDemoGroup().getGroupKey());
-		} else if (accountHolderType.equals(AccountHolderType.CLIENT)) {
-			// set the client key
-			lineOfCredit.setClientKey(DemoUtil.getDemoClient().getClientKey());
+		// Set owner's key: setClientKey for a Client and setGroupKey for a Group
+		switch (accountHolderType) {
+		case CLIENT:
+			lineOfCredit.setClientKey(DemoUtil.getDemoClient(null).getClientKey());
+			break;
+		case GROUP:
+			lineOfCredit.setGroupKey(DemoUtil.getDemoGroup(null).getGroupKey());
+			break;
 		}
 
 		// POST the LoC in Mambu
+		System.out.println("Creating LoC with Start Date=" + lineOfCredit.getStartDate() + "\tExpiry Date="
+				+ lineOfCredit.getExpireDate());
 		LineOfCredit postedLineOfCredit = linesOfCreditService.createLineOfCredit(lineOfCredit);
 		// log the details to the console
 		logLineOfCreditDetails(postedLineOfCredit);
@@ -293,8 +299,8 @@ public class DemoTestLoCService {
 					;
 					// Deleted OK, now add the same back
 					SavingsAccount addedAccount = linesOfCreditService.addSavingsAccount(lineOfCreditId, accountId);
-					System.out.println(
-							"Added Savings Account with ID=" + addedAccount.getId() + " to LoC=" + lineOfCreditId);
+					System.out.println("Added Savings Account with ID=" + addedAccount.getId() + " to LoC="
+							+ lineOfCreditId);
 				} catch (MambuApiException e) {
 					System.out.println("Failed to remove account " + accountId + "\tMessage=" + e.getErrorMessage());
 				}
