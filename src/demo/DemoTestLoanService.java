@@ -193,6 +193,8 @@ public class DemoTestLoanService {
 					testApplyInterestToLoanAccount(); // Available since 3.1
 					testApplyFeeToLoanAccount();
 
+					testBulkReverseLoanTransactions(); // Available since Mambu 4.2
+
 					// Get product Schedule
 					testGetLoanProductSchedule(); // Available since 3.9
 
@@ -232,8 +234,6 @@ public class DemoTestLoanService {
 
 					// Documents
 					testGetDocuments(); // Available since Mambu 3.6
-
-					testBulkReverseLoanTransactions(); // Available since Mambu 4.2
 
 				} catch (MambuApiException e) {
 					DemoUtil.logException(methodName, e);
@@ -2143,71 +2143,19 @@ public class DemoTestLoanService {
 
 		System.out.println(methodName = "\nIn testBulkReverseLoanTransactions");
 
-		LoansService loanService = MambuAPIFactory.getLoanService();
+		LoanAccount loanAccount = newAccount;
 
-		LoanAccount loanAccount = makeLoanAccountForDemoProduct();
-
-		// Create Account in Mambu
-		loanAccount = loanService.createLoanAccount(loanAccount);
-
-		// check for null account
 		if (loanAccount == null) {
 			System.out.println("WARNING: loan account couldn`t be created for bulk reverse loan transactions test");
 			return;
 		}
 
-		System.out.println("Loan Account created OK, ID=" + loanAccount.getId() + " Name= " + loanAccount.getLoanName()
-				+ " Account Holder Key=" + loanAccount.getAccountHolderKey());
-
-		// Approve the account
-		loanAccount = loanService.approveLoanAccount(loanAccount.getId(),
-				"API approved from testBulkReverseLoanTransactions() ");
-
-		System.out.println("Approving loan account with the " + loanAccount.getId() + " Loan name="
-				+ loanAccount.getLoanName() + "  Account State=" + loanAccount.getState().toString());
-
-		// Disburse the account
-		disburseLoanForBulkTeansactinReversalTest(loanAccount);
-
 		// Create 3 repayments
 		List<LoanTransaction> loanTransactions = makeThreeRapaymentTransactionForBulkReverseTest(loanAccount);
-
-		// reverse one of the repayment transactions
-		reverseTransactionForBulkReverseTest(loanTransactions);
-	}
-
-	/**
-	 * Reverses the second transaction from the list received as parameter to this method.
-	 * 
-	 * @param loanTransactions
-	 *            The list containing loan transaction, containing three loan transactions.
-	 * @throws MambuApiException
-	 */
-	private static void reverseTransactionForBulkReverseTest(List<LoanTransaction> loanTransactions)
-			throws MambuApiException {
-
-		System.out.println(methodName = "\nIn reverseTransactionForBulkReverseTest");
-
-		LoansService loanService = MambuAPIFactory.getLoanService();
-
-		if (loanTransactions != null && loanTransactions.size() == 3) {
-			// Get the second transaction to reverse it
-			LoanTransaction transactionToBeReversed = loanTransactions.get(1);
-			String reversalNotes = "Transaction reversed through API bulk reversal test";
-			String originalTransactionId = String.valueOf(transactionToBeReversed.getTransactionId());
-
-			// Reverse the second transaction
-			LoanTransaction reversed = loanService.reverseLoanTransaction(loanTransactions.get(1).getParentAccountKey(),
-					transactionToBeReversed.getType(), originalTransactionId, reversalNotes);
-
-			// log details for the reverted transaction
-			System.out.println("Reversed Transaction " + transactionToBeReversed.getType() + "\tReversed Amount="
-					+ reversed.getAmount().toString() + "\tBalance =" + reversed.getBalance().toString()
-					+ "\tTransaction Type=" + reversed.getType() + "\tAccount key=" + reversed.getParentAccountKey());
-		} else {
-			System.out.println(
-					"WARNING: bulk reversal test on loan transactions couln`t be performed because transaction couldn`t be reversed!");
-		}
+		// make a sublist with the second transaction
+		List<LoanTransaction> loanTransactionsToReverse = loanTransactions.subList(1, 2);
+		// test reversing the second transaction
+		testReverseLoanAccountTransactions(loanTransactionsToReverse);
 	}
 
 	/**
@@ -2246,13 +2194,10 @@ public class DemoTestLoanService {
 				String notes = "Repayment notes from API bulkreverse test transaction no." + i;
 				// Make demo transactionDetails with the valid channel fields
 				TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
-				String channelKey = transactionDetails != null ? transactionDetails.getTransactionChannelKey() : null;
 
-				List<CustomFieldValue> transactionCustomFields = DemoUtil
-						.makeForEntityCustomFieldValues(CustomFieldType.TRANSACTION_CHANNEL_INFO, channelKey, false);
-
+				// post transaction in Mambu
 				LoanTransaction transaction = loanService.makeLoanRepayment(loanAccount.getId(), repaymentAmount, date,
-						transactionDetails, transactionCustomFields, notes);
+						transactionDetails, null, notes);
 
 				loanTransactions.add(transaction);
 
@@ -2263,96 +2208,4 @@ public class DemoTestLoanService {
 		return loanTransactions;
 	}
 
-	/**
-	 * Disburses the loan account passed as parameter to this method.
-	 * 
-	 * @param loanAccount
-	 *            The loan account to be disbursed.
-	 * @throws MambuApiException
-	 */
-	private static void disburseLoanForBulkTeansactinReversalTest(LoanAccount loanAccount) throws MambuApiException {
-
-		System.out.println(methodName = "\nIn disburseLoanForBulkTeansactinReversalTest");
-
-		LoansService loanService = MambuAPIFactory.getLoanService();
-
-		Date disbursementDate = DemoUtil.getAsMidnightUTC();
-		// Make First Repayment Date
-		Date firstRepaymentDate = makeFirstRepaymentDate(loanAccount, demoProduct, true);
-
-		Money amount = null;
-		LoanProductType productType = demoProduct.getLoanProductType();
-		switch (productType) {
-		case DYNAMIC_TERM_LOAN:
-		case FIXED_TERM_LOAN:
-		case PAYMENT_PLAN:
-			amount = null;
-			break;
-		case TRANCHED_LOAN:
-			// For loan account with tranches in Mambu 3.13. See MBU-10045
-			// a) Amount must be null.
-			// b) Only the first tranche can have firstRepaymentDate
-			// c) the back date is also not needed for disbursing with tranches
-			amount = null;
-			disbursementDate = null;
-			// Check if we have any tranches to disburse
-			List<LoanTranche> nonDisbursedTranches = loanAccount.getNonDisbursedTranches();
-			if (nonDisbursedTranches == null || nonDisbursedTranches.size() == 0) {
-				System.out.println(
-						"WARNING: Cannot test disburse: Loan  " + loanAccount.getId() + " has non disbursed tranches");
-				return;
-			}
-			// Check if we the disburse time is not in a future
-			Date expectedTrancheDisbDate = nonDisbursedTranches.get(0).getExpectedDisbursementDate();
-			Date now = new Date();
-			if (expectedTrancheDisbDate.after(now)) {
-				System.out.println(
-						"WARNING: cannot disburse tranche. Its ExpectedDisbursementDate=" + expectedTrancheDisbDate);
-				return;
-			}
-			// If not the first tranche - set the firstRepaymentDate to null
-			if (loanAccount.getDisbursedTranches() != null && loanAccount.getDisbursedTranches().size() > 0) {
-				firstRepaymentDate = null;
-			} else {
-				// First tranche. Can optionally set the first repayment date
-				if (firstRepaymentDate != null && firstRepaymentDate.before(expectedTrancheDisbDate)) {
-					long fiveDays = 5 * 24 * 60 * 60 * 1000L;
-					firstRepaymentDate = new Date(firstRepaymentDate.getTime() + fiveDays);
-				}
-			}
-			break;
-		case REVOLVING_CREDIT:
-			// Amount is mandatory for Revolving Credit loans. See MBU-10547
-			amount = loanAccount.getLoanAmount();
-			// First repayment date should be specified only for the first disbursement (when transitioning from
-			// Approved to Active state)
-			if (loanAccount.getAccountState() != AccountState.APPROVED) {
-				firstRepaymentDate = null;
-			}
-			break;
-		}
-		// Create params for API
-		String disbursementDateParam = DateUtils.format(disbursementDate);
-		String firstRepaymentDateParam = DateUtils.format(firstRepaymentDate);
-		System.out.println("Disbursement=" + disbursementDateParam + "\tFirstRepaymentDate=" + firstRepaymentDateParam);
-		String notes = "Disbursed loan for testing";
-
-		// Set disbursement dates in the DisbursementDetails
-		DisbursementDetails disbDetails = loanAccount.getDisbursementDetails();
-		if (disbDetails == null) {
-			disbDetails = new DisbursementDetails();
-		}
-		disbDetails.setFirstRepaymentDate(firstRepaymentDate);
-		disbDetails.setExpectedDisbursementDate(disbursementDate);
-
-		try {
-			// Send API request to Mambu to test JSON Disburse API
-			LoanTransaction transaction = loanService.disburseLoanAccount(loanAccount.getId(), amount, disbDetails,
-					null, notes);
-			System.out.println("Disbursed OK: Transaction Id=" + transaction.getTransactionId() + " amount="
-					+ transaction.getAmount());
-		} catch (MambuApiException e) {
-			DemoUtil.logException(methodName, e);
-		}
-	}
 }
