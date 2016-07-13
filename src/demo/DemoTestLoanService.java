@@ -2151,21 +2151,24 @@ public class DemoTestLoanService {
 		}
 	}
 
-	// tests bulk reversal on loan transactions
+	// tests bulk reversal on loan transactions. See MBU-12673
 	private static void testBulkReverseLoanTransactions() throws MambuApiException {
 
 		System.out.println(methodName = "\nIn testBulkReverseLoanTransactions");
 
 		LoanAccount loanAccount = newAccount;
-
 		if (loanAccount == null) {
-			System.out.println("WARNING: loan account couldn`t be created for bulk reverse loan transactions test");
+			System.out.println("WARNING: loan account couldn't be created for bulk reverse loan transactions test");
 			return;
 		}
 
 		// Create 3 repayments
 		List<LoanTransaction> loanTransactions = makeThreeRapaymentTransactionForBulkReverseTest(loanAccount);
 		// make a sublist with the second transaction
+		if (loanTransactions.size() < 2) {
+			System.out.println("WARNING:Cannot test bulk reversal: there is not enough transactions to test");
+			return;
+		}
 		List<LoanTransaction> loanTransactionsToReverse = loanTransactions.subList(1, 2);
 		// test reversing the second transaction
 		testReverseLoanAccountTransactions(loanTransactionsToReverse);
