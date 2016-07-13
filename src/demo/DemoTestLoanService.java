@@ -80,7 +80,6 @@ public class DemoTestLoanService {
 	private static String NEW_LOAN_ACCOUNT_ID; // will be assigned after creation in testCreateJsonAccount()
 
 	private static Client demoClient;
-	private static Client investorClient;
 	private static Group demoGroup;
 	private static User demoUser;
 	private static LoanProduct demoProduct;
@@ -100,7 +99,6 @@ public class DemoTestLoanService {
 			final String testProductId = DemoUtil.demoLaonProductId;
 			final String testAccountId = null; // use specific test ID or null to get random loan account
 			demoClient = DemoUtil.getDemoClient(null);
-			investorClient = DemoUtil.getDemoClient(DemoUtil.demoInvestorId);
 			demoGroup = DemoUtil.getDemoGroup(null);
 			demoUser = DemoUtil.getDemoUser();
 
@@ -760,7 +758,7 @@ public class DemoTestLoanService {
 			disbDetails = new DisbursementDetails();
 		}
 		disbDetails.setFirstRepaymentDate(firstRepaymentDate);
-		if (account.getFunds() == null) {
+		if (!demoProduct.isFundingSourceEnabled()) {
 			disbDetails.setExpectedDisbursementDate(disbursementDate);
 		}
 
@@ -1131,7 +1129,7 @@ public class DemoTestLoanService {
 
 			// When rescheduling P2P loans you are not allowed to set a new loan amount or to specify the principal
 			// write off. See MBU-12267
-			if (loanAccount.getFunds() == null) {
+			if (!demoProduct.isFundingSourceEnabled()) {
 				rescheduleDetails.setPrincipalWriteOff(principalWriteOff);
 				// Set new loan amount
 				loanAccount.setLoanAmount(principalBalance.subtract(principalWriteOff));
@@ -1707,7 +1705,7 @@ public class DemoTestLoanService {
 			String savingsAccountKey = null;
 			try {
 				SavingsService savingsService = MambuAPIFactory.getSavingsService();
-				List<SavingsAccount> clientSavings = savingsService.getSavingsAccountsForClient(investorClient.getId());
+				List<SavingsAccount> clientSavings = savingsService.getSavingsAccountsForClient(demoClient.getId());
 				// Only savings of SavingsType.INVESTOR_ACCOUNT can be investors
 				if (clientSavings != null) {
 					for (SavingsAccount account : clientSavings) {
@@ -1731,8 +1729,8 @@ public class DemoTestLoanService {
 				investor.setAmount(loanAccount.getLoanAmount());
 				investor.setSavingsAccountKey(savingsAccountKey);
 				// Mambu Supports both Client and Groups as investors since 4.0. See MBU-11403
-				investor.setGuarantorKey(investorClient.getEncodedKey());
-				investor.setGuarantorType(investorClient.getAccountHolderType());
+				investor.setGuarantorKey(demoClient.getEncodedKey());
+				investor.setGuarantorType(demoClient.getAccountHolderType());
 				// Since Mambu 4.2 we may also need to set Funder's commission. See MBU-13388 and MBU-13407
 				setFunderInterestCommission(demoProduct, investor);
 				funds.add(investor);

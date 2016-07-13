@@ -111,7 +111,6 @@ public class DemoUtil {
 
 	static String demoClientId = null;
 	static String demoGroupId = null;
-	static String demoInvestorId = null;
 
 	static String demoLaonAccountId = null;
 	static String demoLaonProductId = null;
@@ -221,7 +220,6 @@ public class DemoUtil {
 
 		// Get Demo Client and Demo Group IDs
 		demoClientId = makeNullIfEmpty(properties.getProperty("demoClientId"));
-		demoInvestorId = makeNullIfEmpty(properties.getProperty("demoInvestorId"));
 		demoGroupId = makeNullIfEmpty(properties.getProperty("demoGroupId"));
 		System.out.println(demoLogPrefix + "Client ID=" + demoClientId + "\tGroup ID=" + demoGroupId);
 
