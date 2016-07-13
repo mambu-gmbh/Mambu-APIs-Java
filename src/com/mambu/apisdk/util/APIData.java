@@ -291,7 +291,6 @@ public class APIData {
 	// Api endpoint for Lines of Credit. Available since 3.11
 	public static String LINES_OF_CREDIT = "linesofcredit"; // /api/linesofcredit
 	public static String ACCOUNTS = "accounts"; // /api/linesofcredit/{id}/accounts
-	public static String LINE_OF_CREDIT = "lineOfCredit";
 
 	// Use Roles API
 	public static String USER_ROLES = "userroles"; // api/userroles
