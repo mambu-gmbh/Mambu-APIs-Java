@@ -240,7 +240,6 @@ public class DemoUtil {
 		System.out.println(demoLogPrefix + "Line of Credit ID=" + demoLineOfCreditId);
 
 		// Get Demo Test Cron time properties
-
 		demoCronStartHour = getIntValueOrDefault(properties.getProperty("demoCronStartHour"), 0);
 		System.out.println(demoLogPrefix + "Cron start hour=" + demoCronStartHour);
 		demoCronStartMinute = getIntValueOrDefault(properties.getProperty("demoCronStartMinute"), 0);

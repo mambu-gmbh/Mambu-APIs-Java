@@ -1,6 +1,7 @@
 package demo;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -191,6 +192,8 @@ public class DemoTestLoanService {
 					testDisburseLoanAccount();
 					testApplyInterestToLoanAccount(); // Available since 3.1
 					testApplyFeeToLoanAccount();
+
+					testBulkReverseLoanTransactions(); // Available since Mambu 4.2
 
 					// Get product Schedule
 					testGetLoanProductSchedule(); // Available since 3.9
@@ -2144,4 +2147,75 @@ public class DemoTestLoanService {
 			investorFund.setInterestCommission(funderInterestCommission);
 		}
 	}
+
+	// tests bulk reversal on loan transactions
+	private static void testBulkReverseLoanTransactions() throws MambuApiException {
+
+		System.out.println(methodName = "\nIn testBulkReverseLoanTransactions");
+
+		LoanAccount loanAccount = newAccount;
+
+		if (loanAccount == null) {
+			System.out.println("WARNING: loan account couldn`t be created for bulk reverse loan transactions test");
+			return;
+		}
+
+		// Create 3 repayments
+		List<LoanTransaction> loanTransactions = makeThreeRapaymentTransactionForBulkReverseTest(loanAccount);
+		// make a sublist with the second transaction
+		List<LoanTransaction> loanTransactionsToReverse = loanTransactions.subList(1, 2);
+		// test reversing the second transaction
+		testReverseLoanAccountTransactions(loanTransactionsToReverse);
+	}
+
+	/**
+	 * Creates three repayment transaction for the account passed as parameter to this method.
+	 * 
+	 * @param loanAccount
+	 *            The loan account
+	 * @return A list containing the created transactions
+	 * @throws MambuApiException
+	 */
+	private static List<LoanTransaction> makeThreeRapaymentTransactionForBulkReverseTest(LoanAccount loanAccount)
+			throws MambuApiException {
+
+		System.out.println(methodName = "\nIn makeThreeRapaymentTransactionForBulkReverseTest");
+
+		List<LoanTransaction> loanTransactions = new ArrayList<>();
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		LoanAccount account = loanService.getLoanAccountDetails(loanAccount.getId());
+
+		Money totalBalanceOutstanding = account.getTotalBalanceOutstanding();
+
+		// check if there are enough money to split it in 4 tranches
+		if (totalBalanceOutstanding.isMoreThan(new Money(4))) {
+
+			// split it in 4 tranches
+			BigDecimal quarter = new BigDecimal(
+					totalBalanceOutstanding.getAmount().divide(new BigDecimal("4")).doubleValue());
+
+			Money repaymentAmount = new Money(quarter.doubleValue());
+			repaymentAmount.setScale(2, RoundingMode.HALF_UP);
+
+			Date date = null;
+			for (int i = 1; i <= 3; i++) {
+				String notes = "Repayment notes from API bulkreverse test transaction no." + i;
+				// Make demo transactionDetails with the valid channel fields
+				TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
+
+				// post transaction in Mambu
+				LoanTransaction transaction = loanService.makeLoanRepayment(loanAccount.getId(), repaymentAmount, date,
+						transactionDetails, null, notes);
+
+				loanTransactions.add(transaction);
+
+				System.out.println("Repaid loan account with the " + loanAccount.getId() + " id response="
+						+ transaction.getTransactionId() + "   for amount=" + transaction.getAmount());
+			}
+		}
+		return loanTransactions;
+	}
+
 }

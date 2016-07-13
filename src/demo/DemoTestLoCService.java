@@ -1,10 +1,14 @@
 package demo;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
+import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.LinesOfCreditService;
+import com.mambu.core.shared.model.Money;
 import com.mambu.linesofcredit.shared.model.AccountsFromLineOfCredit;
 import com.mambu.linesofcredit.shared.model.LineOfCredit;
 import com.mambu.loans.shared.model.LoanAccount;
@@ -23,7 +27,10 @@ public class DemoTestLoCService {
 		DemoUtil.setUp();
 
 		try {
-
+			// tests creating LoC for a client
+			testCreateLineOfCreditForAnAccountHolder(AccountHolderType.CLIENT); // Available since 4.2
+			// tests creating LoC for a group
+			testCreateLineOfCreditForAnAccountHolder(AccountHolderType.GROUP); // Available since 4.2
 			testGetLinesOfCredit(); // Available since 3.11
 
 			testGetCustomerLinesOfCredit(); // Available since 3.11
@@ -43,11 +50,88 @@ public class DemoTestLoCService {
 	}
 
 	/**
+	 * Tests creating a line of credit for the account holder passed as parameter to this method. Currently it supports
+	 * the GROUP and CLIENT as AccountHolderType.
+	 * 
+	 * @throws MambuApiException
+	 */
+	private static void testCreateLineOfCreditForAnAccountHolder(AccountHolderType accountHolderType)
+			throws MambuApiException {
+
+		System.out.println("\nIn testCreateLineOfCreditForAGroup");
+
+		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
+
+		LineOfCredit lineOfCredit = createLineOfCreditObjectForPost();
+
+		if (accountHolderType.equals(AccountHolderType.GROUP)) {
+			// set the group key
+			lineOfCredit.setGroupKey(DemoUtil.getDemoGroup().getGroupKey());
+		} else if (accountHolderType.equals(AccountHolderType.CLIENT)) {
+			// set the client key
+			lineOfCredit.setClientKey(DemoUtil.getDemoClient().getClientKey());
+		}
+
+		// POST the LoC in Mambu
+		LineOfCredit postedLineOfCredit = linesOfCreditService.createLineOfCredit(lineOfCredit);
+		// log the details to the console
+		logLineOfCreditDetails(postedLineOfCredit);
+		System.out.println("LineOfCredit created today: " + new Date());
+
+	}
+
+	/**
+	 * Helper method, creates a new line of credit object, set some test data on it.
+	 * 
+	 * @return a newly line of credit test object
+	 */
+	private static LineOfCredit createLineOfCreditObjectForPost() {
+
+		LineOfCredit lineOfCredit = new LineOfCredit();
+
+		Calendar now = Calendar.getInstance();
+
+		String notes = "Line of credit note created via API " + now.getTime();
+		lineOfCredit.setId("LOC" + now.getTimeInMillis());
+		lineOfCredit.setStartDate(now.getTime());
+		now.add(Calendar.MONTH, 6);
+		lineOfCredit.setExpiryDate(now.getTime());
+		lineOfCredit.setNotes(notes);
+		lineOfCredit.setAmount(new Money(100000));
+
+		return lineOfCredit;
+	}
+
+	/**
+	 * Helper method, prints to the console details of the LineOfCredit received as parameter to this method.
+	 * 
+	 * @param lineOfCredit
+	 *            The line of credit whose details will be printed to the console
+	 */
+	private static void logLineOfCreditDetails(LineOfCredit lineOfCredit) {
+
+		if (lineOfCredit != null) {
+			System.out.println("Line of credit details:");
+			System.out.println("\tID:" + lineOfCredit.getId());
+			System.out.println("\tClientKey:" + lineOfCredit.getClientKey());
+			System.out.println("\tGroupKey:" + lineOfCredit.getGroupKey());
+			System.out.println("\tStatrDate:" + lineOfCredit.getStartDate());
+			System.out.println("\tExpireDate:" + lineOfCredit.getExpireDate());
+			System.out.println("\tAmount:" + lineOfCredit.getAmount());
+			System.out.println("\tState:" + lineOfCredit.getState());
+			System.out.println("\tCreationDate:" + lineOfCredit.getCreationDate());
+			System.out.println("\tLastModifiedDate:" + lineOfCredit.getLastModifiedDate());
+			System.out.println("\tNotes:" + lineOfCredit.getNotes());
+		}
+	}
+
+	/**
 	 * Test Get paginated list of all lines of credit and LoC details
 	 * 
 	 * @throws MambuApiException
 	 */
 	public static void testGetLinesOfCredit() throws MambuApiException {
+
 		System.out.println("\nIn testGetLinesOfCredit");
 
 		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
@@ -80,6 +164,7 @@ public class DemoTestLoCService {
 	 * @return any of the LoC IDs
 	 */
 	public static void testGetCustomerLinesOfCredit() throws MambuApiException {
+
 		System.out.println("\nIn testGetCustomerLinesOfCredit");
 
 		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
@@ -111,6 +196,7 @@ public class DemoTestLoCService {
 	 * @throws MambuApiException
 	 */
 	public static AccountsFromLineOfCredit testGetAccountsForLineOfCredit() throws MambuApiException {
+
 		System.out.println("\nIn testGetAccountsForLineOfCredit");
 		// Test Get Accounts for a line of credit
 
@@ -136,6 +222,7 @@ public class DemoTestLoCService {
 	// Test deleting and adding accounts to a Line of Credit
 	public static void testAddAndRemoveAccountsForLineOfCredit(AccountsFromLineOfCredit accountsForLoC)
 			throws MambuApiException {
+
 		System.out.println("\nIn testAddAndRemoveAccountsForLineOfCredit");
 
 		String lineOfCreditId = DemoUtil.demoLineOfCreditId;
@@ -156,6 +243,7 @@ public class DemoTestLoCService {
 	// For each Loan account associated with a credit line test deleting and adding it back
 	private static void testdeleteAndAddLoanAccounts(String lineOfCreditId, List<LoanAccount> accounts)
 			throws MambuApiException {
+
 		System.out.println("\nIn testdeleteAndAddLoanAccounts for LoC=" + lineOfCreditId);
 
 		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
@@ -186,6 +274,7 @@ public class DemoTestLoCService {
 	// For each Savings account associated with a credit line test deleting and adding it back
 	private static void testdeleteAndAddSavingsAccounts(String lineOfCreditId, List<SavingsAccount> accounts)
 			throws MambuApiException {
+
 		System.out.println("\nIn testdeleteAndAddSavingsAccounts for LoC=" + lineOfCreditId);
 
 		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
@@ -204,8 +293,8 @@ public class DemoTestLoCService {
 					;
 					// Deleted OK, now add the same back
 					SavingsAccount addedAccount = linesOfCreditService.addSavingsAccount(lineOfCreditId, accountId);
-					System.out.println("Added Savings Account with ID=" + addedAccount.getId() + " to LoC="
-							+ lineOfCreditId);
+					System.out.println(
+							"Added Savings Account with ID=" + addedAccount.getId() + " to LoC=" + lineOfCreditId);
 				} catch (MambuApiException e) {
 					System.out.println("Failed to remove account " + accountId + "\tMessage=" + e.getErrorMessage());
 				}
