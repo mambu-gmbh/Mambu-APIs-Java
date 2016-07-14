@@ -215,8 +215,8 @@ public class DemoUtil {
 				+ "\tClient Last Name=" + demoClientLastName);
 
 		// Domain 2: Get Demo Client defines by first and last name
-		demoClientFirstName2 = makeNullIfEmpty(properties.getProperty("demoClientFirstName", demoClientFirstName2));
-		demoClientLastName2 = makeNullIfEmpty(properties.getProperty("demoClientLastName", demoClientLastName2));
+		demoClientFirstName2 = makeNullIfEmpty(properties.getProperty("demoClientFirstName2", demoClientFirstName2));
+		demoClientLastName2 = makeNullIfEmpty(properties.getProperty("demoClientLastName2", demoClientLastName2));
 
 		// Get Demo Client and Demo Group IDs
 		demoClientId = makeNullIfEmpty(properties.getProperty("demoClientId"));
