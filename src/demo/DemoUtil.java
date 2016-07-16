@@ -204,6 +204,12 @@ public class DemoUtil {
 		user = properties.getProperty("user", user);
 		password = properties.getProperty("password", password);
 		System.out.println(demoLogPrefix + "Domain=" + domain + "\tUser=" + user);
+		
+		// Get Properties. For domain2, user2 and demo client2 we can also use hardcoded defaults if not provided
+		domain2 = properties.getProperty("domain2", domain2);
+		user2 = properties.getProperty("user2", user2);
+		password2 = properties.getProperty("password2", password2);
+		System.out.println(demoLogPrefix + "Domain2=" + domain2 + "\tUser2=" + user2);
 
 		// Get Demo User username
 		demoUsername = makeNullIfEmpty(properties.getProperty("demoUsername", demoUsername));
@@ -215,8 +221,8 @@ public class DemoUtil {
 				+ "\tClient Last Name=" + demoClientLastName);
 
 		// Domain 2: Get Demo Client defines by first and last name
-		demoClientFirstName2 = makeNullIfEmpty(properties.getProperty("demoClientFirstName", demoClientFirstName2));
-		demoClientLastName2 = makeNullIfEmpty(properties.getProperty("demoClientLastName", demoClientLastName2));
+		demoClientFirstName2 = makeNullIfEmpty(properties.getProperty("demoClientFirstName2", demoClientFirstName2));
+		demoClientLastName2 = makeNullIfEmpty(properties.getProperty("demoClientLastName2", demoClientLastName2));
 
 		// Get Demo Client and Demo Group IDs
 		demoClientId = makeNullIfEmpty(properties.getProperty("demoClientId"));

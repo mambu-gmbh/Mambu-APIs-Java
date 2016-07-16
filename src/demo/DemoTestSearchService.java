@@ -143,6 +143,7 @@ public class DemoTestSearchService {
 	}
 
 	public static void testSearchUsersBranchesCentres() throws MambuApiException {
+
 		System.out.println("\nIn testSearchUsersBranchesCentres");
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
@@ -150,7 +151,7 @@ public class DemoTestSearchService {
 		String query = "Map";
 		String limit = "100";
 
-		List<SearchType> searchTypes = Arrays.asList(SearchType.USER); // or null
+		List<SearchType> searchTypes = Arrays.asList(SearchType.USER, SearchType.BRANCH, SearchType.CENTRE); // or null
 
 		Date d1 = new Date();
 
@@ -159,7 +160,7 @@ public class DemoTestSearchService {
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
-		System.out.println("Search Users/Branches for query=" + query + "\tReturned=" + results.size()
+		System.out.println("Search Users/Branches/Centres for query=" + query + "\tReturned=" + results.size()
 				+ "\tTotal time=" + diff);
 
 		logSearchResults(results);
