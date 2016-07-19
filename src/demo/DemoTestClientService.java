@@ -326,7 +326,8 @@ public class DemoTestClientService {
 	 */
 	private static void replaceExistingRoleList(GroupExpanded groupExpanded) {
 
-		if (groupExpanded != null && groupExpanded.getGroupRoles() != null) {
+		if (groupExpanded != null && groupExpanded.getGroupRoles() != null
+				&& !groupExpanded.getGroupRoles().isEmpty()) {
 			// replace the existing role list
 			List<GroupRole> groupRoles = groupExpanded.getGroupRoles();
 			GroupRole groupRole = groupRoles.get(0);
