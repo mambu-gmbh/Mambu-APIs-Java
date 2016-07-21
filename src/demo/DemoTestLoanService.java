@@ -458,7 +458,10 @@ public class DemoTestLoanService {
 		account.setPrincipalRepaymentInterval(theAccount.getPrincipalRepaymentInterval()); // principalRepaymentInterval
 		account.setPenaltyRate(theAccount.getPenaltyRate()); // penaltyRate
 		account.setPeriodicPayment(theAccount.getPeriodicPayment()); // periodicPayment
-		account.setLoanAmount(theAccount.getLoanAmount().add(new BigDecimal("55")));
+		// In order to avoid TOTAL_AMOUNT_NOT_EQUAL_WITH_LOAN_AMOUNT error
+		if (!demoProduct.getLoanProductType().equals(LoanProductType.TRANCHED_LOAN)) {
+			account.setLoanAmount(theAccount.getLoanAmount().add(new BigDecimal("55")));
+		}
 
 		// test update ArrearsTolerancePeriod, available since 4.2, see MBU-13376
 		account.setArrearsTolerancePeriod(theAccount.getArrearsTolerancePeriod());
@@ -1758,16 +1761,24 @@ public class DemoTestLoanService {
 
 		// Create demo Transaction details for this account
 		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
-		disbursementDetails.setTransactionDetails(transactionDetails);
+		
+		// In order to avoid TRANSACTION_DETAILS_NOT_AVAILABLE_FOR_PRODUCT error
+		if (!productType.equals(LoanProductType.TRANCHED_LOAN)) {
+			disbursementDetails.setTransactionDetails(transactionDetails);
+		}
 		String method = transactionDetails.getTransactionChannelKey();
 
 		disbursementDetails.setCustomFieldValues(DemoUtil.makeForEntityCustomFieldValues(
 				CustomFieldType.TRANSACTION_CHANNEL_INFO, method, false));
 
 		// Add demo disbursement fees
-		List<CustomPredefinedFee> customFees = DemoUtil.makeDemoPredefinedFees(demoProduct,
-				new HashSet<>(Collections.singletonList(FeeCategory.DISBURSEMENT)));
-		disbursementDetails.setFees(customFees);
+		// In order to avoid FEES_NOT_AVAILABLE_FOR_PRODUCT error
+		if (!productType.equals(LoanProductType.TRANCHED_LOAN)) {
+			List<CustomPredefinedFee> customFees = DemoUtil.makeDemoPredefinedFees(demoProduct,
+					new HashSet<>(Collections.singletonList(FeeCategory.DISBURSEMENT)));
+			disbursementDetails.setFees(customFees);
+		}
+		
 		// Disbursement Details are not available for REVOLVING_CREDIT products
 		if (productType == LoanProductType.REVOLVING_CREDIT) {
 			loanAccount.setDisbursementDetails(null);
