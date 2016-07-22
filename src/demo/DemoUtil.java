@@ -1260,17 +1260,19 @@ public class DemoUtil {
 			return;
 		}
 		for (CustomFieldValue fieldValue : customFieldValues) {
-
-			System.out.println("\nCustom Field Name=" + fieldValue.getCustomField().getName() + "\tValue="
-					+ fieldValue.getValue() + "\tAmount=" + fieldValue.getAmount() + "\tLinked Entity Key="
-					+ fieldValue.getLinkedEntityKeyValue());
-			Integer groupIndex = fieldValue.getCustomFieldSetGroupIndex();
-			if (groupIndex != null) {
-				System.out.println("Group Index=" + groupIndex);
-			}
-
 			CustomField field = fieldValue.getCustomField();
-			logCustomField(field);
+
+			if (field != null) {
+				System.out.println("\nCustom Field Name=" + field.getName() + "\tValue=" + fieldValue.getValue()
+						+ "\tAmount=" + fieldValue.getAmount() + "\tLinked Entity Key="
+						+ fieldValue.getLinkedEntityKeyValue());
+				Integer groupIndex = fieldValue.getCustomFieldSetGroupIndex();
+				if (groupIndex != null) {
+					System.out.println("Group Index=" + groupIndex);
+				}
+
+				logCustomField(field);
+			}
 
 		}
 	}
