@@ -89,7 +89,7 @@ public class DemoTestLoanService {
 	private static LoanAccount newAccount;
 
 	private static String methodName = null; // print method name on exception
-	
+
 	private static String extraAmount = "55";
 
 	public static void main(String[] args) {
@@ -147,7 +147,7 @@ public class DemoTestLoanService {
 					// Create account to test patch, approve, undo approve, reject, close
 					testCreateJsonAccount();
 					testPatchLoanAccountTerms(); // Available since 3.9.3
-					
+
 					// As per the requirement 2.1 from MBU-10017, when approving a tranched loan account, the loan
 					// amount should be equal to the tranches amount.
 					testUpdateTranchesAmount();
@@ -415,7 +415,7 @@ public class DemoTestLoanService {
 		// TODO: Temporary clear interest rate fields when updating fields for Funded Investor account: Mambu rejects
 		// the request if interest rate fields are present
 		clearInterestRateFieldsForFunderAccounts(demoProduct, updatedAccount);
-		
+
 		// Submit API request to Update account in Mambu
 		LoanAccount updatedAccountResult = loanService.updateLoanAccount(updatedAccount);
 		System.out.println("Loan Update OK, ID=" + updatedAccountResult.getId() + "\tAccount Name="
@@ -433,12 +433,12 @@ public class DemoTestLoanService {
 		}
 
 	}
-	
+
 	// Test update loan account tranches amount.
 	public static void testUpdateTranchesAmount() throws MambuApiException {
 
 		System.out.println(methodName = "\nIn testUpdateTranchesAmount");
-		
+
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		LoanAccount account = loanService.getLoanAccount(NEW_LOAN_ACCOUNT_ID);
 
@@ -448,11 +448,11 @@ public class DemoTestLoanService {
 			tranches.get(0).setAmount(firstTranchAmount.add(new BigDecimal(extraAmount)));
 
 			// Update tranches amount
-			loanService.updateLoanAccountTranches(NEW_LOAN_ACCOUNT_ID, tranches);
-			
-			System.out.println("Loan account tranches amount updated for account" + NEW_LOAN_ACCOUNT_ID);
+			LoanAccount updatedAccount = loanService.updateLoanAccountTranches(account.getId(), tranches);
+
+			System.out.println("Loan account tranches amount updated for account " + updatedAccount.getId());
 		} else {
-			System.out.println("Loan account " + NEW_LOAN_ACCOUNT_ID + "does not have tranches to be updated.");
+			System.out.println("Loan account " + account.getId() + " does not have tranches to be updated");
 		}
 	}
 
@@ -1787,7 +1787,7 @@ public class DemoTestLoanService {
 
 		// Create demo Transaction details for this account
 		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
-		
+
 		// Transaction details are not supported for tranched loans
 		if (!productType.equals(LoanProductType.TRANCHED_LOAN)) {
 			disbursementDetails.setTransactionDetails(transactionDetails);
@@ -1800,11 +1800,11 @@ public class DemoTestLoanService {
 		// Add demo disbursement fees
 		// Predefined fees are not available for tranched loans
 		if (!productType.equals(LoanProductType.TRANCHED_LOAN)) {
-			List<CustomPredefinedFee> customFees = DemoUtil.makeDemoPredefinedFees(demoProduct,
-					new HashSet<>(Collections.singletonList(FeeCategory.DISBURSEMENT)));
+			List<CustomPredefinedFee> customFees = DemoUtil.makeDemoPredefinedFees(demoProduct, new HashSet<>(
+					Collections.singletonList(FeeCategory.DISBURSEMENT)));
 			disbursementDetails.setFees(customFees);
 		}
-		
+
 		// Disbursement Details are not available for REVOLVING_CREDIT products
 		if (productType == LoanProductType.REVOLVING_CREDIT) {
 			loanAccount.setDisbursementDetails(null);
