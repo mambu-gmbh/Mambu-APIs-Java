@@ -89,6 +89,8 @@ public class DemoTestLoanService {
 	private static LoanAccount newAccount;
 
 	private static String methodName = null; // print method name on exception
+	
+	private static String extraAmount = "55";
 
 	public static void main(String[] args) {
 
@@ -145,6 +147,10 @@ public class DemoTestLoanService {
 					// Create account to test patch, approve, undo approve, reject, close
 					testCreateJsonAccount();
 					testPatchLoanAccountTerms(); // Available since 3.9.3
+					
+					// As per the requirement 2.1 from MBU-10017, when approving a tranched loan account, the loan
+					// amount should be equal to the tranches amount.
+					testUpdateTranchesAmount();
 					testApproveLoanAccount();
 					testUndoApproveLoanAccount();
 					testUpdateLoanAccount();
@@ -270,7 +276,7 @@ public class DemoTestLoanService {
 			// account object should have values only for the id and loanAmount fields
 			LoanAccount newLoanAccount = new LoanAccount();
 			newLoanAccount.setId(NEW_LOAN_ACCOUNT_ID);
-			newLoanAccount.setLoanAmount(newAccount.getLoanAmount().add(new BigDecimal("55")));
+			newLoanAccount.setLoanAmount(newAccount.getLoanAmount().add(new BigDecimal(extraAmount)));
 			newLoanAccount.setPeriodicPayment((BigDecimal) null);
 			newLoanAccount.setRepaymentInstallments(null);
 			newLoanAccount.setGracePeriod(null);
@@ -387,10 +393,11 @@ public class DemoTestLoanService {
 		System.out.println(methodName = "\nIn testUpdateLoanAccount");
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
+		LoanAccount account = loanService.getLoanAccount(NEW_LOAN_ACCOUNT_ID);
 
 		// Use the newly created account and update some custom fields
-		LoanAccount updatedAccount = newAccount;
-		List<CustomFieldValue> customFields = newAccount.getCustomFieldValues();
+		LoanAccount updatedAccount = account;
+		List<CustomFieldValue> customFields = account.getCustomFieldValues();
 		List<CustomFieldValue> updatedFields = new ArrayList<CustomFieldValue>();
 
 		if (customFields != null && customFields.size() > 0) {
@@ -401,14 +408,14 @@ public class DemoTestLoanService {
 		} else {
 			System.out.println("Adding new custom fields to the account " + updatedAccount.getId());
 			updatedFields = DemoUtil.makeForEntityCustomFieldValues(CustomFieldType.LOAN_ACCOUNT_INFO,
-					newAccount.getProductTypeKey(), false);
+					account.getProductTypeKey(), false);
 		}
 		updatedAccount.setCustomFieldValues(updatedFields);
 
 		// TODO: Temporary clear interest rate fields when updating fields for Funded Investor account: Mambu rejects
 		// the request if interest rate fields are present
 		clearInterestRateFieldsForFunderAccounts(demoProduct, updatedAccount);
-
+		
 		// Submit API request to Update account in Mambu
 		LoanAccount updatedAccountResult = loanService.updateLoanAccount(updatedAccount);
 		System.out.println("Loan Update OK, ID=" + updatedAccountResult.getId() + "\tAccount Name="
@@ -425,6 +432,28 @@ public class DemoTestLoanService {
 			}
 		}
 
+	}
+	
+	// Test update loan account tranches amount.
+	public static void testUpdateTranchesAmount() throws MambuApiException {
+
+		System.out.println(methodName = "\nIn testUpdateTranchesAmount");
+		
+		LoansService loanService = MambuAPIFactory.getLoanService();
+		LoanAccount account = loanService.getLoanAccount(NEW_LOAN_ACCOUNT_ID);
+
+		if (account.getTranches() != null && !account.getTranches().isEmpty()) {
+			List<LoanTranche> tranches = account.getTranches();
+			BigDecimal firstTranchAmount = tranches.get(0).getAmount();
+			tranches.get(0).setAmount(firstTranchAmount.add(new BigDecimal(extraAmount)));
+
+			// Update tranches amount
+			loanService.updateLoanAccountTranches(NEW_LOAN_ACCOUNT_ID, tranches);
+			
+			System.out.println("Loan account tranches amount updated for account" + NEW_LOAN_ACCOUNT_ID);
+		} else {
+			System.out.println("Loan account " + NEW_LOAN_ACCOUNT_ID + "does not have tranches to be updated.");
+		}
 	}
 
 	// Test Patch Loan account terms API.
@@ -458,10 +487,7 @@ public class DemoTestLoanService {
 		account.setPrincipalRepaymentInterval(theAccount.getPrincipalRepaymentInterval()); // principalRepaymentInterval
 		account.setPenaltyRate(theAccount.getPenaltyRate()); // penaltyRate
 		account.setPeriodicPayment(theAccount.getPeriodicPayment()); // periodicPayment
-		// In order to avoid TOTAL_AMOUNT_NOT_EQUAL_WITH_LOAN_AMOUNT error
-		if (!demoProduct.getLoanProductType().equals(LoanProductType.TRANCHED_LOAN)) {
-			account.setLoanAmount(theAccount.getLoanAmount().add(new BigDecimal("55")));
-		}
+		account.setLoanAmount(theAccount.getLoanAmount().add(new BigDecimal(extraAmount)));
 
 		// test update ArrearsTolerancePeriod, available since 4.2, see MBU-13376
 		account.setArrearsTolerancePeriod(theAccount.getArrearsTolerancePeriod());
@@ -1762,7 +1788,7 @@ public class DemoTestLoanService {
 		// Create demo Transaction details for this account
 		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
 		
-		// In order to avoid TRANSACTION_DETAILS_NOT_AVAILABLE_FOR_PRODUCT error
+		// Transaction details are not supported for tranched loans
 		if (!productType.equals(LoanProductType.TRANCHED_LOAN)) {
 			disbursementDetails.setTransactionDetails(transactionDetails);
 		}
@@ -1772,7 +1798,7 @@ public class DemoTestLoanService {
 				CustomFieldType.TRANSACTION_CHANNEL_INFO, method, false));
 
 		// Add demo disbursement fees
-		// In order to avoid FEES_NOT_AVAILABLE_FOR_PRODUCT error
+		// Predefined fees are not available for tranched loans
 		if (!productType.equals(LoanProductType.TRANCHED_LOAN)) {
 			List<CustomPredefinedFee> customFees = DemoUtil.makeDemoPredefinedFees(demoProduct,
 					new HashSet<>(Collections.singletonList(FeeCategory.DISBURSEMENT)));
