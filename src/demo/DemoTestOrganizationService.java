@@ -1,17 +1,19 @@
 package demo;
 
 import java.math.BigDecimal;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
 import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.accounting.shared.model.GLAccountingRule;
 import com.mambu.accounts.shared.model.TransactionChannel;
-import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
+import com.mambu.admin.shared.model.ExchangeRate;
 import com.mambu.api.server.handler.settings.organization.model.JSONOrganization;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.OrganizationService;
+import com.mambu.apisdk.util.DateUtils;
 import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.model.IdentificationDocumentTemplate;
 import com.mambu.core.shared.model.Address;
@@ -55,6 +57,15 @@ public class DemoTestOrganizationService {
 
 			testGetOrganizationDetails();// Available since 3.11
 
+			// Test GET all currencies
+			List<Currency> organizationCurrencies = testGetCurrency(); // Available since 4.2
+			// Test GET exchange rates
+			testGetExchangeRates(organizationCurrencies); // Available since 4.2
+			// Test POST exchange rate
+			testPostExchangeRate(organizationCurrencies); // Available since 4.2
+
+			testPostExchangeRateWithNullStartDate(organizationCurrencies); // Available since 4.2
+
 			testPostIndexInterestRate(); // Available since 3.10
 
 			testGetTransactionChannels(); // Available since 3.7
@@ -66,8 +77,6 @@ public class DemoTestOrganizationService {
 
 			testGetCentresByPage();
 			testGetCentre();
-
-			testGetCurrency();
 
 			testGetAllBranches();
 			testGetCentresByBranch();
@@ -89,6 +98,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetAllBranches() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetAllBranches");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -111,6 +121,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetBranchesByPage() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetBranchesByPage");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -136,6 +147,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetBranch() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetBranch");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -149,6 +161,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetCentre() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetCentre");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -166,6 +179,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetCentresByPage() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetCentresByPage");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -192,6 +206,7 @@ public class DemoTestOrganizationService {
 	}
 
 	public static void testGetCentresByBranch() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetCentresByBranch");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -214,17 +229,200 @@ public class DemoTestOrganizationService {
 
 	}
 
-	public static void testGetCurrency() throws MambuApiException {
+	/**
+	 * Test get all available currencies and test getting base currency only
+	 * 
+	 * @return a list of organization currencies
+	 * @throws MambuApiException
+	 */
+	public static List<Currency> testGetCurrency() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetCurrency");
-		Date d1 = new Date();
+
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
-		Currency currency = organizationService.getCurrency();
-		Date d2 = new Date();
-		long diff = d2.getTime() - d1.getTime();
-		System.out.println("Currency code=" + currency.getCode() + "   Name=" + currency.getName() + " Total time="
-				+ diff);
+		// Test getting ALL currencies
+		List<Currency> organizationCurrencies = organizationService.getAllCurrencies();
+		// Log the results
+		System.out.println("Total Currencies =" + organizationCurrencies.size());
+		for (Currency currency : organizationCurrencies) {
+			System.out.println("\tCurrency code=" + currency.getCode() + "   Name=" + currency.getName());
+		}
 
+		// Test getting the base currency only (for backward compatibility)
+		Currency baseCurrency = organizationService.getCurrency();
+		System.out.println("\tBase Currency code=" + baseCurrency.getCode() + "   Name=" + baseCurrency.getName());
+
+		return organizationCurrencies;
+	}
+
+	// Tests creating of next exchange rate for a currency
+	private static void testPostExchangeRate(List<Currency> organizationCurrencies) throws MambuApiException {
+
+		System.out.println(methodName = "\nIn testPostExchangeRate");
+		Date start = new Date();
+
+		// Get one currency to test POST exchange rate
+		Currency currncyForTest = getRandomCurrencyOtherThanBase(organizationCurrencies);
+
+		// return if there are no other currencies or just the base currency
+		if (currncyForTest == null) {
+			System.out.println("WARNING: No Foreign Currency found to test POST Exchange Rate API ");
+			return;
+		}
+
+		// create the next day`s exchange rate for the currency
+		ExchangeRate exchangeRate = createExchangeRate(currncyForTest);
+
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+		// POST the exchange rate in Mambu
+		ExchangeRate postedExchangeRate = organizationService.createExchangeRate(currncyForTest, exchangeRate);
+		System.out.println("The details of the created ExchangeRate are: ");
+		logExchangeRateDetails(postedExchangeRate);
+
+		Date end = new Date();
+		System.out.println("\n" + methodName + " took " + (end.getTime() - start.getTime()) + " milliseconds");
+
+		testGetCurrentExchangeRate(postedExchangeRate);
+	}
+
+	/**
+	 * 
+	 * Tests POSTing in Mambu of a exchange rate with null start date.
+	 * 
+	 * @param organizationCurrencies
+	 *            A list of all currencies available for the organization
+	 * @throws MambuApiException
+	 */
+	private static void testPostExchangeRateWithNullStartDate(List<Currency> organizationCurrencies)
+			throws MambuApiException {
+
+		System.out.println(methodName = "\nIn testPostExchangeRateWithNullStartDate");
+
+		// Get one currency to test POST exchange rate
+		Currency currncyForTest = getRandomCurrencyOtherThanBase(organizationCurrencies);
+
+		// return if there are no other currencies or just the base currency
+		if (currncyForTest == null) {
+			System.out.println("WARNING: No Foreign Currency found to test POST Exchange Rate API ");
+			return;
+		}
+		ExchangeRate exchangeRate = createExchangeRate(currncyForTest);
+		// set the startDate to be null
+		exchangeRate.setStartDate(null);
+
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+
+		// POST the exchange rate in Mambu
+		ExchangeRate postedExchangeRate = organizationService.createExchangeRate(currncyForTest, exchangeRate);
+		System.out.println("The details of the created ExchangeRate are: ");
+		logExchangeRateDetails(postedExchangeRate);
+
+		testGetCurrentExchangeRate(postedExchangeRate);
+	}
+
+	/**
+	 * Tests getting the current exchange rate against the last posted exchange date passed as parameter when calling
+	 * this method.
+	 * 
+	 * @param lastPostedExchangeRate
+	 *            The last posted exchange rate. Is used in comparison to see if it really the current exchange rate.
+	 * @throws MambuApiException
+	 */
+	private static void testGetCurrentExchangeRate(ExchangeRate lastPostedExchangeRate) throws MambuApiException {
+
+		System.out.println(methodName = "\nIn testGetCurrentExchangeRate");
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+
+		if (lastPostedExchangeRate == null) {
+			throw new IllegalArgumentException("The lastPostedExchangeRate parameter must not be null");
+		}
+
+		// Get the current exchange rate
+		List<ExchangeRate> exchangeRates = organizationService.getExchangeRates(
+				lastPostedExchangeRate.getToCurrencyCode(), null, null, 0, 1);
+
+		ExchangeRate currentExchangeRate;
+		if (exchangeRates != null && !exchangeRates.isEmpty() && exchangeRates.get(0).getEndDate() == null) {
+			currentExchangeRate = exchangeRates.get(0);
+			logExchangeRateDetails(currentExchangeRate);
+		} else {
+			throw new MambuApiException(new Exception("Current exchange rate for "
+					+ lastPostedExchangeRate.getToCurrencyCode() + " was not found"));
+		}
+
+		// test to see the identity of the exchange rate using encoded keys
+		if (!lastPostedExchangeRate.getEncodedKey().equals(currentExchangeRate.getEncodedKey())) {
+			System.out.println("POST: " + lastPostedExchangeRate.getEncodedKey());
+			System.out.println("GET:  " + currentExchangeRate.getEncodedKey());
+			throw new MambuApiException(new Exception("POSTed and GET(got) exchange rate is not the same"));
+		}
+
+		System.out.println("Current exchange rate was successfully retrieved from Mambu");
+	}
+
+	/**
+	 * Logs to console the details for the ExchangeRrate passed passed as argument
+	 * 
+	 * @param exchangeRate
+	 *            The ExchangeRate
+	 */
+	private static void logExchangeRateDetails(ExchangeRate exchangeRate) {
+
+		if (exchangeRate != null) {
+			System.out.println("Key: " + exchangeRate.getEncodedKey());
+			System.out.println("SellRate: " + exchangeRate.getSellRate());
+			System.out.println("BuyRate: " + exchangeRate.getBuyRate());
+			System.out.println("StartDate: " + exchangeRate.getStartDate());
+			System.out.println("EndDate: " + exchangeRate.getEndDate());
+			System.out.println("ToCurrency: " + exchangeRate.getToCurrencyCode());
+		}
+	}
+
+	/**
+	 * Iterates over all the currencies for the organization and gets the first one it finds which is not base currency.
+	 * 
+	 * @param currencies
+	 *            all organization currencies
+	 * @return a currency or null if there are no other currencies than base currency or no currency at all.
+	 * @throws MambuApiException
+	 */
+	private static Currency getRandomCurrencyOtherThanBase(List<Currency> currencies) throws MambuApiException {
+
+		if (currencies == null) {
+			System.out.println("WARNING:NULL currencies, cannot get foreign currency");
+			return null;
+		}
+		Currency currncyForTest = null;
+		// iterate over all currencies and pick one
+		for (Currency currency : currencies) {
+			// pick one currency that is not the base currency
+			if (!currency.isBaseCurrency()) {
+				currncyForTest = currency;
+				break;
+			}
+		}
+		return currncyForTest;
+	}
+
+	/**
+	 * Creates the exchange rate for the current day.
+	 * 
+	 * @param currncy
+	 *            The currency that the exchange rate is created for.
+	 * @return ExchangeRate for the current day.
+	 */
+	private static ExchangeRate createExchangeRate(Currency currncy) {
+
+		Calendar currentDate = Calendar.getInstance();
+		ExchangeRate exchangeRate = new ExchangeRate();
+		exchangeRate.setBuyRate(new BigDecimal("3.00"));
+		exchangeRate.setToCurrencyCode(currncy.getCode());
+		exchangeRate.setStartDate(currentDate.getTime());
+		exchangeRate.setSellRate(new BigDecimal("4.50"));
+		System.out.println("Created exchange Rate with Start date=" + exchangeRate.getStartDate() + "\tCurrent Time="
+				+ new Date());
+		return exchangeRate;
 	}
 
 	// Get Custom Field by ID
@@ -280,6 +478,7 @@ public class DemoTestOrganizationService {
 	// Test getting transaction channels API
 	// Since Mambu 4.1 this API returns also applicable custom fields for each channel. See MBU-12226
 	public static void testGetTransactionChannels() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetTransactionChannels");
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -325,16 +524,12 @@ public class DemoTestOrganizationService {
 			} else {
 				System.out.println("No GLAccountingRule");
 			}
-
-			// Predefined channel fields were deprecated in 4.1. See MBU-11800
-			List<ChannelField> deprecatedFields = channel.getChannelFields();
-			int deprecatedlFieldsCount = (deprecatedFields == null) ? 0 : deprecatedFields.size();
-			System.out.println("\tTotal Deprecated Fields=" + deprecatedlFieldsCount);
 		}
 	}
 
 	// Update Custom Field values for the demo Branch and for demo Centre and delete the first custom field
 	public static void testUpdateDeleteCustomFields() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testUpdateDeleteCustomFields");
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
@@ -347,6 +542,7 @@ public class DemoTestOrganizationService {
 
 	// Test Posting Index Interest Rates. Available since 3.10
 	public static void testPostIndexInterestRate() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testPostIndexInterestRate");
 		// Note that there is no API yet to get Index Rate Sources. API developers need to know the rate source key to
 		// post new rates. These keys can be obtained from Mambu. They can also be looked up from the getProduct API
@@ -374,6 +570,7 @@ public class DemoTestOrganizationService {
 
 	// Test getting Identification Document Templates
 	public static void testGetIDDocumentTemplates() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetIDDocumentTemplates");
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
@@ -392,6 +589,7 @@ public class DemoTestOrganizationService {
 
 	// Get Organization details. Available since 3.11
 	public static void testGetOrganizationDetails() throws MambuApiException {
+
 		System.out.println(methodName = "\nIn testGetOrganization");
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
@@ -444,5 +642,54 @@ public class DemoTestOrganizationService {
 			DemoUtil.logException(methodName, e);
 		}
 
+	}
+
+	/**
+	 * Test getting exchange rates for organization currencies
+	 * 
+	 * Available since Mambu 4.2. See MBU-12628
+	 * 
+	 * @param organizationCurrencies
+	 *            available organization currencies. Must not be null
+	 * @throws MambuApiException
+	 */
+	public static void testGetExchangeRates(List<Currency> organizationCurrencies) throws MambuApiException {
+
+		System.out.println(methodName = "\nIn testGetExchangeRates");
+
+		if (organizationCurrencies == null || organizationCurrencies.size() < 2) {
+			System.out.println("WARNING: cannot test GET exchange rates with no non-base currencies");
+			return;
+		}
+		// Set test dates. Test with the endDate to be today+1 day and the startDate to be 30 days earlier
+		final long oneDay = 24 * 60 * 60 * 1000L; // 1 days in msecs
+		final long thirtyDays = 30 * oneDay;
+		// Create startDate and endDate for our test
+		Date now = new Date();
+		final int futureDaysLookup = 30;
+		Date futureDate = new Date(now.getTime() + futureDaysLookup * oneDay);
+		// Create test start date about 30 days before now and the endDate to be tomorrow (to see all as of today
+		// exchange rates)
+		String startDate = DateUtils.format(new Date(now.getTime() - thirtyDays));
+		String endDate = DateUtils.format(futureDate);
+
+		// Set test pagination params
+		Integer offset = 0;
+		Integer limit = 100;
+
+		// Test the API
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+
+		for (Currency currency : organizationCurrencies) {
+			if (currency.isBaseCurrency()) {
+				// Skipping. We need non-base currency to get exchange rates
+				continue;
+			}
+			String currencyCode = currency.getCode();
+			System.out.println("\nGETting Exchange Rates for currency=" + currencyCode);
+			List<ExchangeRate> exchangeRates = organizationService.getExchangeRates(currencyCode, startDate, endDate,
+					offset, limit);
+			System.out.println("Total Exchange Rates=" + exchangeRates.size() + " to " + currencyCode);
+		}
 	}
 }

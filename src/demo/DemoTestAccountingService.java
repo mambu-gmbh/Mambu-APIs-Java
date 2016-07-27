@@ -49,6 +49,7 @@ public class DemoTestAccountingService {
 
 	// Test Getting GLAccount by account type
 	public static List<GLAccount> testGetGLAccountsByType() throws MambuApiException {
+
 		System.out.println("\nIn testGetGLAccountsByType");
 
 		AccountingService service = MambuAPIFactory.getAccountingService();
@@ -78,6 +79,7 @@ public class DemoTestAccountingService {
 
 	// Test Getting GLAccount by code
 	public static void testGetGLAccountByCode(List<GLAccount> allAccounts) throws MambuApiException {
+
 		System.out.println("\nIn testGetGLAccountByCode");
 
 		if (allAccounts == null || allAccounts.size() == 0) {
@@ -107,6 +109,7 @@ public class DemoTestAccountingService {
 
 	// Test posting GLJournalEntries. Need at least three(3) test GL Accounts for this test
 	public static void testPostGLJournalEntries(List<GLAccount> allAccounts) throws MambuApiException {
+
 		System.out.println("\nIn testPostGLJournalEntries");
 
 		final int needTestGlAccounts = 3;
@@ -138,6 +141,8 @@ public class DemoTestAccountingService {
 		entries.add(entry2a);
 		entries.add(entry2b);
 		// Add two debit and one matching credit transaction
+		// TODO: re-test this scenario when MBU-14104 issue is fixed: Journal Entries cannot be added via API as long as
+		// 2 GL Accounts used as Debit are equal with 1 GL Account used as Credit
 		ApiGLJournalEntry entry3a = new ApiGLJournalEntry(account3.getGlCode(), EntryType.DEBIT, halfAmount);
 		ApiGLJournalEntry entry3b = new ApiGLJournalEntry(account1.getGlCode(), EntryType.DEBIT, halfAmount);
 		ApiGLJournalEntry entry3 = new ApiGLJournalEntry(account2.getGlCode(), EntryType.CREDIT, amount);
@@ -162,6 +167,7 @@ public class DemoTestAccountingService {
 
 	// Test getting GLJournalEntries
 	public static void testGetGLJournalEntries() throws MambuApiException {
+
 		System.out.println("\nIn testGetGLJournalEntries");
 
 		AccountingService service = MambuAPIFactory.getAccountingService();

@@ -2,7 +2,6 @@ package com.mambu.apisdk.json;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -31,7 +30,7 @@ import com.mambu.loans.shared.model.PrincipalPaymentAccountSettings;
 public class LoanAccountPatchJsonSerializer implements JsonSerializer<LoanAccount> {
 
 	/**
-	 * A list of fields supported by the PATCH loan account API. See MBU-7758, MBU-11481 and MBU-12143
+	 * A list of fields supported by the PATCH loan account API. See MBU-7758, MBU-11481, MBU-12143, MBU-13376
 	 * 
 	 * Note, since 4.0 the EXPECTED_DISBURSEMENT_DATE and FIRST_REPAYMENT_DATE are part of the
 	 * DisbursementDetails.class, see MBU-11481
@@ -41,7 +40,7 @@ public class LoanAccountPatchJsonSerializer implements JsonSerializer<LoanAccoun
 			APIData.LOAN_AMOUNT, APIData.INTEREST_RATE, APIData.INTEREST_RATE_SPREAD, APIData.REPAYMENT_INSTALLMENTS,
 			APIData.REPAYMENT_PERIOD_COUNT, APIData.REPAYMENT_PERIOD_UNIT, APIData.GRACE_PERIOD,
 			APIData.PRNICIPAL_REPAYMENT_INTERVAL, APIData.PENALTY_RATE, APIData.PERIODIC_PAYMENT,
-			APIData.DISBURSEMENT_DETAILS, APIData.PRINCIPAL_PAYMENT_SETTINGS));
+			APIData.DISBURSEMENT_DETAILS, APIData.PRINCIPAL_PAYMENT_SETTINGS, APIData.ARREARS_TOLERANCE_PERIOD));
 
 	/**
 	 * A list of fields from the DisbursementDetails class supported by PATCH loan account API.
@@ -71,6 +70,7 @@ public class LoanAccountPatchJsonSerializer implements JsonSerializer<LoanAccoun
 	}
 
 	public LoanAccountPatchJsonSerializer() {
+
 	}
 
 	// Serialize LoanAccount using custom inclusion strategy as well as helper methods to extract DisbursementDetails
@@ -86,38 +86,9 @@ public class LoanAccountPatchJsonSerializer implements JsonSerializer<LoanAccoun
 		JsonElement loanAccountJsonElement = gson.toJsonTree(loanAccount);
 		JsonObject loanResult = loanAccountJsonElement.getAsJsonObject();
 
-		// Adjust format for EXPECTED_DISBURSEMENT_DATE and FIRST_REPAYMENT_DATE fields to get them from the
-		// DisbursementDetails.class and place at loan account level
-		adjustDisbursementDetails(loanAccount, loanResult);
-
 		// Return as "{\"loanAccount\":" +{ accountFields + "}}";
 		JsonObject loanSubsetObject = new JsonObject();
 		loanSubsetObject.add(APIData.LOAN_ACCOUNT, loanResult);
 		return loanSubsetObject;
 	}
-
-	/**
-	 * Get EXPECTED_DISBURSEMENT_DATE and FIRST_REPAYMENT_DATE fields from the disbursementDetails and not from the
-	 * LoanAccount (deprecated fields) and place these at account level
-	 * 
-	 * @param loanAccount
-	 *            loan account
-	 * @param jsonResult
-	 *            JSON object with the date fields copied from the disbursementDetails into the account level
-	 */
-	private void adjustDisbursementDetails(LoanAccount loanAccount, JsonObject jsonResult) {
-
-		DisbursementDetails disbursementDetails = loanAccount.getDisbursementDetails();
-		if (disbursementDetails != null) {
-			Date expectedDisbursementDate = disbursementDetails.getExpectedDisbursementDate();
-			Date firstRepaymentDate = disbursementDetails.getFirstRepaymentDate();
-			// Add fields from DisbursementDetails
-			JsonHelper.addValueIfNotNullValue(jsonResult, APIData.EXPECTED_DISBURSEMENT_DATE, expectedDisbursementDate);
-			JsonHelper.addValueIfNotNullValue(jsonResult, APIData.FIRST_REPAYMENT_DATE, firstRepaymentDate);
-			// Remove the disbursementDetails:{}, it is not allowed in a Loan PATCH API
-			jsonResult.remove(APIData.DISBURSEMENT_DETAILS);
-		}
-
-	}
-
 }

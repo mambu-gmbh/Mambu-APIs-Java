@@ -12,6 +12,7 @@ import com.mambu.accounting.shared.model.EntryType;
 import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.accounting.shared.model.GLAccountType;
 import com.mambu.accounting.shared.model.GLJournalEntry;
+import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.ApiGLJournalEntry;
@@ -20,10 +21,12 @@ import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.DateUtils;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.apisdk.util.ServiceExecutor;
+import com.mambu.apisdk.util.ServiceHelper;
 
 /**
  * Service class which handles the API operations available for the accounting
@@ -51,6 +54,7 @@ public class AccountingService {
 	 */
 	@Inject
 	public AccountingService(MambuAPIService mambuAPIService) {
+
 		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
@@ -65,6 +69,7 @@ public class AccountingService {
 	 * @throws MambuApiException
 	 */
 	public GLAccount getGLAccount(String glCode) throws MambuApiException {
+
 		// Example GET/api/glaccount/1234123
 		// See MBU-1543
 		return serviceExecutor.execute(getGLAccount, glCode);
@@ -81,6 +86,7 @@ public class AccountingService {
 	 * @throws MambuApiException
 	 */
 	public GLAccount getGLAccount(String glCode, String fromDate, String toDate) throws MambuApiException {
+
 		// Example GET /api/glaccount/1234123?from=2011-10-04&to=2011-11-04
 		// See MBU-1543
 		ParamsMap params = new ParamsMap();
@@ -101,6 +107,7 @@ public class AccountingService {
 	 * @throws MambuApiException
 	 */
 	public List<GLAccount> getGLAccounts(GLAccountType accountType) throws MambuApiException {
+
 		// Example GET /api/glaccount?type=ASSET
 		// See MBU-1543.
 
@@ -130,6 +137,7 @@ public class AccountingService {
 	 */
 	public List<GLJournalEntry> getGLJournalEntries(String branchId, Date fromDate, Date toDate)
 			throws MambuApiException {
+
 		// GET /api/gljournalentries?from=1875-05-20&to=1875-05-25&branchID=ABC123
 		// See MBU-1736
 		return (this.getGLJournalEntries(branchId, fromDate, toDate, -1, -1));
@@ -156,6 +164,7 @@ public class AccountingService {
 	 */
 	public List<GLJournalEntry> getGLJournalEntries(String branchID, Date fromDate, Date toDate, Integer offset,
 			Integer limit) throws MambuApiException {
+
 		// GET /api/gljournalentries?from=1875-05-20&to=1875-05-25&branchID=ABC123&offset=50&limit=50
 		// See MBU-1736
 		if (fromDate == null || toDate == null) {
@@ -177,6 +186,31 @@ public class AccountingService {
 	}
 
 	/**
+	 * Get GL journal entries by specifying filter constraints
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * @return list of GL journal entries matching filter constraints
+	 * @throws MambuApiException
+	 */
+	public List<GLJournalEntry> getGLJournalEntries(JSONFilterConstraints filterConstraints, String offset, String limit)
+			throws MambuApiException {
+
+		// POST {JSONFilterConstraints} /api/gljournalentries/search?offset=0&limit=5
+		// See MBU-12099
+		ApiDefinition apiDefinition = SearchService
+				.makeApiDefinitionforSearchByFilter(MambuEntityType.GL_JOURNAL_ENTRY);
+
+		// POST Filter JSON with pagination params map
+		return serviceExecutor.executeJson(apiDefinition, filterConstraints, null, null,
+				ServiceHelper.makePaginationParams(offset, limit));
+	}
+
+	/**
 	 * Post GL Journal Entries
 	 * 
 	 * @param entries
@@ -195,6 +229,7 @@ public class AccountingService {
 	 */
 	public List<GLJournalEntry> postGLJournalEntries(List<ApiGLJournalEntry> entries, String branchId, String date,
 			String notes) throws MambuApiException {
+
 		// POST "branchId=2&date=2010-02-03&debitAccount1=100001&debitAmount1=30&creditAccount1=100002&creditAmount1=30"
 		// /api/gljournalentries
 		// See MBU-1737

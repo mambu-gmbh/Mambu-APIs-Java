@@ -77,6 +77,7 @@ public class CustomFieldValueService {
 	 */
 	@Inject
 	public CustomFieldValueService(MambuAPIService mambuAPIService) {
+
 		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
@@ -96,6 +97,7 @@ public class CustomFieldValueService {
 	 */
 	public boolean update(MambuEntityType parentEntity, String parentEntityId, CustomFieldValue customFieldValue)
 			throws MambuApiException {
+
 		// Update Custom Field Values API examples:
 		// Execute request for PATCH API to update custom field value for a Loan Account. See MBU-6661
 		// e.g. PATCH "{ "value": "10" }" /host/api/loans/accointId/custominformation/{customFieldId}
@@ -154,6 +156,7 @@ public class CustomFieldValueService {
 	 * @return api custom field value
 	 */
 	private CustomFieldValue makePatchApiCustomField(CustomFieldValue customFieldValue) {
+
 		CustomFieldValue apiField = new CustomFieldValue(customFieldValue);
 
 		// Only "value" and "linkedEntityKeyValue" fields need to be present in API request, if defined
@@ -198,6 +201,7 @@ public class CustomFieldValueService {
 	 */
 	public boolean update(MambuEntityType parentEntity, String parentEntityId, MambuEntityType ownedEntity,
 			String ownedEntityId, CustomFieldValue customFieldValue) throws MambuApiException {
+
 		// Update Custom Field Values API for Owned entities. Currently used to update custom fields for a specific
 		// transaction for a loan or savings account.
 
@@ -284,6 +288,7 @@ public class CustomFieldValueService {
 	 */
 	public boolean addGroupedFields(MambuEntityType parentEntity, String parentEntityId,
 			List<CustomFieldValue> customFieldValues) throws MambuApiException {
+
 		// Add Grouped Custom Field Values
 		// Available since Mambu 4.1. See MBU-12228
 		// Example: Execute request for PATCH API to add new group of custom field values for a Client:
@@ -428,6 +433,7 @@ public class CustomFieldValueService {
 	 * @return custom field id path
 	 */
 	private String makeCustomFieldIdPath(CustomFieldValue customFieldValue) {
+
 		if (customFieldValue == null || customFieldValue.getCustomFieldId() == null) {
 			throw new IllegalArgumentException("Custom Field Value and its Field ID cannot be null");
 		}
@@ -460,10 +466,11 @@ public class CustomFieldValueService {
 	 *            the id or encoded key of the owned entity
 	 * @param customFieldId
 	 *            custom field id
-	 * @return URL patch for DELETE custom field values API
+	 * @return URL path for DELETE custom field values API
 	 */
 	private String makeOwnedEntityUrlPath(MambuEntityType parentEntity, String parentEntityId,
 			MambuEntityType ownedEntity, String ownedEntityId, String customFieldId) {
+
 		if (parentEntity == null || parentEntityId == null || ownedEntity == null || ownedEntityId == null) {
 			throw new IllegalArgumentException("Parameters must not be null");
 		}
@@ -545,7 +552,9 @@ public class CustomFieldValueService {
 	// TODO: in future updates consider changing implementation to using custom serializer in ApiDefitnion for
 	// generating JSON for Custom Field Value API
 	private ParamsMap makeCustomInformationParams(List<CustomFieldValue> customFieldValues) {
-		// customInformation":[{ "customFieldID":"IBAN","value":"DE123456789121243546783"},{ "customFieldID":"BIC","value":"1234566441"}]
+
+		// customInformation":[{ "customFieldID":"IBAN","value":"DE123456789121243546783"},{
+		// "customFieldID":"BIC","value":"1234566441"}]
 
 		Gson gson = GsonUtils.createGson();
 		JsonElement customFieldsJson = gson.toJsonTree(customFieldValues);
@@ -568,6 +577,7 @@ public class CustomFieldValueService {
 	 * @return supported entities
 	 */
 	public static MambuEntityType[] getSupportedEntities() {
+
 		return supportedEntities;
 	}
 
@@ -579,6 +589,7 @@ public class CustomFieldValueService {
 	 * @return true if supported
 	 */
 	public static boolean isSupported(MambuEntityType parentEntityType) {
+
 		if (parentEntityType == null) {
 			return false;
 		}
@@ -598,6 +609,148 @@ public class CustomFieldValueService {
 	public static CustomFieldType getCustomFieldType(MambuEntityType mambuEntityType) {
 
 		return mambuEntityType != null ? customFieldTypes.get(mambuEntityType) : null;
+	}
+
+	/**
+	 * Update a list of custom fields
+	 * 
+	 * @param parentEntity
+	 *            The parent Mambu entity for which the custom field values will be updated. Must not be null. Example:
+	 *            MambuEntity.CLIENT.
+	 * @param parentEntityId
+	 *            The entity id or encoded key for the parent entity (e.g. client id). Must not be null.
+	 * @param customFieldValues
+	 *            A list containing the custom fields values to be updated. Must not be null or empty. Existent custom
+	 *            field values will be updated. If the provided custom field value was not present before - it will be
+	 *            added. Existent custom field values not present in the request will remain unchanged (they will NOT be
+	 *            deleted)
+	 * @return true if custom field values were updated successfully
+	 * @throws MambuApiException
+	 */
+	public boolean update(MambuEntityType parentEntity, String parentEntityId, List<CustomFieldValue> customFieldValues)
+			throws MambuApiException {
+
+		// Available since Mambu 4.2. See MBU-12231
+		// PATCH /api/clients/{clientId}/custominformation/
+		// e.g. PATCH { "customInformation": [{"customFieldID" : "IBAN", "value" :
+		// "DE123456789121243546783"},{"customFieldID" : "BANK_ACCOUNT_TYPE","value" : "Current Account"}]}
+
+		if (parentEntity == null || parentEntityId == null || customFieldValues == null || customFieldValues.isEmpty()) {
+			throw new IllegalArgumentException("Parameters must not be null");
+		}
+
+		// Create API definition
+		ApiDefinition patchOwnedEntityApiDefinition = new ApiDefinition(ApiType.PATCH_OWNED_ENTITIES,
+				parentEntity.getEntityClass(), serviceEntity.getEntityClass());
+		patchOwnedEntityApiDefinition.setApiReturnFormat(ApiReturnFormat.BOOLEAN);
+
+		List<CustomFieldValue> apiCustomFieldValues = makePatchGroupApiCustomFields(customFieldValues, true);
+
+		// TODO Remove this method once MBU-13603 is fixed
+		adjustLinkedCustomFields(apiCustomFieldValues);
+
+		// Create JSON for customFieldValues and add it to the ParamsMap
+		ParamsMap paramsMap = makeCustomInformationParams(apiCustomFieldValues);
+
+		return serviceExecutor.execute(patchOwnedEntityApiDefinition, parentEntityId, paramsMap);
+	}
+
+	/**
+	 * Adjusts a list of custom field values (temporary fix). Iterates over all the values in the list and in case the
+	 * value on "LinkedEntityKeyValue" different than null moves it to "Value" field.
+	 * 
+	 * @param customFieldValues
+	 *            The list of custom field values to be adjusted
+	 */
+	private void adjustLinkedCustomFields(List<CustomFieldValue> customFieldValues) {
+
+		// Available since Mambu 4.2. See MBU-12231
+		// TODO Remove this method once MBU-13603 is fixed
+		for (CustomFieldValue customFieldValue : customFieldValues) {
+			// customFieldValue.getCustomField().getDataItemType();
+			// for anything than null on LinkedEntityKeyValue means Linked CF
+			if (customFieldValue.getLinkedEntityKeyValue() != null) {
+				// move the value to value field
+				customFieldValue.setValue(customFieldValue.getLinkedEntityKeyValue());
+				// set the value to be null
+				customFieldValue.setLinkedEntityKeyValue(null);
+			}
+		}
+	}
+
+	/**
+	 * Gets a list of CustomFieldValue for the corresponding parent entity type, parent entity id and custom field id.
+	 * 
+	 * @param parentEntity
+	 *            The parent entity type. Must not be null.
+	 * @param parentEntityId
+	 *            The id of the parent entity. Must not be null.
+	 * @param customFieldId
+	 *            The id of the custom field. Must not be null.
+	 * @return a list of custom field values registered for the parent entity or empty list if there are no custom
+	 *         fields for the specified custom field id. Usually a single value is expected for standard custom fields
+	 *         and multiple values for grouped custom fields.
+	 * @throws MambuApiException
+	 */
+	public List<CustomFieldValue> getCustomFieldValue(MambuEntityType parentEntity, String parentEntityId,
+			String customFieldId) throws MambuApiException {
+
+		// GET /api/clients/{clientId}/custominformation/{customFieldId}
+		// GET /api/loans/{loanId}/custominformation/{customFieldId}
+		// Available since 4.2. More details on MBU-13211
+
+		// Parameters must not be null since they are used to compose the URL for the call
+		if (parentEntity == null || parentEntityId == null || customFieldId == null) {
+			throw new IllegalArgumentException("Parameters must not be null");
+		}
+
+		// delegate execution to service executor
+		return serviceExecutor.getOwnedEntities(parentEntity, parentEntityId, MambuEntityType.CUSTOM_FIELD_VALUE,
+				customFieldId, null);
+
+	}
+
+	/**
+	 * Gets a list of CustomFieldValue for the corresponding parent entity type, parentEntityId, ownedEntity type, owned
+	 * entity id and custom field id.
+	 * 
+	 * @param parentEntity
+	 *            The parent entity type. Must not be null
+	 * @param parentEntityId
+	 *            The id of the parent entity. Must not be null.
+	 * @param ownedEntity
+	 *            The owned entity type. Must not be null.
+	 * @param ownedEntityId
+	 *            The id of the owned entity. Must not be null.
+	 * @param customFieldId
+	 *            The id of the custom field. Must not be null.
+	 * @return a list of custom field values registered for the owned entity or empty list if there are no custom fields
+	 *         for the specified custom field id. Usually a single value is expected for standard custom fields and
+	 *         multiple values for grouped custom fields.
+	 * @throws MambuApiException
+	 */
+	public List<CustomFieldValue> getCustomFieldValue(MambuEntityType parentEntity, String parentEntityId,
+			MambuEntityType ownedEntity, String ownedEntityId, String customFieldId) throws MambuApiException {
+
+		// GET /api/loans/{loanId}/transactions/{transactionId}/custominformation/{customFieldId}
+		// i.e. GET
+		// /api/loans/1467191564274/transactions/8a80863c559af41b01559b6fbca20270/custominformation/selection_tr_Transactions
+		// Available since 4.2. More details on MBU-13211
+
+		// Parameters must not be null since they are used to compose the URL for the call
+		if (parentEntity == null || parentEntityId == null || customFieldId == null || ownedEntity == null
+				|| ownedEntityId == null) {
+			throw new IllegalArgumentException("Parameters must not be null");
+		}
+
+		String urlPath = makeOwnedEntityUrlPath(parentEntity, parentEntityId, ownedEntity, ownedEntityId, customFieldId);
+
+		// make apiDefinition
+		ApiDefinition apiDefinition = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET,
+				CustomFieldValue.class, ApiReturnFormat.COLLECTION);
+
+		// delegate execution to service executor
+		return serviceExecutor.execute(apiDefinition);
 	}
 
 }
