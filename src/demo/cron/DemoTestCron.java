@@ -6,7 +6,7 @@ import java.util.Timer;
 import demo.DemoUtil;
 
 /**
- * Utility cron job class. Used to run the all demo test classes at the time specified in the confic.properties file.
+ * Utility cron job class. Used to run the all demo test classes at the time specified in the config.properties file.
  * Designed to run tests at the midnight of a day.
  * 
  * @author acostros
