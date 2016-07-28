@@ -37,6 +37,7 @@ import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.MambuAPIServiceFactory;
+import com.mambu.apisdk.Protocol;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.services.LoansService;
@@ -48,6 +49,8 @@ import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.GroupExpanded;
+import com.mambu.core.shared.helper.EnumUtils;
+import com.mambu.core.shared.helper.StringUtils;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldDataType;
 import com.mambu.core.shared.model.CustomFieldLink;
@@ -90,6 +93,10 @@ import com.mambu.savings.shared.model.SavingsType;
  * 
  */
 public class DemoUtil {
+	
+	// protocol
+	private static String protocol = "https"; // Application protocol
+	private static String protocol2 = "https"; // Application protocol for domain2
 
 	// "subdomain.sandbox.mambu.com"
 	private static String domain = "subdomain.sandbox.mambu.com"; // Domain name. Format example: demo.mambucloud.com
@@ -175,7 +182,7 @@ public class DemoUtil {
 
 		}
 		// Set up Factory
-		MambuAPIFactory.setUp(domain, user, password);
+		MambuAPIFactory.setUp(EnumUtils.searchEnum(Protocol.class, protocol), domain, user, password);
 
 		// set up App Key
 		MambuAPIFactory.setApplicationKey(appKeyValue);
@@ -199,13 +206,15 @@ public class DemoUtil {
 			return;
 		}
 
-		// Get Properties. For domain, user and demo client we can also use hardcoded defaults if not provided
+		// Get Properties. For protocol, domain, user and demo client we can also use hardcoded defaults if not provided
+		protocol = makeDefaultIfEmpty(properties.getProperty("protocol"), protocol);
 		domain = properties.getProperty("domain", domain);
 		user = properties.getProperty("user", user);
 		password = properties.getProperty("password", password);
 		System.out.println(demoLogPrefix + "Domain=" + domain + "\tUser=" + user);
 		
-		// Get Properties. For domain2, user2 and demo client2 we can also use hardcoded defaults if not provided
+		// Get Properties. For protocol2, domain2, user2 and demo client2 we can also use hardcoded defaults if not provided
+		protocol2 = makeDefaultIfEmpty(properties.getProperty("protocol2"), protocol2);
 		domain2 = properties.getProperty("domain2", domain2);
 		user2 = properties.getProperty("user2", user2);
 		password2 = properties.getProperty("password2", password2);
@@ -288,6 +297,26 @@ public class DemoUtil {
 		}
 		return param;
 	}
+	
+	/**
+	 * Helper method that returns the provided default value only in case of a null or empty value for the parameter
+	 * that is going to be checked.
+	 * 
+	 * @param param
+	 *            parameter to be checked
+	 * @param defaultValue
+	 *            default value to be returned
+	 * @return the value of the parameter to be checked in case its value is different than null and empty or the default
+	 *         value otherwise
+	 */
+	private static String makeDefaultIfEmpty(String param, String defaultValue) {
+
+		if (StringUtils.isBlank(param)) {
+			return defaultValue;
+		}
+		return param;
+
+	}
 
 	/**
 	 * Get service factory object that includes fixed Mambu credentials with domain
@@ -310,9 +339,9 @@ public class DemoUtil {
 	public static MambuAPIServiceFactory getAPIServiceFactory(boolean secondaryDomain) {
 
 		if (!secondaryDomain) {
-			return MambuAPIServiceFactory.getFactory(domain, user, password);
+			return MambuAPIServiceFactory.getFactory(EnumUtils.searchEnum(Protocol.class, protocol), domain, user, password);
 		} else {
-			return MambuAPIServiceFactory.getFactory(domain2, user2, password2);
+			return MambuAPIServiceFactory.getFactory(EnumUtils.searchEnum(Protocol.class, protocol2), domain2, user2, password2);
 		}
 	}
 

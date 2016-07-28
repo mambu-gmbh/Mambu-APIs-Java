@@ -54,7 +54,7 @@ The list will be updated constantly and currently contains:
 To use the factory, some date must be provided in order to set it up:
 
 	MambuAPIServiceFactory serviceFactory = MambuAPIServiceFactory.getFactory(
-		"mydomain.mambu.com", "username", "password");
+		Protocol.HTTPS, "mydomain.mambu.com", "username", "password");
 
 After this step, each service can be taken through a simple call like:
 
