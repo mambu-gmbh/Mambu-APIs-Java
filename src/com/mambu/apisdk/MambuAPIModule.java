@@ -7,6 +7,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.AbstractModule;
 import com.mambu.apisdk.model.Domain;
 import com.mambu.apisdk.model.Password;
+import com.mambu.apisdk.model.Protocol;
 import com.mambu.apisdk.model.Username;
 import com.mambu.apisdk.model.ApplicationProtocol;
 import com.mambu.apisdk.util.RequestExecutor;
@@ -39,10 +40,10 @@ public class MambuAPIModule extends AbstractModule {
 	 */
 	public MambuAPIModule(Protocol protocol, String domain, String username, String password) {
 		
+		this.protocol = Preconditions.checkNotNull(protocol, "protocol cannot be null").name();
 		this.domain = Preconditions.checkNotNull(domain, "domain cannot be null");
 		this.username = Preconditions.checkNotNull(username, "username cannot be null");
 		this.password = Preconditions.checkNotNull(password, "password cannot be null");
-		this.protocol = Preconditions.checkNotNull(protocol, "protocol cannot be null").name();
 
 	}
 
@@ -52,10 +53,10 @@ public class MambuAPIModule extends AbstractModule {
 	@Override
 	protected void configure() {
 
+		bindConstant().annotatedWith(ApplicationProtocol.class).to(protocol);
 		bindConstant().annotatedWith(Username.class).to(username);
 		bindConstant().annotatedWith(Password.class).to(password);
 		bindConstant().annotatedWith(Domain.class).to(domain);
-		bindConstant().annotatedWith(ApplicationProtocol.class).to(protocol);
 
 		bind(RequestExecutor.class).to(RequestExecutorImpl.class);
 

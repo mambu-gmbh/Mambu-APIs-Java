@@ -3,6 +3,7 @@ package com.mambu.apisdk;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.model.Protocol;
 import com.mambu.apisdk.services.AccountingService;
 import com.mambu.apisdk.services.ActivitiesService;
 import com.mambu.apisdk.services.ClientsService;
@@ -39,9 +40,9 @@ public final class MambuAPIServiceFactory {
 	}
 
 	/***
-	 * Set up the Guice Module with data required for accessing the remote server, returning a factory object to
-	 * retrieve Mambu API services that have Mambu credentials built-in. As of release 4.3, replaced by
-	 * {@link #getFactory(Protocol, String, String, String)()}
+	 * Convenience method for setting up the Guice Module with data required for accessing the remote server, returning
+	 * a factory object to retrieve Mambu API services that have Mambu credentials built-in. The application protocol
+	 * that is used is HTTPS
 	 * 
 	 * @param domain
 	 *            the domain where the server is found
@@ -52,7 +53,6 @@ public final class MambuAPIServiceFactory {
 	 * 
 	 * @return factory object to create API service objects which are bound to the given credentials
 	 */
-	@Deprecated
 	public static MambuAPIServiceFactory getFactory(String domain, String username, String password) {
 
 		Injector injector = Guice.createInjector(new MambuAPIModule(Protocol.HTTPS, domain, username, password));
