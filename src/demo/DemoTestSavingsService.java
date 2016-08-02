@@ -490,7 +490,7 @@ public class DemoTestSavingsService {
 			// Since 4.2 Mambu API supports transfers only between accounts in the same currency. See MBU-12619
 
 			String currencyCode = savings.getCurrencyCode();
-			List<Currency> allCurrencies = organizationService.getCurrencies(true);
+			List<Currency> allCurrencies = organizationService.getAllCurrencies();
 
 			Currency savingsCurrency = null;
 
