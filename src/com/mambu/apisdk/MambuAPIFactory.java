@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.model.Protocol;
 import com.mambu.apisdk.services.AccountingService;
 import com.mambu.apisdk.services.ActivitiesService;
 import com.mambu.apisdk.services.ClientsService;
@@ -49,7 +50,8 @@ public class MambuAPIFactory {
 	private static Integer INVALID_BASIC_AUTHORIZATION = 1;
 
 	/***
-	 * Set up the Guice Module with data required for accessing the remote server
+	 * Convenience method for setting up the Guice Module with data required for accessing the remote server. The
+	 * application protocol that is used is HTTPS
 	 * 
 	 * @param domain
 	 *            the domain where the server is found
@@ -59,7 +61,23 @@ public class MambuAPIFactory {
 	 *            the password used by the user
 	 */
 	public static void setUp(String domain, String username, String password) {
-		injector = Guice.createInjector(new MambuAPIModule(domain, username, password));
+		injector = Guice.createInjector(new MambuAPIModule(Protocol.HTTPS, domain, username, password));
+	}
+	
+	/***
+	 * Set up the Guice Module with data required for accessing the remote server
+	 * 
+	 * @param protocol
+	 *            the protocol used for communication
+	 * @param domain
+	 *            the domain where the server is found
+	 * @param username
+	 *            the name of the user
+	 * @param password
+	 *            the password used by the user
+	 */
+	public static void setUp(Protocol protocol, String domain, String username, String password) {
+		injector = Guice.createInjector(new MambuAPIModule(protocol, domain, username, password));
 	}
 
 	/***
