@@ -128,9 +128,9 @@
 		<dependency>
 			<groupId>com.mambu</groupId>
 			<artifactId>mambumodels</artifactId>
-			<version>4.2</version>
+			<version>4.3</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/mambu-models-V4.2.jar
+			<systemPath>${project.basedir}/lib/mambu-models-V4.3.jar
 			</systemPath>
 			<optional>false</optional>
 		</dependency>
