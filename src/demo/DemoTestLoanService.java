@@ -1744,20 +1744,14 @@ public class DemoTestLoanService {
 				List<SavingsAccount> clientSavings = savingsService.getSavingsAccountsForClient(demoClient.getId());
 
 				OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
-				Currency baseCurrency = null;
-
-				List<Currency> currencies = organizationService.getCurrencies(true);
-
-				for (Currency cur : currencies) {
-					if (cur.isBaseCurrency()) {
-						baseCurrency = cur;
-					}
-				}
+				Currency baseCurrency = organizationService.getCurrency();
 
 				// Only savings of SavingsType.INVESTOR_ACCOUNT can be investors
 				if (clientSavings != null) {
 					for (SavingsAccount account : clientSavings) {
-						if (account.getAccountType() == SavingsType.INVESTOR_ACCOUNT && baseCurrency != null
+						String accountCurrencyCode = account.getCurrencyCode();
+						if (account.getAccountType() == SavingsType.INVESTOR_ACCOUNT
+								&& baseCurrency.getCode().equals(accountCurrencyCode)
 								&& account.getAccountState() == AccountState.ACTIVE && account.getBalance() != null
 								&& account.getBalance().isPositive()) {
 							savingsAccountKey = account.getEncodedKey();
