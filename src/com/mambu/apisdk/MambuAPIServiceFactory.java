@@ -10,6 +10,7 @@ import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.services.CommentsService;
 import com.mambu.apisdk.services.CustomFieldValueService;
 import com.mambu.apisdk.services.CustomViewsService;
+import com.mambu.apisdk.services.DatabaseService;
 import com.mambu.apisdk.services.DocumentTemplatesService;
 import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.services.IntelligenceService;
@@ -290,6 +291,18 @@ public final class MambuAPIServiceFactory {
 	public DocumentTemplatesService getDocumentTemplatesService() throws MambuApiException {
 
 		return injector.getInstance(DocumentTemplatesService.class);
+	}
+
+	/***
+	 * Get an instance of the DatabaseService class
+	 * 
+	 * @return the obtained instance
+	 * 
+	 * @throws MambuApiException
+	 */
+	public DatabaseService getDatabaseService() throws MambuApiException {
+
+		return injector.getInstance(DatabaseService.class);
 	}
 
 }
