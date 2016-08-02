@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mambu.apisdk.MambuAPIServiceTest;
 import com.mambu.apisdk.model.Domain;
+import com.mambu.apisdk.model.ApplicationProtocol;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 
@@ -24,14 +25,15 @@ import com.mambu.apisdk.util.RequestExecutor.Method;
 public class URLHelper {
 
 	private String domainName;
-	private static String WEB_PROTOCOL = "https";
+	private String protocol;
 	private static String API_ENDPOINT = "/api/";
 	private static String DELIMITER = "?";
 
 	private final static Logger LOGGER = Logger.getLogger(URLHelper.class.getName());
 
 	@Inject
-	public URLHelper(@Domain String domainName) {
+	public URLHelper(@ApplicationProtocol String protocol, @Domain String domainName) {
+		this.protocol = protocol;
 		this.domainName = domainName;
 	}
 
@@ -40,17 +42,17 @@ public class URLHelper {
 	 * 
 	 * @param details
 	 *            the extra details
-	 * 
 	 * @return the created URL String in url-encoded format
 	 */
 	public String createUrl(String details) {
+
 		details = details == null ? "" : details;
 
 		// URL String must be url-encoded to handle spaces and UTF-8 chars (See MBU-4669, implemented in Mambu 3.4)
 		String encodedUrl;
 		try {
 
-			URI uri = new URI(WEB_PROTOCOL, domainName, API_ENDPOINT + details, null);
+			URI uri = createURI(details);
 			encodedUrl = uri.toString();
 
 			return encodedUrl;
@@ -63,6 +65,52 @@ public class URLHelper {
 		}
 
 	}
+	
+	/**
+	 * Creates an URI based on the connection details specified at the project level as well as on the details provided as parameter.
+	 * 
+	 * @param details
+	 *            the details that are used for building the path
+	 * 
+	 * @return newly created URI
+	 * 
+	 * @throws URISyntaxException
+	 */
+	private URI createURI(String details) throws URISyntaxException {
+		if (isDomainNameWithPort()) {
+			return new URI(protocol, null, host(), port(), API_ENDPOINT + details, null, null);
+		} else {
+			return new URI(protocol, domainName, API_ENDPOINT + details, null);
+		}
+	}
+	
+	/**
+	 * Extracts the host from the domain name.
+	 * 
+	 * @return connection host
+	 */
+	private String host() {
+		return domainName.split(":")[0];
+	}
+	
+	/**
+	 * Extracts the port from the domain name.
+	 * 
+	 * @return connection port
+	 */
+	private int port() {
+		return Integer.parseInt(domainName.split(":")[1]);
+	}
+	
+	/**
+	 * Checks whether the domain name contains a port value or not.
+	 * 
+	 * @return true if the domain name contains a port value, false otherwise
+	 */
+	private boolean isDomainNameWithPort() {
+		return domainName.matches(".*:[0-9]+");
+	}
+	
 
 	/***
 	 * Appends some params to a given URL String
@@ -78,6 +126,7 @@ public class URLHelper {
 	 * @return the complete URL
 	 */
 	public String createUrlWithParams(String urlString, ParamsMap paramsMap) {
+
 		return makeUrlWithParams(urlString, paramsMap);
 
 	}
@@ -93,6 +142,7 @@ public class URLHelper {
 	 * @return the complete URL
 	 */
 	public static String makeUrlWithParams(String urlString, ParamsMap paramsMap) {
+
 		return paramsMap != null ? urlString + DELIMITER + paramsMap.getURLString() : urlString;
 	}
 
@@ -114,6 +164,7 @@ public class URLHelper {
 	 */
 	public String addJsonPaginationParams(String urlString, Method method, ContentType contentTypeFormat,
 			ParamsMap params) {
+
 		// Add only for POST with ContentType.JSON (for ContentType.WWW_FORM all params will be added to the URL)
 		if (params == null || !(method == Method.POST && contentTypeFormat == ContentType.JSON)) {
 			return urlString;
