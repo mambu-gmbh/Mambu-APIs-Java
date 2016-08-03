@@ -39,6 +39,7 @@ The list will be updated constantly and currently contains:
 - CommentsService
 - CustomFieldValueService
 - CustomViewsService
+- DatabaseService
 - DocumentsService
 - DocumentTemplatesService
 - IntelligenceService
