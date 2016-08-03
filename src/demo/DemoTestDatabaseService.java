@@ -15,6 +15,8 @@ import com.mambu.apisdk.services.DatabaseService;
 
 public class DemoTestDatabaseService {
 
+	private static String methodName;
+
 	public static void main(String[] args) {
 
 		DemoUtil.setUp();
@@ -24,9 +26,7 @@ public class DemoTestDatabaseService {
 			testTriggerDatabaseBackup(); // Available since V4.3
 
 		} catch (MambuApiException e) {
-			System.out.println("Exception caught in Demo Test Tasks Service");
-			System.out.println("Error code=" + e.getErrorCode());
-			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
+			DemoUtil.logException(methodName, e);
 		}
 
 	}
@@ -38,6 +38,8 @@ public class DemoTestDatabaseService {
 	 */
 	private static void testTriggerDatabaseBackup() throws MambuApiException {
 
+		System.out.println(methodName = "\nIn testTriggerDatabaseBackup");
+
 		DatabaseService databaseService = MambuAPIFactory.getDatabaseService();
 
 		DatabaseBackupRequest databaseRequestObject = new DatabaseBackupRequest();
@@ -45,7 +47,6 @@ public class DemoTestDatabaseService {
 
 		DatabaseBackupResponse response = databaseService.createDatabaseBackup(databaseRequestObject);
 
-		System.out.println(response);
-
+		System.out.println("Database request Response:\n" + response);
 	}
 }
