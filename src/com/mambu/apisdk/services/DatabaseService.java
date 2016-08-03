@@ -1,5 +1,8 @@
 package com.mambu.apisdk.services;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -21,10 +24,16 @@ public class DatabaseService {
 	// Our ServiceExecutor
 	private ServiceExecutor serviceExecutor;
 
-	// Create AI definition
+	// Create API definition
 	private final static ApiDefinition createDatabaseBackup = new ApiDefinition(ApiType.CREATE_JSON_ENTITY,
 			DatabaseBackupRequest.class, DatabaseBackupResponse.class);
 
+	/**
+	 * Create a new Database service
+	 * 
+	 * @param mambuAPIService
+	 *            the service responsible with the connection to the server
+	 */
 	@Inject
 	public DatabaseService(MambuAPIService mambuAPIService) {
 
@@ -38,24 +47,41 @@ public class DatabaseService {
 	 * 
 	 * @param databaseBackupRequest
 	 *            The request object for the database backup API containing the callback URL that will be used by
-	 *            webhooks to send the successful backup message after backup creation on S3 server. Wrapper, or
-	 *            callback URL cannot be null.
+	 *            webhooks to send the successful backup message after backup creation on S3 server. Callback URL must
+	 *            be valid if provided.
 	 * @return A wrapper object containing the return status and code for the database backup trigger.
 	 * @throws MambuApiException
 	 */
 	public DatabaseBackupResponse createDatabaseBackup(DatabaseBackupRequest databaseBackupRequest)
 			throws MambuApiException {
 		// Available since 4.3. See MBU-11020
-		// Example POST {"callback":"http://somedomain.com"}'
+		// Example POST /api/database/backup {"callback":"http://somedomain.com"}
 
-		if (databaseBackupRequest == null || databaseBackupRequest.getCallback() == null) {
-			throw new IllegalArgumentException("Request object and callback field must not be null!!");
+		if (databaseBackupRequest != null && databaseBackupRequest.getCallback() != null) {
+			validateCallbackUrl(databaseBackupRequest.getCallback());
 		}
 
 		createDatabaseBackup.setUrlPath(createDatabaseBackup.getEndPoint() + "/" + APIData.BACKUP);
 
 		// delegate execution to service executor
 		return serviceExecutor.executeJson(createDatabaseBackup, databaseBackupRequest);
+
+	}
+
+	/**
+	 * Validates whether the provided callbackUrl is valid or not. In case is not valid throws an
+	 * IllegalArgumentException.
+	 * 
+	 * @param callbackUrl
+	 *            the URL to be validated
+	 */
+	private void validateCallbackUrl(String callbackUrl) {
+
+		try {
+			new URL(callbackUrl);
+		} catch (MalformedURLException e) {
+			throw new IllegalArgumentException("Callback URL must be valid if provided!");
+		}
 
 	}
 
