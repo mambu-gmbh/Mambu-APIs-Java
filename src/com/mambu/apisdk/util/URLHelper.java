@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.mambu.apisdk.MambuAPIServiceTest;
 import com.mambu.apisdk.model.Domain;
 import com.mambu.apisdk.model.ApplicationProtocol;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
@@ -115,7 +114,7 @@ public class URLHelper {
 	/***
 	 * Appends some params to a given URL String
 	 * 
-	 * NOTE: this non-static version is used in SDK Mockito tests (see {@link MambuAPIServiceTest}. Mockito cannot use
+	 * NOTE: this non-static version is used in SDK Mockito tests (see MambuAPIServiceTest). Mockito cannot use
 	 * static methods
 	 * 
 	 * @param urlString
