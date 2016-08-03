@@ -80,7 +80,7 @@ public class DatabaseService {
 		try {
 			new URL(callbackUrl);
 		} catch (MalformedURLException e) {
-			throw new IllegalArgumentException("Callback URL must be valid if provided!");
+			throw new IllegalArgumentException("Callback URL must be valid if provided!", e);
 		}
 
 	}
