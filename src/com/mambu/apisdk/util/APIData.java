@@ -306,4 +306,8 @@ public class APIData {
 	// Base64 encoded strings header's terminator in API responses
 	public static String BASE64_ENCODING_INDICATOR = ";base64,";
 
+	// DB
+	public static String DATABASE = "database";
+	public static String BACKUP = "backup";
+
 }
