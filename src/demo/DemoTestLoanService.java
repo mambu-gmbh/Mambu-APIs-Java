@@ -148,6 +148,8 @@ public class DemoTestLoanService {
 
 					// Create account to test patch, approve, undo approve, reject, close
 					testCreateJsonAccount();
+					testPatchLoanAccountDisbursementAndFirstRepaymentDate();
+
 					testPatchLoanAccountTerms(); // Available since 3.9.3
 
 					// As per the requirement 2.1 from MBU-10017, when approving a tranched loan account, the loan
@@ -2265,6 +2267,45 @@ public class DemoTestLoanService {
 			}
 		}
 		return loanTransactions;
+	}
+
+	/**
+	 * Tests PATCHing the setExpectedDisbursementDate and setFirstRepaymentDate on a loan account.
+	 * 
+	 * @throws MambuApiException
+	 */
+	private static void testPatchLoanAccountDisbursementAndFirstRepaymentDate() throws MambuApiException {
+
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn : " + methodName);
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		LoanAccount theAccount = newAccount;
+		LoanAccount account = new LoanAccount();
+
+		account.setId(theAccount.getId());
+
+		Calendar currentCalendar = Calendar.getInstance();
+		currentCalendar
+				.setTime(theAccount.getDisbursementDate() != null ? theAccount.getDisbursementDate() : new Date());
+		currentCalendar.add(Calendar.DAY_OF_MONTH, 1);
+
+		account.setExpectedDisbursementDate(currentCalendar.getTime());
+
+		currentCalendar.add(Calendar.DAY_OF_MONTH, 2);
+		account.setFirstRepaymentDate(currentCalendar.getTime());
+
+		BigDecimal nullBigDecimal = null;
+		// null LoanAmount and RepaymentInstallments fields, they don't need to be present in the PATCH JSON
+		account.setLoanAmount(nullBigDecimal);
+		account.setRepaymentInstallments(null);
+
+		// patch the loan account
+		boolean patchResult = loanService.patchLoanAccount(account);
+
+		System.out.println("The expectedDisbursementDate and firstRepaymentDate were edited for the loan account "
+				+ NEW_LOAN_ACCOUNT_ID + ". Status: " + patchResult);
 	}
 
 }
