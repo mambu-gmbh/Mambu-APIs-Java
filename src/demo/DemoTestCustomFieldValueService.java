@@ -21,7 +21,7 @@ import com.mambu.loans.shared.model.LoanTransaction;
  * @author mdanilkis
  * 
  */
-public class DemoTestCustomFiledValueService {
+public class DemoTestCustomFieldValueService {
 
 	private static String methodName = null; // print method name on exception
 
