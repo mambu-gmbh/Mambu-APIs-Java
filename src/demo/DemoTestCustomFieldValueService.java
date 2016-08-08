@@ -80,7 +80,7 @@ public class DemoTestCustomFieldValueService {
 		System.out.println("\n\nTesting Custom Fields APIs for " + parentEntity + " " + parentName + " with ID="
 				+ parentId);
 		// Execute test cases to update and delete custom fields
-		testUpdateAdddDeleteEntityCustomFields(parentEntity, entityParams);
+		testUpdateAddDeleteEntityCustomFields(parentEntity, entityParams);
 	}
 
 	/**
@@ -92,10 +92,10 @@ public class DemoTestCustomFieldValueService {
 	 * @entityParams entity params. Must be not null and have not null entity id
 	 * @throws MambuApiException
 	 */
-	public static void testUpdateAdddDeleteEntityCustomFields(MambuEntityType parentEntity,
+	public static void testUpdateAddDeleteEntityCustomFields(MambuEntityType parentEntity,
 			DemoEntityParams entityParams) throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testUpdateAdddDeleteEntityCustomFields");
+		System.out.println(methodName = "\nIn testUpdateAddDeleteEntityCustomFields");
 
 		// Get ID of the parent entity. Use demo entity
 		if (entityParams == null || entityParams.getId() == null) {
