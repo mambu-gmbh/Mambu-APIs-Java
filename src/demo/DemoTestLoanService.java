@@ -148,8 +148,6 @@ public class DemoTestLoanService {
 
 					// Create account to test patch, approve, undo approve, reject, close
 					testCreateJsonAccount();
-					testPatchLoanAccountDisbursementAndFirstRepaymentDate();
-
 					testPatchLoanAccountTerms(); // Available since 3.9.3
 
 					// As per the requirement 2.1 from MBU-10017, when approving a tranched loan account, the loan
@@ -463,7 +461,8 @@ public class DemoTestLoanService {
 	// Test Patch Loan account terms API.
 	public static void testPatchLoanAccountTerms() throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testPatchLoanAccountTerms");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("nIn " + methodName);
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
@@ -486,6 +485,8 @@ public class DemoTestLoanService {
 		account.setRepaymentPeriodUnit(theAccount.getRepaymentPeriodUnit()); // repaymentPeriodUnit
 		account.setDisbursementDetails(theAccount.getDisbursementDetails()); // to update the first repayment date and
 																				// the expected disbursement
+
+		account = updateExpectedDisbursementDateAndFirstRepaymentDate(account);
 
 		account.setGracePeriod(theAccount.getGracePeriod()); // gracePeriod
 		account.setPrincipalRepaymentInterval(theAccount.getPrincipalRepaymentInterval()); // principalRepaymentInterval
@@ -2269,43 +2270,29 @@ public class DemoTestLoanService {
 		return loanTransactions;
 	}
 
+	// TODO once with V4.4 this method needs to be deleted
 	/**
-	 * Tests PATCHing the setExpectedDisbursementDate and setFirstRepaymentDate on a loan account.
+	 * Updates expected disbursement date and first repayment date
 	 * 
+	 * @param loanAccount
+	 *            The loan account to be updated
 	 * @throws MambuApiException
 	 */
-	private static void testPatchLoanAccountDisbursementAndFirstRepaymentDate() throws MambuApiException {
+	private static LoanAccount updateExpectedDisbursementDateAndFirstRepaymentDate(LoanAccount loanAccount)
+			throws MambuApiException {
 
-		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
-		System.out.println("\nIn : " + methodName);
-
-		LoansService loanService = MambuAPIFactory.getLoanService();
-
-		LoanAccount theAccount = newAccount;
-		LoanAccount account = new LoanAccount();
-
-		account.setId(theAccount.getId());
-
+		LoanAccount updatedLoanAccount = loanAccount;
 		Calendar currentCalendar = Calendar.getInstance();
 		currentCalendar
-				.setTime(theAccount.getDisbursementDate() != null ? theAccount.getDisbursementDate() : new Date());
+				.setTime(loanAccount.getDisbursementDate() != null ? loanAccount.getDisbursementDate() : new Date());
 		currentCalendar.add(Calendar.DAY_OF_MONTH, 1);
 
-		account.setExpectedDisbursementDate(currentCalendar.getTime());
+		updatedLoanAccount.setExpectedDisbursementDate(currentCalendar.getTime());
 
 		currentCalendar.add(Calendar.DAY_OF_MONTH, 2);
-		account.setFirstRepaymentDate(currentCalendar.getTime());
+		updatedLoanAccount.setFirstRepaymentDate(currentCalendar.getTime());
 
-		BigDecimal nullBigDecimal = null;
-		// null LoanAmount and RepaymentInstallments fields, they don't need to be present in the PATCH JSON
-		account.setLoanAmount(nullBigDecimal);
-		account.setRepaymentInstallments(null);
-
-		// patch the loan account
-		boolean patchResult = loanService.patchLoanAccount(account);
-
-		System.out.println("The expectedDisbursementDate and firstRepaymentDate were edited for the loan account "
-				+ NEW_LOAN_ACCOUNT_ID + ". Status: " + patchResult);
+		return updatedLoanAccount;
 	}
 
 }
