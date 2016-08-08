@@ -776,10 +776,10 @@ public class DemoTestClientService {
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
 		// Test fields for a Client
-		DemoTestCustomFiledValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.CLIENT);
+		DemoTestCustomFieldValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.CLIENT);
 
 		// Test fields for a Group
-		DemoTestCustomFiledValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.GROUP);
+		DemoTestCustomFieldValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.GROUP);
 	}
 
 	// Test getting client types

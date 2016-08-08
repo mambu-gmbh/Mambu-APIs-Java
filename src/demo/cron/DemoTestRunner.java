@@ -6,7 +6,7 @@ import demo.DemoTestAccountingService;
 import demo.DemoTestActivitiesService;
 import demo.DemoTestClientService;
 import demo.DemoTestCommentsService;
-import demo.DemoTestCustomFiledValueService;
+import demo.DemoTestCustomFieldValueService;
 import demo.DemoTestDocumentTemplatesService;
 import demo.DemoTestDocumentsService;
 import demo.DemoTestIntelligenceService;
@@ -42,7 +42,7 @@ public class DemoTestRunner extends TimerTask {
 
 		DemoTestCommentsService.main(null);
 
-		DemoTestCustomFiledValueService.main(null);
+		DemoTestCustomFieldValueService.main(null);
 
 		DemoTestDocumentsService.main(null);
 

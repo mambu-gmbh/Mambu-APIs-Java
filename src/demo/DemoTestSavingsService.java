@@ -1091,7 +1091,7 @@ public class DemoTestSavingsService {
 		System.out.println(methodName = "\nIn testUpdateDeleteCustomFields");
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
-		DemoTestCustomFiledValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.SAVINGS_ACCOUNT);
+		DemoTestCustomFieldValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.SAVINGS_ACCOUNT);
 
 	}
 
