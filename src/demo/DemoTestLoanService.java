@@ -11,6 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.datanucleus.enhancer.methods.GetExecutionContext;
+
 import com.mambu.accounting.shared.model.GLAccountingRule;
 import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.accounts.shared.model.AccountState;
@@ -2283,14 +2285,21 @@ public class DemoTestLoanService {
 
 		LoanAccount updatedLoanAccount = loanAccount;
 		Calendar currentCalendar = Calendar.getInstance();
-		currentCalendar
-				.setTime(loanAccount.getDisbursementDate() != null ? loanAccount.getDisbursementDate() : new Date());
-		currentCalendar.add(Calendar.DAY_OF_MONTH, 1);
+
+		DisbursementDetails disbursementDetails = loanAccount.getDisbursementDetails();
+
+		if (disbursementDetails != null && disbursementDetails.getExpectedDisbursementDate() != null) {
+			currentCalendar.setTime(disbursementDetails.getExpectedDisbursementDate());
+		}
 
 		updatedLoanAccount.setExpectedDisbursementDate(currentCalendar.getTime());
 
-		currentCalendar.add(Calendar.DAY_OF_MONTH, 2);
-		updatedLoanAccount.setFirstRepaymentDate(currentCalendar.getTime());
+		if (disbursementDetails != null && disbursementDetails.getFirstRepaymentDate() != null) {
+			updatedLoanAccount.setFirstRepaymentDate(disbursementDetails.getFirstRepaymentDate());
+		} else {
+			currentCalendar.add(Calendar.DAY_OF_MONTH, 1);
+			updatedLoanAccount.setFirstRepaymentDate(currentCalendar.getTime());
+		}
 
 		return updatedLoanAccount;
 	}
