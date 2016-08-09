@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.mambu.apisdk.util;
 
@@ -9,16 +9,15 @@ import java.util.logging.Logger;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.mambu.apisdk.MambuAPIServiceTest;
 import com.mambu.apisdk.model.Domain;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 
 /**
  * Helper class for operations with the URL adresses
- * 
+ *
  * @author ipenciuc
- * 
+ *
  */
 @Singleton
 public class URLHelper {
@@ -37,10 +36,10 @@ public class URLHelper {
 
 	/**
 	 * Creates an URL String with an protocol, a domainName and some given details
-	 * 
+	 *
 	 * @param details
 	 *            the extra details
-	 * 
+	 *
 	 * @return the created URL String in url-encoded format
 	 */
 	public String createUrl(String details) {
@@ -50,7 +49,7 @@ public class URLHelper {
 		String encodedUrl;
 		try {
 
-			URI uri = new URI(WEB_PROTOCOL, domainName, API_ENDPOINT + details, null);
+			URI uri = createURI(details);
 			encodedUrl = uri.toString();
 
 			return encodedUrl;
@@ -66,17 +65,17 @@ public class URLHelper {
 
 	/***
 	 * Appends some params to a given URL String
-	 * 
-	 * NOTE: this non-static version is used in SDK Mockito tests (see {@link MambuAPIServiceTest}. Mockito cannot use
-	 * static methods
-	 * 
+	 *
+	 * @deprecated use static version of this method, see {@link #makeUrlWithParams(String, ParamsMap)}
+	 *
 	 * @param urlString
 	 *            the already created URL String
 	 * @param paramsMap
 	 *            the params which must be added
-	 * 
+	 *
 	 * @return the complete URL
 	 */
+	@Deprecated
 	public String createUrlWithParams(String urlString, ParamsMap paramsMap) {
 		return makeUrlWithParams(urlString, paramsMap);
 
@@ -84,12 +83,12 @@ public class URLHelper {
 
 	/***
 	 * Static helper to Append URL params to a given URL String
-	 * 
+	 *
 	 * @param urlString
 	 *            the already created URL String
 	 * @param paramsMap
 	 *            the params which must be added
-	 * 
+	 *
 	 * @return the complete URL
 	 */
 	public static String makeUrlWithParams(String urlString, ParamsMap paramsMap) {
@@ -100,7 +99,7 @@ public class URLHelper {
 	 * Add pagination params to a given URL String for POST with application/json content type. Pagination parameters
 	 * shall be be added to the URL string. See MBU-8975. Only "offset" and "limit" parameters are added. For example,
 	 * in API call POST {JSONFilterConstraints} /api/loans/search?offset=0&limit=5
-	 * 
+	 *
 	 * @param urlString
 	 *            original URL string
 	 * @param method
@@ -113,7 +112,7 @@ public class URLHelper {
 	 * @return URL string with pagination parameters added for POST with application/json content type
 	 */
 	public String addJsonPaginationParams(String urlString, Method method, ContentType contentTypeFormat,
-			ParamsMap params) {
+										  ParamsMap params) {
 		// Add only for POST with ContentType.JSON (for ContentType.WWW_FORM all params will be added to the URL)
 		if (params == null || !(method == Method.POST && contentTypeFormat == ContentType.JSON)) {
 			return urlString;
@@ -135,5 +134,28 @@ public class URLHelper {
 		params.remove(APIData.LIMIT);
 
 		return urlWithParams;
+	}
+
+	private URI createURI(String details) throws URISyntaxException {
+		if(isDomainNameWithPort()) {
+			return new URI(WEB_PROTOCOL, null, host(), port(), API_ENDPOINT + details, null, null);
+		}
+		return new URI(WEB_PROTOCOL, domainName, API_ENDPOINT + details, null);
+	}
+
+	private String host() {
+		return this.domainName.split(":")[0];
+	}
+
+	private int port() {
+		return Integer.parseInt(this.domainName.split(":")[1]);
+	}
+
+	private boolean isDomainNameWithPort() {
+		return this.domainName.matches(".*:[0-9]*");
+	}
+
+	public static void useHttp() {
+		URLHelper.WEB_PROTOCOL = "http";
 	}
 }
