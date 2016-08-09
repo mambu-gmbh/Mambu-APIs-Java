@@ -11,8 +11,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.TimeZone;
 
-import org.datanucleus.enhancer.methods.GetExecutionContext;
-
 import com.mambu.accounting.shared.model.GLAccountingRule;
 import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.accounts.shared.model.AccountState;
