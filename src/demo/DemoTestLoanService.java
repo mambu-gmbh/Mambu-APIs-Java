@@ -462,7 +462,7 @@ public class DemoTestLoanService {
 	public static void testPatchLoanAccountTerms() throws MambuApiException {
 
 		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
-		System.out.println("nIn " + methodName);
+		System.out.println("\nIn " + methodName);
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
