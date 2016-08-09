@@ -45,7 +45,10 @@ public class DemoTestTasksService {
 			testCreateTaskJson();
 
 			// Available since Mambu 3.3. Get Tasks for a Group available since Mambu 3.12
-			testGetTasks();
+			testGetTasksByStatus(TaskStatus.OPEN);
+
+			// Added in Mambu 4.3
+			testGetTasksByStatus(TaskStatus.OVERDUE);
 
 			// Available since Mambu 3.6
 			testupdateTask();
@@ -61,6 +64,7 @@ public class DemoTestTasksService {
 	}
 
 	public static Task testCreateTaskJson() throws MambuApiException {
+
 		System.out.println("\nIn testCreateTaskJson");
 
 		User user = demoUser;
@@ -83,14 +87,15 @@ public class DemoTestTasksService {
 
 		task = tasksService.createTask(task);
 
-		System.out.println("Created task =" + task + "  Returned ID=" + task.getId() + " and Due Date="
-				+ task.getDueDate());
+		System.out.println(
+				"Created task =" + task + "  Returned ID=" + task.getId() + " and Due Date=" + task.getDueDate());
 
 		return task;
 
 	}
 
 	public static void testCreateTaskFromEncoded() throws MambuApiException {
+
 		System.out.println("\nIn testCreateTaskFromEncoded");
 
 		User user = demoUser;
@@ -114,15 +119,16 @@ public class DemoTestTasksService {
 
 	}
 
-	public static List<Task> testGetTasks() throws MambuApiException {
-		System.out.println("\nIn testGetTasks");
+	public static List<Task> testGetTasksByStatus(TaskStatus taskStatus) throws MambuApiException {
+
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 
 		// Get Input params
 		String clientId = null;// demoClient.getId(); // or null;
 		String groupId = demoGroup.getId(); // or null;
 		String username = null;// demoUser.getEncodedKey(); // or getId() or getUsername() or null; See MBU-7467
 
-		TaskStatus taskStatus = TaskStatus.OPEN; // TaskStatus.OPEN or TaskStatus.COMPLETED;
 		// Pagination params
 		String offset = "0"; // or null;
 		String limit = "50"; // or null;
@@ -153,6 +159,7 @@ public class DemoTestTasksService {
 	}
 
 	public static void testupdateTask() throws MambuApiException {
+
 		System.out.println("\nIn testupdateTask");
 
 		if (taskToUpdate == null) {
@@ -188,9 +195,10 @@ public class DemoTestTasksService {
 	}
 
 	public static void testDeleteTask() throws MambuApiException {
+
 		System.out.println("\nIn testDeleteTask");
 
-		List<Task> someDemoTasks = testGetTasks();
+		List<Task> someDemoTasks = testGetTasksByStatus(TaskStatus.OPEN);
 
 		if (someDemoTasks == null || someDemoTasks.isEmpty()) {
 			// Add New task
