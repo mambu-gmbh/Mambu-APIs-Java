@@ -39,7 +39,7 @@ import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanTransaction;
 import com.mambu.notifications.shared.model.NotificationMessage;
 import com.mambu.notifications.shared.model.NotificationMessageDataField;
-import com.mambu.notifications.shared.model.TemplateTrigger;
+import com.mambu.notifications.shared.model.MessageTemplateEvent;
 import com.mambu.savings.shared.data.SavingsDataField;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsTransaction;
@@ -83,6 +83,7 @@ public class DemoTestSearchService {
 	}
 
 	public static void testSearchAll() throws MambuApiException {
+
 		System.out.println("\nIn testSearchAll");
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
@@ -97,14 +98,15 @@ public class DemoTestSearchService {
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
-		System.out.println("Search All types with a query=" + query + "\tReturned=" + results.size() + "\tTotal time="
-				+ diff);
+		System.out.println(
+				"Search All types with a query=" + query + "\tReturned=" + results.size() + "\tTotal time=" + diff);
 
 		logSearchResults(results);
 
 	}
 
 	public static void testSearchClientsGroups() throws MambuApiException {
+
 		System.out.println("\nIn testSearchClientsGroups");
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
@@ -117,14 +119,15 @@ public class DemoTestSearchService {
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
-		System.out.println("Search Clients for query=" + query + "\tReturned=" + results.size() + "\tTotal time="
-				+ diff);
+		System.out
+				.println("Search Clients for query=" + query + "\tReturned=" + results.size() + "\tTotal time=" + diff);
 
 		logSearchResults(results);
 
 	}
 
 	public static void testSearchLoansSavings() throws MambuApiException {
+
 		System.out.println("\nIn testSearchLoansSavings");
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
@@ -168,6 +171,7 @@ public class DemoTestSearchService {
 	}
 
 	public static void testSearchGlAccounts() throws MambuApiException {
+
 		System.out.println("\nIn testSearchGlAccounts");
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
@@ -183,8 +187,8 @@ public class DemoTestSearchService {
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
-		System.out.println("Search GL Accounts for query=" + query + "\tReturned=" + results.size() + "\tTotal time="
-				+ diff);
+		System.out.println(
+				"Search GL Accounts for query=" + query + "\tReturned=" + results.size() + "\tTotal time=" + diff);
 
 		logSearchResults(results);
 
@@ -192,6 +196,7 @@ public class DemoTestSearchService {
 
 	// Test Search for Lines of Credit. Lines of Credit can be searched by ID. Available since 3.14. See MBU-10579
 	public static void testSearchLinesOfCredit() throws MambuApiException {
+
 		System.out.println("\nIn testSearchLinesOfCredit");
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
@@ -210,6 +215,7 @@ public class DemoTestSearchService {
 	}
 
 	public static void testTypesCombinations() throws MambuApiException {
+
 		System.out.println("\nIn testTypesCombinations");
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
@@ -230,6 +236,7 @@ public class DemoTestSearchService {
 
 	// Test API to GET entities by On The Fly Filter
 	private static void testSearchEntitiesByFilter() throws MambuApiException {
+
 		System.out.println("\nIn testSearchEntitiesByFilter");
 
 		String offset = "0";
@@ -301,7 +308,7 @@ public class DemoTestSearchService {
 		// Test Get Loan Accounts by account ID's first char and account state
 		LoanAccount demoLoanAccount = DemoUtil.getDemoLoanAccount();
 		LoansService loansService = MambuAPIFactory.getLoanService();
-		
+
 		constraints = new ArrayList<JSONFilterConstraint>();
 		constraint1 = new JSONFilterConstraint();
 
@@ -426,11 +433,11 @@ public class DemoTestSearchService {
 		} else {
 			System.out.println("Warning: Cannot test savings transactions: no savings accounts returned");
 		}
-		
-		//GL Journal Entries
+
+		// GL Journal Entries
 		AccountingService accountingService = MambuAPIFactory.getAccountingService();
 		constraints = new ArrayList<>();
-		
+
 		// Filter for amount greater than 1000
 		constraint1 = new JSONFilterConstraint();
 		constraint1.setDataFieldType(DataFieldType.NATIVE.name());
@@ -440,7 +447,7 @@ public class DemoTestSearchService {
 		constraint1.setValue("1000");
 
 		constraints.add(constraint1);
-		
+
 		// Filter for creation date to be in the last 10 days
 		constraint2 = new JSONFilterConstraint();
 		constraint2.setDataFieldType(DataFieldType.NATIVE.name());
@@ -452,12 +459,12 @@ public class DemoTestSearchService {
 		df = new SimpleDateFormat(DateUtils.DATE_FORMAT);
 		constraint2.setValue(df.format(from));
 		constraint2.setSecondValue(df.format(now));
-		
+
 		constraints.add(constraint2);
 
 		filterConstraints = new JSONFilterConstraints();
 		filterConstraints.setFilterConstraints(constraints);
-		
+
 		System.out.println("\nTesting Get GL Journal Entries by filters:");
 		List<GLJournalEntry> journalEntries = accountingService.getGLJournalEntries(filterConstraints, offset, limit);
 		System.out.println("Total journal entries returned = " + journalEntries.size());
@@ -465,6 +472,7 @@ public class DemoTestSearchService {
 
 	// Test Search Notification Messages by on the Fly filter API
 	private static void testSearchNotificationMessages() throws MambuApiException {
+
 		System.out.println("\nIn testSearchNotificationMessages");
 
 		// Create Filter Constraints
@@ -475,7 +483,7 @@ public class DemoTestSearchService {
 		constraint1.setDataFieldType(DataFieldType.NATIVE.name());
 		constraint1.setFilterSelection(NotificationMessageDataField.EVENT.name());
 		constraint1.setFilterElement(FilterElement.EQUALS.name());
-		constraint1.setValue(TemplateTrigger.LOAN_CREATED.name());
+		constraint1.setValue(MessageTemplateEvent.LOAN_CREATED.name());
 
 		constraints.add(constraint1);
 
