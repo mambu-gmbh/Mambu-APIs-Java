@@ -461,7 +461,8 @@ public class DemoTestLoanService {
 	// Test Patch Loan account terms API.
 	public static void testPatchLoanAccountTerms() throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testPatchLoanAccountTerms");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
@@ -484,6 +485,8 @@ public class DemoTestLoanService {
 		account.setRepaymentPeriodUnit(theAccount.getRepaymentPeriodUnit()); // repaymentPeriodUnit
 		account.setDisbursementDetails(theAccount.getDisbursementDetails()); // to update the first repayment date and
 																				// the expected disbursement
+
+		account = updateExpectedDisbursementDateAndFirstRepaymentDate(account);
 
 		account.setGracePeriod(theAccount.getGracePeriod()); // gracePeriod
 		account.setPrincipalRepaymentInterval(theAccount.getPrincipalRepaymentInterval()); // principalRepaymentInterval
@@ -1856,7 +1859,7 @@ public class DemoTestLoanService {
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
 		DemoEntityParams demoEntityParams = new DemoEntityParams(newAccount.getName(), newAccount.getEncodedKey(),
 				newAccount.getId(), newAccount.getProductTypeKey());
-		DemoTestCustomFiledValueService.testUpdateAdddDeleteEntityCustomFields(MambuEntityType.LOAN_ACCOUNT,
+		DemoTestCustomFieldValueService.testUpdateAddDeleteEntityCustomFields(MambuEntityType.LOAN_ACCOUNT,
 				demoEntityParams);
 
 	}
@@ -2265,6 +2268,38 @@ public class DemoTestLoanService {
 			}
 		}
 		return loanTransactions;
+	}
+
+	// TODO once with V4.4 this method needs to be deleted
+	/**
+	 * Updates expected disbursement date and first repayment date
+	 * 
+	 * @param loanAccount
+	 *            The loan account to be updated
+	 * @throws MambuApiException
+	 */
+	private static LoanAccount updateExpectedDisbursementDateAndFirstRepaymentDate(LoanAccount loanAccount)
+			throws MambuApiException {
+
+		LoanAccount updatedLoanAccount = loanAccount;
+		Calendar currentCalendar = Calendar.getInstance();
+
+		DisbursementDetails disbursementDetails = loanAccount.getDisbursementDetails();
+
+		if (disbursementDetails != null && disbursementDetails.getExpectedDisbursementDate() != null) {
+			currentCalendar.setTime(disbursementDetails.getExpectedDisbursementDate());
+		}
+
+		updatedLoanAccount.setExpectedDisbursementDate(currentCalendar.getTime());
+
+		if (disbursementDetails != null && disbursementDetails.getFirstRepaymentDate() != null) {
+			updatedLoanAccount.setFirstRepaymentDate(disbursementDetails.getFirstRepaymentDate());
+		} else {
+			currentCalendar.add(Calendar.DAY_OF_MONTH, 1);
+			updatedLoanAccount.setFirstRepaymentDate(currentCalendar.getTime());
+		}
+
+		return updatedLoanAccount;
 	}
 
 }

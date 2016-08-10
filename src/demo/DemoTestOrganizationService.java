@@ -534,10 +534,10 @@ public class DemoTestOrganizationService {
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
 		// Test fields for a Branch
-		DemoTestCustomFiledValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.BRANCH);
+		DemoTestCustomFieldValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.BRANCH);
 
 		// Test fields for a Centre
-		DemoTestCustomFiledValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.CENTRE);
+		DemoTestCustomFieldValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.CENTRE);
 	}
 
 	// Test Posting Index Interest Rates. Available since 3.10
