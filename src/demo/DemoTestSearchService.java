@@ -478,6 +478,7 @@ public class DemoTestSearchService {
 		// Create Filter Constraints
 		ArrayList<JSONFilterConstraint> constraints = new ArrayList<JSONFilterConstraint>();
 		JSONFilterConstraint constraint1 = new JSONFilterConstraint();
+		JSONFilterConstraint constraint2 = new JSONFilterConstraint();
 
 		// Specify Filter to get Notification messages. See MBU-10646 for details on available filters
 		constraint1.setDataFieldType(DataFieldType.NATIVE.name());
@@ -486,6 +487,13 @@ public class DemoTestSearchService {
 		constraint1.setValue(MessageTemplateEvent.LOAN_CREATED.name());
 
 		constraints.add(constraint1);
+		
+		// Filter for retrieving the communications based on user recipients. See MBU-12991
+		constraint2.setDataFieldType(DataFieldType.NATIVE.name());
+		constraint2.setFilterSelection(NotificationMessageDataField.RECIPIENT_USER_KEY.name());
+		constraint2.setFilterElement(FilterElement.EMPTY.name());
+		
+		constraints.add(constraint2);
 
 		// Create JSONFilterConstraints with these constraints
 		JSONFilterConstraints filterConstraints = new JSONFilterConstraints();
