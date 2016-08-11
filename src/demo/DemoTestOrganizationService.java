@@ -174,7 +174,7 @@ public class DemoTestOrganizationService {
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		String centreId = demoCentre.getId();
-		System.out.println("\nIn testGetCentre by ID." + "  Centre ID=" + centreId);
+		System.out.println("\nIn " + methodName + " by ID." + "  Centre ID=" + centreId);
 
 		Date d1 = new Date();
 		Centre centre = organizationService.getCentre(centreId);
@@ -195,7 +195,7 @@ public class DemoTestOrganizationService {
 		String offset = "0";
 		String limit = "5";
 		String branchId = null;
-		System.out.println("\nIn testGetCentresByPage" + "  Offset=" + offset + "  Limit=" + limit);
+		System.out.println("\nIn " + methodName + "  Offset=" + offset + "  Limit=" + limit);
 
 		Date d1 = new Date();
 		List<Centre> centres = organizationService.getCentres(branchId, offset, limit);
@@ -223,8 +223,7 @@ public class DemoTestOrganizationService {
 		String branchId = BRANCH_ID;
 		String offset = "0";
 		String limit = "500";
-		System.out.println(
-				"\nIn testGetCentresByBranch" + "  BranchID=" + branchId + "  Offset=" + offset + "  Limit=" + limit);
+		System.out.println("\nIn " + methodName + "  BranchID=" + branchId + "  Offset=" + offset + "  Limit=" + limit);
 
 		Date d1 = new Date();
 		List<Centre> centres = organizationService.getCentres(branchId, offset, limit);
