@@ -1171,6 +1171,7 @@ public class LoansService {
 		case DISBURSMENT:
 		case FEE:
 		case REPAYMENT:
+		case INTEREST_RATE_CHANGED: // Available since Mambu 4.3. See MBU-13714
 			break;
 		default:
 			throw new IllegalArgumentException("Transaction  type " + transactionType + " is not supported");
