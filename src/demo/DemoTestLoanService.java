@@ -28,6 +28,7 @@ import com.mambu.admin.shared.model.InterestProductSettings;
 import com.mambu.admin.shared.model.PrincipalPaymentProductSettings;
 import com.mambu.api.server.handler.loan.model.JSONLoanAccountResponse;
 import com.mambu.api.server.handler.loan.model.JSONRestructureEntity;
+import com.mambu.api.server.handler.loan.model.JSONTransactionRequest;
 import com.mambu.api.server.handler.loan.model.RestructureDetails;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -125,6 +126,7 @@ public class DemoTestLoanService {
 
 			// Run tests for all required product types
 			for (LoanProductType productType : productTypes) {
+
 				System.out.println("\n*** Product Type=" + productType + " ***");
 
 				// Get random product of a specific type or a product for a specific product id
@@ -175,6 +177,10 @@ public class DemoTestLoanService {
 
 					// Test Disburse and Undo disburse
 					testDisburseLoanAccount();
+					
+					// Test Change interest rate for active revolving credit loans
+					testChangeInterestRateForActiveRevolvingCreditLoans();
+					
 					// Edit the loan amount only for active revolving credit loans
 					testEditLoanAmountForActiveRevolvingCreditLoans();
 					testUndoDisburseLoanAccount(); // Available since 3.9
@@ -254,6 +260,41 @@ public class DemoTestLoanService {
 			System.out.println("Exception caught in Demo Test Loan Service");
 			System.out.println("Error code=" + e.getErrorCode());
 			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
+		}
+
+	}
+	
+	// Change the interest rate for active revolving credit loans. See MBU-13714
+	public static void testChangeInterestRateForActiveRevolvingCreditLoans() throws MambuApiException {
+
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+		
+		LoansService loanService = MambuAPIFactory.getLoanService();
+		
+		// Get the updated state of the loan account
+		AccountState accountState = loanService.getLoanAccount(NEW_LOAN_ACCOUNT_ID).getAccountState();
+
+		LoanProductType loanProductType = demoProduct.getLoanProductType();
+		
+		// Edit the loan amount for active revolving credit loan
+		if (loanProductType.equals(LoanProductType.REVOLVING_CREDIT) && accountState.equals(AccountState.ACTIVE)) {
+
+			JSONTransactionRequest jsonTransactionRequest = new JSONTransactionRequest();
+			Calendar calendar = Calendar.getInstance();
+			calendar.add(Calendar.MONTH, 1);
+			jsonTransactionRequest.setDate(calendar.getTime());
+			jsonTransactionRequest.setRate(new BigDecimal(10));
+			jsonTransactionRequest.setNotes("some notes");
+
+			LoanTransaction loanTransaction = loanService.executeJSONTransactionRequest(NEW_LOAN_ACCOUNT_ID,
+					LoanTransactionType.INTEREST_RATE_CHANGED, jsonTransactionRequest);
+
+			System.out.println("The interest rate was edited for the loan account " + NEW_LOAN_ACCOUNT_ID
+					+ ". Transaction ID = " + loanTransaction);
+		} else {
+			System.out.println(
+					"The loan amount does not meet the prerequisites, therefore its interest rate will not be updated.");
 		}
 
 	}
