@@ -143,8 +143,8 @@ public class OrganizationService {
 	 *            the currency code for the currency to be searched in Mambu. Must not be null.
 	 * 
 	 * @return Currency having as currency code the currency code passed as parameter to this method call. In case a
-	 *         wrong currency code (there is no currency having currency code having this code) is passed to this method
-	 *         call then the server will return INVALID_CURRENCY_CODE error code.
+	 *         wrong currency code (there is no currency having this code) is passed to this method call then the server
+	 *         will return INVALID_CURRENCY_CODE error code.
 	 * 
 	 * @throws MambuApiException
 	 */
