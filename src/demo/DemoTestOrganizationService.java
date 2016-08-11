@@ -59,6 +59,10 @@ public class DemoTestOrganizationService {
 
 			// Test GET all currencies
 			List<Currency> organizationCurrencies = testGetCurrency(); // Available since 4.2
+
+			// Available since 4.3
+			testGetCurrencyByCode();
+
 			// Test GET exchange rates
 			testGetExchangeRates(organizationCurrencies); // Available since 4.2
 			// Test POST exchange rate
@@ -99,7 +103,8 @@ public class DemoTestOrganizationService {
 
 	public static void testGetAllBranches() throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testGetAllBranches");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		String offset = "1";
@@ -122,12 +127,13 @@ public class DemoTestOrganizationService {
 
 	public static void testGetBranchesByPage() throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testGetBranchesByPage");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		String offset = "0";
 		String limit = "500";
-		System.out.println("\nIn testGetBranchesByPage" + "  Offset=" + offset + "  Limit=" + limit);
+		System.out.println("\nIn " + methodName + "  Offset=" + offset + "  Limit=" + limit);
 
 		Date d1 = new Date();
 		List<Branch> branches = organizationService.getBranches(offset, limit);
@@ -148,7 +154,8 @@ public class DemoTestOrganizationService {
 
 	public static void testGetBranch() throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testGetBranch");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		Branch branch = organizationService.getBranch(BRANCH_ID);
@@ -162,11 +169,12 @@ public class DemoTestOrganizationService {
 
 	public static void testGetCentre() throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testGetCentre");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		String centreId = demoCentre.getId();
-		System.out.println("\nIn testGetCentre by ID." + "  Centre ID=" + centreId);
+		System.out.println("\nIn " + methodName + " by ID." + "  Centre ID=" + centreId);
 
 		Date d1 = new Date();
 		Centre centre = organizationService.getCentre(centreId);
@@ -180,13 +188,14 @@ public class DemoTestOrganizationService {
 
 	public static void testGetCentresByPage() throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testGetCentresByPage");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		String offset = "0";
 		String limit = "5";
 		String branchId = null;
-		System.out.println("\nIn testGetCentresByPage" + "  Offset=" + offset + "  Limit=" + limit);
+		System.out.println("\nIn " + methodName + "  Offset=" + offset + "  Limit=" + limit);
 
 		Date d1 = new Date();
 		List<Centre> centres = organizationService.getCentres(branchId, offset, limit);
@@ -207,14 +216,14 @@ public class DemoTestOrganizationService {
 
 	public static void testGetCentresByBranch() throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testGetCentresByBranch");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		String branchId = BRANCH_ID;
 		String offset = "0";
 		String limit = "500";
-		System.out.println("\nIn testGetCentresByBranch" + "  BranchID=" + branchId + "  Offset=" + offset + "  Limit="
-				+ limit);
+		System.out.println("\nIn " + methodName + "  BranchID=" + branchId + "  Offset=" + offset + "  Limit=" + limit);
 
 		Date d1 = new Date();
 		List<Centre> centres = organizationService.getCentres(branchId, offset, limit);
@@ -237,7 +246,8 @@ public class DemoTestOrganizationService {
 	 */
 	public static List<Currency> testGetCurrency() throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testGetCurrency");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -256,10 +266,30 @@ public class DemoTestOrganizationService {
 		return organizationCurrencies;
 	}
 
+	/**
+	 * Tests getting a currency by its currency code
+	 */
+	private static void testGetCurrencyByCode() throws MambuApiException {
+
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
+
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+
+		Currency baseCurrency = organizationService.getCurrency();
+
+		Currency currency = organizationService.getCurrency(baseCurrency.getCode());
+
+		System.out.println("\nCurrency code=" + currency.getCode() + "   Name=" + currency.getName()
+				+ "  Currency symbol=" + currency.getSymbol());
+
+	}
+
 	// Tests creating of next exchange rate for a currency
 	private static void testPostExchangeRate(List<Currency> organizationCurrencies) throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testPostExchangeRate");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
 		Date start = new Date();
 
 		// Get one currency to test POST exchange rate
@@ -297,7 +327,8 @@ public class DemoTestOrganizationService {
 	private static void testPostExchangeRateWithNullStartDate(List<Currency> organizationCurrencies)
 			throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testPostExchangeRateWithNullStartDate");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
 
 		// Get one currency to test POST exchange rate
 		Currency currncyForTest = getRandomCurrencyOtherThanBase(organizationCurrencies);
@@ -331,7 +362,8 @@ public class DemoTestOrganizationService {
 	 */
 	private static void testGetCurrentExchangeRate(ExchangeRate lastPostedExchangeRate) throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testGetCurrentExchangeRate");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		if (lastPostedExchangeRate == null) {
@@ -339,16 +371,16 @@ public class DemoTestOrganizationService {
 		}
 
 		// Get the current exchange rate
-		List<ExchangeRate> exchangeRates = organizationService.getExchangeRates(
-				lastPostedExchangeRate.getToCurrencyCode(), null, null, 0, 1);
+		List<ExchangeRate> exchangeRates = organizationService
+				.getExchangeRates(lastPostedExchangeRate.getToCurrencyCode(), null, null, 0, 1);
 
 		ExchangeRate currentExchangeRate;
 		if (exchangeRates != null && !exchangeRates.isEmpty() && exchangeRates.get(0).getEndDate() == null) {
 			currentExchangeRate = exchangeRates.get(0);
 			logExchangeRateDetails(currentExchangeRate);
 		} else {
-			throw new MambuApiException(new Exception("Current exchange rate for "
-					+ lastPostedExchangeRate.getToCurrencyCode() + " was not found"));
+			throw new MambuApiException(new Exception(
+					"Current exchange rate for " + lastPostedExchangeRate.getToCurrencyCode() + " was not found"));
 		}
 
 		// test to see the identity of the exchange rate using encoded keys
@@ -428,10 +460,11 @@ public class DemoTestOrganizationService {
 	// Get Custom Field by ID
 	public static void testGetCustomField() throws MambuApiException {
 
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		String fieldId = CUSTOM_FIELD_ID;
-		System.out.println(methodName = "\nIn testGetCustomField by ID." + "  Field ID=" + fieldId);
+		System.out.println(methodName = "\nIn " + methodName + "  Field ID=" + fieldId);
 
 		Date d1 = new Date();
 
@@ -452,7 +485,9 @@ public class DemoTestOrganizationService {
 
 		// E.g. CustomField.Type.CLIENT_INFO, CustomField.Type.LOAN_ACCOUNT_INFO, etc
 		CustomFieldType customFieldType = CustomFieldType.TRANSACTION_CHANNEL_INFO;
-		System.out.println(methodName = "\nIn testGetCustomFieldSetsByType for " + customFieldType);
+
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName + " for " + customFieldType);
 
 		Date d1 = new Date();
 
@@ -479,7 +514,8 @@ public class DemoTestOrganizationService {
 	// Since Mambu 4.1 this API returns also applicable custom fields for each channel. See MBU-12226
 	public static void testGetTransactionChannels() throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testGetTransactionChannels");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
 		List<TransactionChannel> transactionChannels = organizationService.getTransactionChannels();
@@ -487,8 +523,8 @@ public class DemoTestOrganizationService {
 		for (TransactionChannel channel : transactionChannels) {
 			String channelName = channel.getName();
 			String channelId = channel.getId();
-			System.out.println("\nChannel Key=" + channel.getEncodedKey() + "\tName=" + channelName + "\tId="
-					+ channelId);
+			System.out.println(
+					"\nChannel Key=" + channel.getEncodedKey() + "\tName=" + channelName + "\tId=" + channelId);
 
 			// Transaction channels also have UsageRights since Mambu 3.13. See MBU-9562
 			String demoUserRoleKey = (demoUser.getRole() == null) ? null : demoUser.getRole().getEncodedKey();
@@ -519,8 +555,8 @@ public class DemoTestOrganizationService {
 			if (accountingRue != null) {
 				GLAccount glAccount = accountingRue.getAccount();
 				String accountName = glAccount.getLongName();
-				System.out.println("GLAccount=" + accountName + "\tFinancialResource="
-						+ accountingRue.getFinancialResource());
+				System.out.println(
+						"GLAccount=" + accountName + "\tFinancialResource=" + accountingRue.getFinancialResource());
 			} else {
 				System.out.println("No GLAccountingRule");
 			}
@@ -530,7 +566,8 @@ public class DemoTestOrganizationService {
 	// Update Custom Field values for the demo Branch and for demo Centre and delete the first custom field
 	public static void testUpdateDeleteCustomFields() throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testUpdateDeleteCustomFields");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
 		// Test fields for a Branch
@@ -543,7 +580,8 @@ public class DemoTestOrganizationService {
 	// Test Posting Index Interest Rates. Available since 3.10
 	public static void testPostIndexInterestRate() throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testPostIndexInterestRate");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
 		// Note that there is no API yet to get Index Rate Sources. API developers need to know the rate source key to
 		// post new rates. These keys can be obtained from Mambu. They can also be looked up from the getProduct API
 		// response. See MBU-8059 for more details
@@ -571,7 +609,8 @@ public class DemoTestOrganizationService {
 	// Test getting Identification Document Templates
 	public static void testGetIDDocumentTemplates() throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testGetIDDocumentTemplates");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 		List<IdentificationDocumentTemplate> templates = organizationService.getIdentificationDocumentTemplates();
@@ -590,7 +629,8 @@ public class DemoTestOrganizationService {
 	// Get Organization details. Available since 3.11
 	public static void testGetOrganizationDetails() throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testGetOrganization");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
 
 		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 
@@ -655,7 +695,8 @@ public class DemoTestOrganizationService {
 	 */
 	public static void testGetExchangeRates(List<Currency> organizationCurrencies) throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testGetExchangeRates");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
 
 		if (organizationCurrencies == null || organizationCurrencies.size() < 2) {
 			System.out.println("WARNING: cannot test GET exchange rates with no non-base currencies");
