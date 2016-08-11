@@ -294,7 +294,7 @@ public class DemoTestLoanService {
 					+ ". Transaction ID = " + loanTransaction);
 		} else {
 			System.out.println(
-					"The loan amount does not meet the prerequisites, therefore its interest rate will not be updated.");
+					"The loan account does not meet the prerequisites, therefore its interest rate will not be updated.");
 		}
 
 	}
@@ -333,7 +333,7 @@ public class DemoTestLoanService {
 					+ patchResult);
 		} else {
 			System.out.println(
-					"The loan amount does not meet the prerequisites, therefore its loan amount will not be updated.");
+					"The loan account does not meet the prerequisites, therefore its loan amount will not be updated.");
 		}
 	}
 
