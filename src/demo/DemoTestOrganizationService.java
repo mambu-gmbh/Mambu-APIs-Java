@@ -61,7 +61,7 @@ public class DemoTestOrganizationService {
 			List<Currency> organizationCurrencies = testGetCurrency(); // Available since 4.2
 
 			// Available since 4.3
-			testetCurrencyByCode();
+			testGetCurrencyByCode();
 
 			// Test GET exchange rates
 			testGetExchangeRates(organizationCurrencies); // Available since 4.2
@@ -270,7 +270,7 @@ public class DemoTestOrganizationService {
 	/**
 	 * Tests getting a currency by its currency code
 	 */
-	private static void testetCurrencyByCode() throws MambuApiException {
+	private static void testGetCurrencyByCode() throws MambuApiException {
 
 		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println(methodName = "\nIn " + methodName);

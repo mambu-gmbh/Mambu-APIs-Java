@@ -61,7 +61,7 @@ public class OrganizationService {
 
 	private final static ApiDefinition getCurrencies = new ApiDefinition(ApiType.GET_LIST, Currency.class);
 
-	// GET currency by code. Example :/api/currencies/{currencyCode}
+	// GET currency by code. Example: /api/currencies/{currencyCode}
 	private final static ApiDefinition getCurrencyByCode = new ApiDefinition(ApiType.GET_ENTITY, Currency.class);
 
 	private final static ApiDefinition getTransactionChannels = new ApiDefinition(ApiType.GET_LIST,
@@ -140,10 +140,11 @@ public class OrganizationService {
 	 * Requests a currency for a supplied currency code.
 	 * 
 	 * @param currencyCode
-	 *            the currency code for the currency to be searched in Mambu.
+	 *            the currency code for the currency to be searched in Mambu. Must not be null.
 	 * 
-	 * @return Currency having as currency code the currency code passed as parameter to this method call, or
-	 *         INVALID_CURRENCY_CODE error code if there is no currency having the code supplied to this method call.
+	 * @return Currency having as currency code the currency code passed as parameter to this method call. In case a
+	 *         wrong currency code (there is no currency having currency code having this code) is passed to this method
+	 *         call then the server will return INVALID_CURRENCY_CODE error code.
 	 * 
 	 * @throws MambuApiException
 	 */

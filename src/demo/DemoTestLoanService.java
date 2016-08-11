@@ -2282,21 +2282,25 @@ public class DemoTestLoanService {
 			throws MambuApiException {
 
 		LoanAccount updatedLoanAccount = loanAccount;
-		Calendar currentCalendar = Calendar.getInstance();
+		// avoid updating these fields for REVOLVING_CREDIT since this product type does not support it
+		if (!demoProduct.getLoanProductType().equals(LoanProductType.REVOLVING_CREDIT)) {
 
-		DisbursementDetails disbursementDetails = loanAccount.getDisbursementDetails();
+			Calendar currentCalendar = Calendar.getInstance();
 
-		if (disbursementDetails != null && disbursementDetails.getExpectedDisbursementDate() != null) {
-			currentCalendar.setTime(disbursementDetails.getExpectedDisbursementDate());
-		}
+			DisbursementDetails disbursementDetails = loanAccount.getDisbursementDetails();
 
-		updatedLoanAccount.setExpectedDisbursementDate(currentCalendar.getTime());
+			if (disbursementDetails != null && disbursementDetails.getExpectedDisbursementDate() != null) {
+				currentCalendar.setTime(disbursementDetails.getExpectedDisbursementDate());
+			}
 
-		if (disbursementDetails != null && disbursementDetails.getFirstRepaymentDate() != null) {
-			updatedLoanAccount.setFirstRepaymentDate(disbursementDetails.getFirstRepaymentDate());
-		} else {
-			currentCalendar.add(Calendar.DAY_OF_MONTH, 1);
-			updatedLoanAccount.setFirstRepaymentDate(currentCalendar.getTime());
+			updatedLoanAccount.setExpectedDisbursementDate(currentCalendar.getTime());
+
+			if (disbursementDetails != null && disbursementDetails.getFirstRepaymentDate() != null) {
+				updatedLoanAccount.setFirstRepaymentDate(disbursementDetails.getFirstRepaymentDate());
+			} else {
+				currentCalendar.add(Calendar.DAY_OF_MONTH, 1);
+				updatedLoanAccount.setFirstRepaymentDate(currentCalendar.getTime());
+			}
 		}
 
 		return updatedLoanAccount;
