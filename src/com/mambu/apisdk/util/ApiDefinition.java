@@ -23,6 +23,7 @@ import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.api.server.handler.tasks.model.JSONTask;
+import com.mambu.apisdk.model.DatabaseBackup;
 import com.mambu.apisdk.model.DatabaseBackupRequest;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
@@ -252,7 +253,7 @@ public class ApiDefinition {
 	 * just a success/failure response
 	 */
 	public enum ApiReturnFormat {
-		OBJECT, COLLECTION, BOOLEAN, RESPONSE_STRING
+		OBJECT, COLLECTION, BOOLEAN, RESPONSE_STRING, ZIP_ARCHIVE
 	}
 
 	private ApiType apiType;
@@ -463,6 +464,7 @@ public class ApiDefinition {
 			// formats)
 			switch (returnFormat) {
 			case OBJECT:
+			case ZIP_ARCHIVE:
 			case COLLECTION:
 				returnClass = resultClass;
 				// Change return format for our special cases (to avoid Gson parsing to Object for these special cases)
@@ -582,6 +584,7 @@ public class ApiDefinition {
 
 		// DB
 		apiEndPointsMap.put(DatabaseBackupRequest.class, APIData.DATABASE); // "database" api end point
+		apiEndPointsMap.put(DatabaseBackup.class, APIData.DATABASE);
 	}
 
 	// Get an Api endpoint for a Mambu class

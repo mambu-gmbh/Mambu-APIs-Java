@@ -1,6 +1,9 @@
 package com.mambu.apisdk.util;
 
+import java.io.ByteArrayOutputStream;
+
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 
 /**
  * Interface for executing url requests
@@ -93,6 +96,26 @@ public interface RequestExecutor {
 	 * @throws MambuApiException
 	 */
 	public String executeRequest(String urlString, Method method, ContentType contentTypeFormat)
+			throws MambuApiException;
+
+	/**
+	 * Executes a request for a given URL Executes a request with given url and specifying the contentType, with some
+	 * parameters, a request method and the API return format.
+	 * 
+	 * @param urlString
+	 *            the url to execute on. eg: https://demo.mambu.com/api/database/backup/LATEST
+	 * @param params
+	 *            the parameters eg: {clientId=id}, {JSON=jsonString}
+	 * @param method
+	 *            the method (e.g. GET or PUT)
+	 * @param contentTypeFormat
+	 *            enumeration for the content type string (e.g WWW_FORM or JSON: will be using respectively the
+	 *            "application/x-www-form-urlencoded; charset=UTF-8" or "application/json; charset=UTF-8";)
+	 * @param apiReturnFormat
+	 *            enumeration for the API return type string (e.g ZIP_ARCHIVE for "application/zip")
+	 * @return
+	 */
+	public ByteArrayOutputStream executeRequest(String urlString, ParamsMap params, ApiDefinition apiDefinition)
 			throws MambuApiException;
 
 }

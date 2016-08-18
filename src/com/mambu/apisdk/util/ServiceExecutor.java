@@ -1,5 +1,6 @@
 package com.mambu.apisdk.util;
 
+import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
@@ -156,11 +157,17 @@ public class ServiceExecutor {
 		Method method = apiDefinition.getMethod();
 		ContentType contentType = apiDefinition.getContentType();
 
-		// Use mambuAPIService to execute request
-		String jsonResponse = mambuAPIService.executeRequest(apiUrlPath, paramsMap, method, contentType);
-
 		// Process API Response. Get the return format from the apiDefintion
 		ApiReturnFormat returnFormat = apiDefinition.getApiReturnFormat();
+
+		ByteArrayOutputStream byteArrayOutputStreamResult = null;
+		String jsonResponse = null;
+		// Use mambuAPIService to execute request
+		if (returnFormat.equals(ApiReturnFormat.ZIP_ARCHIVE)) {
+			byteArrayOutputStreamResult = mambuAPIService.executeRequest(apiUrlPath, paramsMap, apiDefinition);
+		} else {
+			jsonResponse = mambuAPIService.executeRequest(apiUrlPath, paramsMap, method, contentType);
+		}
 
 		R result = null;
 		switch (returnFormat) {
@@ -181,6 +188,8 @@ public class ServiceExecutor {
 			// This can be used for the services to perform any subsequent processing or for such APIs as getDocument()
 			result = (R) jsonResponse;
 			break;
+		case ZIP_ARCHIVE:
+			result = (R) byteArrayOutputStreamResult;
 		}
 
 		return result;
@@ -730,8 +739,8 @@ public class ServiceExecutor {
 	 * @return updated owned entity
 	 * @throws MambuApiException
 	 */
-	public <R, T> R updateOwnedEntity(MambuEntityType parentEntity, String parentId, T ownedEntity, String ownedEntityId)
-			throws MambuApiException {
+	public <R, T> R updateOwnedEntity(MambuEntityType parentEntity, String parentId, T ownedEntity,
+			String ownedEntityId) throws MambuApiException {
 
 		if (parentEntity == null || ownedEntity == null) {
 			throw new IllegalArgumentException("Parent Class and Owned Entity cannot be null");
