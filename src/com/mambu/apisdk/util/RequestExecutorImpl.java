@@ -34,6 +34,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 
 /**
  * Implementation of executing url requests with basic authorization
@@ -215,23 +216,23 @@ public class RequestExecutorImpl implements RequestExecutor {
 		int status = httpResponse.getStatusLine().getStatusCode();
 
 		ByteArrayOutputStream response = null;
-
+		String responseMessage = "";
 		// Get the response Entity
 		HttpEntity entity = httpResponse.getEntity();
 		if (entity != null && status == HttpURLConnection.HTTP_OK) {
 			response = getByteArrayOutputStream(entity.getContent());
-			// Log Mambu response
-			if (LOGGER.isLoggable(responseLogLevel)) {
-				logApiResponse(responseLogLevel, urlString, status, "DB backup stream successfully obtained");
-			}
+			responseMessage = "DB backup stream successfully obtained";
+
 		} else {
 			// read the content for the error message
 			String errorMessage = null;
 			errorMessage = processResponse(httpResponse, method, contentType, urlString, params);
-			// Log Mambu response
-			if (LOGGER.isLoggable(responseLogLevel)) {
-				logApiResponse(responseLogLevel, urlString, status, errorMessage);
-			}
+			responseMessage = errorMessage;
+		}
+
+		// Log Mambu response
+		if (LOGGER.isLoggable(responseLogLevel)) {
+			logApiResponse(responseLogLevel, urlString, status, responseMessage);
 		}
 
 		// if status is Ok - return the response

@@ -111,7 +111,9 @@ public class MambuAPIService {
 	}
 
 	/**
-	 * Delegates the execution to a RequestExecutor
+	 * Delegates the execution to a RequestExecutor. Used for requests that requires downloading content through the API
+	 * (like zip archives). It gets the InputStream from the response and converts it into a ByteArrayOutputStream for
+	 * laster use.
 	 * 
 	 * @param urlString
 	 *            The URL string
