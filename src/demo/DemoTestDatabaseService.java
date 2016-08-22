@@ -1,7 +1,5 @@
 package demo;
 
-import java.io.IOException;
-
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.DatabaseBackup;
@@ -20,7 +18,7 @@ public class DemoTestDatabaseService {
 
 	private static String methodName;
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) {
 
 		DemoUtil.setUp();
 
@@ -53,16 +51,15 @@ public class DemoTestDatabaseService {
 
 		DatabaseBackupResponse response = databaseService.createDatabaseBackup(databaseRequestObject);
 
-		System.out.println("Database request Response:\n" + response);
+		System.out.println("Response for DB backup request:\n" + response);
 	}
 
 	/**
 	 * Tests downloading a DB backup
 	 * 
 	 * @throws MambuApiException
-	 * @throws IOException
 	 */
-	private static void testDownloadLatestDbBackup() throws MambuApiException, IOException {
+	private static void testDownloadLatestDbBackup() throws MambuApiException {
 
 		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println(methodName = "\nIn " + methodName);
