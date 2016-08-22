@@ -142,8 +142,17 @@ public class RequestExecutorImpl implements RequestExecutor {
 		return response;
 	}
 
-	/*
-	 * Executes a request in order to download content and returns it as a ByteArrayOutputStream
+	/**
+	 * Gets the InputStream from the response and converts it into a ByteArrayOutputStream for laster use. (i.e executes
+	 * a request in order to download content and returns it as a ByteArrayOutputStream)
+	 * 
+	 * @param urlString
+	 *            the url to execute on. eg: https://demo.mambu.com/api/database/backup/LATEST
+	 * @param params
+	 *            the parameters eg: {clientId=id}, {JSON=jsonString}
+	 * @param apiDefinition
+	 *            the ApiDefinition holding details like HTTP method, content type and API return type
+	 * @return A ByteArrayOutputStream from the InputStream of the HTTP response.
 	 */
 	@Override
 	public ByteArrayOutputStream executeRequest(String urlString, ParamsMap params, ApiDefinition apiDefinition)
