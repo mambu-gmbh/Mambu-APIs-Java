@@ -249,7 +249,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		Integer errorCode = status;
 
 		// Log raising exception
-		logExceptionForProcessigResponse(method, contentType, urlString, params, "", errorCode);
+		logExceptionForProcessingResponse(method, contentType, urlString, params, "", errorCode);
 
 		// pass to MambuApiException the content that goes with the error code
 		throw new MambuApiException(errorCode, "Couldn`t obtain stream content");
@@ -288,7 +288,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * @param errorCode
 	 *            The error code received from Mambu
 	 */
-	private static void logExceptionForProcessigResponse(Method method, ContentType contentType, String urlString,
+	private static void logExceptionForProcessingResponse(Method method, ContentType contentType, String urlString,
 			ParamsMap params, String response, Integer errorCode) {
 
 		if (LOGGER.isLoggable(exceptionLogLevel)) {
@@ -630,7 +630,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		Integer errorCode = status;
 
 		// Log raising exception
-		logExceptionForProcessigResponse(method, contentType, urlString, params, response, errorCode);
+		logExceptionForProcessingResponse(method, contentType, urlString, params, response, errorCode);
 
 		// pass to MambuApiException the content that goes with the error code
 		throw new MambuApiException(errorCode, response);
