@@ -3,12 +3,14 @@ package com.mambu.apisdk;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.model.Protocol;
 import com.mambu.apisdk.services.AccountingService;
 import com.mambu.apisdk.services.ActivitiesService;
 import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.services.CommentsService;
 import com.mambu.apisdk.services.CustomFieldValueService;
 import com.mambu.apisdk.services.CustomViewsService;
+import com.mambu.apisdk.services.DatabaseService;
 import com.mambu.apisdk.services.DocumentTemplatesService;
 import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.services.IntelligenceService;
@@ -39,8 +41,9 @@ public final class MambuAPIServiceFactory {
 	}
 
 	/***
-	 * Set up the Guice Module with data required for accessing the remote server, returning a factory object to
-	 * retrieve Mambu API services that have Mambu credentials built-in
+	 * Convenience method for setting up the Guice Module with data required for accessing the remote server, returning
+	 * a factory object to retrieve Mambu API services that have Mambu credentials built-in. The application protocol
+	 * that is used is HTTPS
 	 * 
 	 * @param domain
 	 *            the domain where the server is found
@@ -52,7 +55,30 @@ public final class MambuAPIServiceFactory {
 	 * @return factory object to create API service objects which are bound to the given credentials
 	 */
 	public static MambuAPIServiceFactory getFactory(String domain, String username, String password) {
-		Injector injector = Guice.createInjector(new MambuAPIModule(domain, username, password));
+
+		Injector injector = Guice.createInjector(new MambuAPIModule(Protocol.HTTPS, domain, username, password));
+		return new MambuAPIServiceFactory(injector);
+	}
+
+	/***
+	 * Set up the Guice Module with data required for accessing the remote server, returning a factory object to
+	 * retrieve Mambu API services that have Mambu credentials built-in
+	 * 
+	 * @param protocol
+	 *            the protocol used for communication
+	 * @param domain
+	 *            the domain where the server is found
+	 * @param username
+	 *            the name of the user
+	 * @param password
+	 *            the password used by the user
+	 * 
+	 * @return factory object to create API service objects which are bound to the given credentials
+	 */
+	public static MambuAPIServiceFactory getFactory(Protocol protocol, String domain, String username,
+			String password) {
+
+		Injector injector = Guice.createInjector(new MambuAPIModule(protocol, domain, username, password));
 		return new MambuAPIServiceFactory(injector);
 	}
 
@@ -64,6 +90,7 @@ public final class MambuAPIServiceFactory {
 	 * @throws MambuApiException
 	 */
 	public ClientsService getClientService() throws MambuApiException {
+
 		return injector.getInstance(ClientsService.class);
 	}
 
@@ -75,6 +102,7 @@ public final class MambuAPIServiceFactory {
 	 * @throws MambuApiException
 	 */
 	public LoansService getLoanService() throws MambuApiException {
+
 		return injector.getInstance(LoansService.class);
 	}
 
@@ -86,6 +114,7 @@ public final class MambuAPIServiceFactory {
 	 * @throws MambuApiException
 	 */
 	public SavingsService getSavingsService() throws MambuApiException {
+
 		return injector.getInstance(SavingsService.class);
 	}
 
@@ -98,6 +127,7 @@ public final class MambuAPIServiceFactory {
 	 * @throws MambuApiException
 	 */
 	public IntelligenceService getIntelligenceService() throws MambuApiException {
+
 		return injector.getInstance(IntelligenceService.class);
 	}
 
@@ -110,6 +140,7 @@ public final class MambuAPIServiceFactory {
 	 * @throws MambuApiException
 	 */
 	public RepaymentsService getRepaymentsService() throws MambuApiException {
+
 		return injector.getInstance(RepaymentsService.class);
 	}
 
@@ -122,6 +153,7 @@ public final class MambuAPIServiceFactory {
 	 * @throws MambuApiException
 	 */
 	public OrganizationService getOrganizationService() throws MambuApiException {
+
 		return injector.getInstance(OrganizationService.class);
 	}
 
@@ -134,6 +166,7 @@ public final class MambuAPIServiceFactory {
 	 * @throws MambuApiException
 	 */
 	public AccountingService getAccountingService() throws MambuApiException {
+
 		return injector.getInstance(AccountingService.class);
 	}
 
@@ -145,6 +178,7 @@ public final class MambuAPIServiceFactory {
 	 * @throws MambuApiException
 	 */
 	public UsersService getUsersService() throws MambuApiException {
+
 		return injector.getInstance(UsersService.class);
 	}
 
@@ -156,6 +190,7 @@ public final class MambuAPIServiceFactory {
 	 * @throws MambuApiException
 	 */
 	public SearchService getSearchService() throws MambuApiException {
+
 		return injector.getInstance(SearchService.class);
 	}
 
@@ -168,6 +203,7 @@ public final class MambuAPIServiceFactory {
 	 * @throws MambuApiException
 	 */
 	public TasksService getTasksService() throws MambuApiException {
+
 		return injector.getInstance(TasksService.class);
 	}
 
@@ -180,6 +216,7 @@ public final class MambuAPIServiceFactory {
 	 * @throws MambuApiException
 	 */
 	public DocumentsService getDocumentsService() throws MambuApiException {
+
 		return injector.getInstance(DocumentsService.class);
 	}
 
@@ -192,6 +229,7 @@ public final class MambuAPIServiceFactory {
 	 * @throws MambuApiException
 	 */
 	public ActivitiesService getActivitiesService() throws MambuApiException {
+
 		return injector.getInstance(ActivitiesService.class);
 	}
 
@@ -203,6 +241,7 @@ public final class MambuAPIServiceFactory {
 	 * @throws MambuApiException
 	 */
 	public CommentsService getCommentsService() throws MambuApiException {
+
 		return injector.getInstance(CommentsService.class);
 	}
 
@@ -214,6 +253,7 @@ public final class MambuAPIServiceFactory {
 	 * @throws MambuApiException
 	 */
 	public LinesOfCreditService getLineOfCreditService() throws MambuApiException {
+
 		return injector.getInstance(LinesOfCreditService.class);
 	}
 
@@ -225,6 +265,7 @@ public final class MambuAPIServiceFactory {
 	 * @throws MambuApiException
 	 */
 	public CustomFieldValueService getCustomFieldValueService() throws MambuApiException {
+
 		return injector.getInstance(CustomFieldValueService.class);
 	}
 
@@ -236,6 +277,7 @@ public final class MambuAPIServiceFactory {
 	 * @throws MambuApiException
 	 */
 	public CustomViewsService getCustomViewsService() throws MambuApiException {
+
 		return injector.getInstance(CustomViewsService.class);
 	}
 
@@ -247,7 +289,20 @@ public final class MambuAPIServiceFactory {
 	 * @throws MambuApiException
 	 */
 	public DocumentTemplatesService getDocumentTemplatesService() throws MambuApiException {
+
 		return injector.getInstance(DocumentTemplatesService.class);
+	}
+
+	/***
+	 * Get an instance of the DatabaseService class
+	 * 
+	 * @return the obtained instance
+	 * 
+	 * @throws MambuApiException
+	 */
+	public DatabaseService getDatabaseService() throws MambuApiException {
+
+		return injector.getInstance(DatabaseService.class);
 	}
 
 }

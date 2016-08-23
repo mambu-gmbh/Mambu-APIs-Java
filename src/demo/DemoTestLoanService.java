@@ -34,6 +34,7 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.CustomFieldValueService;
 import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.services.LoansService;
+import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.apisdk.services.RepaymentsService;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.util.APIData;
@@ -42,6 +43,7 @@ import com.mambu.apisdk.util.DateUtils;
 import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
+import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomFieldType;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.LoanPenaltyCalculationMethod;
@@ -126,8 +128,8 @@ public class DemoTestLoanService {
 				System.out.println("\n*** Product Type=" + productType + " ***");
 
 				// Get random product of a specific type or a product for a specific product id
-				demoProduct = (productTypesTesting) ? DemoUtil.getDemoLoanProduct(productType) : DemoUtil
-						.getDemoLoanProduct(testProductId);
+				demoProduct = (productTypesTesting) ? DemoUtil.getDemoLoanProduct(productType)
+						: DemoUtil.getDemoLoanProduct(testProductId);
 
 				if (demoProduct == null) {
 					continue;
@@ -289,8 +291,8 @@ public class DemoTestLoanService {
 			System.out.println("The loan amount was edited for the loan account " + NEW_LOAN_ACCOUNT_ID + ". Status: "
 					+ patchResult);
 		} else {
-			System.out
-					.println("The loan amount does not meet the prerequisites, therefore its loan amount will not be updated.");
+			System.out.println(
+					"The loan amount does not meet the prerequisites, therefore its loan amount will not be updated.");
 		}
 	}
 
@@ -313,8 +315,8 @@ public class DemoTestLoanService {
 		String accountId = NEW_LOAN_ACCOUNT_ID;
 
 		LoanAccount loanDeatils = loanService.getLoanAccountDetails(accountId);
-		System.out.println("Got loan account by ID with details: " + loanDeatils.getName() + "\tId="
-				+ loanDeatils.getId());
+		System.out.println(
+				"Got loan account by ID with details: " + loanDeatils.getName() + "\tId=" + loanDeatils.getId());
 
 		// Log Loan's Disbursement Details. Available since 4.0. See MBU-11223
 		DisbursementDetails disbDetails = loanDeatils.getDisbursementDetails();
@@ -366,8 +368,8 @@ public class DemoTestLoanService {
 		account.setCustomFieldValues(null);
 
 		// Use helper to make test custom fields valid for the account's product
-		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(
-				CustomFieldType.LOAN_ACCOUNT_INFO, demoProduct.getEncodedKey());
+		List<CustomFieldValue> clientCustomInformation = DemoUtil
+				.makeForEntityCustomFieldValues(CustomFieldType.LOAN_ACCOUNT_INFO, demoProduct.getEncodedKey());
 		account.setCustomFieldValues(clientCustomInformation);
 
 		// Create Account in Mambu
@@ -459,7 +461,8 @@ public class DemoTestLoanService {
 	// Test Patch Loan account terms API.
 	public static void testPatchLoanAccountTerms() throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testPatchLoanAccountTerms");
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 
@@ -482,6 +485,8 @@ public class DemoTestLoanService {
 		account.setRepaymentPeriodUnit(theAccount.getRepaymentPeriodUnit()); // repaymentPeriodUnit
 		account.setDisbursementDetails(theAccount.getDisbursementDetails()); // to update the first repayment date and
 																				// the expected disbursement
+
+		account = updateExpectedDisbursementDateAndFirstRepaymentDate(account);
 
 		account.setGracePeriod(theAccount.getGracePeriod()); // gracePeriod
 		account.setPrincipalRepaymentInterval(theAccount.getPrincipalRepaymentInterval()); // principalRepaymentInterval
@@ -530,8 +535,8 @@ public class DemoTestLoanService {
 		Date trancheDate = DemoUtil.getAsMidnightUTC();
 		long fiveDays = 5 * 24 * 60 * 60 * 1000L; // 5 days in msecs
 		int i = 0;
-		Date firstRepaymentDate = theAccount.getDisbursementDetails() != null ? theAccount.getDisbursementDetails()
-				.getFirstRepaymentDate() : null;
+		Date firstRepaymentDate = theAccount.getDisbursementDetails() != null
+				? theAccount.getDisbursementDetails().getFirstRepaymentDate() : null;
 		for (LoanTranche tranche : nonDisbursedTranches) {
 			trancheDate = new Date(trancheDate.getTime() + i * fiveDays); // make tranche dates to be some days apart
 			// The first tranche cannot have expected disbursement date after the first repayment date
@@ -576,8 +581,8 @@ public class DemoTestLoanService {
 		// Get Loan Account Funds
 		List<InvestorFund> funds = theAccount.getFunds();
 		if (funds == null || funds.size() == 0) {
-			System.out.println("WARNING: cannot test update funds: loan account " + theAccount.getId()
-					+ " doesn't have funds");
+			System.out.println(
+					"WARNING: cannot test update funds: loan account " + theAccount.getId() + " doesn't have funds");
 			return;
 		}
 
@@ -590,8 +595,8 @@ public class DemoTestLoanService {
 		for (InvestorFund fund : funds) {
 			Money currentAmount = fund.getAmount();
 			// Add changeByAmount to the current fund's amount
-			Money newFundAmount = currentAmount == null ? new Money(changeByAmount.doubleValue()) : currentAmount
-					.add(changeByAmount);
+			Money newFundAmount = currentAmount == null ? new Money(changeByAmount.doubleValue())
+					: currentAmount.add(changeByAmount);
 			// Check if we are exceeding total and adjust to match Loan amount total
 			if (fundsTotal.add(newFundAmount).isMoreThan(loanAmount)) {
 				newFundAmount = loanAmount.subtract(fundsTotal);
@@ -604,8 +609,8 @@ public class DemoTestLoanService {
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		LoanAccount result = loanService.updateLoanAccountFunds(accountId, funds);
 
-		System.out.println("Loan Funds updated for account " + accountId + " Total New Funds="
-				+ result.getFunds().size());
+		System.out.println(
+				"Loan Funds updated for account " + accountId + " Total New Funds=" + result.getFunds().size());
 
 		// Test deleting and then adding funds now. Setting fund's encoded keys to null should result in these
 		// existent funds being deleted and the new ones (with the same data) created
@@ -745,16 +750,16 @@ public class DemoTestLoanService {
 			// Check if we have ny tranches to disburse
 			List<LoanTranche> nonDisbursedTranches = account.getNonDisbursedTranches();
 			if (nonDisbursedTranches == null || nonDisbursedTranches.size() == 0) {
-				System.out.println("WARNING: Cannot test disburse: Loan  " + account.getId()
-						+ " has non disbursed tranches");
+				System.out.println(
+						"WARNING: Cannot test disburse: Loan  " + account.getId() + " has non disbursed tranches");
 				return;
 			}
 			// Check if we the disburse time is not in a future
 			Date expectedTrancheDisbDate = nonDisbursedTranches.get(0).getExpectedDisbursementDate();
 			Date now = new Date();
 			if (expectedTrancheDisbDate.after(now)) {
-				System.out.println("WARNING: cannot disburse tranche. Its ExpectedDisbursementDate="
-						+ expectedTrancheDisbDate);
+				System.out.println(
+						"WARNING: cannot disburse tranche. Its ExpectedDisbursementDate=" + expectedTrancheDisbDate);
 				return;
 			}
 			// If not the first tranche - set the firstRepaymentDate to null
@@ -797,8 +802,8 @@ public class DemoTestLoanService {
 		}
 
 		// Set up disbursement Fees as per Mambu expectations. See MBU-8811
-		List<CustomPredefinedFee> disbursementFees = DemoUtil.makeDemoPredefinedFees(demoProduct, new HashSet<>(
-				Collections.singletonList(FeeCategory.DISBURSEMENT)));
+		List<CustomPredefinedFee> disbursementFees = DemoUtil.makeDemoPredefinedFees(demoProduct,
+				new HashSet<>(Collections.singletonList(FeeCategory.DISBURSEMENT)));
 		disbDetails.setFees(disbursementFees);
 
 		// Test setting Transaction Channel Custom fields
@@ -907,8 +912,8 @@ public class DemoTestLoanService {
 		String accountId = NEW_LOAN_ACCOUNT_ID;
 		String notes = "Write off account via Demo API";
 		LoanTransaction transaction = loanService.writeOffLoanAccount(accountId, notes);
-		System.out.println("\nOK Write Off for account=" + accountId + "\tTransaction Id="
-				+ transaction.getTransactionId());
+		System.out.println(
+				"\nOK Write Off for account=" + accountId + "\tTransaction Id=" + transaction.getTransactionId());
 
 		// Test reversing this transaction
 		// TODO: Uncomment call to testReverseLoanAccountTransactions() when support for WTITE_OFF reversal is
@@ -989,8 +994,8 @@ public class DemoTestLoanService {
 			}
 		}
 		if (!reversalTested) {
-			System.out
-					.println("WARNING: no transaction types supporting reversal are available to test transaction reversal");
+			System.out.println(
+					"WARNING: no transaction types supporting reversal are available to test transaction reversal");
 		}
 	}
 
@@ -1002,8 +1007,8 @@ public class DemoTestLoanService {
 		String accountId = newAccount.getId();
 		// Get the latest account and its balance
 		LoanAccount account = loanService.getLoanAccountDetails(accountId);
-		Money repaymentAmount = fullRepayment ? account.getTotalBalanceOutstanding() : account
-				.getDueAmount(RepaymentAllocationElement.PRINCIPAL);
+		Money repaymentAmount = fullRepayment ? account.getTotalBalanceOutstanding()
+				: account.getDueAmount(RepaymentAllocationElement.PRINCIPAL);
 		System.out.println("Repayment Amount=" + repaymentAmount);
 		if (repaymentAmount == null || repaymentAmount.isNegativeOrZero()) {
 			repaymentAmount = new Money(320);
@@ -1015,8 +1020,8 @@ public class DemoTestLoanService {
 		// Make demo transactionDetails with the valid channel fields
 		TransactionDetails transactionDetails = DemoUtil.makeDemoTransactionDetails();
 		String channelKey = transactionDetails != null ? transactionDetails.getTransactionChannelKey() : null;
-		List<CustomFieldValue> transactionCustomFields = DemoUtil.makeForEntityCustomFieldValues(
-				CustomFieldType.TRANSACTION_CHANNEL_INFO, channelKey, false);
+		List<CustomFieldValue> transactionCustomFields = DemoUtil
+				.makeForEntityCustomFieldValues(CustomFieldType.TRANSACTION_CHANNEL_INFO, channelKey, false);
 
 		LoanTransaction transaction = loanService.makeLoanRepayment(accountId, repaymentAmount, date,
 				transactionDetails, transactionCustomFields, notes);
@@ -1084,8 +1089,8 @@ public class DemoTestLoanService {
 			BigDecimal amount = new BigDecimal(15);
 			// Use Arbitrary fee API
 			String repaymentNumberString = repaymentNumber != null ? repaymentNumber.toString() : null;
-			System.out.println("Applying Arbitrary Fee. Amount=" + amount + "\tRepayment Number="
-					+ repaymentNumberString);
+			System.out.println(
+					"Applying Arbitrary Fee. Amount=" + amount + "\tRepayment Number=" + repaymentNumberString);
 			// Submit API request
 			LoanTransaction transaction = loanService.applyFeeToLoanAccount(accountId, amount.toPlainString(),
 					repaymentNumberString, notes);
@@ -1112,8 +1117,8 @@ public class DemoTestLoanService {
 		String notes = "Notes for applying interest to a loan";
 		try {
 			LoanTransaction transaction = loanService.applyInterestToLoanAccount(accountId, date, notes);
-			System.out.println("Transaction. ID= " + transaction.getTransactionId().toString()
-					+ "\tTransaction Amount=" + transaction.getAmount().toString());
+			System.out.println("Transaction. ID= " + transaction.getTransactionId().toString() + "\tTransaction Amount="
+					+ transaction.getAmount().toString());
 		} catch (MambuApiException e) {
 			DemoUtil.logException(methodName, e);
 		}
@@ -1152,8 +1157,8 @@ public class DemoTestLoanService {
 			BigDecimal principalBalance = loanAccount.getPrincipalBalance().getAmount();
 
 			BigDecimal newPrincipalBalance = principalBalance.subtract(principalWriteOff);
-			System.out.println("Reschedule: original Principal balance=" + principalBalance + "\tNew="
-					+ newPrincipalBalance);
+			System.out.println(
+					"Reschedule: original Principal balance=" + principalBalance + "\tNew=" + newPrincipalBalance);
 			if (newPrincipalBalance.signum() != 1) {
 				newPrincipalBalance = principalBalance;
 				principalWriteOff = BigDecimal.ZERO;
@@ -1205,8 +1210,8 @@ public class DemoTestLoanService {
 				refinanceEntity.setRestructureDetails(refinanceDetails);
 				// POST action
 				System.out.println("Refinancing account=" + accountId);
-				LoanAccount refinancedAccount = loanService
-						.postLoanAccountRestructureAction(accountId, refinanceEntity);
+				LoanAccount refinancedAccount = loanService.postLoanAccountRestructureAction(accountId,
+						refinanceEntity);
 				System.out.println("Account Refinanced. New Amount=" + refinancedAccount.getLoanAmount() + "  Notes="
 						+ refinancedAccount.getNotes());
 			} else {
@@ -1236,8 +1241,8 @@ public class DemoTestLoanService {
 				creditOfficerUserName, accountState, offset, limit);
 
 		if (loanAccounts != null)
-			System.out.println("Got loan accounts for the branch, centre, officer, state, total loans="
-					+ loanAccounts.size());
+			System.out.println(
+					"Got loan accounts for the branch, centre, officer, state, total loans=" + loanAccounts.size());
 		for (LoanAccount account : loanAccounts) {
 			System.out.println("Account Name=" + account.getId() + "-" + account.getLoanName() + "\tBranchId="
 					+ account.getAssignedBranchKey() + "\tCentreId=" + account.getAssignedCentreKey()
@@ -1252,8 +1257,8 @@ public class DemoTestLoanService {
 		String clientId = demoClient.getId();
 		List<LoanAccount> loanAccounts = loanService.getLoanAccountsForClient(clientId);
 
-		System.out.println("Got loan accounts for the client with the " + clientId + " id, Total="
-				+ loanAccounts.size());
+		System.out
+				.println("Got loan accounts for the client with the " + clientId + " id, Total=" + loanAccounts.size());
 		for (LoanAccount account : loanAccounts) {
 			System.out.println(account.getLoanName() + " - " + account.getId());
 		}
@@ -1291,8 +1296,8 @@ public class DemoTestLoanService {
 
 		// Check if the account is in PARTIAL_APPLICATION state
 		if (newAccount == null || newAccount.getAccountState() != AccountState.PARTIAL_APPLICATION) {
-			System.out
-					.println("WARNING: Need to create loan account in PARTIAL_APPLICATION state to test Request Approval");
+			System.out.println(
+					"WARNING: Need to create loan account in PARTIAL_APPLICATION state to test Request Approval");
 			return;
 		}
 		LoansService loanService = MambuAPIFactory.getLoanService();
@@ -1406,9 +1411,8 @@ public class DemoTestLoanService {
 			return;
 		}
 		for (LoanTransaction transaction : transactions) {
-			System.out.println("Locked account with ID " + accountId + " Transaction  "
-					+ transaction.getTransactionId() + " Type=" + transaction.getType() + "  Balance="
-					+ transaction.getBalance());
+			System.out.println("Locked account with ID " + accountId + " Transaction  " + transaction.getTransactionId()
+					+ " Type=" + transaction.getType() + "  Balance=" + transaction.getBalance());
 
 		}
 	}
@@ -1426,9 +1430,9 @@ public class DemoTestLoanService {
 			return;
 		}
 		for (LoanTransaction transaction : transactions) {
-			System.out.println("UnLocked account with ID " + accountId + " Transaction  "
-					+ transaction.getTransactionId() + " Type=" + transaction.getType() + "  Balance="
-					+ transaction.getBalance());
+			System.out
+					.println("UnLocked account with ID " + accountId + " Transaction  " + transaction.getTransactionId()
+							+ " Type=" + transaction.getType() + "  Balance=" + transaction.getBalance());
 		}
 
 	}
@@ -1516,8 +1520,8 @@ public class DemoTestLoanService {
 				: null;
 		if (expectedDisbursementDate != null) {
 			long expectedDisbursemenTime = expectedDisbursementDate.getTime();
-			expectedDisbursementDate = new Date(expectedDisbursemenTime
-					- TimeZone.getDefault().getOffset(expectedDisbursemenTime));
+			expectedDisbursementDate = new Date(
+					expectedDisbursemenTime - TimeZone.getDefault().getOffset(expectedDisbursemenTime));
 			disbursementDetails.setExpectedDisbursementDate(expectedDisbursementDate);
 		}
 		System.out.println("Getting schedule with adjusted firstRepaymentDate=" + firstRepaymentDate
@@ -1741,11 +1745,16 @@ public class DemoTestLoanService {
 			try {
 				SavingsService savingsService = MambuAPIFactory.getSavingsService();
 				List<SavingsAccount> clientSavings = savingsService.getSavingsAccountsForClient(demoClient.getId());
+
+				OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+				Currency baseCurrency = organizationService.getCurrency();
+
 				// Only savings of SavingsType.INVESTOR_ACCOUNT can be investors
 				if (clientSavings != null) {
 					for (SavingsAccount account : clientSavings) {
+						String accountCurrencyCode = account.getCurrencyCode();
 						if (account.getAccountType() == SavingsType.INVESTOR_ACCOUNT
-								&& account.getCurrency().isBaseCurrency()
+								&& baseCurrency.getCode().equals(accountCurrencyCode)
 								&& account.getAccountState() == AccountState.ACTIVE && account.getBalance() != null
 								&& account.getBalance().isPositive()) {
 							savingsAccountKey = account.getEncodedKey();
@@ -1771,8 +1780,8 @@ public class DemoTestLoanService {
 				funds.add(investor);
 				loanAccount.getDisbursementDetails().setExpectedDisbursementDate(null);
 			} else {
-				System.out
-						.println("WARNING:cannot find Savings Funding account: add applicable INVESTOR_ACCOUNT accounts");
+				System.out.println(
+						"WARNING:cannot find Savings Funding account: add applicable INVESTOR_ACCOUNT accounts");
 			}
 
 			// Since 4.2 we should set the Interest Commission at account level, especially if there is no product
@@ -1794,14 +1803,14 @@ public class DemoTestLoanService {
 		}
 		String method = transactionDetails.getTransactionChannelKey();
 
-		disbursementDetails.setCustomFieldValues(DemoUtil.makeForEntityCustomFieldValues(
-				CustomFieldType.TRANSACTION_CHANNEL_INFO, method, false));
+		disbursementDetails.setCustomFieldValues(
+				DemoUtil.makeForEntityCustomFieldValues(CustomFieldType.TRANSACTION_CHANNEL_INFO, method, false));
 
 		// Add demo disbursement fees
 		// Predefined fees are not available for tranched loans
 		if (!productType.equals(LoanProductType.TRANCHED_LOAN)) {
-			List<CustomPredefinedFee> customFees = DemoUtil.makeDemoPredefinedFees(demoProduct, new HashSet<>(
-					Collections.singletonList(FeeCategory.DISBURSEMENT)));
+			List<CustomPredefinedFee> customFees = DemoUtil.makeDemoPredefinedFees(demoProduct,
+					new HashSet<>(Collections.singletonList(FeeCategory.DISBURSEMENT)));
 			disbursementDetails.setFees(customFees);
 		}
 
@@ -1833,8 +1842,8 @@ public class DemoTestLoanService {
 		Integer offset = 0;
 		Integer limit = 5;
 		DocumentsService documentsService = MambuAPIFactory.getDocumentsService();
-		List<Document> documents = documentsService
-				.getDocuments(MambuEntityType.LOAN_ACCOUNT, accountId, offset, limit);
+		List<Document> documents = documentsService.getDocuments(MambuEntityType.LOAN_ACCOUNT, accountId, offset,
+				limit);
 
 		// Log returned documents using DemoTestDocumentsService helper
 		System.out.println("Documents returned for a Loan Account with ID=" + accountId);
@@ -2020,8 +2029,8 @@ public class DemoTestLoanService {
 		// When sent in "yyyy-MM-dd" format, the GMT midnight date will be formatted into using local time zone.
 		// Need to preserve the day, especially for fixed day products
 		if (isLocalMidnight) {
-			firstRepaymentDate = new Date(firstRepaymentDate.getTime()
-					- TimeZone.getDefault().getOffset(firstRepaymentDate.getTime()));
+			firstRepaymentDate = new Date(
+					firstRepaymentDate.getTime() - TimeZone.getDefault().getOffset(firstRepaymentDate.getTime()));
 		}
 		return firstRepaymentDate;
 	}
@@ -2121,8 +2130,8 @@ public class DemoTestLoanService {
 		if (organizationLimits != null) {
 
 			// Set Organization Interest Commission to match product restrictions
-			BigDecimal orgInterestCommission = DemoUtil.getValueMatchingConstraints(organizationLimits, new BigDecimal(
-					0.1f));
+			BigDecimal orgInterestCommission = DemoUtil.getValueMatchingConstraints(organizationLimits,
+					new BigDecimal(0.1f));
 
 			// Check our value against the current interest rate. It cannot be greater
 			BigDecimal interestRate = account.getInterestRate();
@@ -2181,8 +2190,8 @@ public class DemoTestLoanService {
 		// Get product Funder Interest Commission settings and set the value to the non-null default or limit value
 		DecimalIntervalConstraints funderLimits = settings.getFunderInterestCommission();
 		if (funderLimits != null) {
-			BigDecimal funderInterestCommission = DemoUtil.getValueMatchingConstraints(funderLimits, new BigDecimal(
-					0.1f));
+			BigDecimal funderInterestCommission = DemoUtil.getValueMatchingConstraints(funderLimits,
+					new BigDecimal(0.1f));
 			// Set Funder Interest Commission
 			investorFund.setInterestCommission(funderInterestCommission);
 		}
@@ -2236,8 +2245,8 @@ public class DemoTestLoanService {
 		if (totalBalanceOutstanding.isMoreThan(new Money(4))) {
 
 			// split it in 4 tranches
-			BigDecimal quarter = new BigDecimal(totalBalanceOutstanding.getAmount().divide(new BigDecimal("4"))
-					.doubleValue());
+			BigDecimal quarter = new BigDecimal(
+					totalBalanceOutstanding.getAmount().divide(new BigDecimal("4")).doubleValue());
 
 			Money repaymentAmount = new Money(quarter.doubleValue());
 			repaymentAmount.setScale(2, RoundingMode.HALF_UP);
@@ -2259,6 +2268,31 @@ public class DemoTestLoanService {
 			}
 		}
 		return loanTransactions;
+	}
+
+	// TODO once with V4.4 this method needs to be deleted
+	/**
+	 * Updates expected disbursement date and first repayment date
+	 * 
+	 * @param loanAccount
+	 *            The loan account to be updated
+	 * @throws MambuApiException
+	 */
+	private static LoanAccount updateExpectedDisbursementDateAndFirstRepaymentDate(LoanAccount loanAccount)
+			throws MambuApiException {
+
+		LoanAccount updatedLoanAccount = loanAccount;
+		Calendar currentCalendar = Calendar.getInstance();
+		currentCalendar
+				.setTime(loanAccount.getDisbursementDate() != null ? loanAccount.getDisbursementDate() : new Date());
+		currentCalendar.add(Calendar.DAY_OF_MONTH, 1);
+
+		updatedLoanAccount.setExpectedDisbursementDate(currentCalendar.getTime());
+
+		currentCalendar.add(Calendar.DAY_OF_MONTH, 2);
+		updatedLoanAccount.setFirstRepaymentDate(currentCalendar.getTime());
+
+		return updatedLoanAccount;
 	}
 
 }

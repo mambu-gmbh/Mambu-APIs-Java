@@ -50,8 +50,6 @@ public class DemoTestRunner extends TimerTask {
 
 		DemoTestIntelligenceService.main(null);
 
-		DemoTestIntelligenceService.main(null);
-
 		DemoTestLoanService.main(null);
 
 		DemoTestLoCService.main(null);
