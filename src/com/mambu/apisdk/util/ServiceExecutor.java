@@ -162,11 +162,15 @@ public class ServiceExecutor {
 
 		ByteArrayOutputStream byteArrayOutputStreamResult = null;
 		String jsonResponse = null;
+
 		// Use mambuAPIService to execute request
-		if (returnFormat.equals(ApiReturnFormat.ZIP_ARCHIVE)) {
+		switch (returnFormat) {
+		case ZIP_ARCHIVE:
 			byteArrayOutputStreamResult = mambuAPIService.executeRequest(apiUrlPath, paramsMap, apiDefinition);
-		} else {
+			break;
+		default:
 			jsonResponse = mambuAPIService.executeRequest(apiUrlPath, paramsMap, method, contentType);
+			break;
 		}
 
 		R result = null;

@@ -34,6 +34,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 
 /**
  * Implementation of executing url requests with basic authorization
@@ -141,8 +142,17 @@ public class RequestExecutorImpl implements RequestExecutor {
 		return response;
 	}
 
-	/*
-	 * Executes a request in order to download content and returns it as a ByteArrayOutputStream
+	/**
+	 * Gets the InputStream from the response and converts it into a ByteArrayOutputStream for laster use. (i.e executes
+	 * a request in order to download content and returns it as a ByteArrayOutputStream)
+	 * 
+	 * @param urlString
+	 *            the url to execute on. eg: https://demo.mambu.com/api/database/backup/LATEST
+	 * @param params
+	 *            the parameters eg: {clientId=id}, {JSON=jsonString}
+	 * @param apiDefinition
+	 *            the ApiDefinition holding details like HTTP method, content type and API return type
+	 * @return A ByteArrayOutputStream from the InputStream of the HTTP response.
 	 */
 	@Override
 	public ByteArrayOutputStream executeRequest(String urlString, ParamsMap params, ApiDefinition apiDefinition)
@@ -215,23 +225,23 @@ public class RequestExecutorImpl implements RequestExecutor {
 		int status = httpResponse.getStatusLine().getStatusCode();
 
 		ByteArrayOutputStream response = null;
-
+		String responseMessage = "";
 		// Get the response Entity
 		HttpEntity entity = httpResponse.getEntity();
 		if (entity != null && status == HttpURLConnection.HTTP_OK) {
 			response = getByteArrayOutputStream(entity.getContent());
-			// Log Mambu response
-			if (LOGGER.isLoggable(responseLogLevel)) {
-				logApiResponse(responseLogLevel, urlString, status, "DB backup stream successfully obtained");
-			}
+			responseMessage = "DB backup stream successfully obtained";
+
 		} else {
 			// read the content for the error message
 			String errorMessage = null;
 			errorMessage = processResponse(httpResponse, method, contentType, urlString, params);
-			// Log Mambu response
-			if (LOGGER.isLoggable(responseLogLevel)) {
-				logApiResponse(responseLogLevel, urlString, status, errorMessage);
-			}
+			responseMessage = errorMessage;
+		}
+
+		// Log Mambu response
+		if (LOGGER.isLoggable(responseLogLevel)) {
+			logApiResponse(responseLogLevel, urlString, status, responseMessage);
 		}
 
 		// if status is Ok - return the response
