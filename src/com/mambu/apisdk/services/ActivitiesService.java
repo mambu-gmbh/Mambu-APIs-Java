@@ -13,7 +13,6 @@ import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.ServiceExecutor;
-import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.loans.shared.model.LoanAccount;
@@ -138,27 +137,6 @@ public class ActivitiesService {
 	 */
 	public List<JSONActivity> getActivities(Date fromDate, Date toDate) throws MambuApiException {
 		return getActivities(fromDate, toDate, null, null);
-	}
-
-	/**
-	 * Requests a list of activities for a custom view, limited by offset/limit
-	 * 
-	 * @param customViewKey
-	 *            the key of the Custom View to filter system activities
-	 * @param offset
-	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * 
-	 * @param limit
-	 *            pagination limit. If not null it must be an integer greater than zero
-	 * 
-	 * @return the list of Mambu activities
-	 * 
-	 * @throws MambuApiException
-	 */
-	public List<JSONActivity> getActivitiesByCustomView(String customViewKey, String offset, String limit)
-			throws MambuApiException {
-		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
-		return serviceExecutor.execute(getJSONActivityList, params);
 	}
 
 	// Private helper

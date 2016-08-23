@@ -11,6 +11,8 @@ import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstrain
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.json.ClientPatchJsonSerializer;
+import com.mambu.apisdk.json.GroupExpandedPatchSerializer;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
@@ -21,6 +23,7 @@ import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
+import com.mambu.clients.shared.model.ClientState;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.GroupExpanded;
 import com.mambu.clients.shared.model.GroupRoleName;
@@ -63,9 +66,33 @@ public class ClientsService {
 			ClientExpanded.class);
 	// Update Client
 	private final static ApiDefinition updateClient = new ApiDefinition(ApiType.POST_ENTITY, ClientExpanded.class);
+	// Patch Client: PATCH {"client":{ "state":"EXITED", "clientRoleId":"{roleID}","firstName":"jan", }}
+	// /api/clients/clientID
+	private final static ApiDefinition patchClient;
+	static {
+		patchClient = new ApiDefinition(ApiType.PATCH_ENTITY, Client.class);
+		// Use ClientPatchJsonSerializer
+		patchClient.addJsonSerializer(Client.class, new ClientPatchJsonSerializer());
+	}
+
+	// PATCH Group: PATCH:
+	// {"group":{"id":"445076768","groupName":"Village group update","notes":"some_notes after update",
+	// "assignedUserKey":"40288a164c31ebec014c31ebf7200004","assignedCentreKey":"40288a164c31eca9014c31ef7e510005",
+	// "assignedBranchKey":"40288a164c31eca9014c31ef7e4f0003"}}
+	// /api/groups/40288a164c31eca9014c31f1135103de
+	private final static ApiDefinition patchGroupExpanded;
+	static {
+		patchGroupExpanded = new ApiDefinition(ApiType.PATCH_ENTITY, GroupExpanded.class);
+		// Use GroupExpandedPatchSerializer
+		patchGroupExpanded.addJsonSerializer(GroupExpanded.class, new GroupExpandedPatchSerializer());
+	}
+
+	// Delete Client DELETE /api/clients/{clientId}
+	private final static ApiDefinition deleteClient = new ApiDefinition(ApiType.DELETE_ENTITY, Client.class);
+
 	// Create Group. POST JSON /api/groups
 	private final static ApiDefinition createGroup = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, GroupExpanded.class);
-	// Update Group. PATCH JSON /api/groups/groupId
+	// Update Group. POST JSON /api/groups/groupId
 	private final static ApiDefinition updateGroup = new ApiDefinition(ApiType.POST_ENTITY, GroupExpanded.class);
 	// Get Group Role Names. GET /api/grouprolenames/
 	private final static ApiDefinition getGroupRoles = new ApiDefinition(ApiType.GET_LIST, GroupRoleName.class);
@@ -79,10 +106,6 @@ public class ClientsService {
 			GroupExpanded.class);
 	// Get Lists of Groups
 	private final static ApiDefinition getGroupsList = new ApiDefinition(ApiType.GET_LIST, Group.class);
-
-	// Get Documents for a Client
-	private final static ApiDefinition getClientDocuments = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, Client.class,
-			Document.class);
 	// Post Client Profile Documents. POST clients/client_id/documents/PROFILE_PICTURE or
 	// clients/client_id/documents/SIGNATURE
 	private final static ApiDefinition postClientProfileFile = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
@@ -95,9 +118,6 @@ public class ClientsService {
 	// or DELETE api/clients/client_id/documents/SIGNATURE
 	private final static ApiDefinition deleteClientProfileFile = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY,
 			Client.class, Document.class);
-	// Get Documents for a group
-	private final static ApiDefinition getGroupDocuments = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, Group.class,
-			Document.class);
 
 	/***
 	 * Create a new client service
@@ -309,6 +329,128 @@ public class ClientsService {
 		return serviceExecutor.executeJson(updateClient, clientDetails, encodedKey);
 	}
 
+	/**
+	 * Convenience method to Patch client state
+	 * 
+	 * @param clientId
+	 *            the id or the encoded key of a client. Must not be null
+	 * @param clientState
+	 *            new client state. Must not be null. Allowed states: BLACKLISTED, REJECTED, EXITED, INACTIVE
+	 *            (approved), PENDING_APPROVAL (undo approval).
+	 * 
+	 *            See MBU-11443 for more details
+	 * @returns success or failure
+	 * @throws MambuApiException
+	 */
+	public boolean patchClientState(String clientId, ClientState clientState) throws MambuApiException {
+		// Available since Mambu 4.0. See MBU-11443
+		// Example: PATCH {"client":{ "state":"EXITED" }} /api/clients/clientID
+
+		// Verify that both the client ID and clientState are not NULL
+		if (clientId == null || clientState == null) {
+			throw new IllegalArgumentException("Client Id=" + clientId + " and ClientState=" + clientState
+					+ " must not be null");
+		}
+		// Set client state in a client
+		Client client = new Client();
+		client.setId(null); // The default is not null, it is ""
+		client.setPreferredLanguage(null); // default is not null (English)
+		switch (clientState) {
+		case BLACKLISTED:
+			client.setToBlackListed(null);
+			break;
+		case REJECTED:
+			client.setToRejected(null);
+			break;
+		case EXITED:
+			client.setToExited(null);
+			break;
+		case INACTIVE:
+			client.setToInactive();
+			break;
+		case PENDING_APPROVAL:
+			client.setToPendingApproval();
+			break;
+		case ACTIVE:
+			client.setToActive(null);
+			break;
+		default:
+			throw new IllegalArgumentException("Setting client state to" + clientState + " is not supported");
+
+		}
+		// Execute patch client API
+		return patchClient(client, clientId);
+	}
+
+	/**
+	 * Patch client fields
+	 * 
+	 * @param client
+	 *            client. Must not be null and client's encoded key or its id must not be null.
+	 * 
+	 *            As of Mambu 4.1 the following fields can be patched: id, clientRoleId, firstName, lastName,
+	 *            middleName, homePhone, mobilePhone1, birthDate, emailAddress, gender, state, notes, preferredLanguage
+	 * 
+	 * @return true if client was updated successfully, false otherwise
+	 * @throws MambuApiException
+	 */
+	public boolean patchClient(Client client) throws MambuApiException {
+		// Available since Mambu 4.1. See MBU-11868
+		// Updating client state is available since Mambu 4.0. See MBU-11443
+
+		// Example: PATCH "client":{"clientRoleId":"{roleID}", "state":"EXITED", "firstName":"jan",
+		// "lastName":"vanDamme","middleName":"claude", "gender":"female","emailAddress":"jjj@yahoo.com", "id":"123444"}
+		// /api/clients/clientID
+
+		// Verify that both the client and its ID or encoded key are not NULL
+		if (client == null || (client.getEncodedKey() == null && client.getId() == null)) {
+			throw new IllegalArgumentException("Client and client's encoded key or id  must not be null");
+		}
+		String clientId = client.getEncodedKey() != null ? client.getEncodedKey() : client.getId();
+
+		return patchClient(client, clientId);
+	}
+
+	/**
+	 * Patch client fields
+	 * 
+	 * @param client
+	 *            client. Must not be null
+	 * @param clientId
+	 *            client id or encoded key. Must not be null
+	 * @return true if client was patched successfully
+	 * @throws MambuApiException
+	 */
+	private boolean patchClient(Client client, String clientId) throws MambuApiException {
+		// Available since Mambu 4.1. See See MBU-11868
+		// Updating client state is available since Mambu 4.0. See MBU-11443
+		// Verify that both the client ID and clientState are not NULL
+		if (client == null || clientId == null) {
+			throw new IllegalArgumentException("Client and client id  must not be null");
+		}
+
+		// Create an object to be use for PATCH client JSON
+		// execute Patch API request
+		return serviceExecutor.executeJson(patchClient, client, clientId);
+	}
+
+	/***
+	 * Delete Client. Note, clients which have open accounts, have assigned tasks, or are assigned to groups, to linked
+	 * custom fields or are guarantors cannot be deleted. Requires "Delete Clients" permission
+	 * 
+	 * @param clientId
+	 *            client id or encoded key. Must not be null
+	 * 
+	 * @return status returns true if client was deleted successfully
+	 * 
+	 * @throws MambuApiException
+	 */
+	public boolean deleteClient(String clientId) throws MambuApiException {
+		// Available since Mambu 4.2. See MBU-12684
+		// Example: DELETE /api/clients/{clientID}
+		return serviceExecutor.execute(deleteClient, clientId);
+	}
+
 	/***
 	 * Create a new group using GroupExpanded object and sending it as a JSON api. This API allows creating a new Group
 	 * with group details, group members, group roles, custom fields, and group address
@@ -422,27 +564,6 @@ public class ClientsService {
 	}
 
 	/**
-	 * Requests a list of clients for a custom view, limited by offset/limit
-	 * 
-	 * @param customViewKey
-	 *            the id of the Custom View to filter clients
-	 * @param offset
-	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * @param limit
-	 *            pagination limit. If not null it must be an integer greater than zero
-	 * 
-	 * @return the list of Mambu clients
-	 * 
-	 * @throws MambuApiException
-	 */
-	public List<Client> getClientsByCustomView(String customViewKey, String offset, String limit)
-			throws MambuApiException {
-		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
-		return serviceExecutor.execute(getClientsList, params);
-
-	}
-
-	/**
 	 * Get clients by specifying filter constraints
 	 * 
 	 * @param filterConstraints
@@ -465,27 +586,6 @@ public class ClientsService {
 		// POST Filter JSON with pagination params map
 		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
 				ServiceHelper.makePaginationParams(offset, limit));
-
-	}
-
-	/**
-	 * Requests a list of groups for a custom view, limited by offset/limit
-	 * 
-	 * @param customViewKey
-	 *            the key of the Custom View to filter groups
-	 * @param offset
-	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * @param limit
-	 *            pagination limit. If not null it must be an integer greater than zero
-	 * 
-	 * @return the list of Mambu groups
-	 * 
-	 * @throws MambuApiException
-	 */
-	public List<Group> getGroupsByCustomView(String customViewKey, String offset, String limit)
-			throws MambuApiException {
-		ParamsMap params = ServiceHelper.makeParamsForGetByCustomView(customViewKey, offset, limit);
-		return serviceExecutor.execute(getGroupsList, params);
 
 	}
 
@@ -602,34 +702,6 @@ public class ClientsService {
 			String limit) throws MambuApiException {
 		String centreId = null;
 		return getGroupsByBranchCentreOfficer(branchId, centreId, creditOfficerUserName, offset, limit);
-	}
-
-	/***
-	 * Get all documents for a specific Client
-	 * 
-	 * @param clientId
-	 *            the encoded key or id of the Mambu client for which attached documents are to be retrieved
-	 * 
-	 * @return documents attached to the entity
-	 * 
-	 * @throws MambuApiException
-	 */
-	public List<Document> getClientDocuments(String clientId) throws MambuApiException {
-		return serviceExecutor.execute(getClientDocuments, clientId);
-	}
-
-	/***
-	 * Get all documents for a specific Group
-	 * 
-	 * @param groupId
-	 *            the encoded key or id of the Mambu group for which attached documents are to be retrieved
-	 * 
-	 * @return documents attached to the entity
-	 * 
-	 * @throws MambuApiException
-	 */
-	public List<Document> getGroupDocuments(String groupId) throws MambuApiException {
-		return serviceExecutor.execute(getGroupDocuments, groupId);
 	}
 
 	/***
@@ -841,4 +913,60 @@ public class ClientsService {
 		return serviceExecutor.execute(deleteClientProfileFile, clientId, documentType, null);
 
 	}
+
+	/**
+	 * Patch Group fields.
+	 * 
+	 * @param group
+	 *            the Group to be patched. The Group and its encoded key or id must not be Null.
+	 * @return a boolean indicating if the patch was successful
+	 * @throws MambuApiException
+	 */
+	public boolean patchGroup(Group group) throws MambuApiException {
+		// e.g. PATCH {GroupExpandedJson} /api/groups/40288a164c31eca9014c31f1135103de
+		// See MBU-12985 for more details
+
+		if (group == null) {
+			throw new IllegalArgumentException("Group must not be null");
+		}
+		// Create Group Expanded with this group and delegate the call to PATCH GroupExapnded
+		GroupExpanded groupExpanded = new GroupExpanded(group);
+		// Mambu model constructor for GroupExpanded creates empty arrays for group members and group roles. We need to
+		// have them set to null in JSON (not to remove the existent group assignments and roles with our PATCH request)
+		groupExpanded.setGroupMembers(null);
+		groupExpanded.setGroupRoles(null);
+		// These following fields are ignored by Mambu in PATCH API but we should set them to null anyway to avoid
+		// sending unnecessary empty arrays
+		groupExpanded.setAddresses(null);
+		groupExpanded.setCustomFieldValues(null);
+
+		// Delegate the execution
+		return patchGroup(groupExpanded);
+	}
+
+	/**
+	 * Patches Group fields through GroupExpanded. Pay attention, only the group information gets patched, the other
+	 * properties on the GroupExpanded like group members and group roles are replaced if they are supplied.
+	 * 
+	 * @param groupExpanded
+	 *            the GroupExpanded to be patched. The GroupExpanded and its encoded key or id must not be null.
+	 * @return a boolean indicating if the patch was successful
+	 * @throws MambuApiException
+	 */
+	public boolean patchGroup(GroupExpanded groupExpanded) throws MambuApiException {
+		// e.g. PATCH {GroupExpandedJson} /api/groups/40288a164c31eca9014c31f1135103de
+		// See MBU-12985 for more details
+
+		if (groupExpanded == null || groupExpanded.getEncodedKey() == null && groupExpanded.getId() == null) {
+			throw new IllegalArgumentException("Group and group's encoded key or id  must not be null");
+		}
+
+		// get the id of the group
+		String groupId = groupExpanded.getEncodedKey() != null ? groupExpanded.getEncodedKey() : groupExpanded.getId();
+
+		// Execute PATCH group API.
+		return serviceExecutor.executeJson(patchGroupExpanded, groupExpanded, groupId);
+
+	}
+
 }

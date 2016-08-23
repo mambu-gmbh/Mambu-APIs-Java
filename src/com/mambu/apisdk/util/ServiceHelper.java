@@ -1,21 +1,31 @@
 package com.mambu.apisdk.util;
 
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-import com.mambu.accounts.shared.model.TransactionChannel;
-import com.mambu.accounts.shared.model.TransactionChannel.ChannelField;
+import com.mambu.accounts.shared.model.AccountState;
+import com.mambu.accounts.shared.model.PredefinedFee;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
+import com.mambu.api.server.handler.loan.model.JSONApplyManualFee;
+import com.mambu.api.server.handler.loan.model.JSONFeeRequest;
+import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
+import com.mambu.api.server.handler.loan.model.JSONTransactionRequest;
+import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.apisdk.MambuAPIFactory;
-import com.mambu.apisdk.services.CustomFieldValueService;
+import com.mambu.clients.shared.model.ClientExpanded;
+import com.mambu.clients.shared.model.GroupExpanded;
 import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.core.shared.model.Money;
+import com.mambu.loans.shared.model.CustomPredefinedFee;
+import com.mambu.loans.shared.model.DisbursementDetails;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.savings.shared.model.SavingsAccount;
 
@@ -32,171 +42,200 @@ import com.mambu.savings.shared.model.SavingsAccount;
 public class ServiceHelper {
 
 	/**
-	 * Validate Input params and make ParamsMap for GET Mambu entities for a custom view API requests
+	 * Create JSONTransactionRequest for submitting JSON transaction API requests
 	 * 
-	 * @param customViewKey
-	 *            the encoded key of the Custom View to filter entities
-	 * @param offset
-	 *            pagination offset. If not null it must be an integer greater or equal to zero
-	 * @param limit
-	 *            pagination limit. If not null the must be an integer greater than zero
-	 * 
-	 * @return params
-	 */
-	// TODO: when MBU-7042 is fixed - add additional branchId, centreId and centreId filtering params
-	public static ParamsMap makeParamsForGetByCustomView(String customViewKey, String offset, String limit) {
-
-		// Verify that the customViewKey is not null or empty
-		if (customViewKey == null || customViewKey.trim().isEmpty()) {
-			throw new IllegalArgumentException("customViewKey must not be null or empty");
-		}
-		// Validate pagination parameters
-		if ((offset != null && Integer.parseInt(offset) < 0) || ((limit != null && Integer.parseInt(limit) < 1))) {
-			throw new IllegalArgumentException("Invalid pagination parameters");
-		}
-
-		ParamsMap params = new ParamsMap();
-		params.addParam(APIData.VIEW_FILTER, customViewKey);
-		params.addParam(APIData.OFFSET, offset);
-		params.addParam(APIData.LIMIT, limit);
-
-		return params;
-
-	}
-
-	/**
-	 * Validate Custom Field ID and make ParamsMap for Update Custom Field value API requests
-	 * 
-	 * @deprecated use {@link CustomFieldValueService} to update and delete custom field values
-	 * 
-	 * @param customFieldId
-	 *            the ID or the encoded key of the custom field to be updated. Must be not null and not empty
-	 * @param fieldValue
-	 *            the new value of the custom field
-	 * 
-	 * @return params
-	 */
-	@Deprecated
-	public static ParamsMap makeParamsForUpdateCustomField(String customFieldId, String fieldValue) {
-
-		// Verify that customFieldId is not null
-		if (customFieldId == null || customFieldId.trim().isEmpty()) {
-			throw new IllegalArgumentException("Custom Field ID must not be null or empty");
-		}
-
-		// Create JSON string to be used in the PATCH request
-		// The JSON string for this API must have the following format: {"value":"newFieldValue"}. See MBU-6661
-
-		// Make CustomFieldValue object to create this JSON
-		CustomFieldValue customFieldValue = new CustomFieldValue();
-		customFieldValue.setValue(fieldValue);
-
-		// Set all other parameters to null, they are not needed in this JSON
-		customFieldValue.setCustomField(null);
-		customFieldValue.setToBeDeleted(null);
-		customFieldValue.setIndexInList(null);
-		customFieldValue.setAmount(null);
-
-		final String patchJson = GsonUtils.createGson().toJson(customFieldValue, CustomFieldValue.class);
-
-		ParamsMap params = new ParamsMap();
-		params.put(APIData.JSON_OBJECT, patchJson);
-
-		return params;
-
-	}
-
-	/**
-	 * Convenience method to add to the ParamsMap input parameters common to most account transactions. Such common
-	 * parameters include transaction amount, transaction date, transaction notes and transactionDetails object
-	 * 
-	 * @param params
-	 *            input ParamsMap map to which transactionDetails shall be added. Must not be null
 	 * @param amount
 	 *            transaction amount
-	 * @param date
-	 *            transaction date
+	 * @param backDate
+	 *            transaction back date
+	 * @param firstRepaymentDate
+	 *            first repayment date
+	 * @param transactionDetails
+	 *            transaction details
+	 * @param transactionFees
+	 *            transaction fees
+	 * @param customInformation
+	 *            transaction custom fields
 	 * @param notes
 	 *            transaction notes
-	 * @param transactionDetails
-	 *            TransactionDetails object containing information about the transaction channel and the channel fields
+	 * @return JSON Transaction Request
 	 */
-	public static void addAccountTransactionParams(ParamsMap params, String amount, String date, String notes,
-			TransactionDetails transactionDetails) {
+	public static JSONTransactionRequest makeJSONTransactionRequest(Money amount, Date backDate,
+			Date firstRepaymentDate, TransactionDetails transactionDetails, List<CustomPredefinedFee> transactionFees,
+			List<CustomFieldValue> customInformation, String notes) {
 
-		// Params map must not be null
-		if (params == null) {
-			throw new IllegalArgumentException("Params Map cannot be null");
-		}
-		params.addParam(APIData.AMOUNT, amount);
-		params.addParam(APIData.DATE, date);
-		params.addParam(APIData.NOTES, notes);
+		// Create JSONTransactionRequest object for POSTing JSON Transactions. See MBU-11837
+		// Example:POST { "type":"DISBURSMENT", "date":"2012-10-04T11:03:31", "notes":"API comments",
+		// "method":"PayPoint", "customInformation":[ {"value":"Pending", "customFieldID":"Status" }]}
+		// /api/loans/loanId/transactions
 
-		// Add transactionDetails to the paramsMap
-		addParamsForTransactionDetails(params, transactionDetails);
+		JSONTransactionRequest request = new JSONTransactionRequest();
+		// Add amount and notes
+		BigDecimal bigDecimalAmount = amount == null ? null : amount.getAmount();
+		request.setAmount(bigDecimalAmount);
+		request.setNotes(notes);
+		// Add Back Date and First Repayment Date
+		request.setDate(backDate);
+		request.setFirstRepaymentDate(firstRepaymentDate);
+		// Add transaction custom fields
+		request.setCustomInformation(customInformation);
+		// Set Transaction channel Details
+		request.setTransactionDetails(transactionDetails);
+		// Transaction Channel must be set separately
+		String channelKey = transactionDetails != null ? transactionDetails.getTransactionChannelKey() : null;
+		request.setMethod(channelKey);
 
-		return;
+		// Add Transaction Fees
+		setTransactionFees(request, transactionFees);
+		return request;
+
 	}
 
 	/**
-	 * Add TransactionDetails to the input ParamsMap required for account transactions (e.g. disburseLoanAccount(),
-	 * makeLoanRepayment(), etc.)
+	 * Convenience method to create JSONTransactionRequest specifying disbursement details
 	 * 
-	 * @param params
-	 *            input ParamsMap to which transactionDetails shall be added. Must be not null
-	 * 
-	 * @param transactionDetails
-	 *            TransactionDetails object containing information about the transaction channel and the channel fields
+	 * @param amount
+	 *            transaction amount
+	 * @param disbursementDetails
+	 *            disbursement details
+	 * @param customInformation
+	 *            transaction custom fields
+	 * @param notes
+	 *            transaction notes
+	 * @return JSON Transaction Request
 	 */
-	private static void addParamsForTransactionDetails(ParamsMap params, TransactionDetails transactionDetails) {
+	public static JSONTransactionRequest makeJSONTransactionRequest(Money amount,
+			DisbursementDetails disbursementDetails, List<CustomFieldValue> customInformation, String notes) {
+		Date backDate = null;
+		Date firstRepaymentDate = null;
+		List<CustomPredefinedFee> disbursementFees = null;
+		TransactionDetails transactionDetails = null;
+		// Get transaction request fields from the disbursementDetails
+		if (disbursementDetails != null) {
+			backDate = disbursementDetails.getExpectedDisbursementDate();
+			firstRepaymentDate = disbursementDetails.getFirstRepaymentDate();
+			transactionDetails = disbursementDetails.getTransactionDetails();
+			disbursementFees = disbursementDetails.getFees();
+		}
 
-		if (transactionDetails == null) {
-			// Nothing to add
+		return makeJSONTransactionRequest(amount, backDate, firstRepaymentDate, transactionDetails, disbursementFees,
+				customInformation, notes);
+	}
+
+	/**
+	 * Create JSON Transaction request for submitting applying predefined fee and specifying repayment number
+	 * 
+	 * Available since Mambu 4.1. See MBU-12271, MBU-12272 (loan fees), MBU-12273 (savings fees)
+	 * 
+	 * @param transactionFees
+	 *            transaction fees
+	 * @param repaymentNumber
+	 *            repayment number. Applicable only for loan transactions. Must be set to null for savings apply fee
+	 *            transaction
+	 * @param notes
+	 *            transaction notes
+	 * @return JSON Apply Manual Fee Request
+	 */
+	public static JSONApplyManualFee makeJSONApplyManualFeeRequest(List<CustomPredefinedFee> transactionFees,
+			Integer repaymentNumber, String notes) {
+
+		// Applying Manual predefined fees for is available since Mambu 4.1. MBU-12271, MBU-12272. MBU-12273
+
+		// Example: POST /api/loans/LOAN_ID/transactions
+		// {"type":"FEE", "fees":[{"encodedKey":"8a80816752715c34015278bd4792084b", "amount":"20" }
+		// ],"repayment":"2","notes":"test"}
+
+		// Example: POST /api/savings/SAVINGS_ID/transactions
+		// {"type":"FEE", "fees":[{"encodedKey":"8a80816752715c34015278bd4792084b", "amount":"25.50" }
+		// ],"notes":"test"}
+
+		// Create JSONApplyManualFee. It extends JSONTransactionRequest and supports repayment number parameter
+		JSONApplyManualFee request = new JSONApplyManualFee();
+
+		// Add Transaction Fees to the request
+		setTransactionFees(request, transactionFees);
+
+		// Set repayment number
+		request.setRepayment(repaymentNumber);
+
+		// Add notes
+		request.setNotes(notes);
+		return request;
+
+	}
+
+	/**
+	 * Helper to add custom predefined fees to a JSON Transaction Request. CustomPredefinedFees must be converted into
+	 * JSONFeeRequest format when POSTing JSONTransactionRequest
+	 * 
+	 * @param request
+	 *            JSON Transaction Request
+	 * @param transactionFees
+	 *            transaction fees to be added to the request
+	 */
+	private static void setTransactionFees(JSONTransactionRequest request, List<CustomPredefinedFee> transactionFees) {
+		if (request == null) {
 			return;
 		}
-		// Params must not be null
-		if (params == null) {
-			throw new IllegalArgumentException("params Map cannot be null");
-		}
+		// Specifying disbursement predefined Fees in POST JSON transaction is available since Mambu 4.0. See MBU-11853
+		// Example : POST {"type":"DISBURSMENT",
+		// "fees":[{"encodedKey":"8a80816752715c34015278bd4792084b" },{
+		// "encodedKey":"8a808167529f477a0152a1d3fe390336","amount":"11"}]}
 
-		// Get Channel ID
-		TransactionChannel channel = transactionDetails.getTransactionChannel();
-		String channelId = (channel == null) ? null : channel.getId();
-		params.addParam(APIData.PAYMENT_METHOD, channelId);
+		request.setPredefinedFeeInfo(null);
+		if (transactionFees != null && transactionFees.size() > 0) {
+			// Add fees converting CustomPredefinedFee to an expected JSONFeeRequest
+			List<JSONFeeRequest> fees = new ArrayList<>();
+			for (CustomPredefinedFee custFee : transactionFees) {
+				PredefinedFee predefinedFee = custFee.getFee();
+				String feeEncodedKey = predefinedFee != null ? predefinedFee.getEncodedKey() : null;
 
-		if (channel == null || channel.getChannelFields() == null) {
-			// If channel was not specified or channel has no fields then there is nothing more to add
-			return;
-		}
-		// Get Channel Fields configured for the provided channel
-		List<ChannelField> channelFields = channel.getChannelFields();
-
-		// Get field's value from the transactionDetails and add each field to the ParamsMap
-		for (ChannelField field : channelFields) {
-			switch (field) {
-			case ACCOUNT_NAME:
-				params.addParam(APIData.ACCOUNT_NAME, transactionDetails.getAccountName());
-				break;
-			case ACCOUNT_NUMBER:
-				params.addParam(APIData.BANK_ACCOUNT_NUMBER, transactionDetails.getAccountNumber());
-				break;
-			case BANK_NUMBER:
-				params.addParam(APIData.BANK_NUMBER, transactionDetails.getBankNumber());
-				break;
-			case CHECK_NUMBER:
-				params.addParam(APIData.CHECK_NUMBER, transactionDetails.getCheckNumber());
-				break;
-			case IDENTIFIER:
-				params.addParam(APIData.IDENTIFIER, transactionDetails.getIdentifier());
-				break;
-			case RECEPIT_NUMBER:
-				params.addParam(APIData.RECEIPT_NUMBER, transactionDetails.getReceiptNumber());
-				break;
-			case ROUTING_NUMBER:
-				params.addParam(APIData.BANK_ROUTING_NUMBER, transactionDetails.getRoutingNumber());
-				break;
+				// Make JSONFeeRequest
+				JSONFeeRequest jsonFee = new JSONFeeRequest();
+				jsonFee.setEncodedKey(feeEncodedKey); // set key from PredefinedFee
+				// Set amount. Must be not null only for fees with no amount defined in the product. See MBU-8811
+				jsonFee.setAmount(custFee.getAmount()); // set amount from CustomPredefinedFe
+				fees.add(jsonFee);
 			}
+			request.setPredefinedFeeInfo(fees);
 		}
+	}
+
+	/**
+	 * Create params map with as JSON request message for a transaction type
+	 * 
+	 * @param transactionType
+	 *            transaction type string. Example: "DISBURSEMENT"
+	 * @param transactionRequest
+	 *            jSON transaction request. If null then the JSON string with only the transactionType is returned.
+	 * @return params map with a JSON_OBJECT included
+	 */
+	public static ParamsMap makeParamsForTransactionRequest(String transactionType,
+			JSONTransactionRequest transactionRequest) {
+		// JSONTransactionRequest contains all required for a request fields except the transaction type
+		// Create JSON string for a transactionReqest and add type parameter in a format of: "type":"DISBURSEMENT"
+
+		// Make "type":"transactionType" to be added to the JSON string
+		JsonObject jsonObject;
+		Gson gson = GsonUtils.createGson();
+		if (transactionRequest == null) {
+			// if nothing on the request, allow sending just the transaction type as a JSON
+			jsonObject = new JsonObject();
+			jsonObject.addProperty(APIData.TYPE, transactionType);
+		} else {
+			// Create JSON string for the JSONTransactionRequest first
+			JsonElement transactionJson = gson.toJsonTree(transactionRequest, transactionRequest.getClass());
+			// Add transaction type
+			jsonObject = transactionJson.getAsJsonObject();
+			jsonObject.addProperty(APIData.TYPE, transactionType);
+		}
+
+		String jsonRequest = gson.toJson(jsonObject);
+		// return params map with the generated JSON
+		ParamsMap paramsMap = new ParamsMap();
+		paramsMap.put(APIData.JSON_OBJECT, jsonRequest);
+		return paramsMap;
+
 	}
 
 	/***
@@ -283,164 +322,32 @@ public class ServiceHelper {
 	}
 
 	/**
-	 * A list of fields supported by the PATCH loan account API. See MBU-7758
-	 */
-	private final static Set<String> modifiableLoanAccountFields = new HashSet<String>(Arrays.asList(
-			APIData.LOAN_AMOUNT, APIData.INTEREST_RATE, APIData.INTEREST_RATE_SPREAD, APIData.REPAYMENT_INSTALLMENTS,
-			APIData.REPAYMENT_PERIOD_COUNT, APIData.REPAYMENT_PERIOD_UNIT, APIData.EXPECTED_DISBURSEMENT,
-			APIData.FIRST_REPAYMENT_DATE, APIData.GRACE_PERIOD, APIData.PRNICIPAL_REPAYMENT_INTERVAL,
-			APIData.PENALTY_RATE, APIData.PERIODIC_PAYMENT));
-
-	/**
-	 * Create ParamsMap with a JSON string for the PATCH loan account API. Only fields applicable to the API are added
-	 * to the output JSON
-	 * 
-	 * @param account
-	 *            input loan account
-	 * @return params map
-	 */
-	public static ParamsMap makeParamsForLoanTermsPatch(LoanAccount account) {
-
-		// Verify that account is not null
-		if (account == null) {
-			throw new IllegalArgumentException("Loan Account must not be null");
-		}
-
-		// Create JSON expected by the PATCH loan account API:
-		JsonObject accountFields = makeJsonObjectForFields(account, modifiableLoanAccountFields);
-		if (accountFields == null) {
-			return null;
-		}
-
-		// Create JSON string. Format: { "loanAccount":{"loanAmount":"1000", "repaymentPeriodCount":"10"}}'
-		String json = "{\"loanAccount\":" + accountFields.toString() + "}";
-
-		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.put(APIData.JSON_OBJECT, json);
-
-		return paramsMap;
-	}
-
-	/**
-	 * A list of fields supported by the PATCH savings account API. Only updating OverdraftLimit is supports as of Mambu
-	 * 3.12.2. See MBU-9727
-	 */
-	private final static Set<String> modifiableSavingsAccountFields = new HashSet<String>(
-			Arrays.asList(APIData.OVERDRAFT_LIMIT));
-
-	/**
-	 * Create ParamsMap with a JSON string for the PATCH savings account API. Only fields applicable to the API are
-	 * added to the output JSON
-	 * 
-	 * @param account
-	 *            input savings account
-	 * @return params map
-	 */
-	public static ParamsMap makeParamsForSavingsTermsPatch(SavingsAccount account) {
-
-		// Verify that account is not null
-		if (account == null) {
-			throw new IllegalArgumentException("Loan Account must not be null");
-		}
-
-		// Create JSON expected by the PATCH loan account API:
-		JsonObject accountFields = makeJsonObjectForFields(account, modifiableSavingsAccountFields);
-		if (accountFields == null) {
-			return null;
-		}
-
-		// Create JSON string. Format: { "loanAccount":{"loanAmount":"1000", "repaymentPeriodCount":"10"}}'
-		String json = "{\"savingsAccount\":" + accountFields.toString() + "}";
-
-		ParamsMap paramsMap = new ParamsMap();
-		paramsMap.put(APIData.JSON_OBJECT, json);
-
-		return paramsMap;
-	}
-
-	/**
-	 * A list of fields supported by get loan schedule preview API. See MBU-6789 and MBU-7676
-	 */
-	private final static Set<String> loanSchedulePreviewFields = new HashSet<String>(Arrays.asList(APIData.LOAN_AMOUNT,
-			APIData.INTEREST_RATE, APIData.REPAYMENT_INSTALLMENTS, APIData.REPAYMENT_PERIOD_COUNT,
-			APIData.REPAYMENT_PERIOD_UNIT, APIData.FIRST_REPAYMENT_DATE, APIData.GRACE_PERIOD,
-			APIData.PRNICIPAL_REPAYMENT_INTERVAL, APIData.PERIODIC_PAYMENT));
-
-	/**
 	 * Create ParamsMap with a map of fields for the GET loan schedule for the product API. Only fields applicable to
 	 * the API are added to the params map
 	 * 
 	 * @param account
 	 *            input loan account
-	 * @return params map
+	 * @param apiDefinition
+	 *            api definition containing custom serializer for loan account to support generating request only with
+	 *            those fields required by the GET schedule API
+	 * @return params map with fields for an API request
 	 */
-	public static ParamsMap makeParamsForLoanSchedule(LoanAccount account) {
+	public static ParamsMap makeParamsForLoanSchedule(LoanAccount account, ApiDefinition apiDefinition) {
 
 		// Verify that account is not null
 		if (account == null) {
 			throw new IllegalArgumentException("Loan Account must not be null");
 		}
-
-		// Make JsonObject with the applicable fields only
-		// Loan schedule API uses URL encoded params, so the dates should be in "yyyy-MM-dd" date format
-		JsonObject loanTermsObject = makeJsonObjectForFields(account, loanSchedulePreviewFields, APIData.yyyyMmddFormat);
-
-		// For this GET API we need to create params map with all individual params separately
+		// Create API JSON string using apiDefinition with a custom serializer
+		JsonElement object = ServiceHelper.makeApiJsonElement(account, apiDefinition);
+		// For this GET API we need to create params map with all individual params separately. This API uses
+		// "x-www-form-urlencoded" content type
 		// Convert Json object with the applicable fields into a ParamsMap.
 		Type type = new TypeToken<ParamsMap>() {
 		}.getType();
-		ParamsMap params = GsonUtils.createGson().fromJson(loanTermsObject.toString(), type);
-
+		ParamsMap params = GsonUtils.createGson(APIData.yyyyMmddFormat).fromJson(object.getAsJsonObject(), type);
 		return params;
 
-	}
-
-	/**
-	 * Helper to create a JSON object with a sub-set of the applicable object fields with the Mambu's default JSON date
-	 * time format ("yyyy-MM-dd'T'HH:mm:ssZ")
-	 * 
-	 * @param object
-	 *            object
-	 * @param applicableFields
-	 *            a set of applicable fields
-	 * @return JSON object
-	 */
-	public static <T> JsonObject makeJsonObjectForFields(T object, Set<String> applicableFields) {
-
-		return makeJsonObjectForFields(object, applicableFields, GsonUtils.defaultDateTimeFormat);
-	}
-
-	/**
-	 * Helper to create a JSON object with a sub-set of the applicable object fields
-	 * 
-	 * @param object
-	 *            object
-	 * @param applicableFields
-	 *            a set of applicable fields
-	 * @param dateTimeFormat
-	 *            a string representing Mambu API date time format
-	 * @return JSON object
-	 */
-	public static <T> JsonObject makeJsonObjectForFields(T object, Set<String> applicableFields, String dateTimeFormat) {
-
-		if (dateTimeFormat == null) {
-			dateTimeFormat = GsonUtils.defaultDateTimeFormat;
-		}
-		// Create JsonObject for the full loan account and then extract only the fields present in the applicableFields
-		// set
-		JsonObject loanAccountJson = GsonUtils.createGson(dateTimeFormat).toJsonTree(object).getAsJsonObject();
-
-		// Make JsonObject with the applicable fields only. Add only those which are not NULL
-		JsonObject loanSubsetObject = new JsonObject();
-		for (String fieldName : applicableFields) {
-			JsonElement element = loanAccountJson.get(fieldName);
-			if (element == null) {
-				// Field value is NULL. Skipping
-				continue;
-			}
-			loanSubsetObject.add(fieldName, element);
-		}
-		return loanSubsetObject;
 	}
 
 	/**
@@ -465,13 +372,37 @@ public class ServiceHelper {
 	 * @return JSON string for the object
 	 */
 	public static <T> String makeApiJson(T object, String dateTimeFormat) {
-		if (dateTimeFormat == null) {
-			// Use default API formatter
-			return GsonUtils.createGson().toJson(object, object.getClass());
-		} else {
-			// Use provided dateTimeFormat
-			return GsonUtils.createGson(dateTimeFormat).toJson(object, object.getClass());
-		}
+		// Use provided dateTimeFormat. Default format will be used if null
+		return GsonUtils.createGson(dateTimeFormat).toJson(object, object.getClass());
+	}
+
+	/**
+	 * Generate a JSON string for an object and with the specified ApiDefinition
+	 * 
+	 * @param object
+	 *            object
+	 * @param apiDefinition
+	 *            API definition
+	 * @return JSON string for the object
+	 */
+	public static <T> String makeApiJson(T object, ApiDefinition apiDefinition) {
+		return GsonUtils.createSerializerGson(apiDefinition).toJson(object, object.getClass());
+
+	}
+
+	/**
+	 * Generate a JsonElement for an object and with the specified ApiDefinition
+	 * 
+	 * @param object
+	 *            object
+	 * @param apiDefinition
+	 *            API definition
+	 * @return JsonElement for an object
+	 */
+	public static <T> JsonElement makeApiJsonElement(T object, ApiDefinition apiDefinition) {
+
+		return GsonUtils.createSerializerGson(apiDefinition).toJsonTree(object, object.getClass());
+
 	}
 
 	/**
@@ -549,5 +480,118 @@ public class ServiceHelper {
 
 		return jsonWithAppKey.toString();
 
+	}
+
+	/**
+	 * Get class corresponding to the "full details" class for a Mambu Entity. For example, ClientExpanded.class for
+	 * MambuEntityType.CLIENT;
+	 * 
+	 * @param entityType
+	 *            entity type. Must not be null
+	 * @return class representing full details class for the Mambu Entity or null if no such class exists
+	 */
+	public static Class<?> getFullDetailsClass(MambuEntityType entityType) {
+		if (entityType == null) {
+			throw new IllegalArgumentException("Entity type must not be null");
+		}
+		switch (entityType) {
+		case CLIENT:
+			return ClientExpanded.class;
+		case GROUP:
+			return GroupExpanded.class;
+		case LOAN_ACCOUNT:
+			return JSONLoanAccount.class;
+		case SAVINGS_ACCOUNT:
+			return JSONSavingsAccount.class;
+		default:
+			return null;
+
+		}
+	}
+
+	/**
+	 * Helper to determine the type of the Undo Closer Transaction for a closed loan account. The transaction type
+	 * needed in UNDO closer API transactions. Can be also used to determine ahead of time if the UNDO Closer
+	 * transaction can be performed via API for the specified account
+	 * 
+	 * See MBU-13190. As of Mambu 4.2 the following UNDO closer types are supported "UNDO_REJECT", "UNDO_WITHDRAWN",
+	 * "UNDO_CLOSE"
+	 * 
+	 * @param account
+	 *            loan account. Must not be null and its state must not be null.
+	 * @return UNDO close transaction type. Return null if account is not closed or if its closer type is not supported
+	 *         by Mambu API
+	 */
+	public static String getUndoCloserTransactionType(LoanAccount account) {
+		// UNDO Closing loan accounts is available since Mambu 4.4. See MBU-13190
+
+		if (account == null || account.getId() == null || account.getState() == null) {
+			throw new IllegalArgumentException("Account and its ID and its state must not be null");
+		}
+		// Get current state and sub-state
+		AccountState accountState = account.getState();
+		AccountState accountSubState = account.getSubState();
+		// Determine the UNDO Transaction Type parameter based on how the account was closed
+		switch (accountState) {
+		case CLOSED:
+			// Null sub-state is set by Mambu if for accounts closed with all obligations met
+			if (accountSubState == null) {
+				// Account was closed with all obligations met
+				return APIData.UNDO_CLOSE;
+			}
+			// WITHDRAW sub-state is supported by Mambu API for accounts in CLOSED state
+			switch (accountSubState) {
+			case WITHDRAWN:
+				// Account was closed withdrawn
+				return APIData.UNDO_WITHDRAWN;
+			default:
+				return null;
+			}
+		case CLOSED_REJECTED:
+			// Account was closed rejected. No need to check sub-state
+			return APIData.UNDO_REJECT;
+		default:
+			// Only CLOSED and CLOSED_REJECTED states are supported by loan API
+			return null;
+		}
+
+	}
+
+	/**
+	 * Helper to determine the type of the Undo Closer Transaction for a closed savings account. The transaction type
+	 * needed in UNDO closer API transactions. Can be also used to determine ahead of time if the UNDO Closer
+	 * transaction can be performed via API for the specified account
+	 * 
+	 * See MBU-13193. As of Mambu 4.2 the following UNDO closer types are supported "UNDO_REJECT", "UNDO_WITHDRAWN",
+	 * "UNDO_CLOSE"
+	 * 
+	 * @param account
+	 *            savings account. Must not be null and its state must not be null.
+	 * @return UNDO close transaction type. Return null if account is not closed or if its closer type is not supported
+	 *         by Mambu API
+	 */
+	public static String getUndoCloserTransactionType(SavingsAccount account) {
+		// UNDO Closing loan accounts is available since Mambu 4.4. See MBU-13193
+
+		if (account == null || account.getId() == null || account.getAccountState() == null) {
+			throw new IllegalArgumentException("Account and its ID and its state must not be null");
+		}
+		// Get current state and sub-state
+		AccountState accountState = account.getAccountState();
+		// Determine the UNDO Transaction Type parameter based on how the account was closed
+		switch (accountState) {
+		case CLOSED:
+			// Account was closed with all zero balance
+			return APIData.UNDO_CLOSE;
+		case WITHDRAWN:
+			// Account was closed withdrawn
+			return APIData.UNDO_WITHDRAWN;
+		case CLOSED_REJECTED:
+			// Account was closed rejected
+			return APIData.UNDO_REJECT;
+		default:
+			// Only CLOSED, WITHDRAWN and CLOSED_REJECTED states are supported by Savings API
+			return null;
+		}
 	}
 }

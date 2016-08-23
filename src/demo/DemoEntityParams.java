@@ -45,11 +45,43 @@ public class DemoEntityParams {
 	private String name;
 	private String encodedKey;
 	private String id;
+	private String linkedTypeKey; // e.g. product key or client type or channel key
 
+	/**
+	 * Constructor specifying entity name, encoded key and id
+	 * 
+	 * @param name
+	 *            entity name
+	 * @param encodedKey
+	 *            entity encoded key
+	 * @param id
+	 *            entity id
+	 */
 	DemoEntityParams(String name, String encodedKey, String id) {
 		this.name = name;
 		this.encodedKey = encodedKey;
 		this.id = id;
+		this.linkedTypeKey = null;
+	}
+
+	/**
+	 * Constructor specifying entity name, encoded key, id and linked entity key.
+	 * 
+	 * @param name
+	 *            entity name
+	 * @param encodedKey
+	 *            entity encoded key
+	 * @param id
+	 *            entity id
+	 * @param linkedTypeKey
+	 *            . linked type key. For example, for clients this is a client role key, for loans and savings this is a
+	 *            product type key, and for transactions this is a transaction channel key
+	 */
+	DemoEntityParams(String name, String encodedKey, String id, String linkedTypeKey) {
+		this.name = name;
+		this.encodedKey = encodedKey;
+		this.id = id;
+		this.linkedTypeKey = linkedTypeKey;
 	}
 
 	public String getName() {
@@ -62,6 +94,14 @@ public class DemoEntityParams {
 
 	public String getId() {
 		return id;
+	}
+
+	public String getLinkedTypeKey() {
+		return linkedTypeKey;
+	}
+
+	public void setLinkedTypeKey(String linkedTypeKey) {
+		this.linkedTypeKey = linkedTypeKey;
 	}
 
 	/**
@@ -82,22 +122,25 @@ public class DemoEntityParams {
 		// Get Demo entities using IDs specified in the configuration file (set requested ID to null)
 		switch (mambuEntity) {
 		case CLIENT:
-			Client client = DemoUtil.getDemoClient(null);
-			return new DemoEntityParams(client.getFullName(), client.getEncodedKey(), client.getId());
+			Client client = DemoUtil.getDemoClient(DemoUtil.demoClientId);
+			return new DemoEntityParams(client.getFullName(), client.getEncodedKey(), client.getId(), client
+					.getClientRole().getEncodedKey());
 		case GROUP:
-			Group group = DemoUtil.getDemoGroup(null);
-			return new DemoEntityParams(group.getGroupName(), group.getEncodedKey(), group.getId());
+			Group group = DemoUtil.getDemoGroup(DemoUtil.demoGroupId);
+			return new DemoEntityParams(group.getGroupName(), group.getEncodedKey(), group.getId(), group
+					.getClientRole().getEncodedKey());
 		case LOAN_ACCOUNT:
-			LoanAccount loan = DemoUtil.getDemoLoanAccount(null);
-			return new DemoEntityParams(loan.getName(), loan.getEncodedKey(), loan.getId());
+			LoanAccount loan = DemoUtil.getDemoLoanAccount(DemoUtil.demoLaonAccountId);
+			return new DemoEntityParams(loan.getName(), loan.getEncodedKey(), loan.getId(), loan.getProductTypeKey());
 		case SAVINGS_ACCOUNT:
-			SavingsAccount savings = DemoUtil.getDemoSavingsAccount(null);
-			return new DemoEntityParams(savings.getName(), savings.getEncodedKey(), savings.getId());
+			SavingsAccount savings = DemoUtil.getDemoSavingsAccount(DemoUtil.demoSavingsAccountId);
+			return new DemoEntityParams(savings.getName(), savings.getEncodedKey(), savings.getId(),
+					savings.getProductTypeKey());
 		case LOAN_PRODUCT:
-			LoanProduct lProduct = DemoUtil.getDemoLoanProduct(null);
+			LoanProduct lProduct = DemoUtil.getDemoLoanProduct(DemoUtil.demoLaonProductId);
 			return new DemoEntityParams(lProduct.getName(), lProduct.getEncodedKey(), lProduct.getId());
 		case SAVINGS_PRODUCT:
-			SavingsProduct sProduct = DemoUtil.getDemoSavingsProduct(null);
+			SavingsProduct sProduct = DemoUtil.getDemoSavingsProduct(DemoUtil.demoSavingsProductId);
 			return new DemoEntityParams(sProduct.getName(), sProduct.getEncodedKey(), sProduct.getId());
 		case USER:
 			User user = DemoUtil.getDemoUser();
@@ -113,7 +156,6 @@ public class DemoEntityParams {
 			throw new IllegalArgumentException("Demo entity  " + mambuEntity
 					+ " implementation is missing in DemoEntityParams");
 		}
-
 	}
 
 	/**

@@ -15,6 +15,7 @@ import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.ClientsService;
+import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.util.DateUtils;
 import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.model.Client;
@@ -66,10 +67,13 @@ public class DemoTestClientService {
 			demoClient = DemoUtil.getDemoClient(null);
 			demoGroup = DemoUtil.getDemoGroup(null);
 
-			testCreateJsonClient();
-
+			NEW_CLIENT_ID = testCreateJsonClient();
 			testGetClient();
-			testUpdateClient();
+
+			ClientExpanded updatedClient = testUpdateClient();
+			NEW_CLIENT_ID = testPatchClient(updatedClient.getClient()); // Available since 4.1
+			testUpdateClientState(updatedClient.getClient()); // Available since 4.0
+
 			testGetClientDetails();
 
 			testGetClients();
@@ -85,6 +89,10 @@ public class DemoTestClientService {
 			testUpdateGroup(createdGroup); // Available since 3.10
 
 			testGetGroup();
+			testPatchGroup(); // Available since 4.2. For more details see MBU-12985.
+			testPatchGroupExpanded(); // Available since 4.2. For more details see MBU-12985.
+
+			testGetGroup();
 			testGetGroupDetails();
 
 			testGetClientTypes(); // Available since 3.9
@@ -98,6 +106,12 @@ public class DemoTestClientService {
 			getClientProfileFiles(); // Available since 3.9
 			deleteClientProfileFiles(); // Available since 3.9
 
+			// Test deleting newly created client
+			testDeleteClient(NEW_CLIENT_ID); // Available since 4.2
+
+			testDeleteGroupRolesThroughPatch(); // Available since 4.2. See MBU-13763
+			testDeleteGroupMembersThroughPatch(); /// Available since 4.2. See MBU-13763
+
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Clients");
 			System.out.println("Error code=" + e.getErrorCode());
@@ -106,6 +120,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetClient() throws MambuApiException {
+
 		System.out.println("\nIn testGetClient");
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
@@ -116,7 +131,29 @@ public class DemoTestClientService {
 
 	}
 
+	/**
+	 * Test Deleting client
+	 * 
+	 * @param clientId
+	 *            client Id or encoded key. Must not be null
+	 * 
+	 *            Available since Mambu 4.2. See MBU-12684
+	 * 
+	 * @throws MambuApiException
+	 */
+	public static void testDeleteClient(String clientId) throws MambuApiException {
+
+		System.out.println("\nIn testDeleteClient");
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		boolean deleteStatus = clientService.deleteClient(clientId);
+
+		System.out.println("Deleted Client ID= " + clientId + "\tStatus=" + deleteStatus);
+
+	}
+
 	public static void testGetClients() {
+
 		try {
 			System.out.println("\nIn testGetClients");
 			ClientsService clientService = MambuAPIFactory.getClientService();
@@ -133,6 +170,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetClientbyFullName() throws MambuApiException {
+
 		System.out.println("\nIn testGetClientbyFullName");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -151,6 +189,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetClientByLastNameBirthday() throws MambuApiException {
+
 		System.out.println("\nIn testGetClientByLastNameBirthday");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -170,6 +209,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetClientDetails() throws MambuApiException {
+
 		System.out.println("\nIn testGetClientDetails");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -183,6 +223,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetClientByDocIdLastName() throws MambuApiException {
+
 		System.out.println("\nIn testGetClientByDocIdLastName");
 
 		String lastName = demoClient.getLastName();
@@ -209,6 +250,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetGroup() throws MambuApiException {
+
 		System.out.println("\nIn testGetGroup");
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
@@ -217,7 +259,202 @@ public class DemoTestClientService {
 
 	}
 
+	// Test PATCH GroupExpanded fields API. This method patches existing created GroupExpended.
+	public static void testPatchGroup() throws MambuApiException {
+
+		System.out.println("\n In testPatchGroup");
+		String groupId = NEW_GROUP_ID;
+
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		String patchFieldSuffix = "group_patch_test";
+
+		Group group = setUpGroupForPatchingOperation(groupId, clientService, patchFieldSuffix);
+		// reset the value for group id. Might be needed by other tests
+		NEW_GROUP_ID = group.getId();
+
+		// PATCH the group
+		boolean patchStatus = clientService.patchGroup(group);
+
+		System.out.println("Update group status=" + patchStatus);
+
+		GroupExpanded groupExpanded = clientService.getGroupDetails(group.getEncodedKey());
+
+		logGroupExpandedDetails(groupExpanded);
+
+	}
+
+	// Test PATCH GroupExpanded fields API. This method patches existing created GroupExpended.
+	public static void testPatchGroupExpanded() throws MambuApiException {
+
+		System.out.println("\n In testPatchGroupExtended");
+		String groupId = NEW_GROUP_ID;
+
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		// get a GroupExpanded
+		GroupExpanded groupExpanded = clientService.getGroupDetails(groupId);
+
+		String patchFieldSuffix = "group_expanded_patch_test";
+
+		// get group and prepare it for PATCH
+		Group group = setUpGroupForPatchingOperation(groupId, clientService, patchFieldSuffix);
+		groupExpanded.setGroup(group);
+		// reset the value for group id. might be needed by other tests
+		NEW_GROUP_ID = group.getId();
+
+		addTestClientAsGroupMamber(groupExpanded);
+
+		replaceExistingRoleList(groupExpanded);
+
+		// PATCH the group expanded
+		boolean patchStatus = clientService.patchGroup(groupExpanded);
+
+		System.out.println("Update group expanded status=" + patchStatus);
+
+		GroupExpanded patchedGroup = clientService.getGroupDetails(groupExpanded.getEncodedKey());
+
+		logGroupExpandedDetails(patchedGroup);
+	}
+
+	/**
+	 * Replaces the list of roles from GroupExpanded received as parameter to this method with a new list containing
+	 * only the test client
+	 * 
+	 * @param groupExpanded
+	 *            The GroupExpanded to be updated with a new list of roles.
+	 */
+	private static void replaceExistingRoleList(GroupExpanded groupExpanded) {
+
+		if (groupExpanded != null && groupExpanded.getGroupRoles() != null
+				&& !groupExpanded.getGroupRoles().isEmpty()) {
+			// replace the existing role list
+			List<GroupRole> groupRoles = groupExpanded.getGroupRoles();
+			GroupRole groupRole = groupRoles.get(0);
+			groupRole.setClientKey(demoClient.getEncodedKey());
+			// set the role(replace the existing one)
+			groupExpanded.setGroupRoles(groupRoles);
+		}
+	}
+
+	/**
+	 * Adds the test client to the list of existing roles on the GroupExpanded passed as parameter to this method.
+	 * 
+	 * @param groupExpanded
+	 *            The GroupExpanded to be updated with a new list of members (including the existing ones)
+	 */
+	private static void addTestClientAsGroupMamber(GroupExpanded groupExpanded) {
+
+		if (groupExpanded != null && groupExpanded.getGroupMembers() != null) {
+			// add a new member
+			List<GroupMember> groupMembers = groupExpanded.getGroupMembers();
+			GroupMember groupMember = new GroupMember();
+			groupMember.setClientKey(demoClient.getEncodedKey());
+			groupMember.setCreationDate(new Date());
+			groupMembers.add(groupMember);
+			groupExpanded.setGroupMembers(groupMembers);
+		}
+	}
+
+	/**
+	 * Calls ClientService to get a Group from Mambu for a given group id and change some details on it and then returns
+	 * it.
+	 * 
+	 * @param groupId
+	 *            the id of the group to be searched in Mambu
+	 * @param clientService
+	 *            the ClientService
+	 * @param patchFieldSuffix
+	 *            the suffix that will be added on some fields of the group. Needed for differentiating the patch group
+	 *            against patch group expanded operation.
+	 * @return a Group with changed details ready for patching
+	 * @throws MambuApiException
+	 */
+	private static Group setUpGroupForPatchingOperation(String groupId, ClientsService clientService,
+			String patchFieldSuffix) throws MambuApiException {
+
+		Group group = clientService.getGroup(groupId);
+		if (group != null) {
+			String randomIndex = Integer.toString((int) (Math.random() * 1000000));
+			// change the group information
+			group.setId("99999_" + randomIndex);
+			group.setGroupName("Patched Group " + patchFieldSuffix);
+			group.setEmailAddress("test_group_patch5" + patchFieldSuffix + "@mambu.com");
+			group.setPreferredLanguage(Language.ROMANIAN);
+			group.setHomePhone("333-4444-5555-66");
+			group.setNotes("this is a note created through patch group " + patchFieldSuffix);
+			group.setMobilePhone1("777-888-9999");
+		}
+		return group;
+	}
+
+	/**
+	 * Logs to the console the details of the group passed as parameter.
+	 * 
+	 * @param groupExpanded
+	 *            the GroupExpanded, whose details will be printed to the console.
+	 */
+	private static void logGroupExpandedDetails(GroupExpanded groupExpanded) {
+
+		Group group = groupExpanded.getGroup();
+		if (group != null) {
+			System.out.println("Group details:");
+			System.out.println("\tGroup key: " + group.getEncodedKey());
+			System.out.println("\tGroup name: " + group.getGroupName());
+			System.out.println("\tGroup preferred language: " + group.getPreferredLanguage());
+			System.out.println("\tGroup phone: " + group.getMobilePhone1());
+			System.out.println("\tGroup notes: " + group.getNotes());
+			System.out.println("\tGroup homePhone: " + group.getHomePhone());
+			System.out.println("\tGroup emailAddress: " + group.getEmailAddress());
+		}
+
+		logMembersOfTheGroupExpanded(groupExpanded);
+
+		logRolesOfTheGroupExpanded(groupExpanded);
+	}
+
+	/**
+	 * Takes as parameter a GroupExpanded and logs to the console some details about its group roles if there are any
+	 * roles.
+	 * 
+	 * @param groupExpanded
+	 *            The GroupExpanded whose group roles will be printed to the console.
+	 */
+	private static void logRolesOfTheGroupExpanded(GroupExpanded groupExpanded) {
+
+		List<GroupRole> roles = groupExpanded.getGroupRoles();
+		if (roles != null && !roles.isEmpty()) {
+			System.out.println("Group roles:");
+			for (GroupRole role : roles) {
+				System.out.println("\tRole`s encoded key " + role.getEncodedKey());
+				System.out.println("\tRole`s name " + role.getRoleName());
+			}
+			System.out.println("Roles count = " + roles.size());
+		}
+	}
+
+	/**
+	 * Takes as parameter a GroupExpanded and logs to the console some details about its group members if there are any
+	 * members.
+	 * 
+	 * @param groupExpanded
+	 *            The GroupExpanded whose group members will be printed to the console.
+	 */
+	private static void logMembersOfTheGroupExpanded(GroupExpanded groupExpanded) {
+
+		List<GroupMember> members = groupExpanded.getGroupMembers();
+		if (members != null && !members.isEmpty()) {
+			System.out.println("Group mambers:");
+			for (GroupMember member : members) {
+				System.out.println("\tMember`s encoded key " + member.getEncodedKey());
+				System.out.println("\tMember`s parent key " + member.getParentKey());
+			}
+			System.out.println("Members count = " + members.size());
+		}
+	}
+
 	public static void testGetGroupDetails() throws MambuApiException {
+
 		System.out.println("\nIn testGetGroupDetails");
 
 		String groupId = NEW_GROUP_ID;
@@ -234,15 +471,22 @@ public class DemoTestClientService {
 	private static final String apiTestFirstNamePrefix = "Name ";
 	private static final String apiTestLastNamePrefix = "API Client";
 
-	// Test creating new client. Save newly created client in clientCreated object for testing updates
-	public static void testCreateJsonClient() throws MambuApiException {
+	//
+	/**
+	 * Test creating new client. Save newly created client in clientCreated object for testing updates
+	 * 
+	 * @return the id of the newly created client
+	 * @throws MambuApiException
+	 */
+	public static String testCreateJsonClient() throws MambuApiException {
+
 		System.out.println("\nIn testCreateJsonClient");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
 		int randomIndex = (int) (Math.random() * 10000);
-		NEW_CLIENT_ID = Integer.toString(randomIndex);
-		Client clientIn = new Client(apiTestFirstNamePrefix + NEW_CLIENT_ID, apiTestLastNamePrefix + NEW_CLIENT_ID);
-		clientIn.setId(NEW_CLIENT_ID);
+		String clientId = Integer.toString(randomIndex);
+		Client clientIn = new Client(apiTestFirstNamePrefix + clientId, apiTestLastNamePrefix + clientId);
+		clientIn.setId(clientId);
 		clientIn.setLoanCycle(null);
 		clientIn.setGroupLoanCycle(null);
 		clientIn.setToInactive();
@@ -295,26 +539,29 @@ public class DemoTestClientService {
 		idDocs.add(doc);
 		clExpanded.setIdDocuments(idDocs);
 		// Use helper to make test custom fields which are valid for the client's role
-		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(
-				CustomFieldType.CLIENT_INFO, cientRole.getEncodedKey());
+		List<CustomFieldValue> clientCustomInformation = DemoUtil
+				.makeForEntityCustomFieldValues(CustomFieldType.CLIENT_INFO, cientRole.getEncodedKey());
 		// Add All custom fields
 		clExpanded.setCustomFieldValues(clientCustomInformation);
 
 		// Create in Mambu using Json API
 		clientCreated = clientService.createClient(clExpanded);
 
-		System.out.println("Client created, OK, ID=" + clientCreated.getClient().getId() + " Full name= "
+		String createdClientId = clientCreated.getId();
+		System.out.println("Client created, OK, ID=" + createdClientId + " Full name= "
 				+ clientCreated.getClient().getFullName() + " First, Last=" + clientCreated.getClient().getFirstName());
 
 		List<Address> addressOut = clientCreated.getAddresses();
 		System.out.println("\nClient address, total=" + addressOut.size());
 
+		return createdClientId;
 	}
 
 	private static final String updatedSuffix = "_updated";
 
 	// Test update client. This method updates previously created client saved in clientCreated object
-	public static void testUpdateClient() throws MambuApiException {
+	public static ClientExpanded testUpdateClient() throws MambuApiException {
+
 		System.out.println("\nIn testUpdateClient");
 		ClientsService clientService = MambuAPIFactory.getClientService();
 
@@ -322,7 +569,7 @@ public class DemoTestClientService {
 		Client client = clientUpdated.getClient();
 		client.setFirstName(client.getFirstName() + updatedSuffix);
 		client.setLastName(client.getLastName() + updatedSuffix);
-		client.setPreferredLanguage(Language.SPANISH); // TODO: Mambu issue - Language is NOT updated
+		client.setPreferredLanguage(Language.SPANISH);
 
 		// Test updating custom fields too
 		List<CustomFieldValue> customFields = clientCreated.getCustomFieldValues();
@@ -334,15 +581,101 @@ public class DemoTestClientService {
 			}
 		}
 		clientUpdated.setCustomFieldValues(updatedFields);
+		// Test also updating client's address
+		List<Address> addresses = clientUpdated.getAddresses();
+		Address currentAddress = (addresses == null || addresses.size() == 0) ? new Address() : addresses.get(0);
+
+		Address updatedAddress = new Address();
+		updatedAddress.setLine1(currentAddress.getLine1() + updatedSuffix);
+		updatedAddress.setLine2(currentAddress.getLine2() + updatedSuffix);
+		updatedAddress.setCity(currentAddress.getCity() + updatedSuffix);
+		updatedAddress.setPostcode(currentAddress.getPostcode() + updatedSuffix);
+		updatedAddress.setCountry(currentAddress.getCountry() + updatedSuffix);
+		updatedAddress.setLatitude(currentAddress.getLatitude());
+		updatedAddress.setLongitude(currentAddress.getLongitude());
+
+		List<Address> updatedAddresses = new ArrayList<Address>();
+		updatedAddresses.add(updatedAddress);
+
+		clientUpdated.setAddresses(updatedAddresses);
+
 		ClientExpanded clientExpandedResult = clientService.updateClient(clientUpdated);
 
 		System.out.println("Client Update OK, ID=" + clientExpandedResult.getClient().getId() + "\tLastName="
 				+ clientExpandedResult.getClient().getLastName() + "\tFirst Name ="
 				+ clientExpandedResult.getClient().getFirstName());
 
+		return clientExpandedResult;
+	}
+
+	// Test updating client's state API
+	public static void testUpdateClientState(Client client) throws MambuApiException {
+
+		System.out.println("\nIn testUpdateClientState");
+		if (client == null) {
+			System.out.println("WARNING:cannot test updating state for a  null client");
+			return;
+		}
+		String clientId = client.getId();
+		ClientState currentState = client.getState();
+
+		// Change client's state
+		ClientState newState = ClientState.BLACKLISTED;
+
+		System.out.println("Updating State from " + currentState + " to " + newState + " for client ID=" + clientId);
+		ClientsService clientService = MambuAPIFactory.getClientService();
+		boolean stateUpdated = clientService.patchClientState(clientId, newState);
+		System.out.println("Update status=" + stateUpdated);
+
+		// Test restoring client's state back to its previous state
+		System.out
+				.println("Updating State back from " + newState + " to " + currentState + " for client ID=" + clientId);
+		boolean stateUpdated2 = clientService.patchClientState(clientId, currentState);
+		System.out.println("Update status=" + stateUpdated2);
+
+	}
+
+	/**
+	 * Test PATCHing Client fields
+	 * 
+	 * @param client
+	 *            client to update
+	 * @return the id of the updated client
+	 * @throws MambuApiException
+	 */
+	public static String testPatchClient(Client client) throws MambuApiException {
+
+		System.out.println("\nIn testPatchClient");
+
+		client.setFirstName(client.getFirstName()); // keep the same to continue using our demo client
+		client.setLastName(client.getLastName()); // keep the same to continue using our demo client
+		client.setMiddleName(client.getMiddleName() + updatedSuffix);
+		client.setPreferredLanguage(Language.ROMANIAN);
+		String iD = client.getId() + updatedSuffix;
+		// Limit the ID's value to 32 chars. Otherwise 501 error code is returned
+		if (iD.length() > 32) {
+			iD = iD.substring(0, 16);
+		}
+		client.setId(iD);
+		client.setBirthDate(new Date());
+		// Execute Client PATCH API
+		ClientsService clientService = MambuAPIFactory.getClientService();
+		boolean status = clientService.patchClient(client);
+		System.out.println("Update status=" + status);
+
+		// Get updated client details back to confirm PATCHed values
+		Client updatedClient = clientService.getClient(client.getEncodedKey());
+		String updatedId = updatedClient.getId();
+		System.out.println("\tUpdate FirstName=" + updatedClient.getFirstName() + "\tID=" + updatedClient + "\tState="
+				+ updatedClient.getState());
+
+		// Return the ID of our test client
+		return updatedId;
+
 	}
 
 	public static void testGetClientsByBranchCentreOfficerState() throws MambuApiException {
+
 		System.out.println("\nIn testGetClientsByBranchCentreOfficerState");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -367,6 +700,7 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetGroupsByBranchCentreOfficer() throws MambuApiException {
+
 		System.out.println("\nIn testGetGroupsByBranchCentreOfficer");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -382,13 +716,14 @@ public class DemoTestClientService {
 		if (groups != null)
 			System.out.println("Got  Groups for the branch, officer, total groups=" + groups.size());
 		for (Group group : groups) {
-			System.out.println("Group Name=" + group.getGroupName() + "\tBranchId=" + group.getAssignedBranchKey()
-					+ "\tCentreId=" + group.getAssignedCentreKey() + "\tCredit Officer id="
-					+ group.getAssignedUserKey());
+			System.out.println(
+					"Group Name=" + group.getGroupName() + "\tBranchId=" + group.getAssignedBranchKey() + "\tCentreId="
+							+ group.getAssignedCentreKey() + "\tCredit Officer id=" + group.getAssignedUserKey());
 		}
 	}
 
 	public static void testGetGroupsRoles() throws MambuApiException {
+
 		System.out.println("\nIn testGetGroupsRoles");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -411,18 +746,22 @@ public class DemoTestClientService {
 	}
 
 	public static void testGetDocuments() throws MambuApiException {
+
 		System.out.println("\nIn testGetDocuments");
 
+		Integer offset = 0;
+		Integer limit = 50;
 		// Getting Documents for a Client
-		ClientsService clientService = MambuAPIFactory.getClientService();
-		List<Document> documents = clientService.getClientDocuments(demoClient.getId());
+		DocumentsService documentsService = MambuAPIFactory.getDocumentsService();
+		List<Document> documents = documentsService.getDocuments(MambuEntityType.CLIENT, demoClient.getId(), offset,
+				limit);
 
 		// Log returned documents using DemoTestDocumentsService helper
 		System.out.println("Documents returned for a Client with ID=" + demoClient.getId());
 		DemoTestDocumentsService.logDocuments(documents);
 
 		// Getting Documents for a Group
-		documents = clientService.getGroupDocuments(demoGroup.getId());
+		documents = documentsService.getDocuments(MambuEntityType.GROUP, demoGroup.getId(), offset, limit);
 
 		// Log returned documents using DemoTestDocumentsService helper
 		System.out.println("Documents returned for a Group with ID=" + demoGroup.getId());
@@ -432,18 +771,20 @@ public class DemoTestClientService {
 
 	// Update Custom Field values for the client and for the group and delete the first custom field
 	public static void testUpdateDeleteCustomFields() throws MambuApiException {
+
 		System.out.println("\nIn testUpdateDeleteCustomFields");
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
 		// Test fields for a Client
-		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.CLIENT);
+		DemoTestCustomFiledValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.CLIENT);
 
 		// Test fields for a Group
-		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.GROUP);
+		DemoTestCustomFiledValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.GROUP);
 	}
 
 	// Test getting client types
 	public static void testGetClientTypes() throws MambuApiException {
+
 		System.out.println("\nIn testGetClientTypes");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -485,6 +826,7 @@ public class DemoTestClientService {
 
 	// Test getting client profile picture and client profile signature file
 	public static void getClientProfileFiles() throws MambuApiException {
+
 		System.out.println("\nIn getClientProfileFiles");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -504,6 +846,7 @@ public class DemoTestClientService {
 
 	// Test uploading client profile picture and signature files
 	public static void uploadClientProfileFiles() throws MambuApiException {
+
 		System.out.println("\nIn uploadClientProfileFiles");
 		// Our Test file to upload.
 		final String filePath = "./test/data/IMG_1.JPG";
@@ -554,6 +897,7 @@ public class DemoTestClientService {
 
 	// Test deleting client profile picture and client profile signature file
 	public static void deleteClientProfileFiles() throws MambuApiException {
+
 		System.out.println("\nIn deleteClientProfileFiles");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -573,6 +917,7 @@ public class DemoTestClientService {
 
 	// Test Creating new group. Return new group on success
 	public static GroupExpanded testCreateGroup() throws MambuApiException {
+
 		System.out.println("\nIn testCreateGroup");
 
 		ClientsService clientService = MambuAPIFactory.getClientService();
@@ -606,8 +951,8 @@ public class DemoTestClientService {
 		// Set Custom Fields
 
 		// Make test custom fields for our group role
-		List<CustomFieldValue> clientCustomInformation = DemoUtil.makeForEntityCustomFieldValues(
-				CustomFieldType.GROUP_INFO, groupType.getEncodedKey());
+		List<CustomFieldValue> clientCustomInformation = DemoUtil
+				.makeForEntityCustomFieldValues(CustomFieldType.GROUP_INFO, groupType.getEncodedKey());
 		// Add All custom fields
 		groupDetails.setCustomFieldValues(clientCustomInformation);
 
@@ -642,6 +987,7 @@ public class DemoTestClientService {
 			// Add this role to group details
 			List<GroupRole> groupRoles = new ArrayList<GroupRole>();
 			groupRoles.add(useRole);
+
 			groupDetails.setGroupRoles(groupRoles);
 		}
 
@@ -656,6 +1002,7 @@ public class DemoTestClientService {
 
 	// Test updating Group. Pass existent group as a parameter
 	public static void testUpdateGroup(GroupExpanded groupExpanded) throws MambuApiException {
+
 		System.out.println("\nIn testUpdateGroup");
 
 		if (groupExpanded == null || groupExpanded.getGroup() == null) {
@@ -675,7 +1022,10 @@ public class DemoTestClientService {
 		List<Address> addresses = groupExpanded.getAddresses();
 		Address currentAddress = (addresses == null || addresses.size() == 0) ? new Address() : addresses.get(0);
 		List<Address> updatedAddresses = new ArrayList<Address>();
-		Address updatedAddress = new Address();
+		// TODO: Mambu 3.14 returns an exception when updating Groups with an existent address if it'a a new address.
+		// See MBU-11719. The workaround is use the current Address (and not to create a new one) and just to update its
+		// fields. This works. See MBU-11214
+		Address updatedAddress = currentAddress;
 		updatedAddress.setLine1(currentAddress.getLine1() + updatedSuffix);
 		updatedAddress.setLine2(currentAddress.getLine2() + updatedSuffix);
 		updatedAddress.setCity(currentAddress.getCity() + updatedSuffix);
@@ -683,7 +1033,6 @@ public class DemoTestClientService {
 		updatedAddress.setCountry(currentAddress.getCountry() + updatedSuffix);
 		updatedAddress.setLatitude(currentAddress.getLatitude());
 		updatedAddress.setLongitude(currentAddress.getLongitude());
-
 		updatedAddresses.add(updatedAddress);
 		groupExpanded.setAddresses(updatedAddresses);
 
@@ -721,6 +1070,62 @@ public class DemoTestClientService {
 		GroupExpanded updatedGroupExpaneded = clientService.updateGroup(groupExpanded);
 		System.out.println("Group Updated. Name=" + groupExpanded.getGroup().getGroupNameWithId() + "\tName and Id="
 				+ updatedGroupExpaneded.getGroup().getGroupNameWithId());
+	}
+
+	// tests group members deletion through patch operation
+	public static void testDeleteGroupMembersThroughPatch() throws MambuApiException {
+
+		System.out.println("\nIn testDeleteGroupThroughPatch");
+		String groupId = NEW_GROUP_ID;
+
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		// get a GroupExpanded
+		GroupExpanded groupExpanded = clientService.getGroupDetails(groupId);
+		// create an empty list of members
+		List<GroupMember> groupMembers = new ArrayList<>();
+		groupExpanded.setGroupMembers(groupMembers);
+
+		// PATCH the group expanded
+		boolean patchStatus = clientService.patchGroup(groupExpanded);
+
+		System.out.println("Update group expanded status=" + patchStatus);
+
+		GroupExpanded patchedGroup = clientService.getGroupDetails(groupExpanded.getEncodedKey());
+
+		logGroupExpandedDetails(patchedGroup);
+
+		if (!patchedGroup.getGroupMembers().isEmpty()) {
+			throw new MambuApiException(new Exception("Members weren`t deleted!"));
+		}
+	}
+
+	// tests group roles deletion through patch operation
+	public static void testDeleteGroupRolesThroughPatch() throws MambuApiException {
+
+		System.out.println("\nIn testDeleteRolesThroughPatch");
+		String groupId = NEW_GROUP_ID;
+
+		ClientsService clientService = MambuAPIFactory.getClientService();
+
+		// get a GroupExpanded
+		GroupExpanded groupExpanded = clientService.getGroupDetails(groupId);
+		// create an empty list of roles
+		List<GroupRole> groupRoles = new ArrayList<>();
+		groupExpanded.setGroupRoles(groupRoles);
+
+		// PATCH the group expanded
+		boolean patchStatus = clientService.patchGroup(groupExpanded);
+
+		System.out.println("Update group expanded status=" + patchStatus);
+
+		GroupExpanded patchedGroup = clientService.getGroupDetails(groupExpanded.getEncodedKey());
+
+		logGroupExpandedDetails(patchedGroup);
+
+		if (!patchedGroup.getGroupRoles().isEmpty()) {
+			throw new MambuApiException(new Exception("Roles weren`t deleted!"));
+		}
 	}
 
 }

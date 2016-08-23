@@ -13,8 +13,8 @@ Usage
 
 To use the Mambu Java API Wrapper, please include the following jars in your build path
 
-* build/Mambu-APIs-Java-3.13-bin.jar
-* lib/mambu-models-V3.13.jar
+* build/Mambu-APIs-Java-4.2-bin.jar
+* lib/mambu-models-V4.2.jar
 * further dependencies to run and test (see pom.xml for versions)
  * httpclient
  * httpcore
@@ -28,6 +28,7 @@ To use the Mambu Java API Wrapper, please include the following jars in your bui
  * mockito-all
  * junit
  * gwt-user
+ * datanucleus-core
 
 There is a list of services which are provided through a factory.
 The list will be updated constantly and currently contains:
@@ -37,7 +38,9 @@ The list will be updated constantly and currently contains:
 - ClientsService
 - CommentsService
 - CustomFieldValueService
+- CustomViewsService
 - DocumentsService
+- DocumentTemplatesService
 - IntelligenceService
 - LinesOfCreditService
 - LoansService

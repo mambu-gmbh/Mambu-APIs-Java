@@ -5,7 +5,7 @@
 	<groupId>Mambu-APIs-Java</groupId>
 	<artifactId>Mambu-APIs-Java</artifactId>
 	<name>Mambu Java APIs SDK</name>
-	<version>3.13-bin</version>
+	<version>4.2-bin</version>
 	<url>http://www.mambu.com</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -128,9 +128,9 @@
 		<dependency>
 			<groupId>com.mambu</groupId>
 			<artifactId>mambumodels</artifactId>
-			<version>3.13</version>
+			<version>4.2</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/mambu-models-V3.13.jar
+			<systemPath>${project.basedir}/lib/mambu-models-V4.2.jar
 			</systemPath>
 			<optional>false</optional>
 		</dependency>
@@ -148,7 +148,7 @@
 			<optional>false</optional>
 		</dependency>
 		<dependency>
-		    	<!--  Needed since Mambu 3.11 for com.google.common.base.Function used in CustomField -->
+		    <!--  Needed since Mambu 3.11 for com.google.common.base.Function used in CustomField -->
 			<!-- replaces old google-collect with it's successor - guava -->
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
@@ -164,6 +164,12 @@
 			<groupId>javax.jdo</groupId>
 			<artifactId>jdo-api</artifactId>
 			<version>3.0</version>
+		</dependency>
+		<!-- Datanucleus, needed since 4.1  -->
+		<dependency>
+		    <groupId>org.datanucleus</groupId>
+		    <artifactId>datanucleus-core</artifactId>
+		    <version>4.1.7</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.inject</groupId>

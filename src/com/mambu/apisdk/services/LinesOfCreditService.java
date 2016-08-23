@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.inject.Inject;
 import com.mambu.accounts.shared.model.Account.Type;
+import com.mambu.api.server.handler.linesofcredit.model.JSONLineOfCredit;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.ApiDefinition;
@@ -44,6 +45,9 @@ public class LinesOfCreditService {
 	private ServiceExecutor serviceExecutor;
 	// MambuEntity managed by this service
 	private static final MambuEntityType serviceEntity = MambuEntityType.LINE_OF_CREDIT;
+	// Create line of credit API definition. Example: POST {"lineOfCredit" :{LoC fields}"} /api/linesofcredit
+	private final static ApiDefinition createLineOfCredit = new ApiDefinition(ApiType.CREATE_JSON_ENTITY,
+			JSONLineOfCredit.class, LineOfCredit.class);
 
 	/***
 	 * Create a new Lines Of Credit service
@@ -53,6 +57,7 @@ public class LinesOfCreditService {
 	 */
 	@Inject
 	public LinesOfCreditService(MambuAPIService mambuAPIService) {
+
 		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
@@ -67,6 +72,7 @@ public class LinesOfCreditService {
 	 * @throws MambuApiException
 	 */
 	public List<LineOfCredit> getAllLinesOfCredit(Integer offset, Integer limit) throws MambuApiException {
+
 		// GET api/linesofcredit
 		// Available since 3.11. See MBU-8414
 
@@ -83,6 +89,7 @@ public class LinesOfCreditService {
 	 * @throws MambuApiException
 	 */
 	public LineOfCredit getLineOfCredit(String lineofcreditId) throws MambuApiException {
+
 		// GET api/linesofcredit/{id}
 		// Response example: {"lineOfCredit":{"encodedKey":"abc123","id":"FVT160", "amount":"5000",.. }}
 		// Available since 3.11. See MBU-8417
@@ -112,6 +119,7 @@ public class LinesOfCreditService {
 	 */
 	public List<LineOfCredit> getLinesOfCredit(MambuEntityType customerType, String customerId, Integer offset,
 			Integer limit) throws MambuApiException {
+
 		// Example: GET /api/clients/{clientId}/linesofcredit or GET /api/groups/{groupId}/linesofcredit
 		// Available since 3.11. See MBU-8413
 
@@ -142,6 +150,7 @@ public class LinesOfCreditService {
 	 */
 	public List<LineOfCredit> getClientLinesOfCredit(String clientId, Integer offset, Integer limit)
 			throws MambuApiException {
+
 		// Example: GET /api/clients/{clientId}/linesofcredit
 		// Available since 3.11. See MBU-8413
 
@@ -162,6 +171,7 @@ public class LinesOfCreditService {
 	 */
 	public List<LineOfCredit> getGroupLinesOfCredit(String groupId, Integer offset, Integer limit)
 			throws MambuApiException {
+
 		// Example: GET /api/groups/{groupId}/linesofcredit
 		// Available since 3.11. See MBU-8413
 
@@ -178,6 +188,7 @@ public class LinesOfCreditService {
 	 * @throws MambuApiException
 	 */
 	public AccountsFromLineOfCredit getAccountsForLineOfCredit(String lineofcreditId) throws MambuApiException {
+
 		// Example: GET /api/linesofcredit/{ID}/accounts
 		// Available since 3.11. See MBU-8415
 
@@ -196,6 +207,7 @@ public class LinesOfCreditService {
 	 * @return added loan account
 	 */
 	public LoanAccount addLoanAccount(String lineofcreditId, String loanAccountId) throws MambuApiException {
+
 		// Example: POST /api/linesofcredit/{LOC_ID}/loans/{ACCOUNT_ID}
 		// Available since 3.12.2. See MBU-9864
 
@@ -218,6 +230,7 @@ public class LinesOfCreditService {
 	 * @return added savings account
 	 */
 	public SavingsAccount addSavingsAccount(String lineofcreditId, String savingsAccountId) throws MambuApiException {
+
 		// Example: POST /api/linesofcredit/{LOC_ID}/savings/{ACCOUNT_ID}
 		// Available since 3.12.2. See MBU-9864
 
@@ -256,6 +269,31 @@ public class LinesOfCreditService {
 	}
 
 	/**
+	 * Creates a line of credit (Credit arrangement) for a client or a group, depending on the key set on the
+	 * LineOfCredit.
+	 * 
+	 * @param lineOfCredit
+	 *            The line of credit to be created in Mambu. Must not be null.
+	 * @return Newly created line of credit
+	 * 
+	 * @throws MambuApiException
+	 */
+	public LineOfCredit createLineOfCredit(LineOfCredit lineOfCredit) throws MambuApiException {
+
+		// Example: POST /api/linesofcredit
+		// Request example:{"lineOfCredit":{"id": "XXX007","clientKey": "8a80862b5590e1cb015591b12d100e8c",
+		// "startDate": "2016-07-20T00:00:00+0000","expireDate": "2016-10-30T00:00:00+0000","amount": "100000",
+		// "notes": "some line of credit notes"}}
+		// Available since 4.2. See MBU-13767
+		if (lineOfCredit == null) {
+			throw new IllegalArgumentException("Line of credit must not be null.");
+		}
+
+		JSONLineOfCredit lineOfCreditJson = new JSONLineOfCredit(lineOfCredit);
+		return serviceExecutor.executeJson(createLineOfCredit, lineOfCreditJson);
+	}
+
+	/**
 	 * Convenience method to Delete Loan Account from a line of credit
 	 * 
 	 * @param lineofcreditId
@@ -265,6 +303,7 @@ public class LinesOfCreditService {
 	 * @return true if success
 	 */
 	public boolean deleteLoanAccount(String lineofcreditId, String loanAccountId) throws MambuApiException {
+
 		// Example: DELETE /api/linesofcredit/{LOC_ID}/loans/{ACCOUNT_ID}
 		// Available since 3.12.2. See MBU-9873
 		return deleteAccount(lineofcreditId, Type.LOAN, loanAccountId);
@@ -280,6 +319,7 @@ public class LinesOfCreditService {
 	 * @return true if success
 	 */
 	public boolean deleteSavingsAccount(String lineofcreditId, String savingsAccountId) throws MambuApiException {
+
 		// Example: DELETE /api/linesofcredit/{LOC_ID}/savings/{ACCOUNT_ID}
 		// Available since 3.12.2. See MBU-9873
 

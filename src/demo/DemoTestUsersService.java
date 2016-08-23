@@ -4,21 +4,27 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import com.mambu.accounts.shared.model.TransactionLimitType;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.customviews.model.ApiViewType;
+import com.mambu.api.server.handler.customviews.model.CustomViewEntitiesSummaryWrapper;
+import com.mambu.api.server.handler.customviews.model.ResultType;
+import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
+import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
+import com.mambu.api.server.model.SummaryTotalsWrapper;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.MambuAPIServiceFactory;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.services.ActivitiesService;
-import com.mambu.apisdk.services.ClientsService;
-import com.mambu.apisdk.services.LoansService;
-import com.mambu.apisdk.services.SavingsService;
+import com.mambu.apisdk.services.CustomViewsService;
 import com.mambu.apisdk.services.UsersService;
+import com.mambu.apisdk.util.APIData.UserBranchAssignmentType;
 import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.model.Client;
+import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
+import com.mambu.clients.shared.model.GroupExpanded;
 import com.mambu.core.shared.data.DataItemType;
 import com.mambu.core.shared.data.DataViewType;
 import com.mambu.core.shared.model.ColumnConfiguration;
@@ -48,6 +54,7 @@ public class DemoTestUsersService {
 	private static User demoUser;
 	private static String BRANCH_ID;
 	private static String USER_NAME;
+	private static String methodName = null; // print method name
 
 	public static void main(String[] args) {
 
@@ -75,6 +82,9 @@ public class DemoTestUsersService {
 			// Available since 3.8
 			testUpdateDeleteCustomFields();
 
+			List<Role> userRoles = testGetAllUserRoles(); // Available since 3.14
+			testGetAllUserRoleDetails(userRoles); // Available since 3.14
+
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Users Service");
 			System.out.println("Error code=" + e.getErrorCode());
@@ -83,72 +93,58 @@ public class DemoTestUsersService {
 	}
 
 	public static void testGetAllUsers() throws MambuApiException {
-		System.out.println("\nIn testGetAllUsers");
+		System.out.println(methodName = "\nIn testGetAllUsers");
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
-		Date d1 = new Date();
-
 		List<User> users = usersService.getUsers();
-
-		Date d2 = new Date();
-		long diff = d2.getTime() - d1.getTime();
-
-		System.out.println("Total users=" + users.size() + " Total time=" + diff);
-		for (User user : users) {
-			System.out.println(" Username=" + user.getUsername() + "\tId=" + user.getId());
-		}
-		System.out.println();
+		logUsers(users, methodName);
 	}
 
 	public static void testGetUsersByPage() throws MambuApiException {
-
+		System.out.println(methodName = "\nIn testGetUsersByPage");
 		String offset = "0";
 		String limit = "500";
 
-		System.out.println("\nIn testGetUsersByPage" + " offset=" + offset + " limit=" + limit);
-		Date d1 = new Date();
-
+		System.out.println("Offset=" + offset + " Limit=" + limit);
 		UsersService usersService = MambuAPIFactory.getUsersService();
-
 		List<User> users = usersService.getUsers(offset, limit);
-		Date d2 = new Date();
-		long diff = d2.getTime() - d1.getTime();
 
-		System.out.println("Total users=" + users.size() + " Total time=" + diff);
-		for (User user : users) {
-			System.out.println(" Username=" + user.getUsername() + "\tId=" + user.getId() + "\tBranchId="
-					+ user.getAssignedBranchKey());
-		}
-		System.out.println();
+		logUsers(users, methodName);
 	}
 
 	public static void testGetPaginatedUsersByBranch() throws MambuApiException {
-
+		System.out.println(methodName = "\nIn testGetPaginatedUsersByBranch");
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
 		String offset = "0";
 		String limit = "5";
-		String branchId = BRANCH_ID; // GBK 001
-		System.out
-				.println("\nIn testGetPaginatedUsers ByBranch=" + branchId + "  offset=" + offset + " limit=" + limit);
 
-		List<User> users = usersService.getUsers(branchId, null, null);
+		// Test getting all users
+		List<User> allUsers = usersService.getUsers(null, offset, limit);
+		logUsers(allUsers, methodName + ": All Users");
 
-		System.out.println("testGetPaginatedUsers OK, barnch ID=" + BRANCH_ID);
-		for (User user : users) {
-			System.out.println(" Username=" + user.getUsername() + "\tId=" + user.getId());
-		}
-		System.out.println();
+		// Test getting users for a demo branch ID
+		String branchId = BRANCH_ID;
+
+		// Test getting assigned users
+		UserBranchAssignmentType usersType = UserBranchAssignmentType.ASSIGNED;
+		List<User> assignedUsers = usersService.getUsers(branchId, usersType, offset, limit);
+		logUsers(assignedUsers, methodName + ": Users Assigned to " + BRANCH_ID);
+
+		// Test getting users managing the branch
+		usersType = UserBranchAssignmentType.MANAGE;
+		List<User> usersManagingBranch = usersService.getUsers(branchId, usersType, offset, limit);
+		logUsers(usersManagingBranch, methodName + ": Users Managing Branch " + BRANCH_ID);
 	}
 
 	public static void testGetUserById() throws MambuApiException {
-		System.out.println("\nIn testGetUserById");
+		System.out.println(methodName = "\nIn testGetUserById");
 
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
 		String userId = USER_NAME;
 
-		System.out.println("\nIn testGetUserById=" + userId);
+		System.out.println("UserId=" + userId);
 		Date d1 = new Date();
 
 		User user = usersService.getUserById(userId);
@@ -189,34 +185,34 @@ public class DemoTestUsersService {
 	}
 
 	public static void testGetUserByUsername() throws MambuApiException {
-		System.out.println("\nIn testGetUserByUsername");
+		System.out.println(methodName = "\nIn testGetUserByUsername");
 
 		UsersService usersService = MambuAPIFactory.getUsersService();
 		String username = USER_NAME;
-		System.out.println("\nIn testGetUserByUsername with name =" + username);
+		System.out.println("\nUsername =" + username);
 		User user = usersService.getUserByUsername(username);
 
-		System.out.println("testGetUserByUsername OK,returned user= " + user.getFirstName() + " " + user.getLastName()
-				+ " Id=" + user.getId() + " Username=" + user.getUsername());
+		System.out.println("Returned user= " + user.getFirstName() + " " + user.getLastName() + " Id=" + user.getId()
+				+ " Username=" + user.getUsername());
 
 	}
 
 	// Get Custom Views. Available since Mambu 3.7
 	public static void testGetCustomViewsByUsername() throws MambuApiException {
-		System.out.println("\nIn testGetCustomViewsByUsername");
+		System.out.println(methodName = "\nIn testGetCustomViewsByUsername");
 
 		UsersService usersService = MambuAPIFactory.getUsersService();
 
 		String username = USER_NAME;
-		System.out.println("\nIn testGetCustomViewsByUsername with name =" + username);
+		System.out.println("Username =" + username);
 
 		List<CustomView> views = usersService.getCustomViews(username);
 
 		if (views == null) {
-			System.out.println("testGetCustomViewsByUsername OK,returned null");
+			System.out.println("Returned null views");
 			return;
 		}
-		System.out.println("testGetCustomViewsByUsername OK,returned views count= " + views.size());
+		System.out.println("Returned views count= " + views.size());
 
 		for (CustomView view : views) {
 			// Log view details
@@ -227,14 +223,16 @@ public class DemoTestUsersService {
 
 	// getCustomViews
 	public static void testGetCustomViewsByUsernameType() throws MambuApiException {
-		System.out.println("\nIn testGetCustomViewsByUsernameType");
+		System.out.println(methodName = "\nIn testGetCustomViewsByUsernameType");
 
 		MambuAPIServiceFactory serviceFactory = DemoUtil.getAPIServiceFactory();
 		UsersService usersService = serviceFactory.getUsersService();
 		String username = USER_NAME;
 
-		for (ApiViewType viewType : ApiViewType.values()) {
-			System.out.println("\n\nGetting Views for view type=" + viewType);
+		// Test Custom View API for all applicable ApiViewTypes
+		ApiViewType[] testedTypes = ApiViewType.values();
+		for (ApiViewType viewType : testedTypes) {
+			System.out.println("\n\nGetting Views for view type=" + viewType + "\n");
 			List<CustomView> views = usersService.getCustomViews(username, viewType);
 
 			int totalViws = (views == null) ? 0 : views.size();
@@ -245,7 +243,7 @@ public class DemoTestUsersService {
 				testGetEntitiesForCustomView(views);
 
 			} catch (MambuApiException e) {
-				System.out.println("\nError getting entities for view type=" + viewType + "\n");
+				System.out.println(methodName + "\nError getting entities for view type=" + viewType + "\n");
 			}
 		}
 
@@ -253,7 +251,7 @@ public class DemoTestUsersService {
 
 	// Retrieve entities by Custom View filter. Available since Mambu 3.7
 	private static void testGetEntitiesForCustomView(List<CustomView> views) throws MambuApiException {
-		System.out.println("\nIn testGetEntitiesForCustomView");
+		System.out.println(methodName = "\nIn testGetEntitiesForCustomView");
 
 		if (views == null) {
 			System.out.println("Cannot get entities for NULL list of views");
@@ -266,7 +264,12 @@ public class DemoTestUsersService {
 		}
 		System.out.println("Getting entities for " + views.size() + " views");
 
-		// TODO: when MBU-7042 is fixed - add additional branchId, centreId and centreId filtering params
+		String offset = "0";
+		String limit = "5";
+		// Custom views can be filtered by an optional Branch ID filter. Available since 4.0. See MBU-7042
+		String branchId = demoUser.getAssignedBranchKey();
+
+		System.out.println("Getting entities for branch key=" + branchId);
 		for (CustomView view : views) {
 
 			logCustomView(view);
@@ -275,59 +278,157 @@ public class DemoTestUsersService {
 			DataViewType viewType = view.getConfigurationDataViewType();
 			String viewkey = view.getEncodedKey();
 
-			String offset = "0";
-			String limit = "5";
-
 			// Get ApiViewType for this view to determine if it is supported by API
-			ApiViewType viewApiType = UsersService.supportedDataViewTypes.get(viewType);
-			if (viewApiType == null) {
+			ApiViewType apiViewType = UsersService.supportedDataViewTypes.get(viewType);
+			if (apiViewType == null) {
 				System.out.println("\nSkipping custom view type=" + viewType
 						+ " it is not supported by GET entities by custom view API");
 				continue;
 			}
 
-			System.out.println("\nGetting Entities for View Type= " + viewApiType + "\tName=" + viewName + "\tKey="
-					+ viewkey);
-			switch (viewApiType) {
-			case CLIENTS:
-				ClientsService clientsService = MambuAPIFactory.getClientService();
-				List<Client> clients = clientsService.getClientsByCustomView(viewkey, offset, limit);
-				System.out.println("Total Clients=" + clients.size() + " returned for View=" + viewName);
-				break;
-			case GROUPS:
-				clientsService = MambuAPIFactory.getClientService();
-				List<Group> groups = clientsService.getGroupsByCustomView(viewkey, offset, limit);
-				System.out.println("Total Groups=" + groups.size() + " returned for View=" + viewName);
-				break;
-			case LOANS:
-				LoansService loansService = MambuAPIFactory.getLoanService();
-				List<LoanAccount> loans = loansService.getLoanAccountsByCustomView(viewkey, offset, limit);
-				System.out.println("Total Loans=" + loans.size() + " returned for View=" + viewName);
-				break;
-			case DEPOSITS:
-				SavingsService savingsService = MambuAPIFactory.getSavingsService();
-				List<SavingsAccount> savings = savingsService.getSavingsAccountsByCustomView(viewkey, offset, limit);
-				System.out.println("Total Savings=" + savings.size() + " returned for View=" + viewName);
-				break;
-			case LOAN_TRANSACTIONS:
-				loansService = MambuAPIFactory.getLoanService();
-				List<LoanTransaction> loanTransactions = loansService.getLoanTransactionsByCustomView(viewkey, offset,
-						limit);
-				System.out.println("Total Loan Transactions=" + loanTransactions.size() + " returned for View="
-						+ viewName);
-				break;
-			case DEPOSIT_TRANSACTIONS:
-				savingsService = MambuAPIFactory.getSavingsService();
-				List<SavingsTransaction> savingsTransactions = savingsService.getSavingsTransactionsByCustomView(
-						viewkey, offset, limit);
-				System.out.println("Total Savings Transactions=" + savingsTransactions.size() + " returned for View="
-						+ viewName);
-				break;
-			case SYSTEM_ACTIVITIES:
-				ActivitiesService activitiesService = MambuAPIFactory.getActivitiesService();
-				List<JSONActivity> activities = activitiesService.getActivitiesByCustomView(viewkey, offset, limit);
-				System.out.println("Total Activities =" + activities.size() + " returned for View=" + viewName);
-				break;
+			CustomViewsService service = MambuAPIFactory.getCustomViewsService();
+
+			// Get Custom View summary first. Available since Mambu 4.1
+			try {
+				System.out.println("Getting Summary for " + apiViewType + "\tViewKey=" + viewkey + "\tbranchId="
+						+ branchId + "\n");
+				// GET Summary
+				CustomViewEntitiesSummaryWrapper viewSummary = service.getCustomViewSummary(apiViewType, branchId,
+						viewkey);
+				// Log
+				System.out.println("OK GET SUmmary:  View Type=" + apiViewType + " Count=" + viewSummary.getCount());
+				logCustomViewSummary(viewSummary);
+			} catch (Exception e) {
+				System.out.println("ERROR GET SUMMARY for " + apiViewType + " --" + e.getMessage() + "\n");
+			}
+
+			// Test getting entities for custom view for both BASIC and FULL_DETAILS result types
+			ResultType resultTypes[] = ResultType.values();
+			for (ResultType resultType : resultTypes) {
+				System.out.println("\nGetting " + resultType + " type=" + apiViewType + ": " + viewName + "\tKey="
+						+ viewkey);
+
+				boolean fullDetails;
+				switch (apiViewType) {
+				case CLIENTS:
+					switch (resultType) {
+					case BASIC:
+						fullDetails = false;
+
+						List<Client> clients = service.getCustomViewEntities(apiViewType, branchId, fullDetails,
+								viewkey, offset, limit);
+						System.out.println("Clients=" + clients.size() + "  for View=" + viewName);
+						break;
+					case FULL_DETAILS:
+						fullDetails = true;
+						List<ClientExpanded> clientsExpanded = service.getCustomViewEntities(apiViewType, branchId,
+								fullDetails, viewkey, offset, limit);
+						System.out.println("Client Details=" + clientsExpanded.size() + "  for View=" + viewName);
+						break;
+					default:
+						break;
+					}
+					break;
+				case GROUPS:
+					switch (resultType) {
+					case BASIC:
+						fullDetails = false;
+						List<Group> groups = service.getCustomViewEntities(apiViewType, branchId, fullDetails, viewkey,
+								offset, limit);
+						System.out.println("Groups=" + groups.size() + "  for View=" + viewName);
+						break;
+					case FULL_DETAILS:
+						fullDetails = true;
+						List<GroupExpanded> groupsExpanded = service.getCustomViewEntities(apiViewType, branchId,
+								fullDetails, viewkey, offset, limit);
+						System.out.println("Group Details=" + groupsExpanded.size() + "  for View=" + viewName);
+						break;
+					default:
+						break;
+					}
+					break;
+				case LOANS:
+					switch (resultType) {
+					case BASIC:
+						fullDetails = false;
+						List<LoanAccount> loans = service.getCustomViewEntities(apiViewType, branchId, fullDetails,
+								viewkey, offset, limit);
+						System.out.println("Loans=" + loans.size() + "  for View=" + viewName);
+						break;
+					case FULL_DETAILS:
+						fullDetails = true;
+						List<JSONLoanAccount> loansExpanded = service.getCustomViewEntities(apiViewType, branchId,
+								fullDetails, viewkey, offset, limit);
+						System.out.println("Loan Details=" + loansExpanded.size() + "  for View=" + viewName);
+						break;
+					default:
+						break;
+					}
+					break;
+				case DEPOSITS:
+					switch (resultType) {
+					case BASIC:
+						fullDetails = false;
+						List<SavingsAccount> savings = service.getCustomViewEntities(apiViewType, branchId,
+								fullDetails, viewkey, offset, limit);
+						System.out.println("Savings=" + savings.size() + "  for View=" + viewName);
+						break;
+					case FULL_DETAILS:
+						fullDetails = true;
+						List<JSONSavingsAccount> savingsExpanded = service.getCustomViewEntities(apiViewType, branchId,
+								fullDetails, viewkey, offset, limit);
+						System.out.println("Savings Details=" + savingsExpanded.size() + "  for View=" + viewName);
+						break;
+					default:
+						break;
+					}
+					break;
+				case LOAN_TRANSACTIONS:
+					switch (resultType) {
+					case BASIC:
+						fullDetails = false;
+						List<LoanTransaction> transactions = service.getCustomViewEntities(apiViewType, branchId,
+								fullDetails, viewkey, offset, limit);
+						System.out.println("Loan Transactions=" + transactions.size() + " for View=" + viewName);
+						break;
+					case FULL_DETAILS:
+						System.out.println("No Details type for " + apiViewType);
+						break;
+					default:
+						break;
+					}
+					break;
+				case DEPOSIT_TRANSACTIONS:
+					switch (resultType) {
+					case BASIC:
+						fullDetails = false;
+						List<SavingsTransaction> transactions = service.getCustomViewEntities(apiViewType, branchId,
+								fullDetails, viewkey, offset, limit);
+						System.out.println("Savings Transactions=" + transactions.size() + " for View=" + viewName);
+						break;
+					case FULL_DETAILS:
+						System.out.println("No Details type for " + apiViewType);
+						break;
+					default:
+						break;
+					}
+					break;
+				case SYSTEM_ACTIVITIES:
+					switch (resultType) {
+					case BASIC:
+						fullDetails = false;
+						List<JSONActivity> activities = service.getCustomViewEntities(apiViewType, branchId,
+								fullDetails, viewkey, offset, limit);
+						System.out.println("Activities=" + activities.size() + " for View=" + viewName);
+						break;
+					case FULL_DETAILS:
+						System.out.println("No Details type for " + apiViewType);
+						break;
+					default:
+						break;
+					}
+					break;
+				}
 			}
 		}
 	}
@@ -344,7 +445,6 @@ public class DemoTestUsersService {
 		System.out.println("\nView name= " + viewName + "\tType=" + viewType + "\tViewKey=" + view.getEncodedKey());
 
 		ColumnConfiguration columnsConfig = view.getColumnConfiguration();
-		// Since 3.8 ColumnConfiguration.getColumns(); is Deprecated. Use ColumnConfiguration.getFieldColumns() instead
 		List<FieldColumn> fieldColumns = columnsConfig.getFieldColumns();
 
 		if (fieldColumns == null) {
@@ -371,8 +471,96 @@ public class DemoTestUsersService {
 		System.out.println("\nIn testUpdateDeleteCustomFields");
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
-		DemoTestCustomFiledValueService.testUpdateDeleteCustomFields(MambuEntityType.USER);
+		DemoTestCustomFiledValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.USER);
 
 	}
 
+	// Test getting all user roles. Return all user roles
+	public static List<Role> testGetAllUserRoles() throws MambuApiException {
+		System.out.println("\nIn testGetAllUserRoles");
+
+		UsersService usersService = MambuAPIFactory.getUsersService();
+		List<Role> userRoles = usersService.getUserRoles();
+
+		System.out.println("Total users roles=" + userRoles.size());
+		for (Role role : userRoles) {
+			System.out.println("\tKey=" + role.getEncodedKey() + "\tName=" + role.getName());
+		}
+		System.out.println();
+
+		return userRoles;
+	}
+
+	// Test get full Role details by role key
+	public static void testGetAllUserRoleDetails(List<Role> userRoles) throws MambuApiException {
+		System.out.println("\nIn testGetAllUserRole");
+
+		if (userRoles == null || userRoles.size() == 0) {
+			System.out.println("WARNING: cannot test GET user role, no roles available");
+			return;
+		}
+		UsersService usersService = MambuAPIFactory.getUsersService();
+		// Get random user role key from a list of available roles
+		int roleIndex = (int) Math.random() * (userRoles.size() - 1);
+		String roleKey = userRoles.get(roleIndex).getEncodedKey();
+		// Get full role details
+		Role userRole = usersService.getUserRole(roleKey);
+		System.out.println("\tKey=" + userRole.getEncodedKey() + "\tName=" + userRole.getName() + "\n\tPermissions="
+				+ userRole.getPermissions().getPermissionSet());
+
+	}
+
+	// Log some details for a list of users. Prefix with an optional message
+	private static void logUsers(List<User> users, String message) {
+		if (users == null) {
+			return;
+		}
+		message = message == null ? "" : message;
+		System.out.println(message + "\tTotal Users=" + users.size());
+		for (User user : users) {
+			System.out.println(" Username=" + user.getUsername() + "\tName=" + user.getFullName() + "\tId="
+					+ user.getId() + "\tBranch=" + user.getAssignedBranchKey() + "\tAdmin=" + user.isAdministrator());
+		}
+		System.out.println();
+	}
+
+	// Log Custom View Summary results. See MBU-11879
+	private static void logCustomViewSummary(CustomViewEntitiesSummaryWrapper viewSummary) {
+		if (viewSummary == null) {
+			System.out.println("NULL Summary returned");
+			return;
+		}
+		String count = viewSummary.getCount();
+		List<SummaryTotalsWrapper> totals = viewSummary.getTotals();
+		int totalsCount = totals == null ? 0 : totals.size();
+		System.out.println("Summary:");
+		System.out.println("\tCount=" + count + "\tTotals size=" + totalsCount);
+		if (totalsCount > 0) {
+			for (SummaryTotalsWrapper summary : totals) {
+				// Log DataItemType
+				DataItemType dataItemType = summary.getDataItemType();
+				System.out.println("\tData Item Type=" + dataItemType);
+
+				// Log Total Values
+				Map<String, Object> totalValues = summary.getTotalValues();
+				int totalValuesCount = totalValues == null ? 0 : totalValues.size();
+				System.out.println("\tTotal Values=" + totalValuesCount);
+				if (totalValuesCount > 0) {
+					// Log total values
+					for (String dataField : totalValues.keySet()) {
+						System.out.println("\t\tDataField=" + dataField + "\tObject=" + totalValues.get(dataField));
+					}
+				}
+				// Log Custom Totals values
+				Map<String, Object> customValues = summary.getCustomTotalValues();
+				int totalCustomValues = customValues == null ? 0 : customValues.size();
+				System.out.println("\tTotal Custom Values=" + totalCustomValues);
+				if (totalCustomValues > 0) {
+					for (String name : customValues.keySet()) {
+						System.out.println("\t\tCustom name=" + name + "\tValue=" + customValues.get(name));
+					}
+				}
+			}
+		}
+	}
 }

@@ -1,19 +1,28 @@
 package com.mambu.apisdk.util;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonSerializer;
 import com.mambu.accounting.shared.model.GLAccount;
 import com.mambu.accounting.shared.model.GLJournalEntry;
+import com.mambu.accounts.shared.model.DocumentTemplate;
 import com.mambu.accounts.shared.model.TransactionChannel;
+import com.mambu.accountsecurity.shared.model.Guaranty;
 import com.mambu.accountsecurity.shared.model.InvestorFund;
+import com.mambu.admin.shared.model.ExchangeRate;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.coments.model.JSONComment;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
+import com.mambu.api.server.handler.linesofcredit.model.JSONLineOfCredit;
+import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.api.server.handler.tasks.model.JSONTask;
-import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.clients.shared.model.Client;
@@ -35,6 +44,7 @@ import com.mambu.core.shared.model.IndexRate;
 import com.mambu.core.shared.model.IndexRateSource;
 import com.mambu.core.shared.model.ObjectLabel;
 import com.mambu.core.shared.model.Organization;
+import com.mambu.core.shared.model.Role;
 import com.mambu.core.shared.model.SearchResult;
 import com.mambu.core.shared.model.User;
 import com.mambu.docs.shared.model.Document;
@@ -58,7 +68,9 @@ import com.mambu.tasks.shared.model.Task;
  * ApiDefinition is a helper class which allows service classes to provide a specification for a Mambu API request and
  * then use ServiceHelper class to actually execute the API request with this ApiDefinition and with provided input
  * parameters. This class allows users to define API format parameters required by a specific API request, including the
- * URL path structure, the HTTP method and content type, and the specification for the expected Mambu response
+ * URL path structure, the HTTP method and content type, and the specification for the expected Mambu response.
+ * ApiDefinition also allows optionally specifying custom JsonSerializers and JsonDeserializers to be used when
+ * generating API requests or processing Mambu responses as well as serialisation exclusion strategies
  * 
  * For the URL path part of the specification, the API definition assumes the URL path to be build in the following
  * format: endpoint[/objectId][/relatedEntity][/[relatedEntityID]], with all parts , except the endpoint, being
@@ -165,6 +177,7 @@ public class ApiDefinition {
 		// LoanAccount)
 		POST_ENTITY_ACTION(Method.POST, ContentType.WWW_FORM, withObjectId, noFullDetails, hasRelatedEntityPart,
 				ApiReturnFormat.OBJECT);
+
 		/**
 		 * Initialise ApiType enum specifying API parameters to be used by this enum value
 		 * 
@@ -203,26 +216,32 @@ public class ApiDefinition {
 
 		// Getters
 		public Method getMethod() {
+
 			return method;
 		}
 
 		public ContentType getContentType() {
+
 			return contentType;
 		}
 
 		public boolean isObjectIdNeeded() {
+
 			return requiresObjectId;
 		}
 
 		public boolean isWithFullDetails() {
+
 			return withFullDetails;
 		}
 
 		public boolean isWithRelatedEntity() {
+
 			return requiresRelatedEntity;
 		}
 
 		public ApiReturnFormat getApiReturnFormat() {
+
 			return returnFormat;
 		}
 	}
@@ -260,6 +279,14 @@ public class ApiDefinition {
 	// shorter date only format, like "yyyy-MM-dd"
 	private String jsonDateTimeFormat = GsonUtils.defaultDateTimeFormat;
 
+	// support specifying optional exclusion strategies
+	List<ExclusionStrategy> serializationExclusionStrategies = null;
+
+	// support optional API request JsonSerializers
+	private HashMap<Class<?>, JsonSerializer<?>> jsonSerializers = null;
+	// support optional API response JsonDeserializers
+	private HashMap<Class<?>, JsonDeserializer<?>> jsonDeserializers = null;
+
 	/**
 	 * Constructor used with ApiType requests for which only one entity class needs to be specified, Example GET
 	 * loans/123.
@@ -292,9 +319,9 @@ public class ApiDefinition {
 	 * related entity associated with the second endpoint. Example GET api/settings/iddocumenttemplates, GET
 	 * api/loans/transactions
 	 * 
-	 * This constructor accepts the first api endpoint as a string but otherwise is identical to the {@link
-	 * ApiDefinition(ApiType apiType, Class<?> entityClass, Class<?> resultClass)}. This constructor can be used in
-	 * cased when there is no Mambu class to map to the api endpoint. Example GET settings/iddocumenttemplates.
+	 * This constructor accepts the first api endpoint as a string but otherwise is identical to the
+	 * {@link ApiDefinition(ApiType apiType, Class<?> entityClass, Class<?> resultClass)}. This constructor can be used
+	 * in cased when there is no Mambu class to map to the api endpoint. Example GET settings/iddocumenttemplates.
 	 * 
 	 * @param apiEndPoint
 	 *            determines API's endpoint string directly . E.g "settings" as in /api/settings
@@ -400,7 +427,7 @@ public class ApiDefinition {
 			if (entityClass == null) {
 				throw new IllegalArgumentException("entityClass must not be null for " + apiType.name());
 			}
-			returnClass = entityClass;
+			returnClass = resultClass == null ? entityClass : resultClass;
 			break;
 		case CREATE_JSON_ENTITY:
 		case POST_ENTITY:
@@ -411,8 +438,8 @@ public class ApiDefinition {
 			// Document
 			returnClass = (resultClass != null) ? resultClass : entityClass;
 			if (returnClass == null) {
-				throw new IllegalArgumentException("Either entityClass or Result class must not be null for "
-						+ apiType.name());
+				throw new IllegalArgumentException(
+						"Either entityClass or Result class must not be null for " + apiType.name());
 			}
 			break;
 		case GET_OWNED_ENTITY:
@@ -485,7 +512,8 @@ public class ApiDefinition {
 		apiEndPointsMap.put(GroupRoleName.class, APIData.GROUP_ROLE_NAMES);
 
 		apiEndPointsMap.put(LoanAccount.class, APIData.LOANS);
-		apiEndPointsMap.put(LoanAccountExpanded.class, APIData.LOANS);
+		apiEndPointsMap.put(JSONLoanAccount.class, APIData.LOANS);
+
 		apiEndPointsMap.put(LoanTransaction.class, APIData.TRANSACTIONS);
 		apiEndPointsMap.put(Repayment.class, APIData.REPAYMENTS);
 
@@ -532,21 +560,28 @@ public class ApiDefinition {
 		apiEndPointsMap.put(JSONComment.class, APIData.COMMENTS);
 		// Identification Document Template
 		apiEndPointsMap.put(IdentificationDocumentTemplate.class, APIData.ID_DOCUMENT_TEMPLATES);
+		// Document Template
+		apiEndPointsMap.put(DocumentTemplate.class, APIData.TEMPLATES);
 		// Organization
 		apiEndPointsMap.put(Organization.class, APIData.ORGANIZATION);
 		apiEndPointsMap.put(GeneralSettings.class, APIData.GENERAL);
 		apiEndPointsMap.put(ObjectLabel.class, APIData.LABELS);
+		apiEndPointsMap.put(ExchangeRate.class, APIData.RATES); // "rates" api endpoint. Available since 4.2. For more
+																// details see MBU-12629
+
 		// Lines Of Credit
 		apiEndPointsMap.put(LineOfCredit.class, APIData.LINES_OF_CREDIT);
+		apiEndPointsMap.put(JSONLineOfCredit.class, APIData.LINES_OF_CREDIT); // Available since 4.2. See MBU-13767
 		apiEndPointsMap.put(LineOfCreditExpanded.class, APIData.LINES_OF_CREDIT);
 		apiEndPointsMap.put(AccountsFromLineOfCredit.class, APIData.ACCOUNTS);
 		apiEndPointsMap.put(LoanTranche.class, APIData.TRANCHES);
 		apiEndPointsMap.put(InvestorFund.class, APIData.FUNDS); // "funds" api end point
-
+		apiEndPointsMap.put(Guaranty.class, APIData.GUARANTEES); // "guarantees" api end point
+		apiEndPointsMap.put(Role.class, APIData.USER_ROLES); // "userroles" api end point
 	}
 
 	// Get an Api endpoint for a Mambu class
-	private String getApiEndPoint(Class<?> entityClass) {
+	public static String getApiEndPoint(Class<?> entityClass) {
 
 		if (entityClass == null) {
 			throw new IllegalArgumentException("Entity Class cannot be NULL");
@@ -560,79 +595,175 @@ public class ApiDefinition {
 
 	// Getters ////////////////
 	public ApiType getApiType() {
+
 		return apiType;
 	}
 
 	public String getEndPoint() {
+
 		return endPoint;
 	}
 
 	public boolean isObjectIdNeeded() {
+
 		return requiresObjectId;
 	}
 
 	public Method getMethod() {
+
 		return method;
 	}
 
 	public ContentType getContentType() {
+
 		return contentType;
 	}
 
 	public String getRelatedEntity() {
+
 		return relatedEntity;
 	}
 
 	public ApiReturnFormat getApiReturnFormat() {
+
 		return returnFormat;
 	}
 
 	public boolean getWithFullDetails() {
+
 		return isWithFullDetails;
 	}
 
 	public Class<?> getReturnClass() {
+
 		return returnClass;
 	}
 
 	// Setters for params which can be modified
 	public void setApiType(ApiType apiType) {
+
 		this.apiType = apiType;
 	}
 
 	public void setEndPoint(String endPoint) {
+
 		this.endPoint = endPoint;
 	}
 
 	public void setApiReturnFormat(ApiReturnFormat returnFormat) {
+
 		this.returnFormat = returnFormat;
 	}
 
 	public void setContentType(ContentType contentType) {
+
 		this.contentType = contentType;
 	}
 
 	public void setMethod(Method method) {
+
 		this.method = method;
 	}
 
 	public void setJsonDateTimeFormat(String dateTimeFormat) {
+
 		this.jsonDateTimeFormat = dateTimeFormat;
 	}
 
 	public String getJsonDateTimeFormat() {
+
 		return jsonDateTimeFormat;
 	}
 
 	public void setRequiresObjectId(boolean requires) {
+
 		this.requiresObjectId = requires;
 	}
 
 	public String getUrlPath() {
+
 		return urlPath;
 	}
 
 	public void setUrlPath(String urlPath) {
+
 		this.urlPath = urlPath;
 	}
+
+	/**
+	 * Add serialization ExclusionStrategy to the API definition
+	 * 
+	 * @param exclusionStrategy
+	 *            exclusion strategy
+	 */
+	public void addSerializationExclusionStrategy(ExclusionStrategy exclusionStrategy) {
+
+		if (serializationExclusionStrategies == null) {
+			serializationExclusionStrategies = new ArrayList<>();
+		}
+		serializationExclusionStrategies.add(exclusionStrategy);
+	}
+
+	/**
+	 * Get serialization ExclusionStrategy specified in the API definition
+	 * 
+	 * @return exclusion strategy
+	 */
+	public List<ExclusionStrategy> getSerializationExclusionStrategies() {
+
+		return serializationExclusionStrategies;
+	}
+
+	/**
+	 * Add JsonSerializer for a specific class to the API definition
+	 * 
+	 * @param clazz
+	 *            class
+	 * @param serializer
+	 *            JsonSerializer
+	 */
+	public void addJsonSerializer(Class<?> clazz, JsonSerializer<?> serializer) {
+
+		if (jsonSerializers == null) {
+			jsonSerializers = new HashMap<>();
+		}
+		jsonSerializers.put(clazz, serializer);
+	}
+
+	/**
+	 * Get JsonSerializers specified in the API definition
+	 * 
+	 * @return map of classes to JsonSerializer for these classes
+	 */
+	public HashMap<Class<?>, JsonSerializer<?>> getJsonSerializers() {
+
+		return jsonSerializers;
+	}
+
+	/**
+	 * Add JsonDeserializer for a specific class to the API definition
+	 * 
+	 * @param clazz
+	 *            class
+	 * @param deserializer
+	 *            Json Deserializer
+	 */
+	public void addJsonDeserializer(Class<?> clazz, JsonDeserializer<?> deserializer) {
+
+		if (jsonDeserializers == null) {
+			jsonDeserializers = new HashMap<>();
+		}
+		jsonDeserializers.put(clazz, deserializer);
+	}
+
+	/**
+	 * Get JsonDeserializers specified in the API definition
+	 * 
+	 * @return map of classes to JsonDeserializers for these classes
+	 */
+	public HashMap<Class<?>, JsonDeserializer<?>> getJsonDeserializers() {
+
+		return jsonDeserializers;
+	}
+
 }

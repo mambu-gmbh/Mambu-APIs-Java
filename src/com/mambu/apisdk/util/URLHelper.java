@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mambu.apisdk.MambuAPIServiceTest;
 import com.mambu.apisdk.model.Domain;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
@@ -66,6 +67,9 @@ public class URLHelper {
 	/***
 	 * Appends some params to a given URL String
 	 * 
+	 * NOTE: this non-static version is used in SDK Mockito tests (see {@link MambuAPIServiceTest}. Mockito cannot use
+	 * static methods
+	 * 
 	 * @param urlString
 	 *            the already created URL String
 	 * @param paramsMap
@@ -74,11 +78,22 @@ public class URLHelper {
 	 * @return the complete URL
 	 */
 	public String createUrlWithParams(String urlString, ParamsMap paramsMap) {
-		if (paramsMap != null) {
-			return urlString + DELIMITER + paramsMap.getURLString();
-		} else {
-			return urlString;
-		}
+		return makeUrlWithParams(urlString, paramsMap);
+
+	}
+
+	/***
+	 * Static helper to Append URL params to a given URL String
+	 * 
+	 * @param urlString
+	 *            the already created URL String
+	 * @param paramsMap
+	 *            the params which must be added
+	 * 
+	 * @return the complete URL
+	 */
+	public static String makeUrlWithParams(String urlString, ParamsMap paramsMap) {
+		return paramsMap != null ? urlString + DELIMITER + paramsMap.getURLString() : urlString;
 	}
 
 	/**
@@ -113,7 +128,7 @@ public class URLHelper {
 		paginationParams.put(APIData.LIMIT, params.get(APIData.LIMIT));
 
 		// Add offset/limit to the URL string
-		String urlWithParams = createUrlWithParams(urlString, paginationParams);
+		String urlWithParams = makeUrlWithParams(urlString, paginationParams);
 
 		// Remove pagination params already added to the URL
 		params.remove(APIData.OFFSET);

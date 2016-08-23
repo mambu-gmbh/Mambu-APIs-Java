@@ -13,7 +13,6 @@ import org.mockito.Mockito;
 import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.apisdk.MambuAPIServiceTest;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.model.LoanAccountExpanded;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
@@ -32,6 +31,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 
 	@Override
 	public void setUp() throws MambuApiException {
+
 		super.setUp();
 
 		service = new LoansService(super.mambuApiService);
@@ -52,8 +52,6 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 		// From Product
 		account.setRepaymentPeriodUnit(RepaymentPeriodUnit.DAYS);
 		account.setRepaymentPeriodCount(1);
-		// Set Custom fields to null in the account
-		account.setCustomFieldValues(null);
 
 		// ADd Custom Fields
 
@@ -66,6 +64,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 		custField1.setCustomFieldId(customFieldId);
 		custField1.setValue(customFieldValue);
 		custField1.setCustomFieldSetGroupIndex(null); // Set to null explicitly: since Mambu 3.13 defaults to -1
+		custField1.setSkipUniqueValidation(null); // Set to null explicitly: new in Mambu 4.1, defaults to false
 		// Add new field to the list
 		clientCustomInformation.add(custField1);
 		// Field #2
@@ -77,19 +76,15 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 		custField2.setCustomFieldId(customFieldId);
 		custField2.setValue(customFieldValue);
 		custField2.setCustomFieldSetGroupIndex(null); // Set to null explicitly: since Mambu 3.13 defaults to -1
+		custField2.setSkipUniqueValidation(null); // Set to null explicitly: since Mambu 4.1 defaults to false
 		// Add new field to the list
 		clientCustomInformation.add(custField2);
 
 		// Add All custom fields
-		// account.setCustomFieldValues(clientCustomInformation);
-
-		// Create Account Expanded
-		LoanAccountExpanded accountExpanded = new LoanAccountExpanded();
-		accountExpanded.setLoanAccount(account);
-		accountExpanded.setCustomInformation(clientCustomInformation);
+		account.setCustomFieldValues(clientCustomInformation);
 
 		// Create Account in Mambu
-		service.createLoanAccount(accountExpanded);
+		service.createLoanAccount(account);
 
 		ParamsMap params = new ParamsMap();
 		params.addParam(
@@ -121,10 +116,12 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 						+ "\"repaymentInstallments\":20,"
 						+ "\"gracePeriod\":0,"
 						+ "\"interestRate\":3.2,"
+						+ "\"interestBalanceCalculationMethod\":\"PRINCIPAL_ONLY\","
 						+ "\"principalRepaymentInterval\":1,"
 						+ "\"interestRateSource\":\"FIXED_INTEREST_RATE\","
 						+ "\"accruedInterest\":0,"
-						+ "\"accruedPenalty\":0,\"loanPenaltyCalculationMethod\":\"NONE\"},"
+						+ "\"accruedPenalty\":0,\"loanPenaltyCalculationMethod\":\"NONE\","
+						+ "\"arrearsTolerancePeriod\":0}," // Added in 4.2: defaults to zero in the model
 						+ "\"customInformation\":["
 						+ "{\"value\":\"My Loan Purpose 5\",\"indexInList\":-1,\"toBeDeleted\":false,\"customFieldID\":\"Loan_Purpose_Loan_Accounts\"},"
 						+ "{\"value\":\"Trust\",\"indexInList\":-1,\"toBeDeleted\":false,\"customFieldID\":\"Loan_Originator_Loan_Accounts\"}"

@@ -3,6 +3,11 @@
  */
 package com.mambu.apisdk.services;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import com.google.inject.Inject;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIService;
@@ -12,6 +17,7 @@ import com.mambu.apisdk.util.APIData.IMAGE_SIZE_TYPE;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.ServiceExecutor;
 import com.mambu.apisdk.util.ServiceHelper;
@@ -39,6 +45,13 @@ public class DocumentsService {
 	private final static ApiDefinition deleteDocument = new ApiDefinition(ApiType.DELETE_ENTITY, Document.class);
 	// Get Image
 	private final static ApiDefinition getImage = new ApiDefinition(ApiType.GET_ENTITY, Image.class);
+
+	// Specify Mambu entities supported by the GET Documents API: Client, Group. LoanAccount, SavingsAccount,
+	// LoanProduct, SavingsProduct, Branch, Centre, User
+	private final static MambuEntityType[] supportedEntities = new MambuEntityType[] { MambuEntityType.CLIENT,
+			MambuEntityType.GROUP, MambuEntityType.LOAN_ACCOUNT, MambuEntityType.SAVINGS_ACCOUNT,
+			MambuEntityType.LOAN_PRODUCT, MambuEntityType.SAVINGS_PRODUCT, MambuEntityType.BRANCH,
+			MambuEntityType.CENTRE, MambuEntityType.USER };
 
 	/***
 	 * Create a new documents service
@@ -143,6 +156,61 @@ public class DocumentsService {
 		String base64EncodedString = ServiceHelper.getContentForBase64EncodedMessage(apiResponse);
 
 		return base64EncodedString;
+	}
+
+	/***
+	 * Get all Documents for a given parent entity
+	 * 
+	 * @param parentEntity
+	 *            MambuEntityType for which documents are retrieved. Must not be null. Documents for the following
+	 *            entities are currently supported: Client, Group. LoanAccount, SavingsAccount, LoanProduct,
+	 *            SavingsProduct, Branch, Centre, User
+	 * @param parentId
+	 *            entity id or encoded key for the parent entity. Example, client id for a MambuEntityType.CLIENT. Must
+	 *            not be null
+	 * @param offset
+	 *            pagination offset
+	 * @param limit
+	 *            pagination limit
+	 * @return a list of documents for the parent entity
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<Document> getDocuments(MambuEntityType parentEntity, String parentId, Integer offset, Integer limit)
+			throws MambuApiException {
+		// Example: GET /api/loans/3/documents
+		// See MBU-5084
+		if (!isSupported(parentEntity)) {
+			throw new IllegalArgumentException("GET Documents API is not supported for " + parentEntity);
+		}
+		return serviceExecutor.getOwnedEntities(parentEntity, parentId, MambuEntityType.DOCUMENT, offset, limit);
+
+	}
+
+	/**
+	 * Get supported entity types
+	 * 
+	 * @return all supported entities
+	 */
+	public static MambuEntityType[] getSupportedEntities() {
+		return supportedEntities;
+	}
+
+	/**
+	 * Is parent entity type supported by the API
+	 * 
+	 * @param parentEntityType
+	 *            Mambu Entity type
+	 * @return true if supported
+	 */
+	public static boolean isSupported(MambuEntityType parentEntityType) {
+		if (parentEntityType == null) {
+			throw new IllegalArgumentException("NULL entity type is not supported");
+		}
+
+		Set<MambuEntityType> set = new HashSet<MambuEntityType>(Arrays.asList(supportedEntities));
+		return (set.contains(parentEntityType)) ? true : false;
+
 	}
 
 }
