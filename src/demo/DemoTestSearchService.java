@@ -497,10 +497,10 @@ public class DemoTestSearchService {
 		constraint.setFilterElement(FilterElement.BETWEEN.name());
 		constraint.setDataItemType(DataItemType.DISBURSEMENT_DETAILS.name());
 
-		// from date, 1 months ago
+		// from date, 2 months ago
 		Calendar from = Calendar.getInstance();
 		from.roll(Calendar.MONTH, -2);
-		// until date, 2 month ago
+		// until date, 1 month ago
 		Calendar until = Calendar.getInstance();
 		until.roll(Calendar.MONTH, -1);
 

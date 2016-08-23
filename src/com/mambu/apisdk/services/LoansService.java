@@ -1198,19 +1198,14 @@ public class LoansService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public LoanTransaction postInterestRateChange(String accountId, LoanTransactionType transactionType,
-			JSONTransactionRequest transactionRequest) throws MambuApiException {
+	public LoanTransaction postInterestRateChange(String accountId, JSONTransactionRequest transactionRequest)
+			throws MambuApiException {
 
-		if (transactionRequest == null || transactionType == null) {
-			throw new IllegalArgumentException("Transaction request and transactionType must not be null");
+		if (accountId == null || transactionRequest == null) {
+			throw new IllegalArgumentException("Transaction request and account id must not be null");
 		}
 
-		if (!transactionType.equals(INTEREST_RATE_CHANGED)) {
-			throw new IllegalArgumentException(
-					"Interest rate can`t be updated using " + transactionType + " transaction  type ");
-		}
-
-		return executeJSONTransactionRequest(accountId, transactionType, transactionRequest);
+		return executeJSONTransactionRequest(accountId, LoanTransactionType.INTEREST_RATE_CHANGED, transactionRequest);
 
 	}
 
