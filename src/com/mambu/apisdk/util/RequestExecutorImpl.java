@@ -34,7 +34,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 
 /**
  * Implementation of executing url requests with basic authorization
@@ -160,9 +159,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		Method method = apiDefinition.getMethod();
 		ContentType contentTypeFormat = apiDefinition.getContentType();
-
-		// Pagination parameters for POST with JSON are to be provided with the URL. See MBU-8975
-		urlString = urlHelper.addJsonPaginationParams(urlString, method, contentTypeFormat, params);
 
 		// Log API Request details
 		logApiRequestDetails(urlString, params, method, contentTypeFormat);

@@ -1,5 +1,6 @@
 package com.mambu.apisdk.services;
 
+import java.io.ByteArrayOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -31,7 +32,7 @@ public class DatabaseService {
 			DatabaseBackupRequest.class, DatabaseBackupResponse.class);
 
 	// Download DB backup API definition
-	private final static ApiDefinition downloadLatetDbBackupDefinition = new ApiDefinition(ApiType.GET_ENTITY,
+	private final static ApiDefinition downloadLatestDbBackup = new ApiDefinition(ApiType.GET_ENTITY,
 			DatabaseBackup.class);
 
 	/**
@@ -84,14 +85,14 @@ public class DatabaseService {
 		// Available since 4.3. See MBU-11022.
 		// Example GET /api/database/backup/LATEST
 
-		downloadLatetDbBackupDefinition.setUrlPath(createDatabaseBackup.getEndPoint() + APIData.FORWARD_SLASH
-				+ APIData.BACKUP + APIData.FORWARD_SLASH + APIData.LATEST);
+		downloadLatestDbBackup.setUrlPath(createDatabaseBackup.getEndPoint() + APIData.FORWARD_SLASH + APIData.BACKUP
+				+ APIData.FORWARD_SLASH + APIData.LATEST);
 
-		downloadLatetDbBackupDefinition.setApiReturnFormat(ApiReturnFormat.ZIP_ARCHIVE);
+		downloadLatestDbBackup.setApiReturnFormat(ApiReturnFormat.ZIP_ARCHIVE);
 
 		// creates a DatabaseCackup wrapper to store the backup content
 		DatabaseBackup backup = new DatabaseBackup();
-		backup.setContent(serviceExecutor.execute(downloadLatetDbBackupDefinition));
+		backup.setContent((ByteArrayOutputStream) serviceExecutor.execute(downloadLatestDbBackup));
 
 		return backup;
 	}
