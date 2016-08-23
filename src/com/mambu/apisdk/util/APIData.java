@@ -309,5 +309,7 @@ public class APIData {
 	// DB
 	public static String DATABASE = "database";
 	public static String BACKUP = "backup";
+	public static String LATEST = "LATEST";
+	public static String FORWARD_SLASH = "/";
 
 }
