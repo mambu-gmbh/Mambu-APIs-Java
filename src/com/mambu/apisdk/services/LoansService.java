@@ -50,6 +50,7 @@ import com.mambu.loans.shared.model.LoanProduct;
 import com.mambu.loans.shared.model.LoanTranche;
 import com.mambu.loans.shared.model.LoanTransaction;
 import com.mambu.loans.shared.model.LoanTransactionType;
+import static com.mambu.loans.shared.model.LoanTransactionType.INTEREST_RATE_CHANGED;
 import com.mambu.loans.shared.model.Repayment;
 
 /**
@@ -1152,16 +1153,18 @@ public class LoansService {
 	 * @param accountId
 	 *            account id or encoded key. Must not be null
 	 * @param transactionType
-	 *            loan transaction type. Must not be null. Supported types are: DISBURSMENT, FEE and REPAYMENT
+	 *            loan transaction type. Must not be null. Supported types are: DISBURSMENT, FEE, REPAYMENT and
+	 *            INTEREST_RATE_CHANGED
 	 * @param transactionRequest
 	 *            JSON transaction request
-	 * @return savings transaction
+	 * 
+	 * @return loan transaction
+	 * 
 	 * @throws MambuApiException
 	 */
 	public LoanTransaction executeJSONTransactionRequest(String accountId, LoanTransactionType transactionType,
 			JSONTransactionRequest transactionRequest) throws MambuApiException {
 
-		//
 		if (transactionRequest == null || transactionType == null) {
 			throw new IllegalArgumentException("Transaction request and transactionType must not be null");
 		}
@@ -1178,6 +1181,31 @@ public class LoansService {
 		}
 		// Post Transaction
 		return serviceExecutor.executeJSONTransactionRequest(accountId, transactionRequest, Type.LOAN, methodName);
+
+	}
+
+	/**
+	 * Convenience method for updating/changing the interest rate on a loan account.
+	 * 
+	 * @param accountId
+	 *            the id of the account.
+	 * @param transactionType
+	 *            loan transaction type. Must not be null. Supported type is: INTEREST_RATE_CHANGED
+	 * @param transactionRequest
+	 *            JSON transaction request
+	 * 
+	 * @return loan transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public LoanTransaction postInterestRateChange(String accountId, JSONTransactionRequest transactionRequest)
+			throws MambuApiException {
+
+		if (accountId == null || transactionRequest == null) {
+			throw new IllegalArgumentException("Transaction request and account id must not be null");
+		}
+
+		return executeJSONTransactionRequest(accountId, LoanTransactionType.INTEREST_RATE_CHANGED, transactionRequest);
 
 	}
 

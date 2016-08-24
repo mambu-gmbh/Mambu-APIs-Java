@@ -177,10 +177,10 @@ public class DemoTestLoanService {
 
 					// Test Disburse and Undo disburse
 					testDisburseLoanAccount();
-					
+
 					// Test Change interest rate for active revolving credit loans
 					testChangeInterestRateForActiveRevolvingCreditLoans();
-					
+
 					// Edit the loan amount only for active revolving credit loans
 					testEditLoanAmountForActiveRevolvingCreditLoans();
 					testUndoDisburseLoanAccount(); // Available since 3.9
@@ -263,20 +263,20 @@ public class DemoTestLoanService {
 		}
 
 	}
-	
+
 	// Change the interest rate for active revolving credit loans. See MBU-13714
 	public static void testChangeInterestRateForActiveRevolvingCreditLoans() throws MambuApiException {
 
 		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println("\nIn " + methodName);
-		
+
 		LoansService loanService = MambuAPIFactory.getLoanService();
-		
+
 		// Get the updated state of the loan account
 		AccountState accountState = loanService.getLoanAccount(NEW_LOAN_ACCOUNT_ID).getAccountState();
 
 		LoanProductType loanProductType = demoProduct.getLoanProductType();
-		
+
 		// Edit the loan amount for active revolving credit loan
 		if (loanProductType.equals(LoanProductType.REVOLVING_CREDIT) && accountState.equals(AccountState.ACTIVE)) {
 
@@ -285,13 +285,14 @@ public class DemoTestLoanService {
 			calendar.add(Calendar.MONTH, 1);
 			jsonTransactionRequest.setDate(calendar.getTime());
 			jsonTransactionRequest.setRate(new BigDecimal(10));
-			jsonTransactionRequest.setNotes("some notes");
+			jsonTransactionRequest
+					.setNotes("Interest rate changed through API to be " + jsonTransactionRequest.getRate() + "%");
 
-			LoanTransaction loanTransaction = loanService.executeJSONTransactionRequest(NEW_LOAN_ACCOUNT_ID,
-					LoanTransactionType.INTEREST_RATE_CHANGED, jsonTransactionRequest);
+			LoanTransaction loanTransaction = loanService.postInterestRateChange(NEW_LOAN_ACCOUNT_ID,
+					jsonTransactionRequest);
 
 			System.out.println("The interest rate was edited for the loan account " + NEW_LOAN_ACCOUNT_ID
-					+ ". Transaction ID = " + loanTransaction);
+					+ ". Transaction ID = " + loanTransaction.getTransactionId());
 		} else {
 			System.out.println(
 					"The loan account does not meet the prerequisites, therefore its interest rate will not be updated.");

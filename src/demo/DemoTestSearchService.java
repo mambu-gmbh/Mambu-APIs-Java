@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ import com.mambu.core.shared.data.SortingOrder;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.SearchResult;
 import com.mambu.core.shared.model.SearchType;
+import com.mambu.loans.shared.data.DisbursementDetailsDataField;
 import com.mambu.loans.shared.data.LoansDataField;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanTransaction;
@@ -74,6 +76,8 @@ public class DemoTestSearchService {
 
 			testSearchNotificationMessages(); // Available since Mambu 3.14
 
+			testSearchByDisbursementDetails(); // Available since Mambu 4.3
+
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Search Service");
 			System.out.println("Error code=" + e.getErrorCode());
@@ -84,7 +88,8 @@ public class DemoTestSearchService {
 
 	public static void testSearchAll() throws MambuApiException {
 
-		System.out.println("\nIn testSearchAll");
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
@@ -107,7 +112,8 @@ public class DemoTestSearchService {
 
 	public static void testSearchClientsGroups() throws MambuApiException {
 
-		System.out.println("\nIn testSearchClientsGroups");
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
 		String query = "i";
@@ -128,7 +134,8 @@ public class DemoTestSearchService {
 
 	public static void testSearchLoansSavings() throws MambuApiException {
 
-		System.out.println("\nIn testSearchLoansSavings");
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
@@ -147,7 +154,8 @@ public class DemoTestSearchService {
 
 	public static void testSearchUsersBranchesCentres() throws MambuApiException {
 
-		System.out.println("\nIn testSearchUsersBranchesCentres");
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
@@ -172,7 +180,8 @@ public class DemoTestSearchService {
 
 	public static void testSearchGlAccounts() throws MambuApiException {
 
-		System.out.println("\nIn testSearchGlAccounts");
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
@@ -197,7 +206,8 @@ public class DemoTestSearchService {
 	// Test Search for Lines of Credit. Lines of Credit can be searched by ID. Available since 3.14. See MBU-10579
 	public static void testSearchLinesOfCredit() throws MambuApiException {
 
-		System.out.println("\nIn testSearchLinesOfCredit");
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
 		// Lines of Credit can be searched by ID
@@ -216,7 +226,8 @@ public class DemoTestSearchService {
 
 	public static void testTypesCombinations() throws MambuApiException {
 
-		System.out.println("\nIn testTypesCombinations");
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
 
@@ -237,7 +248,8 @@ public class DemoTestSearchService {
 	// Test API to GET entities by On The Fly Filter
 	private static void testSearchEntitiesByFilter() throws MambuApiException {
 
-		System.out.println("\nIn testSearchEntitiesByFilter");
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 
 		String offset = "0";
 		String limit = "5";
@@ -470,10 +482,59 @@ public class DemoTestSearchService {
 		System.out.println("Total journal entries returned = " + journalEntries.size());
 	}
 
+	// Test search loans by disbursement details using on the fly filter API
+	public static void testSearchByDisbursementDetails() throws MambuApiException {
+
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+
+		// Create Filter Constraints
+		ArrayList<JSONFilterConstraint> constraints = new ArrayList<JSONFilterConstraint>();
+		JSONFilterConstraint constraint = new JSONFilterConstraint();
+
+		// Specify Filter with disbursement details. See MBU-14097
+		constraint.setFilterSelection(DisbursementDetailsDataField.DISBURSEMENT_DATE.name());
+		constraint.setFilterElement(FilterElement.BETWEEN.name());
+		constraint.setDataItemType(DataItemType.DISBURSEMENT_DETAILS.name());
+
+		// from date, 2 months ago
+		Calendar from = Calendar.getInstance();
+		from.roll(Calendar.MONTH, -2);
+		// until date, 1 month ago
+		Calendar until = Calendar.getInstance();
+		until.roll(Calendar.MONTH, -1);
+
+		DateFormat df = new SimpleDateFormat(DateUtils.DATE_FORMAT);
+
+		constraint.setValue(df.format(from.getTime()));
+		constraint.setSecondValue(df.format(until.getTime()));
+
+		constraints.add(constraint);
+
+		String offset = "0";
+		String limit = "5";
+
+		JSONFilterConstraints filterConstraints = new JSONFilterConstraints();
+		filterConstraints.setFilterConstraints(constraints);
+
+		LoansService loansService = MambuAPIFactory.getLoanService();
+
+		System.out.println("\nTesting Get Loans by disbursement details filter:");
+		List<LoanAccount> loanAccounts = loansService.getLoanAccounts(filterConstraints, offset, limit);
+
+		if (loanAccounts.isEmpty()) {
+			System.out.println("Warning: No loan accounts matching filtering constraints were found");
+		} else {
+			System.out.println("Total loans returned by search = " + loanAccounts.size());
+		}
+
+	}
+
 	// Test Search Notification Messages by on the Fly filter API
 	private static void testSearchNotificationMessages() throws MambuApiException {
 
-		System.out.println("\nIn testSearchNotificationMessages");
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 
 		// Create Filter Constraints
 		ArrayList<JSONFilterConstraint> constraints = new ArrayList<JSONFilterConstraint>();
@@ -487,12 +548,12 @@ public class DemoTestSearchService {
 		constraint1.setValue(MessageTemplateEvent.LOAN_CREATED.name());
 
 		constraints.add(constraint1);
-		
+
 		// Filter for retrieving the communications based on user recipients. See MBU-12991
 		constraint2.setDataFieldType(DataFieldType.NATIVE.name());
 		constraint2.setFilterSelection(NotificationMessageDataField.RECIPIENT_USER_KEY.name());
 		constraint2.setFilterElement(FilterElement.EMPTY.name());
-		
+
 		constraints.add(constraint2);
 
 		// Create JSONFilterConstraints with these constraints

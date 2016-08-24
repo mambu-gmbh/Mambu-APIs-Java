@@ -1,15 +1,18 @@
 package com.mambu.apisdk.services;
 
+import java.io.ByteArrayOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 import com.google.inject.Inject;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.model.DatabaseBackup;
 import com.mambu.apisdk.model.DatabaseBackupRequest;
 import com.mambu.apisdk.model.DatabaseBackupResponse;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ServiceExecutor;
 
@@ -27,6 +30,10 @@ public class DatabaseService {
 	// Create API definition
 	private final static ApiDefinition createDatabaseBackup = new ApiDefinition(ApiType.CREATE_JSON_ENTITY,
 			DatabaseBackupRequest.class, DatabaseBackupResponse.class);
+
+	// Download DB backup API definition
+	private final static ApiDefinition downloadLatestDbBackup = new ApiDefinition(ApiType.GET_ENTITY,
+			DatabaseBackup.class);
 
 	/**
 	 * Create a new Database service
@@ -61,11 +68,33 @@ public class DatabaseService {
 			validateCallbackUrl(databaseBackupRequest.getCallback());
 		}
 
-		createDatabaseBackup.setUrlPath(createDatabaseBackup.getEndPoint() + "/" + APIData.BACKUP);
+		createDatabaseBackup.setUrlPath(createDatabaseBackup.getEndPoint() + APIData.FORWARD_SLASH + APIData.BACKUP);
 
 		// delegate execution to service executor
 		return serviceExecutor.executeJson(createDatabaseBackup, databaseBackupRequest);
 
+	}
+
+	/**
+	 * Downloads the last DB backup if there is one.
+	 * 
+	 * @return A DatabaseBackup wrapper containing the DB backup as a ByteArrayOutputStream.
+	 * @throws MambuApiException
+	 */
+	public DatabaseBackup downloadLatestDbBackup() throws MambuApiException {
+		// Available since 4.3. See MBU-11022.
+		// Example GET /api/database/backup/LATEST
+
+		downloadLatestDbBackup.setUrlPath(createDatabaseBackup.getEndPoint() + APIData.FORWARD_SLASH + APIData.BACKUP
+				+ APIData.FORWARD_SLASH + APIData.LATEST);
+
+		downloadLatestDbBackup.setApiReturnFormat(ApiReturnFormat.ZIP_ARCHIVE);
+
+		// creates a DatabaseCackup wrapper to store the backup content
+		DatabaseBackup backup = new DatabaseBackup();
+		backup.setContent((ByteArrayOutputStream) serviceExecutor.execute(downloadLatestDbBackup));
+
+		return backup;
 	}
 
 	/**
