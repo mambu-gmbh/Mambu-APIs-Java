@@ -1,9 +1,12 @@
 package demo;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.mambu.accounts.shared.model.AccountState;
 import com.mambu.accountsecurity.shared.model.InvestorFund;
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
 import com.mambu.apisdk.MambuAPIFactory;
@@ -37,7 +40,6 @@ public class DemoTestRepaymentService {
 		DemoUtil.setUp();
 
 		try {
-
 			final String testAccountId = null; // use specific account id or null to get random loan account
 			demoLoanAccount = DemoUtil.getDemoLoanAccount(testAccountId);
 			LOAN_ACCOUNT_ID = demoLoanAccount.getId();
@@ -45,6 +47,8 @@ public class DemoTestRepaymentService {
 			repayments = testGetLoanAccountRepayments();
 
 			testUpdateLoanRepaymentsSchedule(); // Available since 3.9
+
+			testDeleteRepayment(); // Available since 4.3
 
 			testGetRepaymentsDueFromTo();
 
@@ -60,7 +64,8 @@ public class DemoTestRepaymentService {
 
 	public static List<Repayment> testGetLoanAccountRepayments() throws MambuApiException {
 
-		System.out.println("\nIn testGetLoanAccountRepayments");
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 
 		RepaymentsService repaymentService = MambuAPIFactory.getRepaymentsService();
 		String offset = "0";
@@ -80,7 +85,8 @@ public class DemoTestRepaymentService {
 
 	public static void testGetRepaymentsDueFromTo() throws MambuApiException {
 
-		System.out.println("\nIn testGetRepaymentsDueFromTo");
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 
 		RepaymentsService repaymentService = MambuAPIFactory.getRepaymentsService();
 		String offset = "0";
@@ -97,7 +103,8 @@ public class DemoTestRepaymentService {
 
 	public static void testUpdateLoanRepaymentsSchedule() throws MambuApiException {
 
-		System.out.println("\nIn testUpdateLoanRepaymentsSchedule");
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 
 		if (repayments == null) {
 			System.out.println("No repayments to update");
@@ -156,25 +163,15 @@ public class DemoTestRepaymentService {
 			modifiedRepayments.add(repayment);
 		}
 
-		// Submit Update schedule API request with these updated entries
-		JSONLoanRepayments loanRepayments = new JSONLoanRepayments(modifiedRepayments);
-		RepaymentsService repaymentService = MambuAPIFactory.getRepaymentsService();
-		System.out.println("Updating Repayments schedule for Loan Account ID=" + LOAN_ACCOUNT_ID + "\tRepayments ="
-				+ modifiedRepayments.size());
-
-		List<Repayment> updatedRepayments = repaymentService.updateLoanRepaymentsSchedule(LOAN_ACCOUNT_ID,
-				loanRepayments);
-
-		int totalReturned = (updatedRepayments == null) ? 0 : updatedRepayments.size();
-		System.out.println("Total Repayments returned after update=" + totalReturned);
-		// Can also see detailed update log on a Dashboard in Mambu
+		submitEditedRepaymentsToMambu(modifiedRepayments);
 
 	}
 
 	// Test getting repayments schedule for investor account.
 	public static void testGetInvestorAccountRepayments() throws MambuApiException {
 
-		System.out.println("\nIn testGetInvestorAccountRepayments");
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 
 		// Get schedule for investor in a demo loan account
 		LoanAccount loanAccount = demoLoanAccount;
@@ -214,5 +211,127 @@ public class DemoTestRepaymentService {
 					"Last  Repayment  Due date=" + repayemnts.get(repayemnts.size() - 1).getDueDate().toString());
 		}
 
+	}
+
+	// Tests deleting a repayment for a loan account
+	public static void testDeleteRepayment() throws MambuApiException {
+
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
+
+		if (!demoLoanAccount.getState().equals(AccountState.PENDING_APPROVAL)) {
+			System.out.println("Invalid account state for " + methodName);
+			return;
+		}
+
+		// get repayments for the loan account
+		List<Repayment> repayments = testGetLoanAccountRepayments();
+		if (repayments.size() >= 2) {
+			List<Repayment> notPaidRepayments = filterNotPaidRepayments(repayments);
+
+			// edits the schedule
+			reduceScheduleByFirstRepayment(notPaidRepayments);
+
+			List<Repayment> returnedRepayments = submitEditedRepaymentsToMambu(notPaidRepayments);
+
+			// delete first of the repayments
+			RepaymentsService repaymentService = MambuAPIFactory.getRepaymentsService();
+			Boolean deleted = repaymentService.deleteLoanRepayment(LOAN_ACCOUNT_ID,
+					returnedRepayments.get(0).getEncodedKey());
+
+			System.out.println("Repayment was successfully deleted = " + deleted);
+		} else {
+			System.out.println(methodName + "can`t be performed due e to repayments no.");
+			System.out.println("There should be at least 2 repayments");
+		}
+	}
+
+	/**
+	 * Submits the list of updated repayments received as parameter to this method in order to update the schedule of a
+	 * loan.
+	 * 
+	 * @param editedRepayments
+	 *            a list of updated repayments to be sent to Mambu.
+	 * 
+	 * @return a list of updated repayments from Mambu
+	 * 
+	 * @throws MambuApiException
+	 */
+	private static List<Repayment> submitEditedRepaymentsToMambu(List<Repayment> editedRepayments)
+			throws MambuApiException {
+
+		// Submit Update schedule API request with these updated entries
+		JSONLoanRepayments loanRepayments = new JSONLoanRepayments(editedRepayments);
+		RepaymentsService repaymentService = MambuAPIFactory.getRepaymentsService();
+		System.out.println("Updating Repayments schedule for Loan Account ID=" + LOAN_ACCOUNT_ID + "\tRepayments ="
+				+ editedRepayments.size());
+
+		List<Repayment> updatedRepayments = repaymentService.updateLoanRepaymentsSchedule(LOAN_ACCOUNT_ID,
+				loanRepayments);
+
+		int totalReturned = (updatedRepayments == null) ? 0 : updatedRepayments.size();
+		System.out.println("Total Repayments returned after update=" + totalReturned);
+		// Can also see detailed update log on a Dashboard in Mambu
+		return updatedRepayments;
+	}
+
+	/**
+	 * Edits the list of not paid yet repayments by setting the first one`s principal to be "0"
+	 * 
+	 * @param notPaidRepayments
+	 *            the list of not paid repayments to be adjusted.
+	 */
+	private static void reduceScheduleByFirstRepayment(List<Repayment> notPaidRepayments) {
+
+		BigDecimal newInstallementsNo = new BigDecimal(notPaidRepayments.size() - 1);
+
+		Money totalPrincipalAmountBalance = demoLoanAccount.getPrincipalAmount();
+
+		// calculate the due for remaining repayments
+		BigDecimal repaymentPrincipal = new BigDecimal(totalPrincipalAmountBalance.getAmount()
+				.divide(newInstallementsNo, 2, RoundingMode.HALF_UP).doubleValue());
+
+		Money principal = new Money(repaymentPrincipal.doubleValue());
+		principal.setScale(2, RoundingMode.HALF_UP);
+
+		// update repayments (all but first)
+		for (int i = 1; i < notPaidRepayments.size() - 1; i++) {
+			notPaidRepayments.get(i).setPrincipalDue(principal);
+		}
+
+		// set the first one to be = "0"
+		notPaidRepayments.get(0).setPrincipalDue(new BigDecimal("0"));
+
+		BigDecimal updatedRepaymentsNo = new BigDecimal(notPaidRepayments.size() - 1);
+
+		// calculate and adjust the value for last payment
+		Money lastRepaymentPrincipal = new Money(
+				(totalPrincipalAmountBalance.getAmount().subtract(principal.getAmount().multiply(updatedRepaymentsNo))
+						.add(principal.getAmount())).doubleValue());
+
+		lastRepaymentPrincipal.setScale(2, RoundingMode.HALF_UP);
+		notPaidRepayments.get(notPaidRepayments.size() - 1).setPrincipalDue(lastRepaymentPrincipal);
+	}
+
+	/**
+	 * Filters a list of repayments and returns only the one not paid yet
+	 * 
+	 * @param repayments
+	 *            a list of repayments
+	 * 
+	 * @return a list of repayments not paid yet
+	 */
+	private static List<Repayment> filterNotPaidRepayments(List<Repayment> repayments) {
+
+		List<Repayment> notPaidRepayments = new ArrayList<>();
+
+		for (Repayment repayment : repayments) {
+			if (repayment.isPaid()) {
+				continue;
+			} else {
+				notPaidRepayments.add(repayment);
+			}
+		}
+		return notPaidRepayments;
 	}
 }
