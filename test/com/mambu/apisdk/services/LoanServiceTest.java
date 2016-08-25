@@ -117,6 +117,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 						+ "\"gracePeriod\":0,"
 						+ "\"interestRate\":3.2,"
 						+ "\"interestBalanceCalculationMethod\":\"PRINCIPAL_ONLY\","
+						+ "\"accrueInterestAfterMaturity\":false," //Added in 4.3: defaults to false in the model
 						+ "\"principalRepaymentInterval\":1,"
 						+ "\"interestRateSource\":\"FIXED_INTEREST_RATE\","
 						+ "\"accruedInterest\":0,"
@@ -147,4 +148,4 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 				"https://demo.mambutest.com/api/loans/8ad661123b36cfaf013b42c2e0f46dca/transactions", params,
 				Method.POST, ContentType.WWW_FORM);
 	}
-}
+}
