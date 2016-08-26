@@ -54,6 +54,88 @@ public class ActivitiesService {
 	/***
 	 * GET all activity feed items within a specified date interval and (optionally) for a specified Mambu entity Allows
 	 * retrieving a list of activities within a date range which can be filtered by entity key.
+	 *
+	 *
+	 * @param fromDate
+	 *            starting date for the time interval (mandatory). Only the full date without time is used, the date is
+	 *            inclusive
+	 * @param toDate
+	 *            end date for the time interval (mandatory). Only the full date without time is used,the date is
+	 *            inclusive
+	 * @param mambuEntity
+	 *            Mambu Entity for requested activities. If Mambu entity is null then all available activities for all
+	 *            entities supported by API are returned. The following classes are currently supported: Client, Group,
+	 *            Centre, Branch, LoanProduct, SavingsProduct, LoanAccount, SvaingsAccount, User
+	 *
+	 * @param entityId
+	 *            the Id for the Mambu entity for requested activities
+	 *
+	 * @param offset
+	 *            offset to start pagination. If null, the default value of 0 (zero) will be used.
+	 * 
+	 * @param limit
+	 *            page-size. If null, the default value of 50 (fifty) will be used.
+	 *               
+	 * @return a list of JSONActivities
+	 *
+	 * @throws MambuApiException
+	 */
+	@SuppressWarnings("rawtypes")
+	public List<JSONActivity> getActivities(Date fromDate, Date toDate, Class mambuEntity, String entityId, Integer offset, Integer limit)
+			throws MambuApiException {
+
+		// From Date and To Date are mandatory
+		if (fromDate == null) {
+			throw new IllegalArgumentException("From Date must not be NULL");
+		}
+		if (toDate == null) {
+			throw new IllegalArgumentException("To Date must not be NULL");
+		}
+
+		// Mambu Entity class and its ID must be either both NULL or both NOT NULL
+		if ((mambuEntity == null && entityId != null) || (mambuEntity != null && entityId == null)) {
+			throw new IllegalArgumentException(
+					"Mambu Entity class and its ID must be either both NULL or both NOT NULL");
+		}
+
+		// Format dates as API requirements: "yyyy-MM-dd
+		final String dateTimeFormat = APIData.yyyyMmddFormat;
+
+		ParamsMap params = new ParamsMap();
+
+		if (offset != null) {
+			params.put(APIData.OFFSET, Integer.toString(offset));
+		}
+		if (limit != null) {
+			params.put(APIData.LIMIT, Integer.toString(limit));
+		}
+		
+		try {
+			String formattedFromDate = new SimpleDateFormat(dateTimeFormat).format(fromDate);
+			params.put(FROM, formattedFromDate);
+
+		} catch (IllegalArgumentException e) {
+			throw new IllegalArgumentException("Invalid From Date");
+		}
+
+		try {
+			String formattedToDate = new SimpleDateFormat(dateTimeFormat).format(toDate);
+			params.put(TO, formattedToDate);
+		} catch (IllegalArgumentException e) {
+			throw new IllegalArgumentException("Invalid To Date");
+		}
+
+		// Get the name of the ID parameter based on the requested Mambu Class and add id to the ParamsMap
+		if (mambuEntity != null) {
+			params.put(getIdParameterName(mambuEntity), entityId);
+		}
+
+		return serviceExecutor.execute(getJSONActivityList, params);
+	}
+	
+	/***
+	 * GET all activity feed items within a specified date interval and (optionally) for a specified Mambu entity Allows
+	 * retrieving a list of activities within a date range which can be filtered by entity key.
 	 * 
 	 * 
 	 * @param fromDate
@@ -79,48 +161,33 @@ public class ActivitiesService {
 	public List<JSONActivity> getActivities(Date fromDate, Date toDate, Class mambuEntity, String entityId)
 			throws MambuApiException {
 
-		// From Date and To Date are mandatory
-		if (fromDate == null) {
-			throw new IllegalArgumentException("From Date must not be NULL");
-		}
-		if (toDate == null) {
-			throw new IllegalArgumentException("To Date must not be NULL");
-		}
-
-		// Mambu Entity class and its ID must be either both NULL or both NOT NULL
-		if ((mambuEntity == null && entityId != null) || (mambuEntity != null && entityId == null)) {
-			throw new IllegalArgumentException(
-					"Mambu Entity class and its ID must be either both NULL or both NOT NULL");
-		}
-
-		// Format dates as API requirements: "yyyy-MM-dd
-		final String dateTimeFormat = APIData.yyyyMmddFormat;
-
-		ParamsMap params = new ParamsMap();
-
-		try {
-			String formattedFromDate = new SimpleDateFormat(dateTimeFormat).format(fromDate);
-			params.put(FROM, formattedFromDate);
-
-		} catch (IllegalArgumentException e) {
-			throw new IllegalArgumentException("Invalid From Date");
-		}
-
-		try {
-			String formattedToDate = new SimpleDateFormat(dateTimeFormat).format(toDate);
-			params.put(TO, formattedToDate);
-		} catch (IllegalArgumentException e) {
-			throw new IllegalArgumentException("Invalid To Date");
-		}
-
-		// Get the name of the ID parameter based on the requested Mambu Class and add id to the ParamsMap
-		if (mambuEntity != null) {
-			params.put(getIdParameterName(mambuEntity), entityId);
-		}
-
-		return serviceExecutor.execute(getJSONActivityList, params);
+		return getActivities(fromDate, toDate, mambuEntity, entityId, null, null);
 	}
 
+	/***
+	 * A convenience method to GET All activities within a specified date interval
+	 *
+	 * @param fromDate
+	 *            starting date for the time interval (mandatory).Only the full date without time is used, the date is
+	 *            inclusive
+	 * @param toDate
+	 *            end date for the time interval (mandatory). Only the full date without time is used,the date is
+	 *            inclusive
+	 *
+	 * @param offset
+	 *            offset to start pagination. If null, the default value of 0 (zero) will be used.
+	 *
+	 * @param limit
+	 *            page-size. If null, the default value of 50 (fifty) will be used.
+	 *            
+	 * @return a list of JSONActivities
+	 *
+	 * @throws MambuApiException
+	 */
+	public List<JSONActivity> getActivities(Date fromDate, Date toDate, Integer offset, Integer limit) throws MambuApiException {
+		return getActivities(fromDate, toDate, null, null, offset, limit);
+	}
+	
 	/***
 	 * A convenience method to GET All activities within a specified date interval
 	 * 
@@ -136,7 +203,7 @@ public class ActivitiesService {
 	 * @throws MambuApiException
 	 */
 	public List<JSONActivity> getActivities(Date fromDate, Date toDate) throws MambuApiException {
-		return getActivities(fromDate, toDate, null, null);
+		return getActivities(fromDate, toDate, null, null, null, null);
 	}
 
 	// Private helper

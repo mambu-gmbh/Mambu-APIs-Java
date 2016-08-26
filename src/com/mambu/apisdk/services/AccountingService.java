@@ -107,6 +107,26 @@ public class AccountingService {
 	 * @throws MambuApiException
 	 */
 	public List<GLAccount> getGLAccounts(GLAccountType accountType) throws MambuApiException {
+		return getGLAccounts(accountType, null ,null);
+	}
+
+	/**
+	 * Requests gl accounts by account type
+	 *
+	 * @param accountType
+	 *            account type. Must not be null
+	 *
+	 * @param offset
+	 *            offset to start pagination. If null, the default value of 0 (zero) will be used.
+	 *
+	 * @param limit
+	 *            page-size. If null, the default value of 50 (fifty) will be used.
+	 *
+	 * @return a list of Mambu gl accounts
+	 *
+	 * @throws MambuApiException
+	 */
+	public List<GLAccount> getGLAccounts(GLAccountType accountType, Integer offset, Integer limit) throws MambuApiException {
 
 		// Example GET /api/glaccount?type=ASSET
 		// See MBU-1543.
@@ -116,6 +136,13 @@ public class AccountingService {
 		}
 		ParamsMap params = new ParamsMap();
 		params.put(APIData.TYPE, accountType.name());
+
+		if (offset != null) {
+			params.put(APIData.OFFSET, Integer.toString(offset));
+		}
+		if (limit != null) {
+			params.put(APIData.LIMIT, Integer.toString(limit));
+		}
 
 		return serviceExecutor.execute(getGLAccounts, params);
 	}
@@ -146,7 +173,7 @@ public class AccountingService {
 	/**
 	 * Returns all GLJournalEntries of a specific date-range
 	 * 
-	 * @param branchId
+	 * @param branchID
 	 *            branch Id
 	 * @param fromDate
 	 *            range starting from. Must not be null
