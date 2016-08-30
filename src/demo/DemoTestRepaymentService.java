@@ -157,7 +157,8 @@ public class DemoTestRepaymentService {
 		String productTypeKey = demoLoanAccount.getProductTypeKey();
 		LoanProductType loanProductType = loansService.getLoanProduct(productTypeKey).getLoanProductType();
 
-		if (loanProductType.equals(LoanProductType.REVOLVING_CREDIT)) {
+		if (loanProductType.equals(LoanProductType.REVOLVING_CREDIT)
+				|| loanProductType.equals(LoanProductType.DYNAMIC_TERM_LOAN)) {
 			Repayment repayment = new Repayment();
 			repayment.setDueDate(new Date(now.getTime() + fiveDays));
 			modifiedRepayments.add(repayment);
@@ -219,6 +220,8 @@ public class DemoTestRepaymentService {
 		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println(methodName = "\nIn " + methodName);
 
+		// This check is here only for testing reasons
+		// you may also update schedule on a different state
 		if (!demoLoanAccount.getState().equals(AccountState.PENDING_APPROVAL)) {
 			System.out.println("Invalid account state for " + methodName);
 			return;
@@ -227,12 +230,11 @@ public class DemoTestRepaymentService {
 		// get repayments for the loan account
 		List<Repayment> repayments = testGetLoanAccountRepayments();
 		if (repayments.size() >= 2) {
-			List<Repayment> notPaidRepayments = filterNotPaidRepayments(repayments);
 
 			// edits the schedule
-			reduceScheduleByFirstRepayment(notPaidRepayments);
+			updateScheduleByFirstRepayment(repayments);
 
-			List<Repayment> returnedRepayments = submitEditedRepaymentsToMambu(notPaidRepayments);
+			List<Repayment> returnedRepayments = submitEditedRepaymentsToMambu(repayments);
 
 			// delete first of the repayments
 			RepaymentsService repaymentService = MambuAPIFactory.getRepaymentsService();
@@ -281,7 +283,7 @@ public class DemoTestRepaymentService {
 	 * @param notPaidRepayments
 	 *            the list of not paid repayments to be adjusted.
 	 */
-	private static void reduceScheduleByFirstRepayment(List<Repayment> notPaidRepayments) {
+	private static void updateScheduleByFirstRepayment(List<Repayment> notPaidRepayments) {
 
 		BigDecimal newInstallementsNo = new BigDecimal(notPaidRepayments.size() - 1);
 
@@ -294,7 +296,7 @@ public class DemoTestRepaymentService {
 		Money principal = new Money(repaymentPrincipal.doubleValue());
 		principal.setScale(2, RoundingMode.HALF_UP);
 
-		// update repayments (all but first)
+		// update repayments (all but first and last)
 		for (int i = 1; i < notPaidRepayments.size() - 1; i++) {
 			notPaidRepayments.get(i).setPrincipalDue(principal);
 		}
@@ -302,36 +304,13 @@ public class DemoTestRepaymentService {
 		// set the first one to be = "0"
 		notPaidRepayments.get(0).setPrincipalDue(new BigDecimal("0"));
 
-		BigDecimal updatedRepaymentsNo = new BigDecimal(notPaidRepayments.size() - 1);
-
 		// calculate and adjust the value for last payment
 		Money lastRepaymentPrincipal = new Money(
-				(totalPrincipalAmountBalance.getAmount().subtract(principal.getAmount().multiply(updatedRepaymentsNo))
+				(totalPrincipalAmountBalance.getAmount().subtract(principal.getAmount().multiply(newInstallementsNo))
 						.add(principal.getAmount())).doubleValue());
 
 		lastRepaymentPrincipal.setScale(2, RoundingMode.HALF_UP);
 		notPaidRepayments.get(notPaidRepayments.size() - 1).setPrincipalDue(lastRepaymentPrincipal);
 	}
 
-	/**
-	 * Filters a list of repayments and returns only the one not paid yet
-	 * 
-	 * @param repayments
-	 *            a list of repayments
-	 * 
-	 * @return a list of repayments not paid yet
-	 */
-	private static List<Repayment> filterNotPaidRepayments(List<Repayment> repayments) {
-
-		List<Repayment> notPaidRepayments = new ArrayList<>();
-
-		for (Repayment repayment : repayments) {
-			if (repayment.isPaid()) {
-				continue;
-			} else {
-				notPaidRepayments.add(repayment);
-			}
-		}
-		return notPaidRepayments;
-	}
 }

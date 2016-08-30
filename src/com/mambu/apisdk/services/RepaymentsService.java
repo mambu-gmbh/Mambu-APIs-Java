@@ -185,7 +185,7 @@ public class RepaymentsService {
 		// Example: GET endpoint "/api/loans/{LOAN_ID}/repayments/{REPAYMENT_ID}
 		// Available since Mambu 4.3
 
-		if (accountId == null && repaymentId == null) {
+		if (accountId == null || repaymentId == null) {
 			throw new IllegalArgumentException("Account ID and Repayment ID must not be null!");
 		}
 
