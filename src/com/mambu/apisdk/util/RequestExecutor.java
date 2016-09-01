@@ -3,7 +3,6 @@ package com.mambu.apisdk.util;
 import java.io.ByteArrayOutputStream;
 
 import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 
 /**
  * Interface for executing url requests

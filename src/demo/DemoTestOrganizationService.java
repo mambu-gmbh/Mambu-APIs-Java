@@ -649,7 +649,8 @@ public class DemoTestOrganizationService {
 		System.out.println("\nSettings. BirthDateRequired=" + "\tDATE_FORMAT="
 				+ generalSettings.getDateFormats().get(DateFormatType.DATE_FORMAT) + "\tDATETIME_FORMAT="
 				+ generalSettings.getDateFormats().get(DateFormatType.DATE_TIME_FORMAT) + "\tDecimalSeperator="
-				+ generalSettings.getDecimalSeperator());
+				+ generalSettings.getDecimalSeperator() + "\tOtherIdDocumentsEnabled="
+				+ generalSettings.getOtherIdDocumentsEnabled());
 
 		try {
 			// Test Get Mambu Object Labels
