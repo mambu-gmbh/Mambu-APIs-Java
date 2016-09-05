@@ -50,7 +50,6 @@ import com.mambu.loans.shared.model.LoanProduct;
 import com.mambu.loans.shared.model.LoanTranche;
 import com.mambu.loans.shared.model.LoanTransaction;
 import com.mambu.loans.shared.model.LoanTransactionType;
-import static com.mambu.loans.shared.model.LoanTransactionType.INTEREST_RATE_CHANGED;
 import com.mambu.loans.shared.model.Repayment;
 
 /**

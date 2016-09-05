@@ -16,6 +16,7 @@ import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.services.DocumentsService;
+import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.apisdk.util.DateUtils;
 import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.model.Client;
@@ -530,14 +531,9 @@ public class DemoTestClientService {
 		address.setIndexInList(0);
 		addresses.add(address);
 		clExpanded.setAddresses(addresses);
-		// ADd doc IDs
-		List<IdentificationDocument> idDocs = new ArrayList<IdentificationDocument>();
-		IdentificationDocument doc = new IdentificationDocument();
-		doc.setDocumentId("DFG1234");
-		doc.setDocumentType("Passport");
-		doc.setIssuingAuthority("Vancouver");
-		idDocs.add(doc);
-		clExpanded.setIdDocuments(idDocs);
+
+		createAndAddDocumentIdsForClient(clExpanded);
+
 		// Use helper to make test custom fields which are valid for the client's role
 		List<CustomFieldValue> clientCustomInformation = DemoUtil
 				.makeForEntityCustomFieldValues(CustomFieldType.CLIENT_INFO, cientRole.getEncodedKey());
@@ -555,6 +551,44 @@ public class DemoTestClientService {
 		System.out.println("\nClient address, total=" + addressOut.size());
 
 		return createdClientId;
+	}
+
+	/**
+	 * Helper method, it creates and add other doc IDs for the client received as parameter to this method call. NOTE:
+	 * the documents will be added only if the settings allow this
+	 * 
+	 * @param clientExpanded
+	 *            the client to updated with new document IDs
+	 * @throws MambuApiException
+	 */
+	private static void createAndAddDocumentIdsForClient(ClientExpanded clientExpanded) throws MambuApiException {
+
+		// check if other document IDs are allowed
+		boolean areOtherDocIdsAllowed = getOtherDocumentTemplateIdsEnabeled();
+
+		if (areOtherDocIdsAllowed) {
+			// create and add doc IDs
+			List<IdentificationDocument> idDocs = new ArrayList<>();
+			IdentificationDocument doc = new IdentificationDocument();
+			doc.setDocumentId("DFG1234");
+			doc.setDocumentType("Passport");
+			doc.setIssuingAuthority("Vancouver");
+			idDocs.add(doc);
+			clientExpanded.setIdDocuments(idDocs);
+		}
+	}
+
+	/**
+	 * Helper method call organization API to get the value of the OtherDocumentTemplateIdsEnabeled field.
+	 * 
+	 * @return true if other document template IDs is enabled
+	 * @throws MambuApiException
+	 */
+	private static boolean getOtherDocumentTemplateIdsEnabeled() throws MambuApiException {
+
+		OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
+
+		return organizationService.getGeneralSettings().getOtherIdDocumentsEnabled();
 	}
 
 	private static final String updatedSuffix = "_updated";

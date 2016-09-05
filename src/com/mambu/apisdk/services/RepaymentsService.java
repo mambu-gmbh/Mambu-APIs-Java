@@ -11,6 +11,7 @@ import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition.ApiType;
 import com.mambu.apisdk.util.ParamsMap;
@@ -72,6 +73,7 @@ public class RepaymentsService {
 	 */
 	public List<Repayment> getRapaymentsDueFromTo(String dueFromString, String dueToString, String offset, String limit)
 			throws MambuApiException {
+
 		// E.g. GET /api/repayments?dueFrom=2011-01-05&dueTo=2011-06-07&offset=0&limit100
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.put(DUE_FROM, dueFromString);
@@ -124,6 +126,7 @@ public class RepaymentsService {
 	 */
 	public List<Repayment> updateLoanRepaymentsSchedule(String accountId, JSONLoanRepayments repayments)
 			throws MambuApiException {
+
 		// Available since Mambu 3.9. See MBU-6813. For Revolving Credit product available since 3.14. See MBU-10546
 		// Available for fixed loans, when the account is in Pending/Partial state since 3.13. See MBU-10245
 		// API example: PATCH -d JSONLoanRepayments_object /api/loans/loan_id/repayments. Returns list of Repayments
@@ -163,5 +166,31 @@ public class RepaymentsService {
 				ApiReturnFormat.COLLECTION);
 
 		return serviceExecutor.execute(apiDefinition);
+	}
+
+	/**
+	 * Deletes a repayment for a supplied loan account ID and a repayment ID.
+	 * 
+	 * NOTE: Only installments with 0 principal can be deleted.
+	 * 
+	 * @param accountId
+	 *            The ID of the Loan account
+	 * @param repaymentId
+	 *            The ID of the repayment to be deleted
+	 * @return true in case of success
+	 * @throws MambuApiException
+	 */
+	public Boolean deleteLoanRepayment(String accountId, String repaymentId) throws MambuApiException {
+
+		// Example: GET endpoint "/api/loans/{LOAN_ID}/repayments/{REPAYMENT_ID}
+		// Available since Mambu 4.3
+
+		if (accountId == null || repaymentId == null) {
+			throw new IllegalArgumentException("Account ID and Repayment ID must not be null!");
+		}
+
+		return serviceExecutor.deleteOwnedEntity(MambuEntityType.LOAN_ACCOUNT, accountId, MambuEntityType.REPAYMENTS,
+				repaymentId);
+
 	}
 }
