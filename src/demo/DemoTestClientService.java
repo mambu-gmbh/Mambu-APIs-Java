@@ -568,7 +568,7 @@ public class DemoTestClientService {
 
 		if (areOtherDocIdsAllowed) {
 			// create and add doc IDs
-			List<IdentificationDocument> idDocs = new ArrayList<IdentificationDocument>();
+			List<IdentificationDocument> idDocs = new ArrayList<>();
 			IdentificationDocument doc = new IdentificationDocument();
 			doc.setDocumentId("DFG1234");
 			doc.setDocumentType("Passport");
