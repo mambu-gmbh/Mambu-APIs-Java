@@ -25,7 +25,7 @@ public class DemoTestDatabaseService {
 		try {
 
 			testTriggerDatabaseBackup(); // Available since V4.3
-
+			//consider a pause between these two tests so the server could finish creating the backup
 			testDownloadLatestDbBackup(); // Available since V4.3
 
 		} catch (MambuApiException e) {
