@@ -24,10 +24,15 @@ public class DemoTestDatabaseService {
 
 		try {
 
-			testTriggerDatabaseBackup(); // Available since V4.3
-			//consider a pause between these two tests so the server could finish creating the backup
-			testDownloadLatestDbBackup(); // Available since V4.3
-
+			if (testTriggerDatabaseBackup()) {// Available since V4.3
+				// added here because we don`t know how long to wait until the backup is done
+				// backup creation might vary in time depending on the DB size
+				while (true) {
+					if (testDownloadLatestDbBackup()) {// Available since V4.3
+						break;
+					}
+				}
+			}
 		} catch (MambuApiException e) {
 			DemoUtil.logException(methodName, e);
 		}
@@ -39,9 +44,10 @@ public class DemoTestDatabaseService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	private static void testTriggerDatabaseBackup() throws MambuApiException {
+	private static boolean testTriggerDatabaseBackup() throws MambuApiException {
 
-		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		methodName = new Object() {
+		}.getClass().getEnclosingMethod().getName();
 		System.out.println(methodName = "\nIn " + methodName);
 
 		DatabaseService databaseService = MambuAPIFactory.getDatabaseService();
@@ -52,6 +58,7 @@ public class DemoTestDatabaseService {
 		DatabaseBackupResponse response = databaseService.createDatabaseBackup(databaseRequestObject);
 
 		System.out.println("Response for DB backup request:\n" + response);
+		return response.getReturnStatus().equals("SUCCESS");
 	}
 
 	/**
@@ -59,9 +66,10 @@ public class DemoTestDatabaseService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	private static void testDownloadLatestDbBackup() throws MambuApiException {
+	private static boolean testDownloadLatestDbBackup() throws MambuApiException {
 
-		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		methodName = new Object() {
+		}.getClass().getEnclosingMethod().getName();
 		System.out.println(methodName = "\nIn " + methodName);
 
 		DatabaseService databaseService = MambuAPIFactory.getDatabaseService();
@@ -69,6 +77,8 @@ public class DemoTestDatabaseService {
 		DatabaseBackup response = databaseService.downloadLatestDbBackup();
 
 		System.out.println("Backup was successfuly downloaded = " + (response.getContent().toByteArray() != null));
+
+		return response.getContent() != null;
 
 	}
 }
