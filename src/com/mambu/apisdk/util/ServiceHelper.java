@@ -406,13 +406,13 @@ public class ServiceHelper {
 	}
 
 	/**
-	 * Convenience helper to make params map which contains only pagination parameters: offset and limit
+	 * Convenience helper to make parameters map which contains only pagination parameters: offset and limit
 	 * 
 	 * @param offset
 	 *            pagination offset. If not null it must be an integer greater or equal to zero
 	 * @param limit
 	 *            pagination limit. If not null the must be an integer greater than zero
-	 * @return
+	 * @return ParamsMap
 	 */
 	public static ParamsMap makePaginationParams(String offset, String limit) {
 

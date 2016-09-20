@@ -115,6 +115,9 @@ public class OrganizationService {
 		return serviceExecutor.execute(getCurrencies, paramsMap);
 	}
 
+	
+	public final static String baseCurrencyMustBeDefined = "Base Currency must be defined";
+
 	/**
 	 * Convenience method to request the organization's base currency only
 	 * 
@@ -122,8 +125,6 @@ public class OrganizationService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public final static String baseCurrencyMustBeDefined = "Base Currency must be defined";
-
 	public Currency getCurrency() throws MambuApiException {
 
 		// Delegate the call to GET all currencies method and request only the base currency

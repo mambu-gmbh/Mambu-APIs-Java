@@ -321,7 +321,7 @@ public class DemoUtil {
 	/**
 	 * Get service factory object that includes fixed Mambu credentials with domain
 	 * 
-	 * @return
+	 * @return MambuAPIServiceFactory
 	 */
 	public static MambuAPIServiceFactory getAPIServiceFactory() {
 
@@ -334,7 +334,7 @@ public class DemoUtil {
 	 * @param secondaryDomain
 	 *            true if service factory for secondary domain is required, false for primary domain
 	 * 
-	 * @return
+	 * @return MambuAPIServiceFactory
 	 */
 	public static MambuAPIServiceFactory getAPIServiceFactory(boolean secondaryDomain) {
 
@@ -406,7 +406,7 @@ public class DemoUtil {
 	 * Get or Create a Demo Client of primary domain, delegate for {@link DemoUtil#getDemoClient(boolean)}. Demo client
 	 * is retrieved or created using "demoClientFirstName" and "demoClientLastName" parameters of the configuration file
 	 * 
-	 * @return
+	 * @return Client
 	 * @throws MambuApiException
 	 */
 	public static Client getDemoClient() throws MambuApiException {
@@ -545,7 +545,7 @@ public class DemoUtil {
 	 * @param groupId
 	 *            group ID. Can be null. If null, then "demoGroupId" parameter specified in the configuration file is
 	 *            used. If the configuration parameter is absent (or is empty) then random group is returned. See
-	 *            {@link #getDemoGroup())}
+	 *            {@link #getDemoGroup()}
 	 * @return group
 	 * @throws MambuApiException
 	 */
@@ -574,7 +574,7 @@ public class DemoUtil {
 	 * @param groupId
 	 *            groupId ID. Can be null. If null, then "demoGroupId" parameter specified in the configuration file is
 	 *            used. If the configuration parameter is absent (or is empty) then full details for a random group are
-	 *            retrieved. See {@link #getDemoGroup())}
+	 *            retrieved. See {@link #getDemoGroup()}
 	 * @return group
 	 * @throws MambuApiException
 	 */
@@ -640,8 +640,8 @@ public class DemoUtil {
 	 * @param productId
 	 *            product id. Can be null. If null, then "demoLaonProductId" parameter specified in the configuration
 	 *            file is used. If the configuration parameter is absent (or is empty) then random loan product is
-	 *            retrieved. See {@link #getDemoLoanProduct())}
-	 * @return
+	 *            retrieved. See {@link #getDemoLoanProduct()}
+	 * @return LoanProduct
 	 * @throws MambuApiException
 	 */
 	public static LoanProduct getDemoLoanProduct(String productId) throws MambuApiException {
@@ -817,7 +817,7 @@ public class DemoUtil {
 	 * @param productId
 	 *            product id. Can be null. If null, then "demoSavingsProductId" parameter specified in the configuration
 	 *            file is used. If the configuration parameter is absent (or is empty) then random savings product is
-	 *            retrieved. See {@link #getDemoSavingsProduct())}
+	 *            retrieved. See {@link #getDemoSavingsProduct()}
 	 * @return savings product
 	 * @throws MambuApiException
 	 */
@@ -874,7 +874,7 @@ public class DemoUtil {
 	 * @param accountId
 	 *            account ID. Can be null. If null, then "demoLaonAccountId" parameter specified in the configuration
 	 *            file is used. If the configuration parameter is absent (or is empty) then random loan account is
-	 *            retrieved. See {@link #getDemoLoanAccount())}
+	 *            retrieved. See {@link #getDemoLoanAccount()}
 	 * @return loan account
 	 * @throws MambuApiException
 	 */
@@ -926,7 +926,7 @@ public class DemoUtil {
 	 * @param accountId
 	 *            account ID. Can be null. If null, then "demoLaonAccountId" parameter specified in the configuration
 	 *            file is used. If the configuration parameter is absent (or is empty) then random loan account is
-	 *            retrieved. See {@link #getDemoLoanAccount())}
+	 *            retrieved. See {@link #getDemoLoanAccount()}
 	 * @return loan transaction for the loan account
 	 * @throws MambuApiException
 	 */
@@ -947,7 +947,7 @@ public class DemoUtil {
 	 * @param accountId
 	 *            account ID. Can be null. If null, then "demoLaonAccountId" parameter specified in the configuration
 	 *            file is used. If the configuration parameter is absent (or is empty) then random loan account is
-	 *            retrieved. See {@link #getDemoLoanAccount())}
+	 *            retrieved. See {@link #getDemoLoanAccount()}
 	 * @return loan transaction with transaction details
 	 * @throws MambuApiException
 	 */
@@ -1001,8 +1001,8 @@ public class DemoUtil {
 	 * @param accountId
 	 *            account ID. Can be null. If null, then "demoSavingsAccountId" parameter specified in the configuration
 	 *            file is used. If the configuration parameter is absent (or is empty) then random savings account is
-	 *            retrieved. See {@link #getDemoSavingsAccount())}
-	 * @return
+	 *            retrieved. See {@link #getDemoSavingsAccount()}
+	 * @return  demo SavingsAccount
 	 * @throws MambuApiException
 	 */
 	public static SavingsAccount getDemoSavingsAccount(String accountId) throws MambuApiException {
@@ -1515,7 +1515,7 @@ public class DemoUtil {
 	 * 
 	 * @param absolutePath
 	 *            file's absolute path
-	 * @return
+	 * @return encoded String
 	 */
 	public static String encodeFileIntoBase64String(String absolutePath) {
 
