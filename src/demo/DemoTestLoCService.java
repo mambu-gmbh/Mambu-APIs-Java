@@ -167,7 +167,6 @@ public class DemoTestLoCService {
 	/**
 	 * Test Get lines of credit for a Client and Group
 	 * 
-	 * @return any of the LoC IDs
 	 */
 	public static void testGetCustomerLinesOfCredit() throws MambuApiException {
 
@@ -196,8 +195,6 @@ public class DemoTestLoCService {
 	/**
 	 * Test Get Accounts for a line of Credit
 	 * 
-	 * @param lineOfCreditId
-	 *            an id or encoded key for a Line of Credit
 	 * @return accounts for a line of credit
 	 * @throws MambuApiException
 	 */

@@ -322,9 +322,11 @@ public class ApiDefinition {
 	 * api/loans/transactions
 	 * 
 	 * This constructor accepts the first api endpoint as a string but otherwise is identical to the
-	 * {@link ApiDefinition(ApiType apiType, Class<?> entityClass, Class<?> resultClass)}. This constructor can be used
+	 * @See #ApiDefinition(ApiType apiType, Class<?> entityClass, Class<?> resultClass). This constructor can be used
 	 * in cased when there is no Mambu class to map to the api endpoint. Example GET settings/iddocumenttemplates.
 	 * 
+	 * @param apiType
+	 *            the API type
 	 * @param apiEndPoint
 	 *            determines API's endpoint string directly . E.g "settings" as in /api/settings
 	 * @param resultClass

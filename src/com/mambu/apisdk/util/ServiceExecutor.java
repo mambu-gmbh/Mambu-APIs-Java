@@ -243,7 +243,7 @@ public class ServiceExecutor {
 	 * Convenience method to execute API Request using its ApiDefinition and params map. This version of the execute
 	 * method can be used when the API request doesn't use object ID (for example in get list requests)
 	 * 
-	 * @param api
+	 * @param apiDefinition
 	 *            API definition for the request
 	 * @param paramsMap
 	 *            map with API parameters
@@ -264,8 +264,6 @@ public class ServiceExecutor {
 	 * 
 	 * @param apiDefinition
 	 *            API definition for the request
-	 * @param objectId
-	 *            api's object id (optional, must be null if not used)
 	 * 
 	 * @return object result object, which will be an API specific object or a list of objects
 	 * 
@@ -770,10 +768,10 @@ public class ServiceExecutor {
 	 * @return true if successful
 	 * @throws MambuApiException
 	 */
-	public <R> Boolean deleteOwnedEntity(MambuEntityType mambuEntity, String parentId, MambuEntityType ownedEntity,
+	public <R> Boolean deleteOwnedEntity(MambuEntityType parentEntity, String parentId, MambuEntityType ownedEntity,
 			String ownedEntityId) throws MambuApiException {
 
-		Class<?> parentClass = mambuEntity.getEntityClass();
+		Class<?> parentClass = parentEntity.getEntityClass();
 		Class<?> ownedClass = ownedEntity.getEntityClass();
 		// Create ApiDefinition for DELETE_OWNED_ENTITY
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY, parentClass, ownedClass);
