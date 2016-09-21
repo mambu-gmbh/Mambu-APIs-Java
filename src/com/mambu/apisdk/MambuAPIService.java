@@ -1,8 +1,6 @@
 package com.mambu.apisdk;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -10,7 +8,6 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.Domain;
 import com.mambu.apisdk.model.Password;
 import com.mambu.apisdk.model.Username;
-import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor;
@@ -61,8 +58,6 @@ public class MambuAPIService {
 	 *         response (with the content being specific for each request) or an error response for the http request.
 	 * 
 	 * @throws MambuApiException
-	 * @throws IOException
-	 * @throws MalformedURLException
 	 */
 	public String executeRequest(String urlString, Method method) throws MambuApiException {
 
@@ -80,8 +75,6 @@ public class MambuAPIService {
 	 * @return String
 	 * 
 	 * @throws MambuApiException
-	 * @throws IOException
-	 * @throws MalformedURLException
 	 */
 	public String executeRequest(String urlString, ParamsMap params, Method method) throws MambuApiException {
 
@@ -101,8 +94,6 @@ public class MambuAPIService {
 	 * @return String
 	 * 
 	 * @throws MambuApiException
-	 * @throws IOException
-	 * @throws MalformedURLException
 	 */
 	public String executeRequest(String urlString, ParamsMap params, Method method,
 			RequestExecutor.ContentType contentTypeFormat) throws MambuApiException {
@@ -119,11 +110,8 @@ public class MambuAPIService {
 	 *            The URL string
 	 * @param params
 	 *            The parameters map
-	 * @param method
-	 *            The HTTP method
-	 * @param contentTypeFormat
-	 *            The request content type
-	 * 
+	 * @param apiDefinition
+	 * 				The API definition
 	 * @return ByteArrayOutputStream of the response content.
 	 * 
 	 * @throws MambuApiException
@@ -146,8 +134,6 @@ public class MambuAPIService {
 	 * @return String
 	 * 
 	 * @throws MambuApiException
-	 * @throws IOException
-	 * @throws MalformedURLException
 	 */
 	public String executeRequest(String urlString, Method method, RequestExecutor.ContentType contentTypeFormat)
 			throws MambuApiException {

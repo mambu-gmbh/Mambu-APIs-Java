@@ -60,7 +60,7 @@ public class RepaymentsService {
 	/***
 	 * Get a loan account Repayments between FromDate and ToDate
 	 * 
-	 * @param dueFomString
+	 * @param dueFromString
 	 * @param dueToString
 	 * @param offset
 	 *            pagination offset. Has to be >= 0 if not null. If null, Mambu default will be used

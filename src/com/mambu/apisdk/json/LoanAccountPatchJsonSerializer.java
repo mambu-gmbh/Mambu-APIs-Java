@@ -21,8 +21,8 @@ import com.mambu.loans.shared.model.PrincipalPaymentAccountSettings;
  * LoanAccountPatchJsonSerializer implements custom JsonSerializer for PATCH Loan Account API requests. It specifies
  * PATCH API fields inclusion strategy as well as providing custom JSON formating as expected by Mambu API specification
  * 
- * For more details on Mambu PATCH Loan API specification see MBU-7758, MBU-11481 and {@link https
- * ://developer.mambu.com/customer/en/portal/articles/1617482-loans-api}
+ * For more details on Mambu PATCH Loan API specification see MBU-7758, MBU-11481 and @see
+ * <a href="https://developer.mambu.com/customer/en/portal/articles/1617482-loans-api">Loans API</a>
  * 
  * @author mdanilkis
  * 
