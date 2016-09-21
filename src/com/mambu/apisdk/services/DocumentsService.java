@@ -122,6 +122,9 @@ public class DocumentsService {
 
 	/***
 	 * Get an Image file using file's encoded key and the preferred image size
+	 * 
+	 * @param imageKey
+	 *            a key to access image file (e.g. client's profile picture key: client.getProfilePictureKey())
 	 * @param sizeType
 	 *            a desired size to be returned. E.g LARGE, MEDIUM, SMALL_THUMB, TINY_THUMB. Can be null to get full
 	 *            size
