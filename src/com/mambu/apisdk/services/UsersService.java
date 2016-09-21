@@ -179,11 +179,11 @@ public class UsersService {
 	/**
 	 * Get Custom Views for the user by user's userName and apiViewType.
 	 * 
-	 * See more in {@link MBU-4607 @ https://mambucom.jira.com/browse/MBU-4607 } and in MBU-6306 {@link https
-	 * ://mambucom.jira.com/browse/MBU-6306}
+	 * See more in  @see <a href="https://mambucom.jira.com/browse/MBU-4607">MBU-4607</a> and in 
+	 * @see <a href="https://mambucom.jira.com/browse/MBU-6306">MBU-6306</a>
 	 * 
 	 * @param username
-	 *            the username of the user. Mandatory field
+	 *            the user name of the user. Mandatory field
 	 * @param apiViewType
 	 *            view filter type. If null, all custom views are returned
 	 * 

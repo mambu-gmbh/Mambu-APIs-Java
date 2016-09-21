@@ -1048,8 +1048,6 @@ public class LoansService {
 	 *            transaction amount
 	 * @param date
 	 *            transaction date
-	 * @param transactionDetails
-	 *            transaction details
 	 * @param customInformation
 	 *            transaction custom fields
 	 * @param notes
@@ -1188,8 +1186,6 @@ public class LoansService {
 	 * 
 	 * @param accountId
 	 *            the id of the account.
-	 * @param transactionType
-	 *            loan transaction type. Must not be null. Supported type is: INTEREST_RATE_CHANGED
 	 * @param transactionRequest
 	 *            JSON transaction request
 	 * 
