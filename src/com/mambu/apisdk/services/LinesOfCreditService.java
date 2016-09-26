@@ -49,6 +49,12 @@ public class LinesOfCreditService {
 	private final static ApiDefinition createLineOfCredit = new ApiDefinition(ApiType.CREATE_JSON_ENTITY,
 			JSONLineOfCredit.class, LineOfCredit.class);
 
+	// Patch Line of credit:
+	// PATCH{"lineOfCredit":{"id":"LOC1468393266785","startDate":"2016-07-13T10:01:06+0300","expireDate":"2017-01-13T10:01:06+0200",
+	// "creationDate":"2016-07-13T10:01:11+0300","amount":105000,"notes":"some notes"}}'
+	// /api/linesofcredit/LOC_ID
+	private final static ApiDefinition patchLineOfCredit = new ApiDefinition(ApiType.PATCH_ENTITY, LineOfCredit.class);
+
 	/***
 	 * Create a new Lines Of Credit service
 	 * 
@@ -325,6 +331,29 @@ public class LinesOfCreditService {
 
 		return deleteAccount(lineofcreditId, Type.SAVINGS, savingsAccountId);
 
+	}
+	
+	/**
+	 * Patches a line of credit. 
+	 * 
+	 * @param lineOfCreditId
+	 *            The ID for the line of credit (could be both id or the encodedKey). Must not be null.
+	 * @param lineOfCredit
+	 * 				The line of credit object to be patched. Must not be null.
+	 * @return true if the PATCH operation succeeded.
+	 */
+	public boolean patchLinesOfCredit(String lineOfCreditId, LineOfCredit lineOfCredit) throws MambuApiException {
+
+		// PATCH /api/linesofcredit/{LOC_ID}
+		// Example: PATCH /api/linesofcredit/8a80863a55e2d9f40155e30f2dee0106
+		// Available since 4.3 See MBU-14628
+		
+		if (lineOfCreditId == null || lineOfCredit == null) {
+			throw new IllegalArgumentException("lineOfCreditId or lineOfCredit object must not be null");
+		}
+		
+		JSONLineOfCredit lineOfCreditJson = new JSONLineOfCredit(lineOfCredit);
+		return serviceExecutor.executeJson(patchLineOfCredit, lineOfCreditJson, lineOfCreditId);
 	}
 
 }

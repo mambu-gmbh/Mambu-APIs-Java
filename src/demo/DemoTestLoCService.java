@@ -40,6 +40,8 @@ public class DemoTestLoCService {
 
 			// test add and remove accounts from LoC.
 			testAddAndRemoveAccountsForLineOfCredit(locAccounts);// Available since 3.12.2
+			
+			testPatchLineOfCredit(); // Available since v4.3
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Lines of Credit Service");
@@ -305,5 +307,47 @@ public class DemoTestLoCService {
 			}
 
 		}
+	}
+	
+	// tests PATCHing a line of credit
+	public static void testPatchLineOfCredit() throws MambuApiException{
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+		
+		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
+
+		final String clientId = DemoUtil.getDemoClient().getId();
+		// Get Lines of Credit for a client
+		List<LineOfCredit> clientLoCs = linesOfCreditService.getClientLinesOfCredit(clientId, 0, 5);
+		System.out.println(clientLoCs.size() + " lines of credit  for Client " + clientId);
+		
+		if(clientLoCs.isEmpty() && clientLoCs.get(0) == null){
+			System.out.println("WARNING: " + methodName + " could not be tested because there are no LoCs to be patched");
+		}else{
+			LineOfCredit lineOfCredit = clientLoCs.get(0);
+			
+			//change some values on the allowed patch fields
+			Calendar patchDate = Calendar.getInstance();
+			
+			lineOfCredit.setId("LOC" + System.currentTimeMillis());
+			patchDate.add(Calendar.DAY_OF_MONTH, 1);
+			lineOfCredit.setStartDate(patchDate.getTime());
+			
+			patchDate.add(Calendar.YEAR, 2);
+			lineOfCredit.setExpiryDate(patchDate.getTime());
+			
+			lineOfCredit.setAmount(lineOfCredit.getAmount().add(new Money("5000")));
+			lineOfCredit.setNotes("Note updated through APIs today " + new Date());
+
+			boolean booleanResult = linesOfCreditService.patchLinesOfCredit(lineOfCredit.getEncodedKey(), lineOfCredit);
+			System.out.println("PATCH LoC result is = "  + booleanResult);
+			
+			// retrieve PATCHed line of credit
+			lineOfCredit = linesOfCreditService.getLineOfCredit(lineOfCredit.getEncodedKey());
+			
+			// log details of the PATCHed line of credit
+			logLineOfCreditDetails(lineOfCredit);
+		}
+		
 	}
 }
