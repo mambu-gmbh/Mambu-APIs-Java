@@ -123,7 +123,7 @@ public class DemoTestLoCService {
 			System.out.println("\tID:" + lineOfCredit.getId());
 			System.out.println("\tClientKey:" + lineOfCredit.getClientKey());
 			System.out.println("\tGroupKey:" + lineOfCredit.getGroupKey());
-			System.out.println("\tStatrDate:" + lineOfCredit.getStartDate());
+			System.out.println("\tStartDate:" + lineOfCredit.getStartDate());
 			System.out.println("\tExpireDate:" + lineOfCredit.getExpireDate());
 			System.out.println("\tAmount:" + lineOfCredit.getAmount());
 			System.out.println("\tState:" + lineOfCredit.getState());
@@ -321,7 +321,7 @@ public class DemoTestLoCService {
 		List<LineOfCredit> clientLoCs = linesOfCreditService.getClientLinesOfCredit(clientId, 0, 5);
 		System.out.println(clientLoCs.size() + " lines of credit  for Client " + clientId);
 		
-		if(clientLoCs.isEmpty() && clientLoCs.get(0) == null){
+		if(clientLoCs.isEmpty() || clientLoCs.get(0) == null){
 			System.out.println("WARNING: " + methodName + " could not be tested because there are no LoCs to be patched");
 		}else{
 			LineOfCredit lineOfCredit = clientLoCs.get(0);
@@ -339,8 +339,8 @@ public class DemoTestLoCService {
 			lineOfCredit.setAmount(lineOfCredit.getAmount().add(new Money("5000")));
 			lineOfCredit.setNotes("Note updated through APIs today " + new Date());
 
-			boolean booleanResult = linesOfCreditService.patchLinesOfCredit(lineOfCredit.getEncodedKey(), lineOfCredit);
-			System.out.println("PATCH LoC result is = "  + booleanResult);
+			boolean pstchResult = linesOfCreditService.patchLinesOfCredit(lineOfCredit);
+			System.out.println("PATCH LoC result is = "  + pstchResult);
 			
 			// retrieve PATCHed line of credit
 			lineOfCredit = linesOfCreditService.getLineOfCredit(lineOfCredit.getEncodedKey());
