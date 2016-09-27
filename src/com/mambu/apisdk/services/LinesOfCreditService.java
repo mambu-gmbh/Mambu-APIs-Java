@@ -334,26 +334,32 @@ public class LinesOfCreditService {
 	}
 	
 	/**
-	 * Patches a line of credit. 
+	 * Patches a line of credit.
 	 * 
-	 * @param lineOfCreditId
-	 *            The ID for the line of credit (could be both id or the encodedKey). Must not be null.
 	 * @param lineOfCredit
-	 * 				The line of credit object to be patched. Must not be null.
+	 *            The line of credit object to be patched. LineOfCredit object must NOT be null. 
+	 *            Note that either the encodedKey or the ID must NOT be null for PATCHing a line of credit
 	 * @return true if the PATCH operation succeeded.
 	 */
-	public boolean patchLinesOfCredit(String lineOfCreditId, LineOfCredit lineOfCredit) throws MambuApiException {
+	public boolean patchLinesOfCredit(LineOfCredit lineOfCredit) throws MambuApiException {
 
 		// PATCH /api/linesofcredit/{LOC_ID}
 		// Example: PATCH /api/linesofcredit/8a80863a55e2d9f40155e30f2dee0106
 		// Available since 4.3 See MBU-14628
+		if(lineOfCredit == null){
+			throw new IllegalArgumentException("Line of Credit must not be null");
+		} 
 		
-		if (lineOfCreditId == null || lineOfCredit == null) {
-			throw new IllegalArgumentException("lineOfCreditId or lineOfCredit object must not be null");
+		String locEncodedKey = lineOfCredit.getEncodedKey();
+		String locId = lineOfCredit.getId();
+		
+		if (locEncodedKey == null && locId == null) {
+			throw new IllegalArgumentException("Line Of Credit cannot be updated, the encodedKey or ID must be NOT null");
 		}
 		
+		String id = locEncodedKey != null ? locEncodedKey : locId;
 		JSONLineOfCredit lineOfCreditJson = new JSONLineOfCredit(lineOfCredit);
-		return serviceExecutor.executeJson(patchLineOfCredit, lineOfCreditJson, lineOfCreditId);
+		return serviceExecutor.executeJson(patchLineOfCredit, lineOfCreditJson, id);
 	}
 
 }
