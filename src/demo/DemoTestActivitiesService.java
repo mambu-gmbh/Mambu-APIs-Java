@@ -170,8 +170,7 @@ public class DemoTestActivitiesService {
 		Calendar fromDate = Calendar.getInstance();
 		fromDate.add(Calendar.DAY_OF_MONTH, -10);
 		
-		List<JSONActivity> jsonActivities = activitiesService.getActivities(fromDate.getTime(), toDate.getTime(),
-				null, null, 0, 5);
+		List<JSONActivity> jsonActivities = activitiesService.getActivities(fromDate.getTime(), toDate.getTime(), 0, 5);
 		
 		printMambuEntityAndActivitiesDetails(null, null, jsonActivities, fromDate.getTime(), toDate.getTime());	
 	}
