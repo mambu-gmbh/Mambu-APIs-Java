@@ -339,8 +339,8 @@ public class DemoTestLoCService {
 			lineOfCredit.setAmount(lineOfCredit.getAmount().add(new Money("5000")));
 			lineOfCredit.setNotes("Note updated through APIs today " + new Date());
 
-			boolean pstchResult = linesOfCreditService.patchLinesOfCredit(lineOfCredit);
-			System.out.println("PATCH LoC result is = "  + pstchResult);
+			boolean patchResult = linesOfCreditService.patchLinesOfCredit(lineOfCredit);
+			System.out.println("PATCH LoC result is = "  + patchResult);
 			
 			// retrieve PATCHed line of credit
 			lineOfCredit = linesOfCreditService.getLineOfCredit(lineOfCredit.getEncodedKey());
