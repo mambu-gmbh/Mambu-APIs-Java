@@ -411,7 +411,7 @@ public class SavingsService {
 	 *            fee.
 	 * 
 	 *            Note: Once MBU-12865 is implemented this method will support both predefined fees and arbitrary fees
-	 *            and the (@link {@link #applyFeeToLoanAccount(String, String, String, String)} method used for
+	 *            and the (@link #applyFeeToLoanAccount(String, String, String, String)} method used for
 	 *            arbitrary fees can be deprecated
 	 * @param notes
 	 *            transaction notes
@@ -605,7 +605,7 @@ public class SavingsService {
 	 * 
 	 * @param accountId
 	 *            the id of the account to withdraw. Must not be null
-	 * @param type
+	 * @param closerType
 	 *            type of closer (withdraw, reject or close). Must not be null
 	 * @param notes
 	 *            optional notes
@@ -631,7 +631,7 @@ public class SavingsService {
 	/****
 	 * Undo Close Savings account. Supports UNDO_REJECT, UNDO_WITHDRAWN, UNDO_CLOSE
 	 * 
-	 * @param savings
+	 * @param savingsAccount
 	 *            closed savings account. Must not be null and must be in one of the supported closed states.
 	 * @param notes
 	 *            undo closer reason notes

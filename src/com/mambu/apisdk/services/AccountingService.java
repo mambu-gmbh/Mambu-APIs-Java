@@ -146,7 +146,7 @@ public class AccountingService {
 	/**
 	 * Returns all GLJournalEntries of a specific date-range
 	 * 
-	 * @param branchId
+	 * @param branchID
 	 *            branch Id
 	 * @param fromDate
 	 *            range starting from. Must not be null

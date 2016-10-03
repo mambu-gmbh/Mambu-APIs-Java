@@ -21,6 +21,7 @@ import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.CustomFieldValueService;
 import com.mambu.apisdk.services.DocumentsService;
+import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.util.APIData.CLOSER_TYPE;
 import com.mambu.apisdk.util.MambuEntityType;
@@ -483,11 +484,22 @@ public class DemoTestSavingsService {
 		// use try and catch to continue: valid API test transfer transactions often fail on business validation rules
 		try {
 			SavingsService savingsService = MambuAPIFactory.getSavingsService();
-
+			OrganizationService organizationService = MambuAPIFactory.getOrganizationService();
 			String accountId = NEW_ACCOUNT_ID;
 			SavingsAccount savings = savingsService.getSavingsAccount(accountId);
 			// Since 4.2 Mambu API supports transfers only between accounts in the same currency. See MBU-12619
-			Currency savingsCurrency = savings.getCurrency();
+
+			String currencyCode = savings.getCurrencyCode();
+			List<Currency> allCurrencies = organizationService.getAllCurrencies();
+
+			Currency savingsCurrency = null;
+
+			for (Currency cur : allCurrencies) {
+				if (cur.getCode().equals(currencyCode)) {
+					savingsCurrency = cur;
+				}
+			}
+
 			// Check the balance
 			Money balance = savings.getBalance();
 			if (balance == null || balance.isLessOrEqual(Money.zero())) {
@@ -530,7 +542,7 @@ public class DemoTestSavingsService {
 			SavingsAccount transferAccount = null;
 			for (SavingsAccount account : savingAccounts) {
 				// Compare currency symbols
-				if (account.getCurrency().getCode().equals(savingsCurrency.getCode())) {
+				if (account.getCurrencyCode().equals(savingsCurrency.getCode())) {
 					transferAccount = account;
 					break;
 				}
@@ -1079,7 +1091,7 @@ public class DemoTestSavingsService {
 		System.out.println(methodName = "\nIn testUpdateDeleteCustomFields");
 
 		// Delegate tests to new since 3.11 DemoTestCustomFiledValueService
-		DemoTestCustomFiledValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.SAVINGS_ACCOUNT);
+		DemoTestCustomFieldValueService.testUpdateDeleteEntityCustomFields(MambuEntityType.SAVINGS_ACCOUNT);
 
 	}
 
@@ -1122,7 +1134,8 @@ public class DemoTestSavingsService {
 		// Get Currency from the account's product
 		List<Currency> currencies = demoSavingsProduct.getCurrencies();
 		Currency currency = currencies != null && currencies.size() > 0 ? currencies.get(0) : null;
-		savingsAccount.setCurrency(currency);
+
+		savingsAccount.setCurrencyCode(currency.getCode());
 
 		// Set Interest rate. required since Mambu 3.13. See MBU-9806
 		InterestProductSettings productRateSettings = demoSavingsProduct.getInterestRateSettings();

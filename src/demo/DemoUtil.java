@@ -38,6 +38,7 @@ import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.MambuAPIServiceFactory;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.model.Protocol;
 import com.mambu.apisdk.services.ClientsService;
 import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.services.OrganizationService;
@@ -48,6 +49,8 @@ import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.GroupExpanded;
+import com.mambu.core.shared.helper.EnumUtils;
+import com.mambu.core.shared.helper.StringUtils;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldDataType;
 import com.mambu.core.shared.model.CustomFieldLink;
@@ -90,6 +93,10 @@ import com.mambu.savings.shared.model.SavingsType;
  * 
  */
 public class DemoUtil {
+	
+	// protocol
+	private static String protocol = "https"; // Application protocol
+	private static String protocol2 = "https"; // Application protocol for domain2
 
 	// "subdomain.sandbox.mambu.com"
 	private static String domain = "subdomain.sandbox.mambu.com"; // Domain name. Format example: demo.mambucloud.com
@@ -175,7 +182,7 @@ public class DemoUtil {
 
 		}
 		// Set up Factory
-		MambuAPIFactory.setUp(domain, user, password);
+		MambuAPIFactory.setUp(EnumUtils.searchEnum(Protocol.class, protocol), domain, user, password);
 
 		// set up App Key
 		MambuAPIFactory.setApplicationKey(appKeyValue);
@@ -199,13 +206,15 @@ public class DemoUtil {
 			return;
 		}
 
-		// Get Properties. For domain, user and demo client we can also use hardcoded defaults if not provided
+		// Get Properties. For protocol, domain, user and demo client we can also use hardcoded defaults if not provided
+		protocol = makeDefaultIfEmpty(properties.getProperty("protocol"), protocol);
 		domain = properties.getProperty("domain", domain);
 		user = properties.getProperty("user", user);
 		password = properties.getProperty("password", password);
 		System.out.println(demoLogPrefix + "Domain=" + domain + "\tUser=" + user);
 		
-		// Get Properties. For domain2, user2 and demo client2 we can also use hardcoded defaults if not provided
+		// Get Properties. For protocol2, domain2, user2 and demo client2 we can also use hardcoded defaults if not provided
+		protocol2 = makeDefaultIfEmpty(properties.getProperty("protocol2"), protocol2);
 		domain2 = properties.getProperty("domain2", domain2);
 		user2 = properties.getProperty("user2", user2);
 		password2 = properties.getProperty("password2", password2);
@@ -288,11 +297,31 @@ public class DemoUtil {
 		}
 		return param;
 	}
+	
+	/**
+	 * Helper method that returns the provided default value only in case of a null or empty value for the parameter
+	 * that is going to be checked.
+	 * 
+	 * @param param
+	 *            parameter to be checked
+	 * @param defaultValue
+	 *            default value to be returned
+	 * @return the value of the parameter to be checked in case its value is different than null and empty or the default
+	 *         value otherwise
+	 */
+	private static String makeDefaultIfEmpty(String param, String defaultValue) {
+
+		if (StringUtils.isBlank(param)) {
+			return defaultValue;
+		}
+		return param;
+
+	}
 
 	/**
 	 * Get service factory object that includes fixed Mambu credentials with domain
 	 * 
-	 * @return
+	 * @return MambuAPIServiceFactory
 	 */
 	public static MambuAPIServiceFactory getAPIServiceFactory() {
 
@@ -305,14 +334,14 @@ public class DemoUtil {
 	 * @param secondaryDomain
 	 *            true if service factory for secondary domain is required, false for primary domain
 	 * 
-	 * @return
+	 * @return MambuAPIServiceFactory
 	 */
 	public static MambuAPIServiceFactory getAPIServiceFactory(boolean secondaryDomain) {
 
 		if (!secondaryDomain) {
-			return MambuAPIServiceFactory.getFactory(domain, user, password);
+			return MambuAPIServiceFactory.getFactory(EnumUtils.searchEnum(Protocol.class, protocol), domain, user, password);
 		} else {
-			return MambuAPIServiceFactory.getFactory(domain2, user2, password2);
+			return MambuAPIServiceFactory.getFactory(EnumUtils.searchEnum(Protocol.class, protocol2), domain2, user2, password2);
 		}
 	}
 
@@ -377,7 +406,7 @@ public class DemoUtil {
 	 * Get or Create a Demo Client of primary domain, delegate for {@link DemoUtil#getDemoClient(boolean)}. Demo client
 	 * is retrieved or created using "demoClientFirstName" and "demoClientLastName" parameters of the configuration file
 	 * 
-	 * @return
+	 * @return Client
 	 * @throws MambuApiException
 	 */
 	public static Client getDemoClient() throws MambuApiException {
@@ -516,7 +545,7 @@ public class DemoUtil {
 	 * @param groupId
 	 *            group ID. Can be null. If null, then "demoGroupId" parameter specified in the configuration file is
 	 *            used. If the configuration parameter is absent (or is empty) then random group is returned. See
-	 *            {@link #getDemoGroup())}
+	 *            {@link #getDemoGroup()}
 	 * @return group
 	 * @throws MambuApiException
 	 */
@@ -545,7 +574,7 @@ public class DemoUtil {
 	 * @param groupId
 	 *            groupId ID. Can be null. If null, then "demoGroupId" parameter specified in the configuration file is
 	 *            used. If the configuration parameter is absent (or is empty) then full details for a random group are
-	 *            retrieved. See {@link #getDemoGroup())}
+	 *            retrieved. See {@link #getDemoGroup()}
 	 * @return group
 	 * @throws MambuApiException
 	 */
@@ -611,8 +640,8 @@ public class DemoUtil {
 	 * @param productId
 	 *            product id. Can be null. If null, then "demoLaonProductId" parameter specified in the configuration
 	 *            file is used. If the configuration parameter is absent (or is empty) then random loan product is
-	 *            retrieved. See {@link #getDemoLoanProduct())}
-	 * @return
+	 *            retrieved. See {@link #getDemoLoanProduct()}
+	 * @return LoanProduct
 	 * @throws MambuApiException
 	 */
 	public static LoanProduct getDemoLoanProduct(String productId) throws MambuApiException {
@@ -788,7 +817,7 @@ public class DemoUtil {
 	 * @param productId
 	 *            product id. Can be null. If null, then "demoSavingsProductId" parameter specified in the configuration
 	 *            file is used. If the configuration parameter is absent (or is empty) then random savings product is
-	 *            retrieved. See {@link #getDemoSavingsProduct())}
+	 *            retrieved. See {@link #getDemoSavingsProduct()}
 	 * @return savings product
 	 * @throws MambuApiException
 	 */
@@ -845,7 +874,7 @@ public class DemoUtil {
 	 * @param accountId
 	 *            account ID. Can be null. If null, then "demoLaonAccountId" parameter specified in the configuration
 	 *            file is used. If the configuration parameter is absent (or is empty) then random loan account is
-	 *            retrieved. See {@link #getDemoLoanAccount())}
+	 *            retrieved. See {@link #getDemoLoanAccount()}
 	 * @return loan account
 	 * @throws MambuApiException
 	 */
@@ -897,7 +926,7 @@ public class DemoUtil {
 	 * @param accountId
 	 *            account ID. Can be null. If null, then "demoLaonAccountId" parameter specified in the configuration
 	 *            file is used. If the configuration parameter is absent (or is empty) then random loan account is
-	 *            retrieved. See {@link #getDemoLoanAccount())}
+	 *            retrieved. See {@link #getDemoLoanAccount()}
 	 * @return loan transaction for the loan account
 	 * @throws MambuApiException
 	 */
@@ -918,7 +947,7 @@ public class DemoUtil {
 	 * @param accountId
 	 *            account ID. Can be null. If null, then "demoLaonAccountId" parameter specified in the configuration
 	 *            file is used. If the configuration parameter is absent (or is empty) then random loan account is
-	 *            retrieved. See {@link #getDemoLoanAccount())}
+	 *            retrieved. See {@link #getDemoLoanAccount()}
 	 * @return loan transaction with transaction details
 	 * @throws MambuApiException
 	 */
@@ -972,8 +1001,8 @@ public class DemoUtil {
 	 * @param accountId
 	 *            account ID. Can be null. If null, then "demoSavingsAccountId" parameter specified in the configuration
 	 *            file is used. If the configuration parameter is absent (or is empty) then random savings account is
-	 *            retrieved. See {@link #getDemoSavingsAccount())}
-	 * @return
+	 *            retrieved. See {@link #getDemoSavingsAccount()}
+	 * @return  demo SavingsAccount
 	 * @throws MambuApiException
 	 */
 	public static SavingsAccount getDemoSavingsAccount(String accountId) throws MambuApiException {
@@ -1486,7 +1515,7 @@ public class DemoUtil {
 	 * 
 	 * @param absolutePath
 	 *            file's absolute path
-	 * @return
+	 * @return encoded String
 	 */
 	public static String encodeFileIntoBase64String(String absolutePath) {
 

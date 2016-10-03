@@ -1,7 +1,6 @@
 package com.mambu.apisdk;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
+import java.io.ByteArrayOutputStream;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -9,6 +8,7 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.Domain;
 import com.mambu.apisdk.model.Password;
 import com.mambu.apisdk.model.Username;
+import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor;
 import com.mambu.apisdk.util.RequestExecutor.Method;
@@ -58,10 +58,9 @@ public class MambuAPIService {
 	 *         response (with the content being specific for each request) or an error response for the http request.
 	 * 
 	 * @throws MambuApiException
-	 * @throws IOException
-	 * @throws MalformedURLException
 	 */
 	public String executeRequest(String urlString, Method method) throws MambuApiException {
+
 		return executor.executeRequest(urlString, method);
 	}
 
@@ -76,10 +75,9 @@ public class MambuAPIService {
 	 * @return String
 	 * 
 	 * @throws MambuApiException
-	 * @throws IOException
-	 * @throws MalformedURLException
 	 */
 	public String executeRequest(String urlString, ParamsMap params, Method method) throws MambuApiException {
+
 		return executor.executeRequest(urlString, params, method);
 	}
 
@@ -96,12 +94,32 @@ public class MambuAPIService {
 	 * @return String
 	 * 
 	 * @throws MambuApiException
-	 * @throws IOException
-	 * @throws MalformedURLException
 	 */
 	public String executeRequest(String urlString, ParamsMap params, Method method,
 			RequestExecutor.ContentType contentTypeFormat) throws MambuApiException {
+
 		return executor.executeRequest(urlString, params, method, contentTypeFormat);
+	}
+
+	/**
+	 * Delegates the execution to a RequestExecutor. Used for requests that requires downloading content through the API
+	 * (like zip archives). It gets the InputStream from the response and converts it into a ByteArrayOutputStream for
+	 * laster use.
+	 * 
+	 * @param urlString
+	 *            The URL string
+	 * @param params
+	 *            The parameters map
+	 * @param apiDefinition
+	 * 				The API definition
+	 * @return ByteArrayOutputStream of the response content.
+	 * 
+	 * @throws MambuApiException
+	 */
+	public ByteArrayOutputStream executeRequest(String urlString, ParamsMap params, ApiDefinition apiDefinition)
+			throws MambuApiException {
+
+		return executor.executeRequest(urlString, params, apiDefinition);
 	}
 
 	/**
@@ -116,11 +134,10 @@ public class MambuAPIService {
 	 * @return String
 	 * 
 	 * @throws MambuApiException
-	 * @throws IOException
-	 * @throws MalformedURLException
 	 */
 	public String executeRequest(String urlString, Method method, RequestExecutor.ContentType contentTypeFormat)
 			throws MambuApiException {
+
 		return executor.executeRequest(urlString, method, contentTypeFormat);
 	}
 
@@ -132,6 +149,7 @@ public class MambuAPIService {
 	 * @return String
 	 */
 	public String createUrl(String details) {
+
 		return urlHelper.createUrl(details);
 	}
 
@@ -148,6 +166,7 @@ public class MambuAPIService {
 	 * @return URL for a limited query
 	 */
 	public String createUrl(String details, int offset, int limit) {
+
 		String url = this.createUrl(details);
 
 		if (limit != -1)

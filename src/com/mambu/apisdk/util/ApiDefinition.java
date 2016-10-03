@@ -23,6 +23,8 @@ import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.api.server.handler.tasks.model.JSONTask;
+import com.mambu.apisdk.model.DatabaseBackup;
+import com.mambu.apisdk.model.DatabaseBackupRequest;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.clients.shared.model.Client;
@@ -251,7 +253,7 @@ public class ApiDefinition {
 	 * just a success/failure response
 	 */
 	public enum ApiReturnFormat {
-		OBJECT, COLLECTION, BOOLEAN, RESPONSE_STRING
+		OBJECT, COLLECTION, BOOLEAN, RESPONSE_STRING, ZIP_ARCHIVE
 	}
 
 	private ApiType apiType;
@@ -320,9 +322,11 @@ public class ApiDefinition {
 	 * api/loans/transactions
 	 * 
 	 * This constructor accepts the first api endpoint as a string but otherwise is identical to the
-	 * {@link ApiDefinition(ApiType apiType, Class<?> entityClass, Class<?> resultClass)}. This constructor can be used
+	 * @See #ApiDefinition(ApiType apiType, Class<?> entityClass, Class<?> resultClass). This constructor can be used
 	 * in cased when there is no Mambu class to map to the api endpoint. Example GET settings/iddocumenttemplates.
 	 * 
+	 * @param apiType
+	 *            the API type
 	 * @param apiEndPoint
 	 *            determines API's endpoint string directly . E.g "settings" as in /api/settings
 	 * @param resultClass
@@ -462,6 +466,7 @@ public class ApiDefinition {
 			// formats)
 			switch (returnFormat) {
 			case OBJECT:
+			case ZIP_ARCHIVE:
 			case COLLECTION:
 				returnClass = resultClass;
 				// Change return format for our special cases (to avoid Gson parsing to Object for these special cases)
@@ -578,6 +583,10 @@ public class ApiDefinition {
 		apiEndPointsMap.put(InvestorFund.class, APIData.FUNDS); // "funds" api end point
 		apiEndPointsMap.put(Guaranty.class, APIData.GUARANTEES); // "guarantees" api end point
 		apiEndPointsMap.put(Role.class, APIData.USER_ROLES); // "userroles" api end point
+
+		// DB
+		apiEndPointsMap.put(DatabaseBackupRequest.class, APIData.DATABASE); // "database" api end point
+		apiEndPointsMap.put(DatabaseBackup.class, APIData.DATABASE);
 	}
 
 	// Get an Api endpoint for a Mambu class

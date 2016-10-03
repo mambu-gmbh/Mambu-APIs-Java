@@ -1,5 +1,7 @@
 package com.mambu.apisdk.util;
 
+import java.io.ByteArrayOutputStream;
+
 import com.mambu.apisdk.exception.MambuApiException;
 
 /**
@@ -93,6 +95,21 @@ public interface RequestExecutor {
 	 * @throws MambuApiException
 	 */
 	public String executeRequest(String urlString, Method method, ContentType contentTypeFormat)
+			throws MambuApiException;
+
+	/**
+	 * Executes a request for a given URL Executes a request with given url and specifying the apiDefinition and some
+	 * parameters.
+	 * 
+	 * @param urlString
+	 *            the url to execute on. eg: https://demo.mambu.com/api/database/backup/LATEST
+	 * @param params
+	 *            the parameters eg: {clientId=id}, {JSON=jsonString}
+	 * @param apiDefinition
+	 *            the ApiDefinition holding details like HTTP method, content type and API return type
+	 * @return A ByteArrayOutputStream from the InputStream of the HTTP response.
+	 */
+	public ByteArrayOutputStream executeRequest(String urlString, ParamsMap params, ApiDefinition apiDefinition)
 			throws MambuApiException;
 
 }

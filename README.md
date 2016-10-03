@@ -13,8 +13,9 @@ Usage
 
 To use the Mambu Java API Wrapper, please include the following jars in your build path
 
-* build/Mambu-APIs-Java-4.2-bin.jar
-* lib/mambu-models-V4.2.jar
+* build/Mambu-APIs-Java-4.3-bin.jar
+* build/Mambu-APIs-Java-4.3-bin-sources.jar
+* lib/mambu-models-V4.3.jar
 * further dependencies to run and test (see pom.xml for versions)
  * httpclient
  * httpcore
@@ -39,6 +40,7 @@ The list will be updated constantly and currently contains:
 - CommentsService
 - CustomFieldValueService
 - CustomViewsService
+- DatabaseService
 - DocumentsService
 - DocumentTemplatesService
 - IntelligenceService

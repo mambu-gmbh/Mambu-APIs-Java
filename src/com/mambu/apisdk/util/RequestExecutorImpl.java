@@ -1,12 +1,14 @@
 package com.mambu.apisdk.util;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -26,7 +29,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -44,7 +46,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 	private URLHelper urlHelper;
 	private String encodedAuthorization;
-	private final static String UTF8_charset = HTTP.UTF_8;
+	private final static String UTF8_charset = StandardCharsets.UTF_8.name();
 	private final static String wwwFormUrlEncodedContentType = "application/x-www-form-urlencoded; charset=UTF-8";
 
 	// Added charset charset=UTF-8, MBU-4137 is now fixed
@@ -68,6 +70,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	// Without params and with default contentType (ContentType.WWW_FORM)
 	@Override
 	public String executeRequest(String urlString, Method method) throws MambuApiException {
+
 		// invoke with default contentType (WWW_FORM)
 		return executeRequest(urlString, null, method, ContentType.WWW_FORM);
 	}
@@ -75,6 +78,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	// With params and with default contentType (ContentType.WWW_FORM)
 	@Override
 	public String executeRequest(String urlString, ParamsMap params, Method method) throws MambuApiException {
+
 		// invoke with default contentType (WWW_FORM)
 		return executeRequest(urlString, params, method, ContentType.WWW_FORM);
 	}
@@ -87,6 +91,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	@Override
 	public String executeRequest(String urlString, Method method, ContentType contentTypeFormat)
 			throws MambuApiException {
+
 		// No params version
 		return executeRequest(urlString, null, method, contentTypeFormat);
 	}
@@ -103,52 +108,23 @@ public class RequestExecutorImpl implements RequestExecutor {
 		urlString = urlHelper.addJsonPaginationParams(urlString, method, contentTypeFormat, params);
 
 		// Log API Request details
-		if (LOGGER.isLoggable(requesLogLevel)) {
-			logApiRequest(requesLogLevel, method, contentTypeFormat, urlString, params);
-		}
+		logApiRequestDetails(urlString, params, method, contentTypeFormat);
 		// Optionally log a template for the "curl" command as if it would be executed with the request specific API
 		// params
-		if (LOGGER.isLoggable(curlRequestTemplateLogLevel)) {
-			logCurlCommandForRequest(method, contentTypeFormat, urlString, params);
-		}
+		logCurlRequestDetails(urlString, params, method, contentTypeFormat);
 
 		// Add 'Application Key', if it was set by the application
 		// Mambu may handle API requests differently for different Application Keys
 
-		String applicationKey = MambuAPIFactory.getApplicationKey();
-		if (applicationKey != null) {
-			// add application key to the params map
-			if (params == null) {
-				params = new ParamsMap();
-			}
-			params.addParam(APPLICATION_KEY, applicationKey);
-
-			// Log that Application key was added
-			logAppKey(applicationKey);
-
-		}
+		params = addAppKeyToParams(params);
 
 		HttpClient httpClient = new DefaultHttpClient();
 		String response = "";
 		HttpResponse httpResponse = null;
 		try {
-			switch (method) {
-			case GET:
-				httpResponse = executeGetRequest(httpClient, urlString, params);
-				break;
-			case POST:
-				httpResponse = executePostRequest(httpClient, urlString, params, contentTypeFormat);
-				break;
-			case PATCH:
-				httpResponse = executePatchRequest(httpClient, urlString, params);
-				break;
-			case DELETE:
-				httpResponse = executeDeleteRequest(httpClient, urlString, params);
-				break;
-			default:
-				throw new IllegalArgumentException("Only methods GET, POST PATCH and DELETE are supported, not "
-						+ method.name() + ".");
-			}
+			httpResponse = executeRequestByMethod(urlString, params, method, contentTypeFormat, httpClient,
+					httpResponse);
+
 			// Process response
 			response = processResponse(httpResponse, method, contentTypeFormat, urlString, params);
 
@@ -163,6 +139,290 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 
 		return response;
+	}
+
+	/**
+	 * Gets the InputStream from the response and converts it into a ByteArrayOutputStream for laster use. (i.e executes
+	 * a request in order to download content and returns it as a ByteArrayOutputStream)
+	 * 
+	 * @param urlString
+	 *            the url to execute on. eg: https://demo.mambu.com/api/database/backup/LATEST
+	 * @param params
+	 *            the parameters eg: {clientId=id}, {JSON=jsonString}
+	 * @param apiDefinition
+	 *            the ApiDefinition holding details like HTTP method, content type and API return type
+	 * @return A ByteArrayOutputStream from the InputStream of the HTTP response.
+	 */
+	@Override
+	public ByteArrayOutputStream executeRequest(String urlString, ParamsMap params, ApiDefinition apiDefinition)
+			throws MambuApiException {
+
+		Method method = apiDefinition.getMethod();
+		ContentType contentTypeFormat = apiDefinition.getContentType();
+
+		// Log API Request details
+		logApiRequestDetails(urlString, params, method, contentTypeFormat);
+		// Optionally log a template for the "curl" command as if it would be executed with the request specific API
+		// params
+		logCurlRequestDetails(urlString, params, method, contentTypeFormat);
+
+		// Add 'Application Key', if it was set by the application
+		// Mambu may handle API requests differently for different Application Keys
+		params = addAppKeyToParams(params);
+
+		HttpClient httpClient = new DefaultHttpClient();
+		ByteArrayOutputStream byteArrayOutputStreamResponse = null;
+		HttpResponse httpResponse = null;
+		try {
+			httpResponse = executeRequestByMethod(urlString, params, method, contentTypeFormat, httpClient,
+					httpResponse);
+
+			// Process response
+			byteArrayOutputStreamResponse = processInputStreamResponse(httpResponse, method, contentTypeFormat,
+					urlString, params);
+
+		} catch (MalformedURLException e) {
+			LOGGER.severe("MalformedURLException: " + e.getMessage());
+			throw new MambuApiException(e);
+		} catch (IOException e) {
+			LOGGER.warning("IOException: message= " + e.getMessage());
+			throw new MambuApiException(e);
+		} finally {
+			httpClient.getConnectionManager().shutdown();
+		}
+
+		return byteArrayOutputStreamResponse;
+	}
+
+	/**
+	 * Process and return the response to an HTTP request. Throw MambuApiException if request failed. Logs the response
+	 * details. Currently used to download DB backup dumps.
+	 * 
+	 * @param httpResponse
+	 *            HTTP response
+	 * @param method
+	 *            The HTTP method
+	 * @param contentType
+	 *            The content type
+	 * @param urlString
+	 *            The URL string for the HTTP request
+	 * @param params
+	 *            The parameters map
+	 * @return A ByteArrayOutputStream for the response`s InputStream.
+	 * @throws MambuApiException
+	 * @throws UnsupportedOperationException
+	 * @throws IOException
+	 */
+	private ByteArrayOutputStream processInputStreamResponse(HttpResponse httpResponse, Method method,
+			ContentType contentType, String urlString, ParamsMap params)
+			throws MambuApiException, UnsupportedOperationException, IOException {
+
+		// get status
+		int status = httpResponse.getStatusLine().getStatusCode();
+
+		ByteArrayOutputStream response = null;
+		String responseMessage = "";
+		// Get the response Entity
+		HttpEntity entity = httpResponse.getEntity();
+		if (entity != null && status == HttpURLConnection.HTTP_OK) {
+			response = getByteArrayOutputStream(entity.getContent());
+			responseMessage = "DB backup stream successfully obtained";
+
+		} else {
+			// read the content for the error message
+			String errorMessage = null;
+			errorMessage = processResponse(httpResponse, method, contentType, urlString, params);
+			responseMessage = errorMessage;
+		}
+
+		// Log Mambu response
+		if (LOGGER.isLoggable(responseLogLevel)) {
+			logApiResponse(responseLogLevel, urlString, status, responseMessage);
+		}
+
+		// if status is Ok - return the response
+		if (status == HttpURLConnection.HTTP_OK || status == HttpURLConnection.HTTP_CREATED) {
+			return response;
+		}
+
+		// Set error code and throw Mambu Exception
+		Integer errorCode = status;
+
+		// Log raising exception
+		logExceptionForProcessingResponse(method, contentType, urlString, params, "", errorCode);
+
+		// pass to MambuApiException the content that goes with the error code
+		throw new MambuApiException(errorCode, "Couldn`t obtain stream content");
+	}
+
+	/**
+	 * Converts the InputStream passed as parameter to this method into a ByteArrayOutputStream
+	 * 
+	 * @param inputStream
+	 *            The InputStream to be transformed
+	 * @return A ByteArrayOutputStream
+	 * @throws IOException
+	 */
+	private ByteArrayOutputStream getByteArrayOutputStream(InputStream inputStream) throws IOException {
+
+		byte[] byteArray = IOUtils.toByteArray(inputStream);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream(byteArray.length);
+		baos.write(byteArray, 0, byteArray.length);
+
+		return baos;
+	}
+
+	/**
+	 * Logs the exception details in case an error occurred while processing the response.
+	 * 
+	 * @param method
+	 *            The HTTP method
+	 * @param contentType
+	 *            The content type
+	 * @param urlString
+	 *            The URL
+	 * @param params
+	 *            the parameters for the URL
+	 * @param response
+	 *            The String response
+	 * @param errorCode
+	 *            The error code received from Mambu
+	 */
+	private static void logExceptionForProcessingResponse(Method method, ContentType contentType, String urlString,
+			ParamsMap params, String response, Integer errorCode) {
+
+		if (LOGGER.isLoggable(exceptionLogLevel)) {
+			// Remove appKey from the URL string when logging exception
+			String urlLogString = urlString;
+			String appKeyValue = MambuAPIFactory.getApplicationKey();
+			if (appKeyValue != null) {
+				urlLogString = urlLogString.replace(appKeyValue, "...");
+			}
+			LOGGER.log(exceptionLogLevel, "Creating exception, error code=" + errorCode + " for url=" + urlLogString);
+			// if response was not logged - log it now with the exception
+			if (!LOGGER.isLoggable(responseLogLevel)) {
+				LOGGER.log(exceptionLogLevel, "Mambu Response: " + response);
+			}
+			// If the request was not logged yet - log it now for this exception to see all needed request details
+			if (!LOGGER.isLoggable(requesLogLevel)) {
+				// Request was not log. Log it now with the exception
+				LOGGER.log(exceptionLogLevel, "Request causing Mambu exception:");
+				logApiRequest(exceptionLogLevel, method, contentType, urlLogString, params);
+			}
+		}
+	}
+
+	/**
+	 * Adds the application key to the parameter map received as parameter to this
+	 * 
+	 * @param paramsMap
+	 *            The parameters map where the application key will be added. The application key will be added only if
+	 *            it was specified.
+	 * @return The updated parameters map
+	 */
+	private ParamsMap addAppKeyToParams(ParamsMap paramsMap) {
+
+		String applicationKey = MambuAPIFactory.getApplicationKey();
+		if (applicationKey != null) {
+			// add application key to the params map
+			if (paramsMap == null) {
+				paramsMap = new ParamsMap();
+			}
+			paramsMap.addParam(APPLICATION_KEY, applicationKey);
+
+			// Log that Application key was added
+			logAppKey(applicationKey);
+
+		}
+		return paramsMap;
+	}
+
+	/**
+	 * Logs the Curl details for the request.
+	 * 
+	 * NOTE: This method logs output only when the Logger level is set to FINEST.
+	 * 
+	 * @param urlString
+	 *            The URL as String
+	 * @param params
+	 *            The parameters for the URL
+	 * @param method
+	 *            The HTTP method
+	 * @param contentTypeFormat
+	 *            The content type
+	 */
+	private void logCurlRequestDetails(String urlString, ParamsMap params, Method method,
+			ContentType contentTypeFormat) {
+
+		if (LOGGER.isLoggable(curlRequestTemplateLogLevel)) {
+			logCurlCommandForRequest(method, contentTypeFormat, urlString, params);
+		}
+	}
+
+	/**
+	 * Logs to the details of an API request
+	 * 
+	 * @param urlString
+	 *            The URL to be printed in logs
+	 * @param params
+	 *            The parameters to be logged
+	 * @param method
+	 *            HTTP method to be logged
+	 * @param contentTypeFormat
+	 *            The content type to be logged
+	 * 
+	 */
+	private void logApiRequestDetails(String urlString, ParamsMap params, Method method,
+			ContentType contentTypeFormat) {
+
+		if (LOGGER.isLoggable(requesLogLevel)) {
+			logApiRequest(requesLogLevel, method, contentTypeFormat, urlString, params);
+		}
+	}
+
+	/**
+	 * Delegates the request executions to more specialized methods based on HTTP method type. Returns the HTTP response
+	 * after executing the requests.
+	 * 
+	 * @param urlString
+	 *            URL string for the HTTP request
+	 * @param params
+	 *            parameters map
+	 * @param method
+	 *            HTTP method
+	 * @param contentTypeFormat
+	 *            content type
+	 * @param httpClient
+	 *            HTTP client executing the request
+	 * @param httpResponse
+	 *            HTTP response
+	 * @return HTTP response
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 * @throws MambuApiException
+	 */
+	private HttpResponse executeRequestByMethod(String urlString, ParamsMap params, Method method,
+			ContentType contentTypeFormat, HttpClient httpClient, HttpResponse httpResponse)
+			throws MalformedURLException, IOException, MambuApiException {
+
+		switch (method) {
+		case GET:
+			httpResponse = executeGetRequest(httpClient, urlString, params);
+			break;
+		case POST:
+			httpResponse = executePostRequest(httpClient, urlString, params, contentTypeFormat);
+			break;
+		case PATCH:
+			httpResponse = executePatchRequest(httpClient, urlString, params);
+			break;
+		case DELETE:
+			httpResponse = executeDeleteRequest(httpClient, urlString, params);
+			break;
+		default:
+			throw new IllegalArgumentException(
+					"Only methods GET, POST PATCH and DELETE are supported, not " + method.name() + ".");
+		}
+		return httpResponse;
 	}
 
 	/**
@@ -370,25 +630,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 		Integer errorCode = status;
 
 		// Log raising exception
-		if (LOGGER.isLoggable(exceptionLogLevel)) {
-			// Remove appKey from the URL string when logging exception
-			String urlLogString = urlString;
-			String appKeyValue = MambuAPIFactory.getApplicationKey();
-			if (appKeyValue != null) {
-				urlLogString = urlLogString.replace(appKeyValue, "...");
-			}
-			LOGGER.log(exceptionLogLevel, "Creating exception, error code=" + errorCode + " for url=" + urlLogString);
-			// if response was not logged - log it now with the exception
-			if (!LOGGER.isLoggable(responseLogLevel)) {
-				LOGGER.log(exceptionLogLevel, "Mambu Response: " + response);
-			}
-			// If the request was not logged yet - log it now for this exception to see all needed request details
-			if (!LOGGER.isLoggable(requesLogLevel)) {
-				// Request was not log. Log it now with the exception
-				LOGGER.log(exceptionLogLevel, "Request causing Mambu exception:");
-				logApiRequest(exceptionLogLevel, method, contentType, urlLogString, params);
-			}
-		}
+		logExceptionForProcessingResponse(method, contentType, urlString, params, response, errorCode);
+
 		// pass to MambuApiException the content that goes with the error code
 		throw new MambuApiException(errorCode, response);
 
@@ -418,6 +661,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 	@Override
 	public void setAuthorization(String username, String password) {
+
 		// encode the username and password
 		String userNamePassword = username + ":" + password;
 		encodedAuthorization = new String(Base64.encodeBase64(userNamePassword.getBytes()));
@@ -451,6 +695,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * Get the formatted content type string for the content type enum value
 	 */
 	private static String getFormattedContentTypeString(ContentType contentTypeFormat) {
+
 		switch (contentTypeFormat) {
 		case WWW_FORM:
 			return wwwFormUrlEncodedContentType;
@@ -706,8 +951,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 				// Get everything up to the documentContent plus some more
 				final int encodedCharsToShow = 20;
 				// Also add "..." to indicate that the output was truncated
-				jsonString = jsonString
-						.substring(0, contentStarts + documentContentParam.length() + encodedCharsToShow)
+				jsonString = jsonString.substring(0, contentStarts + documentContentParam.length() + encodedCharsToShow)
 						+ moreIndicator + "}";
 			}
 		}
@@ -788,4 +1032,5 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 
 	}
+
 }
