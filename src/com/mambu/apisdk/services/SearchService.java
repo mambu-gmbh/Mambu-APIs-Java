@@ -106,7 +106,7 @@ public class SearchService {
 	 * Convenience method to GET Mambu entities by specifying filter constraints. This generic method can be used to
 	 * retrieve entities by filter constraints for any supported entity type. API users can also use methods specific to
 	 * each entity, for example to get clients by filter constraints use
-	 * {@link ClientsService#getClients(JSONFilterConstraints)}
+	 * {@link ClientsService#getClients(JSONFilterConstraints, String, String)}
 	 * 
 	 * @param searchEntityType
 	 *            Mambu entity type. Must not be null. Currently searching with filter constrains API supports the

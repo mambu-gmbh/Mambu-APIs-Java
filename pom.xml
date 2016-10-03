@@ -103,6 +103,12 @@
 						<goals>
 							<goal>jar-no-fork</goal>
 						</goals>
+						<configuration>
+							<outputDirectory>build</outputDirectory>
+                			<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>false</overWriteSnapshots>
+							<overWriteIfNewer>true</overWriteIfNewer>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>

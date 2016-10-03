@@ -24,7 +24,7 @@ import com.mambu.clients.shared.model.GroupRole;
  * API
  * 
  * For more details on Mambu PATCH Group API specification see MBU-11443, MBU-12985 and 
- * {@link https://mambucom.jira.com/browse/MBU-12985}
+ * @see <a href="https://mambucom.jira.com/browse/MBU-12985">MBU-12985</a>
  * 
  * @author acostros
  * 

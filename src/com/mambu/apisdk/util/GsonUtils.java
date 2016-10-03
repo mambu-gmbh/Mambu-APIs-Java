@@ -36,9 +36,7 @@ public class GsonUtils {
 	/**
 	 * Create GsonBuilder with default date/time format
 	 * 
-	 * @param dateTimeFormat
-	 *            date/time format. If null, default date/time format is used
-	 * @return
+	 * @return GsonBuilder
 	 */
 	public static GsonBuilder createGsonBuilder() {
 		return new GsonBuilder().setDateFormat(defaultDateTimeFormat);
@@ -49,7 +47,7 @@ public class GsonUtils {
 	 * 
 	 * @param dateTimeFormat
 	 *            date/time format. If null, default date/time format is used
-	 * @return
+	 * @return GsonBuilder
 	 */
 	public static GsonBuilder createGsonBuilder(String dateTimeFormat) {
 		if (dateTimeFormat == null) {

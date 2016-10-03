@@ -22,7 +22,7 @@ import com.mambu.loans.shared.model.LoanAccount;
  * Mambu API specification
  * 
  * For more details on Mambu GET Loan Product schedule preview API specification see MBU-6789, MBU-7676, MBU-10802 and
- * MBU-11481 and {@link https://developer.mambu.com/customer/en/portal/articles/1616164-loan-products-api}
+ * MBU-11481 and @see <a href="https://developer.mambu.com/customer/en/portal/articles/1616164-loan-products-api">Loan products API</a>
  * 
  * @author mdanilkis
  * 

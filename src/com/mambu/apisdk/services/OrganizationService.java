@@ -61,6 +61,9 @@ public class OrganizationService {
 
 	private final static ApiDefinition getCurrencies = new ApiDefinition(ApiType.GET_LIST, Currency.class);
 
+	// GET currency by code. Example: /api/currencies/{currencyCode}
+	private final static ApiDefinition getCurrencyByCode = new ApiDefinition(ApiType.GET_ENTITY, Currency.class);
+
 	private final static ApiDefinition getTransactionChannels = new ApiDefinition(ApiType.GET_LIST,
 			TransactionChannel.class);
 	// Post Index Interest Rate
@@ -112,6 +115,9 @@ public class OrganizationService {
 		return serviceExecutor.execute(getCurrencies, paramsMap);
 	}
 
+	
+	public final static String baseCurrencyMustBeDefined = "Base Currency must be defined";
+
 	/**
 	 * Convenience method to request the organization's base currency only
 	 * 
@@ -119,8 +125,6 @@ public class OrganizationService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public final static String baseCurrencyMustBeDefined = "Base Currency must be defined";
-
 	public Currency getCurrency() throws MambuApiException {
 
 		// Delegate the call to GET all currencies method and request only the base currency
@@ -131,6 +135,30 @@ public class OrganizationService {
 			// At least base currency must be defined for an organization
 			throw new MambuApiException(-1, baseCurrencyMustBeDefined);
 		}
+	}
+
+	/**
+	 * Requests a currency for a supplied currency code.
+	 * 
+	 * @param currencyCode
+	 *            the currency code for the currency to be searched in Mambu. Must not be null.
+	 * 
+	 * @return Currency having as currency code the currency code passed as parameter to this method call. In case a
+	 *         wrong currency code (there is no currency having this code) is passed to this method call then the server
+	 *         will return INVALID_CURRENCY_CODE error code.
+	 * 
+	 * @throws MambuApiException
+	 */
+	public Currency getCurrency(String currencyCode) throws MambuApiException {
+
+		// Getting a currency for a supplied currency code, available since 4.3. See JSDK-25
+		// Example: GET api/currencies/{currencyCode}
+
+		if (currencyCode == null) {
+			throw new IllegalArgumentException("The currency code can`t be null!");
+		}
+
+		return serviceExecutor.execute(getCurrencyByCode, currencyCode);
 	}
 
 	/**

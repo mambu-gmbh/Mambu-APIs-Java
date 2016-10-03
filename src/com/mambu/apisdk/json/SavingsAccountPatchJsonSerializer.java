@@ -21,8 +21,8 @@ import com.mambu.savings.shared.model.SavingsAccount;
  * specifies PATCH API fields inclusion strategy, as well as providing custom JSON formating as expected by Mambu API
  * specification for this API
  * 
- * For more details on Mambu PATCH Savings API specification see MBU-10447 and {@link https
- * ://developer.mambu.com/customer/en/portal/articles/1616216-savings-api}
+ * For more details on Mambu PATCH Savings API specification see MBU-10447 and @see <a
+ * href="https://developer.mambu.com/customer/en/portal/articles/1616216-savings-api">Savings API</a>
  * 
  * @author mdanilkis
  * 
