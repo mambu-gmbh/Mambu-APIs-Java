@@ -90,7 +90,7 @@ public class DatabaseService {
 
 		downloadLatestDbBackup.setApiReturnFormat(ApiReturnFormat.ZIP_ARCHIVE);
 
-		// creates a DatabaseCackup wrapper to store the backup content
+		// creates a DatabaseBackup wrapper to store the backup content
 		DatabaseBackup backup = new DatabaseBackup();
 		backup.setContent((ByteArrayOutputStream) serviceExecutor.execute(downloadLatestDbBackup));
 
