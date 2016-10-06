@@ -2406,9 +2406,6 @@ public class DemoTestLoanService {
 			boolean patchSettlementsResult = loanService.patchSettlementAccouns(loanAccountToBeUpdated, savingsAccount);
 
 			System.out.println("The result of PATCHing settlements is: " + patchSettlementsResult);
-
-			// delete it now
-			testDeleteSettlementAccount(loanAccountToBeUpdated, savingsAccount);
 		}
 	}
 
@@ -2443,29 +2440,4 @@ public class DemoTestLoanService {
 		return savingsAccount;
 	}
 
-	/**
-	 * Deletes the linkage between the loan account and the savings account passed as parameters in a call to this
-	 * method.
-	 * 
-	 * @param loanAccount
-	 *            The loan account used to delete the settlement account from.
-	 * @param savingsAccount
-	 *            The saving account used for linkage deletion
-	 * @throws MambuApiException
-	 */
-	public static void testDeleteSettlementAccount(LoanAccount loanAccount, SavingsAccount savingsAccount)
-			throws MambuApiException {
-		// use the previously linked account
-
-		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
-		System.out.println(methodName = "\nIn " + methodName);
-
-		LoanAccount loanAccountToBeUpdated = newAccount;
-
-		LoansService loanService = MambuAPIFactory.getLoanService();
-		boolean deleteResult = loanService.deleteSettlementAccount(loanAccountToBeUpdated.getEncodedKey(),
-				savingsAccount.getEncodedKey());
-
-		System.out.println("The delete resut is: " + deleteResult);
-	}
 }
