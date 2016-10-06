@@ -8,7 +8,6 @@ import java.util.List;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.mambu.accounts.shared.model.Account;
 import com.mambu.accounts.shared.model.Account.Type;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.accountsecurity.shared.model.Guaranty;
@@ -28,8 +27,8 @@ import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.json.LoanAccountPatchJsonSerializer;
 import com.mambu.apisdk.json.LoanProductScheduleJsonSerializer;
-import com.mambu.apisdk.json.SettlementAccountPatchSerializer;
 import com.mambu.apisdk.model.ApiLoanAccount;
+import com.mambu.apisdk.model.SettlementAccount;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
@@ -53,7 +52,6 @@ import com.mambu.loans.shared.model.LoanTranche;
 import com.mambu.loans.shared.model.LoanTransaction;
 import com.mambu.loans.shared.model.LoanTransactionType;
 import com.mambu.loans.shared.model.Repayment;
-import com.mambu.savings.shared.model.SavingsAccount;
 
 /**
  * Service class which handles API operations like retrieval, creation or changing state of loan accounts. See full
@@ -135,12 +133,10 @@ public class LoansService {
 		patchAccount.addJsonSerializer(LoanAccount.class, new LoanAccountPatchJsonSerializer());
 	}
 	// Patch Account. Used to link loan accounts with savings accounts
-	private final static ApiDefinition patchLoanwithSettlementAccounts;
+	private final static ApiDefinition postSettlementForLoanAccount;
 	static {
-		patchLoanwithSettlementAccounts = new ApiDefinition(ApiType.PATCH_OWNED_ENTITY, LoanAccount.class,
-				SettlementAccountPatchSerializer.class, Boolean.class);
-		// Use SettlementAccountPatchSerializer in order to make expected format
-		patchLoanwithSettlementAccounts.addJsonSerializer(SavingsAccount.class, new SettlementAccountPatchSerializer());
+		postSettlementForLoanAccount = new ApiDefinition(ApiType.POST_OWNED_ENTITY, LoanAccount.class,
+				SettlementAccount.class);
 	}
 	// Update Loan Tranches. Returns updated LoanAccount. POST /api/loans/loanId/tranches
 	private final static ApiDefinition updateAccountTranches = new ApiDefinition(ApiType.POST_ENTITY_ACTION,
@@ -1534,54 +1530,62 @@ public class LoansService {
 	}
 
 	/**
-	 * Patches or links a settlement account with a loan account.
+	 * Updates or links a settlement account with a loan account.
 	 * 
-	 * Since Mambu 4.4 Example: PATCH : /api/loans/LOAN_ID/settlementAccounts {savingsAccount:{"encodedKey”
-	 * :“8a8087b05787f0e701578a83caf302b0"} }
+	 * Call: POST : /api/loans/{LOAN_KEY}/settlementAccounts/{SAVINGS_KEY}
 	 * 
+	 * Sample call: POST /api/loans/8a8086a756dfa8f30156e0bdbf060259/settlementAccounts/8a80866357976c62015798e0b60e00d0
 	 * 
-	 * @param loanAccount
-	 *            The loan to be linked. Must not be null. NOTE: Its ID or the encodedKey must not be null also.
+	 * Sample response: {"returnCode":0,"returnStatus":"SUCCESS"}
 	 * 
-	 * @param savingsAccount
-	 *            The settlement account to be linked. Must not be null. NOTE: Its ID or the encodedKey must not be null
-	 *            also.
-	 * @return true if it succeeds linking the two accounts passed as parameters in a call to this method.
+	 * Available since Mambu 4.4
+	 * 
+	 * @param loanAccountKey
+	 *            A string key representing the ID or the encoding key of the loan account. Must NOT be NULL.
+	 * 
+	 * @param savingsAccountKey
+	 *            A string key representing the ID or the encoding key of the saving account Must NOT be NULL.
+	 * 
+	 * @return true if it succeeds linking the two accounts of the keys passed as parameters in a call to this method.
 	 * @throws MambuApiException
 	 */
-	public Boolean patchSettlementAccouns(LoanAccount loanAccount, SavingsAccount savingsAccount)
+	public Boolean addSettlementAccount(String loanAccountKey, String savingsAccountKey)
 			throws MambuApiException {
 
-		String savingKey = getKeyForAccount(savingsAccount);
-		if (savingKey == null) {
-			throw new IllegalArgumentException("ID or encodedKey for the saving account must NOT be NULL");
-		}
-
-		String loanKey = getKeyForAccount(loanAccount);
-		if (loanKey == null) {
-			throw new IllegalArgumentException("ID or encodedKey for the loan account must NOT be NULL");
+		if (savingsAccountKey == null || loanAccountKey == null) {
+			throw new IllegalArgumentException("loanAcountKey or savingsAccountKey must NOT be NULL");
 		}
 		
-		return serviceExecutor.executeJson(patchLoanwithSettlementAccounts, savingsAccount, loanKey);
+		return serviceExecutor.execute(postSettlementForLoanAccount, savingsAccountKey, loanAccountKey, null);
 	}
 
 	/**
-	 * Gets the encodedKey or the ID from the account passed as parameter in a call to this method.
+	 * Deletes the link between the loan account and saving account (known as settlement account)
 	 * 
-	 * @param account
-	 *            The account used to obtain the ID or the encoded key from.
-	 * @return a String key representing the encodedKey or the ID or null if both are null.
+	 * Call: DELETE /api/loans/{LOAN_KEY}/settlementAccounts/{SAVINGS_KEY}
+	 * 
+	 * Sample call: DELETE /api/loans/STLACC_7832648/settlementAccounts/8a80866357976c62015798e0b60e00d0
+	 * 
+	 * Sample response: {"returnCode":0,"returnStatus":"SUCCESS"}
+	 * 
+	 * Available since Mambu 4.4
+	 * 
+	 * @param loanAccountKey
+	 *            A string key representing the ID or the encoding key of the loan account. Must NOT be NULL.
+	 * @param savingAccountKey
+	 *            A string key representing the ID or the encoding key of the saving account Must NOT be NULL.
+	 * @return true if the linkage succeeded.
+	 * @throws MambuApiException
 	 */
-	private String getKeyForAccount(Account account) {
+	public Boolean deleteSettlementAccount(String loanAccountKey, String savingAccountKey)
+			throws MambuApiException {
 
-		if (account == null) {
-			throw new IllegalArgumentException("Account must not be NULL");
+		if (savingAccountKey == null || loanAccountKey == null) {
+			throw new IllegalArgumentException("loanAcountKey or savingAccountKey must NOT be NULL");
 		}
 
-		String encodedKey = account.getEncodedKey();
-		String accountId = account.getId();
-
-		return encodedKey != null ? encodedKey : accountId;
+		return serviceExecutor.deleteOwnedEntity(MambuEntityType.LOAN_ACCOUNT, loanAccountKey,
+				MambuEntityType.SETTLEMENT_ACCOUNT, savingAccountKey);
 	}
 
 }
