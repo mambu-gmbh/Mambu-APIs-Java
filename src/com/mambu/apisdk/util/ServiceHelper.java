@@ -10,6 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.mambu.accounts.shared.model.Account;
 import com.mambu.accounts.shared.model.AccountState;
 import com.mambu.accounts.shared.model.PredefinedFee;
 import com.mambu.accounts.shared.model.TransactionDetails;
@@ -593,5 +594,24 @@ public class ServiceHelper {
 			// Only CLOSED, WITHDRAWN and CLOSED_REJECTED states are supported by Savings API
 			return null;
 		}
+	}
+
+	/**
+	 * Gets the encodedKey or the ID from the account passed as parameter in a call to this method.
+	 * 
+	 * @param account
+	 *            The account used to obtain the ID or the encoded key from.
+	 * @return a String key representing the encodedKey or the ID or null if both are null.
+	 */
+	public static String getKeyForAccount(Account account) {
+
+		if (account == null) {
+			throw new IllegalArgumentException("Account must not be NULL");
+		}
+
+		String encodedKey = account.getEncodedKey();
+		String accountId = account.getId();
+
+		return encodedKey != null ? encodedKey : accountId;
 	}
 }
