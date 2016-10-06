@@ -8,7 +8,6 @@ import java.util.List;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.mambu.accounts.shared.model.Account;
 import com.mambu.accounts.shared.model.Account.Type;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.accountsecurity.shared.model.Guaranty;
@@ -1552,12 +1551,12 @@ public class LoansService {
 	public Boolean patchSettlementAccouns(LoanAccount loanAccount, SavingsAccount savingsAccount)
 			throws MambuApiException {
 
-		String savingKey = getKeyForAccount(savingsAccount);
+		String savingKey = ServiceHelper.getKeyForAccount(savingsAccount);
 		if (savingKey == null) {
 			throw new IllegalArgumentException("ID or encodedKey for the saving account must NOT be NULL");
 		}
 
-		String loanKey = getKeyForAccount(loanAccount);
+		String loanKey = ServiceHelper.getKeyForAccount(loanAccount);
 		if (loanKey == null) {
 			throw new IllegalArgumentException("ID or encodedKey for the loan account must NOT be NULL");
 		}
@@ -1566,22 +1565,37 @@ public class LoansService {
 	}
 
 	/**
-	 * Gets the encodedKey or the ID from the account passed as parameter in a call to this method.
+	 * Deletes the link between the loan account and saving account (known as settlement account)
 	 * 
-	 * @param account
-	 *            The account used to obtain the ID or the encoded key from.
-	 * @return a String key representing the encodedKey or the ID or null if both are null.
+	 * Call: DELETE /api/loans/{LOAN_KEY}/settlementAccounts/{SAVINGS_KEY}
+	 * 
+	 * Sample call: DELETE /api/loans/STLACC_7832648/settlementAccounts/8a80866357976c62015798e0b60e00d0
+	 * 
+	 * Sample response: {"returnCode":0,"returnStatus":"SUCCESS"}
+	 * 
+	 * Available since Mambu 4.4
+	 * 
+	 * @param loanAccountKey
+	 *            A string key representing the ID or the encoding key of the loan account. Must NOT be NULL.
+	 * @param savingAccountKey
+	 *            A string key representing the ID or the encoding key of the saving account Must NOT be NULL.
+	 * @return true if the linkage succeeded.
+	 * @throws MambuApiException
 	 */
-	private String getKeyForAccount(Account account) {
+	public Boolean deleteSettlementAccount(String loanAccountKey, String savingAccountKey)
+			throws MambuApiException {
 
-		if (account == null) {
-			throw new IllegalArgumentException("Account must not be NULL");
+
+		if (savingAccountKey == null) {
+			throw new IllegalArgumentException("loanAcountKey for the saving account must NOT be NULL");
 		}
 
-		String encodedKey = account.getEncodedKey();
-		String accountId = account.getId();
+		if (loanAccountKey == null) {
+			throw new IllegalArgumentException("ID or encodedKey for the loan account must NOT be NULL");
+		}
 
-		return encodedKey != null ? encodedKey : accountId;
+		return serviceExecutor.deleteOwnedEntity(MambuEntityType.LOAN_ACCOUNT, loanAccountKey,
+				MambuEntityType.SETTLEMENT_ACCOUNT, savingAccountKey);
 	}
 
 }
