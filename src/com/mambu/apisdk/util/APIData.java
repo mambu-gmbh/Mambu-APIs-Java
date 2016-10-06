@@ -1,10 +1,9 @@
 package com.mambu.apisdk.util;
 
-/*
- * This class defines string constants and other constants for Mambu API services
- * 
- */
-
+//
+// This class defines string constants and other constants for Mambu API services
+//
+//
 public class APIData {
 
 	public final static String APPLICATION_KEY = "appkey";
@@ -211,9 +210,6 @@ public class APIData {
 	public static final String MAX_WITHDRAWAL_AMOUNT = "maxWidthdrawlAmount";
 	public static final String RECOMMENDED_DEPOSIT_AMOUNT = "recommendedDepositAmount";
 	public static final String TARGET_AMOUNT = "targetAmount";
-
-	// Parameters supported by SettlementAccounts PATCH API
-	public static final String ENCODED_KEY = "encodedKey";
 
 	public static final String DUE_FROM = "dueFrom";
 	public static final String DUE_TO = "dueTo";
