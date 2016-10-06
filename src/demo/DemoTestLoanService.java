@@ -2352,7 +2352,7 @@ public class DemoTestLoanService {
 	}
 
 	/**
-	 * Tests updating a loan in order to set a settlement account on it. It works only with Loans having Account Linking
+	 * Tests PATCHing a loan in order to set a settlement account on it. It works only with Loans having Account Linking
 	 * enabled
 	 * 
 	 * @throws MambuApiException
@@ -2402,16 +2402,13 @@ public class DemoTestLoanService {
 				return;
 			}
 
-			System.out.println("Adding the settlement account the loan account...");
-			boolean additionSucceded = loanService.addSettlementAccount(loanAccountToBeUpdated.getEncodedKey(),
-					savingsAccount.getEncodedKey());
+			System.out.println("PATCHing the loan account...");
+			boolean patchSettlementsResult = loanService.patchSettlementAccouns(loanAccountToBeUpdated, savingsAccount);
 
-			System.out.println("The result of adding settlements is: " + additionSucceded);
+			System.out.println("The result of PATCHing settlements is: " + patchSettlementsResult);
 
-			if(additionSucceded){
-				// delete it now
-				testDeleteSettlementAccount(savingsAccount); // available since Mambu v4.4
-			}
+			// delete it now
+			testDeleteSettlementAccount(loanAccountToBeUpdated, savingsAccount);
 		}
 	}
 
@@ -2447,14 +2444,16 @@ public class DemoTestLoanService {
 	}
 
 	/**
-	 * Tests deleting the linkage between the loan account and the savings account passed as parameters in a call to
-	 * this method.
+	 * Deletes the linkage between the loan account and the savings account passed as parameters in a call to this
+	 * method.
 	 * 
+	 * @param loanAccount
+	 *            The loan account used to delete the settlement account from.
 	 * @param savingsAccount
 	 *            The saving account used for linkage deletion
 	 * @throws MambuApiException
 	 */
-	public static void testDeleteSettlementAccount(SavingsAccount savingsAccount)
+	public static void testDeleteSettlementAccount(LoanAccount loanAccount, SavingsAccount savingsAccount)
 			throws MambuApiException {
 		// use the previously linked account
 
