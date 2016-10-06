@@ -2352,7 +2352,7 @@ public class DemoTestLoanService {
 	}
 
 	/**
-	 * Tests PATCHing a loan in order to set a settlement account on it. It works only with Loans having Account Linking
+	 * Tests updating a loan in order to set a settlement account on it. It works only with Loans having Account Linking
 	 * enabled
 	 * 
 	 * @throws MambuApiException
@@ -2402,10 +2402,16 @@ public class DemoTestLoanService {
 				return;
 			}
 
-			System.out.println("PATCHing the loan account...");
-			boolean patchSettlementsResult = loanService.patchSettlementAccouns(loanAccountToBeUpdated, savingsAccount);
+			System.out.println("Adding the settlement account the loan account...");
+			boolean additionSucceded = loanService.addSettlementAccount(loanAccountToBeUpdated.getEncodedKey(),
+					savingsAccount.getEncodedKey());
 
-			System.out.println("The result of PATCHing settlements is: " + patchSettlementsResult);
+			System.out.println("The result of adding settlements is: " + additionSucceded);
+
+			if(additionSucceded){
+				// delete it now
+				testDeleteSettlementAccount(savingsAccount); // available since Mambu v4.4
+			}
 		}
 	}
 
@@ -2440,4 +2446,27 @@ public class DemoTestLoanService {
 		return savingsAccount;
 	}
 
+	/**
+	 * Tests deleting the linkage between the loan account and the savings account passed as parameters in a call to
+	 * this method.
+	 * 
+	 * @param savingsAccount
+	 *            The saving account used for linkage deletion
+	 * @throws MambuApiException
+	 */
+	public static void testDeleteSettlementAccount(SavingsAccount savingsAccount)
+			throws MambuApiException {
+		// use the previously linked account
+
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
+
+		LoanAccount loanAccountToBeUpdated = newAccount;
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+		boolean deleteResult = loanService.deleteSettlementAccount(loanAccountToBeUpdated.getEncodedKey(),
+				savingsAccount.getEncodedKey());
+
+		System.out.println("The delete resut is: " + deleteResult);
+	}
 }
