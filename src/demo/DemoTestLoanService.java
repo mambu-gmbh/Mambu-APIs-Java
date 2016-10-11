@@ -152,7 +152,7 @@ public class DemoTestLoanService {
 
 					// Create account to test patch, approve, undo approve, reject, close
 					testCreateJsonAccount();
-					testPatchSetllementAccounts(); // Available since Mambu 4.4
+					testAddAndRemoveSetllementAccounts(); // Available since Mambu 4.4
 					testPatchLoanAccountTerms(); // Available since 3.9.3
 
 					// As per the requirement 2.1 from MBU-10017, when approving a tranched loan account, the loan
@@ -1112,7 +1112,7 @@ public class DemoTestLoanService {
 			// Test Submitting available product fees and their reversal when applicable
 			for (CustomPredefinedFee predefinedFee : productFees) {
 				System.out.println("Applying Predefined Fee =" + predefinedFee.getPredefinedFeeEncodedKey()
-						+ "\tAmount=" + predefinedFee.getAmount());
+						+ "\tAmount=" + predefinedFee.getAmountForLoan());
 				// Only one fee in a time is allowed in API
 				List<CustomPredefinedFee> customFees = new ArrayList<>();
 				customFees.add(predefinedFee);
@@ -2110,7 +2110,7 @@ public class DemoTestLoanService {
 		if (dibsursementFees != null) {
 			System.out.println("\nDisbursement Fees=" + dibsursementFees.size());
 			for (CustomPredefinedFee customFee : dibsursementFees) {
-				System.out.println("\tAmount=" + customFee.getAmount());
+				System.out.println("\tAmount=" + customFee.getAmountForLoan());
 				PredefinedFee fee = customFee.getFee();
 				if (fee == null) {
 					continue;
@@ -2352,13 +2352,13 @@ public class DemoTestLoanService {
 	}
 
 	/**
-	 * Tests updating a loan in order to set a settlement account on it. It works only with Loans having Account Linking
-	 * enabled
+	 * Tests updating a loan in order to set a settlement account on it and then remove the link between the two. It
+	 * works only with Loans having Account Linking enabled
 	 * 
 	 * @throws MambuApiException
 	 */
 
-	public static void testPatchSetllementAccounts() throws MambuApiException {
+	public static void testAddAndRemoveSetllementAccounts() throws MambuApiException {
 
 		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println(methodName = "\nIn " + methodName);
@@ -2371,16 +2371,16 @@ public class DemoTestLoanService {
 		System.out.println("Obtaining the product type of the loan account");
 		LoanProduct loanProduct = loanService.getLoanProduct(productTypeKey);
 
-		if (loanProduct.isAccountLinkingEnabled() == false) {
+		if (!loanProduct.isAccountLinkingEnabled()) {
 
 			System.out.println("WARNING: " + methodName
-					+ " PATCH can`t be ran agains a loan that doesn`t have account linking enabled");
+					+ " PATCH can`t be ran against a loan that doesn`t have account linking enabled");
 		} else {
 			String linkableSavingAccountEncodedKey = loanProduct.getLinkableSavingsProductKey();
 			SavingsService savingService = MambuAPIFactory.getSavingsService();
 
 			SavingsAccount savingsAccount = null;
-			// of linkableSavingAccountEncodedKey is null it means that the loan account can be linked to any type of
+			// if linkableSavingAccountEncodedKey is null it means that the loan account can be linked to any type of
 			// saving account
 			if (linkableSavingAccountEncodedKey == null) {
 				// obtain a savings account as per configuration file or a random one
@@ -2398,17 +2398,17 @@ public class DemoTestLoanService {
 			}
 
 			if (savingsAccount == null) {
-				System.out.println("WARNING: The saving account coldn`t be created");
+				System.out.println("WARNING: The saving account couldn`t be created");
 				return;
 			}
 
 			System.out.println("Adding the settlement account the loan account...");
-			boolean additionSucceded = loanService.addSettlementAccount(loanAccountToBeUpdated.getEncodedKey(),
+			boolean additionSucceeded = loanService.addSettlementAccount(loanAccountToBeUpdated.getEncodedKey(),
 					savingsAccount.getEncodedKey());
 
-			System.out.println("The result of adding settlements is: " + additionSucceded);
+			System.out.println("The result of adding settlements is: " + additionSucceeded);
 
-			if(additionSucceded){
+			if(additionSucceeded){
 				// delete it now
 				testDeleteSettlementAccount(savingsAccount); // available since Mambu v4.4
 			}
@@ -2467,6 +2467,6 @@ public class DemoTestLoanService {
 		boolean deleteResult = loanService.deleteSettlementAccount(loanAccountToBeUpdated.getEncodedKey(),
 				savingsAccount.getEncodedKey());
 
-		System.out.println("The delete resut is: " + deleteResult);
+		System.out.println("The delete result is: " + deleteResult);
 	}
 }

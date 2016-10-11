@@ -132,12 +132,9 @@ public class LoansService {
 		// Use LoanAccountPatchJsonSerializer to make the expected format
 		patchAccount.addJsonSerializer(LoanAccount.class, new LoanAccountPatchJsonSerializer());
 	}
-	// Patch Account. Used to link loan accounts with savings accounts
-	private final static ApiDefinition postSettlementForLoanAccount;
-	static {
-		postSettlementForLoanAccount = new ApiDefinition(ApiType.POST_OWNED_ENTITY, LoanAccount.class,
-				SettlementAccount.class);
-	}
+	// Used to link loan accounts with savings accounts
+	private final static ApiDefinition postSettlementForLoanAccount = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
+			LoanAccount.class, SettlementAccount.class);
 	// Update Loan Tranches. Returns updated LoanAccount. POST /api/loans/loanId/tranches
 	private final static ApiDefinition updateAccountTranches = new ApiDefinition(ApiType.POST_ENTITY_ACTION,
 			LoanAccount.class, LoanTranche.class);
@@ -1573,7 +1570,7 @@ public class LoansService {
 	 * @param loanAccountKey
 	 *            A string key representing the ID or the encoding key of the loan account. Must NOT be NULL.
 	 * @param savingAccountKey
-	 *            A string key representing the ID or the encoding key of the saving account Must NOT be NULL.
+	 *            A string key representing the ID or the encoding key of the saving account. Must NOT be NULL.
 	 * @return true if the linkage succeeded.
 	 * @throws MambuApiException
 	 */
