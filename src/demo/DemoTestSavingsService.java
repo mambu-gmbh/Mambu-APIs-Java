@@ -607,7 +607,7 @@ public class DemoTestSavingsService {
 			int randomIndex = (int) Math.random() * (productFees.size() - 1);
 			CustomPredefinedFee predefinedFee = productFees.get(randomIndex);
 			System.out.println("Applying Predefined Fee =" + predefinedFee.getPredefinedFeeEncodedKey() + " Amount="
-					+ predefinedFee.getAmount());
+					+ predefinedFee.getAmountForLoan());
 			List<CustomPredefinedFee> customFees = new ArrayList<>();
 			customFees.add(predefinedFee);
 			// Submit API request

@@ -15,6 +15,7 @@ import com.mambu.accounting.shared.model.GLAccountingRule;
 import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.accounts.shared.model.AccountState;
 import com.mambu.accounts.shared.model.DecimalIntervalConstraints;
+import com.mambu.accounts.shared.model.InterestAccountSettings;
 import com.mambu.accounts.shared.model.InterestRateSource;
 import com.mambu.accounts.shared.model.PredefinedFee;
 import com.mambu.accounts.shared.model.PrincipalPaymentMethod;
@@ -69,6 +70,7 @@ import com.mambu.loans.shared.model.Repayment;
 import com.mambu.loans.shared.model.RepaymentScheduleMethod;
 import com.mambu.loans.shared.model.ScheduleDueDatesMethod;
 import com.mambu.savings.shared.model.SavingsAccount;
+import com.mambu.savings.shared.model.SavingsProduct;
 import com.mambu.savings.shared.model.SavingsType;
 
 import demo.DemoUtil.FeeCategory;
@@ -150,6 +152,7 @@ public class DemoTestLoanService {
 
 					// Create account to test patch, approve, undo approve, reject, close
 					testCreateJsonAccount();
+					testAddAndRemoveSetllementAccounts(); // Available since Mambu 4.4
 					testPatchLoanAccountTerms(); // Available since 3.9.3
 
 					// As per the requirement 2.1 from MBU-10017, when approving a tranched loan account, the loan
@@ -1109,7 +1112,7 @@ public class DemoTestLoanService {
 			// Test Submitting available product fees and their reversal when applicable
 			for (CustomPredefinedFee predefinedFee : productFees) {
 				System.out.println("Applying Predefined Fee =" + predefinedFee.getPredefinedFeeEncodedKey()
-						+ "\tAmount=" + predefinedFee.getAmount());
+						+ "\tAmount=" + predefinedFee.getAmountForLoan());
 				// Only one fee in a time is allowed in API
 				List<CustomPredefinedFee> customFees = new ArrayList<>();
 				customFees.add(predefinedFee);
@@ -2107,7 +2110,7 @@ public class DemoTestLoanService {
 		if (dibsursementFees != null) {
 			System.out.println("\nDisbursement Fees=" + dibsursementFees.size());
 			for (CustomPredefinedFee customFee : dibsursementFees) {
-				System.out.println("\tAmount=" + customFee.getAmount());
+				System.out.println("\tAmount=" + customFee.getAmountForLoan());
 				PredefinedFee fee = customFee.getFee();
 				if (fee == null) {
 					continue;
@@ -2348,4 +2351,122 @@ public class DemoTestLoanService {
 		return updatedLoanAccount;
 	}
 
+	/**
+	 * Tests updating a loan in order to set a settlement account on it and then remove the link between the two. It
+	 * works only with Loans having Account Linking enabled
+	 * 
+	 * @throws MambuApiException
+	 */
+
+	public static void testAddAndRemoveSetllementAccounts() throws MambuApiException {
+
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
+
+		LoanAccount loanAccountToBeUpdated = newAccount;
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+		String productTypeKey = loanAccountToBeUpdated.getProductTypeKey();
+
+		System.out.println("Obtaining the product type of the loan account");
+		LoanProduct loanProduct = loanService.getLoanProduct(productTypeKey);
+
+		if (!loanProduct.isAccountLinkingEnabled()) {
+
+			System.out.println("WARNING: " + methodName
+					+ " PATCH can`t be ran against a loan that doesn`t have account linking enabled");
+		} else {
+			String linkableSavingAccountEncodedKey = loanProduct.getLinkableSavingsProductKey();
+			SavingsService savingService = MambuAPIFactory.getSavingsService();
+
+			SavingsAccount savingsAccount = null;
+			// if linkableSavingAccountEncodedKey is null it means that the loan account can be linked to any type of
+			// saving account
+			if (linkableSavingAccountEncodedKey == null) {
+				// obtain a savings account as per configuration file or a random one
+				savingsAccount = DemoUtil.getDemoSavingsAccount();
+			} else {
+
+				System.out.println("Obtaining the product type for the saving account that should be created");
+				SavingsProduct savingsProduct = savingService.getSavingsProduct(linkableSavingAccountEncodedKey);
+
+				System.out.println("Creating the Savings account to be used for linking...");
+				savingsAccount = makeSavingsAccountForLoanWithSettlements(loanAccountToBeUpdated, savingsProduct);
+
+				System.out.println("POSTing the newly created Savings account...");
+				savingsAccount = savingService.createSavingsAccount(savingsAccount);
+			}
+
+			if (savingsAccount == null) {
+				System.out.println("WARNING: The saving account couldn`t be created");
+				return;
+			}
+
+			System.out.println("Adding the settlement account the loan account...");
+			boolean additionSucceeded = loanService.addSettlementAccount(loanAccountToBeUpdated.getEncodedKey(),
+					savingsAccount.getEncodedKey());
+
+			System.out.println("The result of adding settlements is: " + additionSucceeded);
+
+			if(additionSucceeded){
+				// delete it now
+				testDeleteSettlementAccount(savingsAccount); // available since Mambu v4.4
+			}
+		}
+	}
+
+	/**
+	 * Helper method, builds and returns a simple saving account for the same account holder as the Loan account passed
+	 * as parameter to this method. NOTE that it need to be amended in case you want to use it for building more complex
+	 * savings accounts (i.e. having custom fields and mandatory fields)
+	 * 
+	 * @param loanAccount
+	 *            The loan account that the deposit will be created for
+	 * @param savingsProduct
+	 *            The saving product used for building the new saving account
+	 * @return A brand new SavingAccount for the same account holder as per the loan passed as parameter to this method
+	 *         call
+	 */
+	private static SavingsAccount makeSavingsAccountForLoanWithSettlements(LoanAccount loanAccount,
+			SavingsProduct savingsProduct) {
+
+		SavingsAccount savingsAccount = new SavingsAccount();
+		savingsAccount.setInterestSettings(new InterestAccountSettings());
+		savingsAccount.setAccountHolderKey(loanAccount.getAccountHolderKey());
+		savingsAccount.setAccountHolderType(loanAccount.getAccountHolderType());
+		savingsAccount.setCurrencyCode(loanAccount.getCurrencyCode());
+		savingsAccount.setProductTypeKey(savingsProduct.getEncodedKey());
+		savingsAccount.setAccountType(savingsProduct.getProductType());
+		savingsAccount.setAccountState(AccountState.PENDING_APPROVAL);
+		savingsAccount.setInterestRate(new BigDecimal(1.50));
+
+		final long time = new Date().getTime();
+		savingsAccount.setId(apiTestIdPrefix + time);
+		savingsAccount.setNotes("Created by API on " + new Date());
+		return savingsAccount;
+	}
+
+	/**
+	 * Tests deleting the linkage between the loan account and the savings account passed as parameters in a call to
+	 * this method.
+	 * 
+	 * @param savingsAccount
+	 *            The saving account used for linkage deletion
+	 * @throws MambuApiException
+	 */
+	public static void testDeleteSettlementAccount(SavingsAccount savingsAccount)
+			throws MambuApiException {
+		// use the previously linked account
+
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
+
+		LoanAccount loanAccountToBeUpdated = newAccount;
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+		boolean deleteResult = loanService.deleteSettlementAccount(loanAccountToBeUpdated.getEncodedKey(),
+				savingsAccount.getEncodedKey());
+
+		System.out.println("The delete result is: " + deleteResult);
+	}
 }
