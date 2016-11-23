@@ -96,6 +96,7 @@ public class DemoTestLoanService {
 	private static String methodName = null; // print method name on exception
 
 	private static String extraAmount = "55";
+	private static String extraPercentage = "5";
 
 	public static void main(String[] args) {
 
@@ -186,6 +187,8 @@ public class DemoTestLoanService {
 
 					// Edit the loan amount only for active revolving credit loans
 					testEditLoanAmountForActiveRevolvingCreditLoans();
+					testEditPrincipalPaymentAmountForActiveRevolvingCreditLoans(); //available since 4.4
+					testEditPrincipalPaymentPercentageForActiveRevolvingCreditLoans(); //available since 4.4
 					testUndoDisburseLoanAccount(); // Available since 3.9
 					testDisburseLoanAccount();
 					testGetLoanAccountTransactions();
@@ -338,6 +341,84 @@ public class DemoTestLoanService {
 		} else {
 			System.out.println(
 					"The loan account does not meet the prerequisites, therefore its loan amount will not be updated.");
+		}
+	}
+	
+	private static void testEditPrincipalPaymentAmountForActiveRevolvingCreditLoans() throws MambuApiException {
+
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+
+		LoanProductType loanProductType = demoProduct.getLoanProductType();
+		LoansService loanService = MambuAPIFactory.getLoanService();
+		AccountState accountState = loanService.getLoanAccount(NEW_LOAN_ACCOUNT_ID).getAccountState();
+
+		PrincipalPaymentAccountSettings paymentSettings = newAccount.getPrincipalPaymentSettings();
+		// Edit loan's principal payment amount for active revolving credit loan
+		if (loanProductType.equals(LoanProductType.REVOLVING_CREDIT) && 
+				PrincipalPaymentMethod.FLAT.equals(paymentSettings.getPrincipalPaymentMethod()) && 
+				(accountState.equals(AccountState.ACTIVE) || accountState.equals(AccountState.ACTIVE_IN_ARREARS))) {
+
+			LoanAccount newLoanAccount = new LoanAccount();
+			newLoanAccount.setId(NEW_LOAN_ACCOUNT_ID);
+			paymentSettings.setAmount(paymentSettings.getAmount().add(new BigDecimal(extraAmount)));
+			newLoanAccount.setPrincipalPaymentSettings(paymentSettings);
+
+			newLoanAccount.setLoanAmount(newAccount.getLoanAmount().add(new BigDecimal(extraAmount)));
+			// null the unwanted PATCH fields
+			newLoanAccount.setPeriodicPayment((BigDecimal) null);
+			newLoanAccount.setRepaymentInstallments(null);
+			newLoanAccount.setGracePeriod(null);
+			newLoanAccount.setPrincipalRepaymentInterval(null);
+			newLoanAccount.setArrearsTolerancePeriod(null);
+
+			boolean patchResult = loanService.patchLoanAccount(newLoanAccount);
+
+			System.out.println("The loan's principal payment amount was edited for the loan account "
+					+ NEW_LOAN_ACCOUNT_ID + ". Status: " + patchResult);
+		} else {
+			System.out.println(
+					"The loan account does not meet the prerequisites, therefore its principal payment amount will not be updated.");
+		}
+	}
+	
+	private static void testEditPrincipalPaymentPercentageForActiveRevolvingCreditLoans() throws MambuApiException {
+
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+		
+		LoanProductType loanProductType = demoProduct.getLoanProductType();
+		LoansService loanService = MambuAPIFactory.getLoanService();
+		AccountState accountState = loanService.getLoanAccount(NEW_LOAN_ACCOUNT_ID).getAccountState();
+		
+		PrincipalPaymentAccountSettings paymentSettings = newAccount.getPrincipalPaymentSettings();
+
+		// Edit loan's principal payment percentage for active revolving credit loan
+		if (loanProductType.equals(LoanProductType.REVOLVING_CREDIT) && 
+			PrincipalPaymentMethod.OUTSTANDING_PRINCIPAL_PERCENTAGE.equals(paymentSettings.getPrincipalPaymentMethod()) &&
+			(accountState.equals(AccountState.ACTIVE) || accountState.equals(AccountState.ACTIVE_IN_ARREARS))) {
+
+			LoanAccount newLoanAccount = new LoanAccount();
+			newLoanAccount.setId(NEW_LOAN_ACCOUNT_ID);
+		
+			paymentSettings.setPercentage(paymentSettings.getPercentage().add(new BigDecimal(extraPercentage)));
+			newLoanAccount.setPrincipalPaymentSettings(paymentSettings);
+			
+			// null the unwanted PATCH fields
+			newLoanAccount.setLoanAmount((BigDecimal) null);
+			newLoanAccount.setPeriodicPayment((BigDecimal) null); 
+			newLoanAccount.setRepaymentInstallments(null);
+			newLoanAccount.setGracePeriod(null);
+			newLoanAccount.setPrincipalRepaymentInterval(null);
+			newLoanAccount.setArrearsTolerancePeriod(null);
+
+			boolean patchResult = loanService.patchLoanAccount(newLoanAccount);
+
+			System.out.println("The loan's principal payment percentage was edited for the loan account " + NEW_LOAN_ACCOUNT_ID + ". Status: "
+					+ patchResult);
+		} else {
+			System.out.println(
+					"The loan account does not meet the prerequisites, therefore its principal payment percentage will not be updated.");
 		}
 	}
 
