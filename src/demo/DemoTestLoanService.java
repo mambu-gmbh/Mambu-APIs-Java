@@ -355,9 +355,9 @@ public class DemoTestLoanService {
 
 		PrincipalPaymentAccountSettings paymentSettings = newAccount.getPrincipalPaymentSettings();
 		// Edit loan's principal payment amount for active revolving credit loan
-		if (loanProductType.equals(LoanProductType.REVOLVING_CREDIT)
-				&& paymentSettings.getPrincipalPaymentMethod().name().equals("FLAT")
-				&& (accountState.equals(AccountState.ACTIVE) || accountState.equals(AccountState.ACTIVE_IN_ARREARS))) {
+		if (loanProductType.equals(LoanProductType.REVOLVING_CREDIT) && 
+				(paymentSettings.getPrincipalPaymentMethod() == PrincipalPaymentMethod.FLAT) && 
+				(accountState.equals(AccountState.ACTIVE) || accountState.equals(AccountState.ACTIVE_IN_ARREARS))) {
 
 			LoanAccount newLoanAccount = new LoanAccount();
 			newLoanAccount.setId(NEW_LOAN_ACCOUNT_ID);
@@ -395,7 +395,7 @@ public class DemoTestLoanService {
 
 		// Edit loan's principal payment percentage for active revolving credit loan
 		if (loanProductType.equals(LoanProductType.REVOLVING_CREDIT) && 
-			paymentSettings.getPrincipalPaymentMethod().name().equals("OUTSTANDING_PRINCIPAL_PERCENTAGE") &&
+			(paymentSettings.getPrincipalPaymentMethod() == PrincipalPaymentMethod.OUTSTANDING_PRINCIPAL_PERCENTAGE) &&
 			(accountState.equals(AccountState.ACTIVE) || accountState.equals(AccountState.ACTIVE_IN_ARREARS))) {
 
 			LoanAccount newLoanAccount = new LoanAccount();
