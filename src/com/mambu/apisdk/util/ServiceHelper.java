@@ -105,6 +105,7 @@ public class ServiceHelper {
 	 */
 	public static JSONTransactionRequest makeJSONTransactionRequest(Money amount,
 			DisbursementDetails disbursementDetails, List<CustomFieldValue> customInformation, String notes) {
+
 		Date backDate = null;
 		Date firstRepaymentDate = null;
 		List<CustomPredefinedFee> disbursementFees = null;
@@ -173,6 +174,7 @@ public class ServiceHelper {
 	 *            transaction fees to be added to the request
 	 */
 	private static void setTransactionFees(JSONTransactionRequest request, List<CustomPredefinedFee> transactionFees) {
+
 		if (request == null) {
 			return;
 		}
@@ -193,7 +195,7 @@ public class ServiceHelper {
 				JSONFeeRequest jsonFee = new JSONFeeRequest();
 				jsonFee.setEncodedKey(feeEncodedKey); // set key from PredefinedFee
 				// Set amount. Must be not null only for fees with no amount defined in the product. See MBU-8811
-				jsonFee.setAmount(custFee.getAmount()); // set amount from CustomPredefinedFe
+				jsonFee.setAmount(custFee.getAmount()); // set amount from CustomPredefinedFee
 				fees.add(jsonFee);
 			}
 			request.setPredefinedFeeInfo(fees);
@@ -342,8 +344,7 @@ public class ServiceHelper {
 		// For this GET API we need to create params map with all individual params separately. This API uses
 		// "x-www-form-urlencoded" content type
 		// Convert Json object with the applicable fields into a ParamsMap.
-		Type type = new TypeToken<ParamsMap>() {
-		}.getType();
+		Type type = new TypeToken<ParamsMap>() {}.getType();
 		ParamsMap params = GsonUtils.createGson(APIData.yyyyMmddFormat).fromJson(object.getAsJsonObject(), type);
 		return params;
 
@@ -357,6 +358,7 @@ public class ServiceHelper {
 	 * @return JSON string for the object
 	 */
 	public static <T> String makeApiJson(T object) {
+
 		return GsonUtils.createGson().toJson(object, object.getClass());
 	}
 
@@ -371,6 +373,7 @@ public class ServiceHelper {
 	 * @return JSON string for the object
 	 */
 	public static <T> String makeApiJson(T object, String dateTimeFormat) {
+
 		// Use provided dateTimeFormat. Default format will be used if null
 		return GsonUtils.createGson(dateTimeFormat).toJson(object, object.getClass());
 	}
@@ -385,6 +388,7 @@ public class ServiceHelper {
 	 * @return JSON string for the object
 	 */
 	public static <T> String makeApiJson(T object, ApiDefinition apiDefinition) {
+
 		return GsonUtils.createSerializerGson(apiDefinition).toJson(object, object.getClass());
 
 	}
@@ -490,6 +494,7 @@ public class ServiceHelper {
 	 * @return class representing full details class for the Mambu Entity or null if no such class exists
 	 */
 	public static Class<?> getFullDetailsClass(MambuEntityType entityType) {
+
 		if (entityType == null) {
 			throw new IllegalArgumentException("Entity type must not be null");
 		}
@@ -522,10 +527,11 @@ public class ServiceHelper {
 	 *         by Mambu API
 	 */
 	public static String getUndoCloserTransactionType(LoanAccount account) {
+
 		// UNDO Closing loan accounts is available since Mambu 4.4. See MBU-13190
 
-		if (account == null || account.getId() == null || account.getState() == null) {
-			throw new IllegalArgumentException("Account and its ID and its state must not be null");
+		if (account == null || account.getState() == null) {
+			throw new IllegalArgumentException("Account and its state must not be null");
 		}
 		// Get current state and sub-state
 		AccountState accountState = account.getState();
@@ -570,10 +576,11 @@ public class ServiceHelper {
 	 *         by Mambu API
 	 */
 	public static String getUndoCloserTransactionType(SavingsAccount account) {
+
 		// UNDO Closing loan accounts is available since Mambu 4.4. See MBU-13193
 
-		if (account == null || account.getId() == null || account.getAccountState() == null) {
-			throw new IllegalArgumentException("Account and its ID and its state must not be null");
+		if (account == null || account.getAccountState() == null) {
+			throw new IllegalArgumentException("Account and its state must not be null");
 		}
 		// Get current state and sub-state
 		AccountState accountState = account.getAccountState();
