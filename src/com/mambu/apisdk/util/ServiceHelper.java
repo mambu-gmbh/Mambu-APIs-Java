@@ -80,8 +80,6 @@ public class ServiceHelper {
 		request.setFirstRepaymentDate(firstRepaymentDate);
 		// Add transaction custom fields
 		request.setCustomInformation(customInformation);
-		// Set Transaction channel Details
-		request.setTransactionDetails(transactionDetails);
 		// Transaction Channel must be set separately
 		String channelKey = transactionDetails != null ? transactionDetails.getTransactionChannelKey() : null;
 		request.setMethod(channelKey);
@@ -215,7 +213,6 @@ public class ServiceHelper {
 	 */
 	public static ParamsMap makeParamsForTransactionRequest(String transactionType,
 			JSONTransactionRequest transactionRequest) {
-
 		// JSONTransactionRequest contains all required for a request fields except the transaction type
 		// Create JSON string for a transactionReqest and add type parameter in a format of: "type":"DISBURSEMENT"
 
