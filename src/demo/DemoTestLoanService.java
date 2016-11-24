@@ -1193,7 +1193,7 @@ public class DemoTestLoanService {
 			// Test Submitting available product fees and their reversal when applicable
 			for (CustomPredefinedFee predefinedFee : productFees) {
 				System.out.println("Applying Predefined Fee =" + predefinedFee.getPredefinedFeeEncodedKey()
-						+ "\tAmount=" + predefinedFee.getAmountForLoan());
+						+ "\tAmount=" + predefinedFee.getAmount());
 				// Only one fee in a time is allowed in API
 				List<CustomPredefinedFee> customFees = new ArrayList<>();
 				customFees.add(predefinedFee);
@@ -2191,7 +2191,7 @@ public class DemoTestLoanService {
 		if (dibsursementFees != null) {
 			System.out.println("\nDisbursement Fees=" + dibsursementFees.size());
 			for (CustomPredefinedFee customFee : dibsursementFees) {
-				System.out.println("\tAmount=" + customFee.getAmountForLoan());
+				System.out.println("\tAmount=" + customFee.getAmount());
 				PredefinedFee fee = customFee.getFee();
 				if (fee == null) {
 					continue;
