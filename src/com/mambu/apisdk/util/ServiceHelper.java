@@ -80,8 +80,6 @@ public class ServiceHelper {
 		request.setFirstRepaymentDate(firstRepaymentDate);
 		// Add transaction custom fields
 		request.setCustomInformation(customInformation);
-		// Set Transaction channel Details
-		request.setTransactionDetails(transactionDetails);
 		// Transaction Channel must be set separately
 		String channelKey = transactionDetails != null ? transactionDetails.getTransactionChannelKey() : null;
 		request.setMethod(channelKey);
@@ -195,7 +193,7 @@ public class ServiceHelper {
 				JSONFeeRequest jsonFee = new JSONFeeRequest();
 				jsonFee.setEncodedKey(feeEncodedKey); // set key from PredefinedFee
 				// Set amount. Must be not null only for fees with no amount defined in the product. See MBU-8811
-				jsonFee.setAmount(custFee.getAmountForLoan().getAmount()); // set amount from CustomPredefinedFe
+				jsonFee.setAmount(custFee.getAmount()); // set amount from CustomPredefinedFe
 				fees.add(jsonFee);
 			}
 			request.setPredefinedFeeInfo(fees);
