@@ -209,7 +209,7 @@ public class DemoTestSavingsService {
 		AccountState accountState = savingService.getSavingsAccount(accountId).getAccountState();
 
 		if ((SavingsType.FIXED_DEPOSIT.equals(savingAccountType) || (SavingsType.SAVINGS_PLAN.equals(savingAccountType)))
-				&& (accountState.equals(AccountState.ACTIVE) || accountState.equals(AccountState.DORMANT))) {
+				&& (AccountState.ACTIVE.equals(accountState) || AccountState.DORMANT.equals(accountState))) {
 
 			SavingsService service = MambuAPIFactory.getSavingsService();
 
