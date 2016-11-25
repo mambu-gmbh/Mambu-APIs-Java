@@ -82,7 +82,7 @@
 				<configuration>
 					<outputDirectory>${project.basedir}/build</outputDirectory>
 					<excludes>
-						<exclude>demo/*.*</exclude>
+						<exclude>demo/**</exclude>
 					</excludes>
 					<archive>
 						<manifest>
