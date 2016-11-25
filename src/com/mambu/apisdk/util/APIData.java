@@ -10,8 +10,8 @@ public class APIData {
 	public final static String APPLICATION_KEY = "appkey";
 
 	// Users API
-
 	public static final String USERS = "users";
+
 	// Custom Views. Added in Mambu 3.7
 	public static final String VIEWS = "views";
 	public static final String FOR = "for";
