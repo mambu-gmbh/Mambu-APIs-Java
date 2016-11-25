@@ -3,6 +3,7 @@ package demo;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -139,7 +140,7 @@ public class DemoTestSavingsService {
 					testReverseSavingsAccountTransaction(deposiTransaction); // Available since 3.10
 
 					testDepositToSavingsAccount(); // Make another deposit after reversal to continue testing
-
+					testStartMaturityForSavingAccount(); // Available since 4.4
 					// Test withdrawal and reversal transactions
 					SavingsTransaction withdrawalTransaction = testWithdrawalFromSavingsAccount();
 					testReverseSavingsAccountTransaction(withdrawalTransaction); // Available since 3.10
@@ -191,6 +192,38 @@ public class DemoTestSavingsService {
 			System.out.println("Exception caught in Demo Test Savings Service");
 			System.out.println("Error code=" + e.getErrorCode());
 			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
+		}
+
+	}
+
+	/* Tests starting maturity on a saving account */
+	private static void testStartMaturityForSavingAccount() throws MambuApiException {
+
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+
+		String accountId = NEW_ACCOUNT_ID;
+
+		SavingsType savingAccountType = demoSavingsProduct.getProductType();
+		SavingsService savingService = MambuAPIFactory.getSavingsService();
+		AccountState accountState = savingService.getSavingsAccount(accountId).getAccountState();
+
+		if ((SavingsType.FIXED_DEPOSIT.equals(savingAccountType) || (SavingsType.SAVINGS_PLAN.equals(savingAccountType)))
+				&& (accountState.equals(AccountState.ACTIVE) || accountState.equals(AccountState.DORMANT))) {
+
+			SavingsService service = MambuAPIFactory.getSavingsService();
+
+			Calendar now = Calendar.getInstance();
+			now.add(Calendar.DAY_OF_WEEK, 1);
+			String notes = "Notes created through API=" + System.currentTimeMillis();
+			SavingsAccount updatedAccount = service.startMaturity(accountId, notes, now.getTime());
+			
+			// log account details
+			System.out.println("Started maturity for saving account, ID=" + updatedAccount.getId() + "\tName= " + updatedAccount.getName()
+			+ "\tCurrency=" + updatedAccount.getCurrencyCode() + "\tHolder Key=" + updatedAccount.getAccountHolderKey());
+			
+		} else {
+			System.out.println("WARNING: The test " +  methodName +  " wasn`t run due to account conditions.");
 		}
 
 	}
