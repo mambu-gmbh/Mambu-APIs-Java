@@ -211,12 +211,10 @@ public class DemoTestSavingsService {
 		if ((SavingsType.FIXED_DEPOSIT.equals(savingAccountType) || (SavingsType.SAVINGS_PLAN.equals(savingAccountType)))
 				&& (AccountState.ACTIVE.equals(accountState) || AccountState.DORMANT.equals(accountState))) {
 
-			SavingsService service = MambuAPIFactory.getSavingsService();
-
 			Calendar now = Calendar.getInstance();
 			now.add(Calendar.DAY_OF_WEEK, 1);
 			String notes = "Notes created through API=" + System.currentTimeMillis();
-			SavingsAccount updatedAccount = service.startMaturity(accountId, now.getTime(), notes);
+			SavingsAccount updatedAccount = savingService.startMaturity(accountId, now.getTime(), notes);
 			
 			// log account details
 			System.out.println("Started maturity for saving account, ID=" + updatedAccount.getId() + "\tName= " + updatedAccount.getName()
