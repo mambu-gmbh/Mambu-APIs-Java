@@ -93,6 +93,10 @@ public class SavingsService {
 	// Post Account state change. Params map defines the account change transaction
 	private final static ApiDefinition postAccountChange = new ApiDefinition(ApiType.POST_ENTITY_ACTION,
 			SavingsAccount.class, SavingsTransaction.class);
+	// Post a transaction in a saving account in order to start its maturity
+	private final static ApiDefinition postStartMaturityTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY, 
+			SavingsAccount.class, SavingsTransaction.class, SavingsAccount.class);
+
 	// Get Accounts Transactions (transactions for a specific savings account)
 	private final static ApiDefinition getAccountTransactions = new ApiDefinition(ApiType.GET_OWNED_ENTITIES,
 			SavingsAccount.class, SavingsTransaction.class);
@@ -614,7 +618,6 @@ public class SavingsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-
 	public SavingsAccount closeSavingsAccount(String accountId, APIData.CLOSER_TYPE closerType, String notes)
 			throws MambuApiException {
 
@@ -626,6 +629,40 @@ public class SavingsService {
 		paramsMap.addParam(NOTES, notes);
 
 		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
+	}
+	
+	/**
+	 * Starts maturity for a saving account. (A transaction will be created and posted into Mambu in order to accomplish
+	 * this)
+	 * 
+	 * Example: POST "{"type":"START_MATURITY", "notes":"123", "date":"2017-01-12"}" /api/savings/{ID}/transactions/
+	 * 
+	 * @param accountId
+	 *            The id of the saving account that maturity will be started for. Must not be NULL.
+	 * 
+	 * @param date
+	 *            The date used to indicate when the maturity starts.
+	 * 
+	 * @param notes
+	 *            Some notes that will be posted on the transaction that will be created for starting the maturity for
+	 *            the account.
+	 * 
+	 * @return the SavingAccount the maturity was started for
+	 * 
+	 * @throws MambuApiException
+	 */
+	public SavingsAccount startMaturity(String accountId, Date date, String notes) throws MambuApiException {
+
+		if (accountId == null) {
+			throw new IllegalArgumentException("The account id must not be null");
+		}
+		JSONTransactionRequest transactionRequest = ServiceHelper.makeJSONTransactionRequest(null, date, null, null,
+				null, null, notes);
+
+		ParamsMap paramsMap = ServiceHelper.makeParamsForTransactionRequest(APIData.START_MATURITY, transactionRequest);
+
+		postStartMaturityTransaction.setContentType(ContentType.JSON);
+		return serviceExecutor.execute(postStartMaturityTransaction, accountId, paramsMap);
 	}
 
 	/****
