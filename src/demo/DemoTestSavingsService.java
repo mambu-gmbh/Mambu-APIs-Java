@@ -216,7 +216,7 @@ public class DemoTestSavingsService {
 			Calendar now = Calendar.getInstance();
 			now.add(Calendar.DAY_OF_WEEK, 1);
 			String notes = "Notes created through API=" + System.currentTimeMillis();
-			SavingsAccount updatedAccount = service.startMaturity(accountId, notes, now.getTime());
+			SavingsAccount updatedAccount = service.startMaturity(accountId, now.getTime(), notes);
 			
 			// log account details
 			System.out.println("Started maturity for saving account, ID=" + updatedAccount.getId() + "\tName= " + updatedAccount.getName()

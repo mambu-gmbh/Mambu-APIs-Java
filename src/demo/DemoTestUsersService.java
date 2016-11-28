@@ -596,8 +596,9 @@ public class DemoTestUsersService {
 		List<Role> userRoles = usersService.getUserRoles();
 		
 		if(CollectionUtils.isEmpty(userRoles)){
-			System.out.println("WARNING: There are no roles in the appication! User can`t be created wih");
+			System.out.println("WARNING: There are no roles in the appication!");
 			System.out.println("User can`t be created wihout a role");
+			return;
 		}
 		long currentTime = System.currentTimeMillis();		
 		User userToBeCreated = new User();
