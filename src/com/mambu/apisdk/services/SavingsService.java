@@ -639,20 +639,22 @@ public class SavingsService {
 	 * 
 	 * @param accountId
 	 *            The id of the saving account that maturity will be started for. Must not be NULL.
+	 * 
+	 * @param date
+	 *            The date used to indicate when the maturity starts.
+	 * 
 	 * @param notes
 	 *            Some notes that will be posted on the transaction that will be created for starting the maturity for
 	 *            the account.
-	 * @param date
-	 *            The date used to indicate when the maturity starts.  Must not be NULL.
 	 * 
 	 * @return the SavingAccount the maturity was started for
 	 * 
 	 * @throws MambuApiException
 	 */
-	public SavingsAccount startMaturity(String accountId, String notes, Date date) throws MambuApiException {
+	public SavingsAccount startMaturity(String accountId, Date date, String notes) throws MambuApiException {
 
-		if (accountId == null || date == null) {
-			throw new IllegalArgumentException("The account id, and the date must not  be null");
+		if (accountId == null) {
+			throw new IllegalArgumentException("The account id must not be null");
 		}
 		JSONTransactionRequest transactionRequest = ServiceHelper.makeJSONTransactionRequest(null, date, null, null,
 				null, null, notes);

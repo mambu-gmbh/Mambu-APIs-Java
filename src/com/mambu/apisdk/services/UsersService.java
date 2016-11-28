@@ -291,23 +291,25 @@ public class UsersService {
 	/**
 	 * Creates a new user
 	 * 
-	 * i.e. API call POST api/users
-	 * JSON payload: { "user": { "username": "tinker", "password": "pass1234566",
-	 * "email": "ddd@mambu.com", "title": "Mrs", "firstName": "John"... } }
-	 * NOTE: for more information on users API visit 
+	 * i.e. API call POST api/users JSON payload: { "user": { "username": "tinker", "password": "pass1234566", "email":
+	 * "ddd@mambu.com", "title": "Mrs", "firstName": "John"... } } 
+	 * NOTE: for more information on users API visit
+	 * 
 	 * @see <a href="https://developer.mambu.com/customer/en/portal/articles/1162284-users-api?b_id=874">Users API</a>
 	 * 
 	 * @param user
-	 *            The user to be created
+	 *            The user to be created. Must be not be null. Also, take into account that the user must have a role
+	 *            assigned.
+	 *            
 	 * @return newly created user
 	 */
-	public User createUser(User user)  throws MambuApiException {
-		
+	public User createUser(User user) throws MambuApiException {
+
 		// See MBU-15091
-		if(user == null){
+		if (user == null) {
 			throw new IllegalArgumentException("User must not be null.");
 		}
-		
+
 		JSONUser jsonUser = new JSONUser();
 		jsonUser.setUser(user);
 		JSONUser jsonCreatedUser = serviceExecutor.executeJson(createUser, jsonUser);
