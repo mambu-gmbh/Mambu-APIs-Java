@@ -4,9 +4,9 @@ Mambu Java Client
 The Mambu Java Client library is an open source library to interact with Mambu's APIs from your Java project. 
 The library interacts with Mambu's REST APIs.
 
-Using the original class files from the Mambu project, the library allows your to easily interact via the Mambu APIs to retrieve and store information. 
+Using the original class files from the Mambu project, the library allows you to easily interact with Mambu via the APIs to retrieve and store information. 
 
-The library is current under development and is in beta. This means the APIs are not versioned.
+The library is continuously updated each time new functionalities are added to the Mambu's REST APIs and it is released once with the main Mambu product.  
 
 Usage
 -----
@@ -76,5 +76,5 @@ Ensure to write JUnit tests for all contributions and rerun all existing tests (
 
 When you're done with your changes, commit and push them to your GitHub fork and create a pull request so that we can review your code and incorporate the changes.
 
-The Mambu team will update the Mambu models jar to account for changes in new releases as needed.
+The Mambu team updates the Mambu models jar to account for changes in new releases as needed.
 
