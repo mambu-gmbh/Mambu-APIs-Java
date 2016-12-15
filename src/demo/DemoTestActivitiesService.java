@@ -1,5 +1,6 @@
 package demo;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -31,6 +32,8 @@ public class DemoTestActivitiesService {
 			// available since Mambu 3.5
 			testGetAllActivities();
 			testGetActivitiesForEntity();
+			testGetActivitiesWithPaginationForClient(); // Available since Mambu 4.3
+			testGetAllActivitiesPaginated(); // Available since Mambu 4.3
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Activities Service");
@@ -117,14 +120,84 @@ public class DemoTestActivitiesService {
 		List<JSONActivity> jsonActivities = activitiesService.getActivities(fromDate, toDate, mambuEntity, entityId);
 
 		// Print results
+		printMambuEntityAndActivitiesDetails(mambuEntity, entityId, jsonActivities, fromDate, toDate);
+	}
+	
+	/**
+	 * Tests getting activities paginated for a client 
+	 * 
+	 * @throws MambuApiException 
+	 * 
+	 */
+	public static void testGetActivitiesWithPaginationForClient() throws MambuApiException {
+
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
+
+		ActivitiesService activitiesService = MambuAPIFactory.getActivitiesService();
+
+		Class<Client> mambuEntity = Client.class;
+
+		Calendar toDate = Calendar.getInstance(); 
+
+		Calendar fromDate = Calendar.getInstance();
+		fromDate.add(Calendar.DAY_OF_MONTH, -10);
+		
+		String entityId = DemoUtil.getDemoClient().getEncodedKey();
+		if (entityId == null) {
+			System.out.println("WARNING: No Activities can be obtained for a client with null encodedKey");
+			return;
+		}
+
+		List<JSONActivity> jsonActivities = activitiesService.getActivities(fromDate.getTime(), toDate.getTime(),
+				mambuEntity, entityId, 0, 5);
+
+		printMambuEntityAndActivitiesDetails(mambuEntity, entityId, jsonActivities, fromDate.getTime(), toDate.getTime());
+	}
+
+	/*
+	 * Tests getting ALL activities paginated
+	 */
+	public static void testGetAllActivitiesPaginated() throws MambuApiException{
+		
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println(methodName = "\nIn " + methodName);
+		
+		ActivitiesService activitiesService = MambuAPIFactory.getActivitiesService();
+		
+		Calendar toDate = Calendar.getInstance(); 
+
+		Calendar fromDate = Calendar.getInstance();
+		fromDate.add(Calendar.DAY_OF_MONTH, -10);
+		
+		List<JSONActivity> jsonActivities = activitiesService.getActivities(fromDate.getTime(), toDate.getTime(), 0, 5);
+		
+		printMambuEntityAndActivitiesDetails(null, null, jsonActivities, fromDate.getTime(), toDate.getTime());	
+	}
+	
+	/**
+	 * Helper method used to print to console the entity`s and activity`s details.
+	 * 
+	 * @param mambuEntity
+	 *            the Mambu entity
+	 * @param entityId
+	 *            the entity id (encoded key)
+	 * @param jsonActivities
+	 *            the activities to be printed
+	 */
+	private static void printMambuEntityAndActivitiesDetails(Class<Client> mambuEntity, String entityId,
+			List<JSONActivity> jsonActivities, Date fromDate, Date toDate) {
+
+		String entityNameToBePrinted =  mambuEntity != null ? " Entity= " + mambuEntity.getSimpleName() : " All entities ";
+		String entityIdToBePrinted = entityId != null ? " withId= " + entityId : " ";
 		if (jsonActivities == null) {
-			System.out.println("Error - API returned NULL for Entity=" + mambuEntity.getSimpleName() + "\tFrom Date="
+			System.out.println("Error - API returned NULL for" + entityNameToBePrinted + "\tFrom Date="
 					+ fromDate.toString() + "\tTo Date =" + toDate.toString());
 			return;
-
 		}
-		System.out.println("Total " + jsonActivities.size() + " activities returned for Entity "
-				+ mambuEntity.getSimpleName() + " withId= " + entityId + " =" + "\tFrom Date=" + fromDate.toString()
+		
+		System.out.println("Total " + jsonActivities.size() + " activities returned for "
+				+ entityNameToBePrinted + entityIdToBePrinted + "\tFrom Date=" + fromDate.toString()
 				+ "\tTo Date =" + toDate.toString());
 
 		for (JSONActivity jsonActivity : jsonActivities) {

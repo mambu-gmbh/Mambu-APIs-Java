@@ -1,5 +1,6 @@
 package com.mambu.apisdk.util;
 
+import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
@@ -156,11 +157,21 @@ public class ServiceExecutor {
 		Method method = apiDefinition.getMethod();
 		ContentType contentType = apiDefinition.getContentType();
 
-		// Use mambuAPIService to execute request
-		String jsonResponse = mambuAPIService.executeRequest(apiUrlPath, paramsMap, method, contentType);
-
 		// Process API Response. Get the return format from the apiDefintion
 		ApiReturnFormat returnFormat = apiDefinition.getApiReturnFormat();
+
+		ByteArrayOutputStream byteArrayOutputStreamResult = null;
+		String jsonResponse = null;
+
+		// Use mambuAPIService to execute request
+		switch (returnFormat) {
+		case ZIP_ARCHIVE:
+			byteArrayOutputStreamResult = mambuAPIService.executeRequest(apiUrlPath, paramsMap, apiDefinition);
+			break;
+		default:
+			jsonResponse = mambuAPIService.executeRequest(apiUrlPath, paramsMap, method, contentType);
+			break;
+		}
 
 		R result = null;
 		switch (returnFormat) {
@@ -181,6 +192,8 @@ public class ServiceExecutor {
 			// This can be used for the services to perform any subsequent processing or for such APIs as getDocument()
 			result = (R) jsonResponse;
 			break;
+		case ZIP_ARCHIVE:
+			result = (R) byteArrayOutputStreamResult;
 		}
 
 		return result;
@@ -230,7 +243,7 @@ public class ServiceExecutor {
 	 * Convenience method to execute API Request using its ApiDefinition and params map. This version of the execute
 	 * method can be used when the API request doesn't use object ID (for example in get list requests)
 	 * 
-	 * @param api
+	 * @param apiDefinition
 	 *            API definition for the request
 	 * @param paramsMap
 	 *            map with API parameters
@@ -251,8 +264,6 @@ public class ServiceExecutor {
 	 * 
 	 * @param apiDefinition
 	 *            API definition for the request
-	 * @param objectId
-	 *            api's object id (optional, must be null if not used)
 	 * 
 	 * @return object result object, which will be an API specific object or a list of objects
 	 * 
@@ -730,8 +741,8 @@ public class ServiceExecutor {
 	 * @return updated owned entity
 	 * @throws MambuApiException
 	 */
-	public <R, T> R updateOwnedEntity(MambuEntityType parentEntity, String parentId, T ownedEntity, String ownedEntityId)
-			throws MambuApiException {
+	public <R, T> R updateOwnedEntity(MambuEntityType parentEntity, String parentId, T ownedEntity,
+			String ownedEntityId) throws MambuApiException {
 
 		if (parentEntity == null || ownedEntity == null) {
 			throw new IllegalArgumentException("Parent Class and Owned Entity cannot be null");
@@ -757,10 +768,10 @@ public class ServiceExecutor {
 	 * @return true if successful
 	 * @throws MambuApiException
 	 */
-	public <R> Boolean deleteOwnedEntity(MambuEntityType mambuEntity, String parentId, MambuEntityType ownedEntity,
+	public <R> Boolean deleteOwnedEntity(MambuEntityType parentEntity, String parentId, MambuEntityType ownedEntity,
 			String ownedEntityId) throws MambuApiException {
 
-		Class<?> parentClass = mambuEntity.getEntityClass();
+		Class<?> parentClass = parentEntity.getEntityClass();
 		Class<?> ownedClass = ownedEntity.getEntityClass();
 		// Create ApiDefinition for DELETE_OWNED_ENTITY
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.DELETE_OWNED_ENTITY, parentClass, ownedClass);

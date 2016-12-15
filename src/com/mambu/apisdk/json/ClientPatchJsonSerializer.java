@@ -21,8 +21,8 @@ import com.mambu.core.shared.model.ClientRole;
  * fields inclusion strategy as well as providing custom JSON formating as expected by Mambu API specification for this
  * API
  * 
- * For more details on Mambu PATCH Client API specification see MBU-11443, MBU-11868 and {@link https
- * ://developer.mambu.com/customer/en/portal/articles/1617472-clients-api}
+ * For more details on Mambu PATCH Client API specification see MBU-11443, MBU-11868 and @see
+ * <a href ="https://developer.mambu.com/customer/en/portal/articles/1617472-clients-api">Clients API</a>
  * 
  * @author mdanilkis
  * 
