@@ -269,7 +269,7 @@ public class APIData {
 	public static final String CLIENT_ROLE_ID = "clientRoleId"; // ClientRole Id field for PATCH API. See MBU-11868
 	public static String FIRST_NAME = "firstName";
 	public static String LAST_NAME = "lastName";
-	public static String BIRTH_DATE = "birthdate";
+	public static String BIRTH_DATE = "birthDate";
 	public static String ID_DOCUMENT = "idDocument";
 	// Client fields supported by PATCH Client API since 4.1. See MBU-11443, MBU-11868
 	public static String STATE = "state";
