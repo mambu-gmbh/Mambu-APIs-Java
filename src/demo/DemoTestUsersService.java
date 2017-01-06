@@ -613,6 +613,7 @@ public class DemoTestUsersService {
 		permissions.setCanManageAllBranches(true);
 		permissions.setCanManageEntitiesAssignedToOtherOfficers(true);
 		userToBeCreated.setPermissions(permissions);
+		userToBeCreated.setAssignedBranchKey(demoUser.getAssignedBranchKey());
 
 		User createdUser = usersService.createUser(userToBeCreated);
 		

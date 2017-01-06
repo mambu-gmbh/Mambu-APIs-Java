@@ -499,7 +499,7 @@ public class DemoTestSearchService {
 
 		// from date, 2 months ago
 		Calendar from = Calendar.getInstance();
-		from.roll(Calendar.MONTH, -2);
+		from.add(Calendar.MONTH, -6);
 		// until date, 1 month ago
 		Calendar until = Calendar.getInstance();
 		until.roll(Calendar.MONTH, -1);
