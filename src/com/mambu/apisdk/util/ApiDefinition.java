@@ -23,8 +23,10 @@ import com.mambu.api.server.handler.loan.model.JSONLoanAccount;
 import com.mambu.api.server.handler.loan.model.JSONLoanRepayments;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
 import com.mambu.api.server.handler.tasks.model.JSONTask;
+import com.mambu.api.server.handler.users.model.JSONUser;
 import com.mambu.apisdk.model.DatabaseBackup;
 import com.mambu.apisdk.model.DatabaseBackupRequest;
+import com.mambu.apisdk.model.SettlementAccount;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 import com.mambu.clients.shared.model.Client;
@@ -527,7 +529,10 @@ public class ApiDefinition {
 		apiEndPointsMap.put(SavingsTransaction.class, APIData.TRANSACTIONS);
 
 		apiEndPointsMap.put(Branch.class, APIData.BRANCHES);
+		
 		apiEndPointsMap.put(User.class, APIData.USERS);
+		apiEndPointsMap.put(JSONUser.class, APIData.USERS);
+		
 		apiEndPointsMap.put(Centre.class, APIData.CENTRES);
 		apiEndPointsMap.put(Currency.class, APIData.CURRENCIES);
 		apiEndPointsMap.put(TransactionChannel.class, APIData.TRANSACTION_CHANNELS);
@@ -587,6 +592,10 @@ public class ApiDefinition {
 		// DB
 		apiEndPointsMap.put(DatabaseBackupRequest.class, APIData.DATABASE); // "database" api end point
 		apiEndPointsMap.put(DatabaseBackup.class, APIData.DATABASE);
+
+		// SettlementAccount endPoint, a workaround because there is no SettlementAccount class
+		apiEndPointsMap.put(SettlementAccount.class, APIData.SETTLEMENT_ACCOUNTS);
+		
 	}
 
 	// Get an Api endpoint for a Mambu class

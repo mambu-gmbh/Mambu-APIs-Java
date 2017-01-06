@@ -1,16 +1,17 @@
 package com.mambu.apisdk.util;
 
-//
-// This class defines string constants and other constants for Mambu API services
-//
-//
+/*
+ * This class defines string constants and other constants for Mambu API services
+ * 
+ */
+
 public class APIData {
 
 	public final static String APPLICATION_KEY = "appkey";
 
 	// Users API
-
 	public static final String USERS = "users";
+
 	// Custom Views. Added in Mambu 3.7
 	public static final String VIEWS = "views";
 	public static final String FOR = "for";
@@ -65,6 +66,7 @@ public class APIData {
 	public static final String TYPE_LOCK = "LOCK";
 	public static final String TYPE_UNLOCK = "UNLOCK";
 	public static final String TYPE_INTEREST_APPLIED = "INTEREST_APPLIED";
+	public static final String START_MATURITY = "START_MATURITY"; // Added in 4.4 See MBU-7446
 	public static final String TYPE_WRITE_OFF = "WRITE_OFF"; // added in 3.14. See MBU-10423
 	// Savings reversal transactions
 	public static final String TYPE_DEPOSIT_ADJUSTMENT = "DEPOSIT_ADJUSTMENT";
@@ -210,6 +212,9 @@ public class APIData {
 	public static final String MAX_WITHDRAWAL_AMOUNT = "maxWidthdrawlAmount";
 	public static final String RECOMMENDED_DEPOSIT_AMOUNT = "recommendedDepositAmount";
 	public static final String TARGET_AMOUNT = "targetAmount";
+
+	// Parameters supported by SettlementAccounts PATCH API
+	public static final String ENCODED_KEY = "encodedKey";
 
 	public static final String DUE_FROM = "dueFrom";
 	public static final String DUE_TO = "dueTo";
