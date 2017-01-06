@@ -51,7 +51,7 @@ public class DemoTestTasksService {
 			testGetTasksByStatus(TaskStatus.OVERDUE);
 
 			// Available since Mambu 3.6
-			testupdateTask();
+			testUpdateTask();
 
 			testDeleteTask();
 
@@ -158,7 +158,7 @@ public class DemoTestTasksService {
 		return tasks;
 	}
 
-	public static void testupdateTask() throws MambuApiException {
+	public static void testUpdateTask() throws MambuApiException {
 
 		System.out.println("\nIn testupdateTask");
 
