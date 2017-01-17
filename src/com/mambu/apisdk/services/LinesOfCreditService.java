@@ -107,6 +107,29 @@ public class LinesOfCreditService {
 		// Return as the LineOfCredit
 		return lineOfCreditExpanded.getLineOfCredit();
 	}
+	
+	
+	/***
+	 * Gets the details of a line of credit including custom fields information
+	 *  GET api/linesofcredit/{id}?fullDetails=true
+	 *  Response example: {"lineOfCredit":{"encodedKey":"abc123","id":"FVT160", "amount":"5000",.. }}
+	 *	Available since 4.5. 
+	 *
+	 * @param lineofcreditId
+	 *            the id or the encoded key of a Line Of Credit. Mandatory. Must not be null
+	 * 
+	 * @return Line of Credit with all the details including custom field values
+	 * @throws MambuApiException
+	 */
+	public LineOfCredit getLineOfCreditDetails(String lineofcreditId) throws MambuApiException {
+
+		// This API returns LineOfCreditExpanded object
+		ApiDefinition apiDefinition = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LineOfCreditExpanded.class);
+		LineOfCreditExpanded lineOfCreditExpanded = serviceExecutor.execute(apiDefinition, lineofcreditId);
+
+		// Return as the LineOfCredit
+		return lineOfCreditExpanded.getLineOfCredit();
+	}
 
 	/***
 	 * Get lines of credit for a Client or a Group
