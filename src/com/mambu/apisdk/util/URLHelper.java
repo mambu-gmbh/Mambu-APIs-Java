@@ -186,4 +186,27 @@ public class URLHelper {
 
 		return urlWithParams;
 	}
+
+	private URI createURI(String details) throws URISyntaxException {
+		if(isDomainNameWithPort()) {
+			return new URI(WEB_PROTOCOL, null, host(), port(), API_ENDPOINT + details, null, null);
+		}
+		return new URI(WEB_PROTOCOL, domainName, API_ENDPOINT + details, null);
+	}
+
+	private String host() {
+		return this.domainName.split(":")[0];
+	}
+
+	private int port() {
+		return Integer.parseInt(this.domainName.split(":")[1]);
+	}
+
+	private boolean isDomainNameWithPort() {
+		return this.domainName.matches(".*:[0-9]*");
+	}
+
+	public static void useHttp() {
+		URLHelper.WEB_PROTOCOL = "http";
+	}
 }
