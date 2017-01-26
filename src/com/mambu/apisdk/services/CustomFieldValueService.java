@@ -47,7 +47,7 @@ public class CustomFieldValueService {
 	// Branch, Centre
 	private final static MambuEntityType[] supportedEntities = new MambuEntityType[] { MambuEntityType.CLIENT,
 			MambuEntityType.GROUP, MambuEntityType.LOAN_ACCOUNT, MambuEntityType.SAVINGS_ACCOUNT,
-			MambuEntityType.BRANCH, MambuEntityType.CENTRE, MambuEntityType.USER };
+			MambuEntityType.BRANCH, MambuEntityType.CENTRE, MambuEntityType.USER, MambuEntityType.LINE_OF_CREDIT };
 
 	// Map MambuEntityType to a CustomFieldType to support testing using CustomFieldType
 	// Example: MambuEntityType.CLIENT=> CustomFieldType.CLIENT_INFO
@@ -63,6 +63,7 @@ public class CustomFieldValueService {
 		customFieldTypes.put(MambuEntityType.BRANCH, CustomFieldType.BRANCH_INFO);
 		customFieldTypes.put(MambuEntityType.CENTRE, CustomFieldType.CENTRE_INFO);
 		customFieldTypes.put(MambuEntityType.USER, CustomFieldType.USER_INFO);
+		customFieldTypes.put(MambuEntityType.LINE_OF_CREDIT, CustomFieldType.LINE_OF_CREDIT);
 	}
 
 	// Custom Field Values API supports Updating (PATCH) and Deleting (DELETE). Note, custom field values cannot be
