@@ -142,7 +142,7 @@ public class CommentsService {
 		// Example: GET /api/clients/ABC123/comments GET /api/loans/XYZ123/comments
 		// Available since Mambu 3.11. See MBU-8608 for more details
 
-		return serviceExecutor.getOwnedEntities(parentEntity, parentId, ownedEntity, offset, limit);
+		return serviceExecutor.getOwnedEntities(parentEntity, parentId, ownedEntity, offset, limit, false);
 
 	}
 

@@ -589,11 +589,13 @@ public class ServiceExecutor {
 	 *            related entity id. Can be null if not required
 	 * @param params
 	 *            params map with filtering parameters
+	 * @param requiresFullDetails
+	 *            boolean flag indicates whether the full or object is wanted
 	 * @return list of owned entities
 	 * @throws MambuApiException
 	 */
 	public <R> R getOwnedEntities(MambuEntityType parentEntity, String parentId, MambuEntityType ownedEntity,
-			String relatedEntityId, ParamsMap params) throws MambuApiException {
+			String relatedEntityId, ParamsMap params, boolean requiresFullDetails) throws MambuApiException {
 
 		if (parentEntity == null || ownedEntity == null) {
 			throw new IllegalArgumentException("Parent Entity and Owned Entity cannot be null");
@@ -601,9 +603,36 @@ public class ServiceExecutor {
 		Class<?> parentClass = parentEntity.getEntityClass();
 		Class<?> ownedClass = ownedEntity.getEntityClass();
 
-		ApiDefinition apiDefinition = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, parentClass, ownedClass);
+		ApiDefinition  apiDefinition ;
 
+		apiDefinition = createApiDefinitionForGetOwnedEntities(requiresFullDetails, parentClass, ownedClass);
+		
 		return execute(apiDefinition, parentId, relatedEntityId, params);
+	}
+
+	/**
+	 * Helper method, creates the ApiDefinition used in obtaining the owned entities
+	 * 
+	 * @param requiresFullDetails
+	 *            boolean flag indicates whether the full or object is wanted
+	 * @param parentClass
+	 *            the parent class
+	 * @param ownedClass
+	 *            the owned class
+	 * @return newly created ApiDefinition
+	 */
+	private ApiDefinition createApiDefinitionForGetOwnedEntities(boolean requiresFullDetails, Class<?> parentClass,
+			Class<?> ownedClass) {
+
+		ApiDefinition apiDefinition;
+		
+		if(requiresFullDetails){
+			apiDefinition = new ApiDefinition(ApiType.GET_OWNED_ENTITIES_WITH_DETAILS, parentClass, ownedClass);
+		}else{
+			apiDefinition = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, parentClass, ownedClass);
+		}
+		
+		return apiDefinition;
 	}
 
 	/**
@@ -624,7 +653,7 @@ public class ServiceExecutor {
 	 * @throws MambuApiException
 	 */
 	public <R> R getOwnedEntities(MambuEntityType parentEntity, String parentId, MambuEntityType ownedEntity,
-			Integer offset, Integer limit) throws MambuApiException {
+			Integer offset, Integer limit, boolean requiresFullDetails) throws MambuApiException {
 
 		ParamsMap params = new ParamsMap();
 		if (offset != null) {
@@ -634,7 +663,7 @@ public class ServiceExecutor {
 			params.addParam(APIData.LIMIT, String.valueOf(limit));
 		}
 
-		return getOwnedEntities(parentEntity, parentId, ownedEntity, null, params);
+		return getOwnedEntities(parentEntity, parentId, ownedEntity, null, params, requiresFullDetails);
 
 	}
 
@@ -823,11 +852,13 @@ public class ServiceExecutor {
 	 *            offset
 	 * @param limit
 	 *            limit
+	 * @param requiresFullDetails
+	 *            flag indicating if is a full call if true then 'fullDetails=true' parameter will be added to the call
 	 * @return list of entities for the requested page
 	 * @throws MambuApiException
 	 */
-	public <R> List<R> getPaginatedList(MambuEntityType mambuEntity, Integer offset, Integer limit)
-			throws MambuApiException {
+	public <R> List<R> getPaginatedList(MambuEntityType mambuEntity, Integer offset, Integer limit,
+			boolean requiresFullDetails) throws MambuApiException {
 
 		Class<?> clazz = mambuEntity.getEntityClass();
 
@@ -838,8 +869,29 @@ public class ServiceExecutor {
 		if (limit != null) {
 			params.addParam(APIData.LIMIT, String.valueOf(limit));
 		}
-		ApiDefinition apiDefinition = new ApiDefinition(ApiType.GET_LIST, clazz);
-		return execute(apiDefinition, params);
+
+		return execute(getApiDefinitionForPaginatedList(requiresFullDetails, clazz), params);
+	}
+
+	/**
+	 * Creates an ApiDefinition in order to get a list with basic or full details based on requiresFullDetails flag
+	 * 
+	 * @param fullDetails
+	 *  flag indicating the call return type, a collection with full details or a collection with basic details 
+	 * @param clazz
+	 *            the class used to create the ApiDefinition
+	 * @return newly created ApiDefinition
+	 */
+	private ApiDefinition getApiDefinitionForPaginatedList(boolean requiresFullDetails, Class<?> clazz) {
+
+		ApiDefinition apiDefinition;
+
+		if (requiresFullDetails == true) {
+			apiDefinition = new ApiDefinition(ApiType.GET_LIST_WITH_DETAILS, clazz);
+		} else {
+			apiDefinition = new ApiDefinition(ApiType.GET_LIST, clazz);
+		}
+		return apiDefinition;
 	}
 
 	/**

@@ -543,7 +543,7 @@ public class DemoUtil {
 	}
 
 	/**
-	 * Gets a Demo LineOFCredit. Fetch a random LineOfCredit from Mambu.
+	 * Gets a Demo LineOfCredit. Fetch a random LineOfCredit from Mambu.
 
 	 * @return newly fetched LineOfCredit
 	 * @throws MambuApiException
@@ -597,8 +597,8 @@ public class DemoUtil {
 	}
 	
 	/**
-	 * Gets a Demo LineOFCredit. It tries to fetch it from Mambu based on the demoLineOfCredit filled in the properties
-	 * file or fetches a random LineOFcredit.
+	 * Gets a Demo LineOfCredit. It tries to fetch it from Mambu based on the demoLineOfCredit filled in the properties
+	 * file or fetches a random LineOfCredit.
 	 * 
 	 * @param lineOfCreditId
 	 *            the ID of the line of credit to be fetched from Mambu

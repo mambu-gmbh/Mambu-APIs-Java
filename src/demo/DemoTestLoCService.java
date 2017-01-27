@@ -46,7 +46,13 @@ public class DemoTestLoCService {
 			
 			testPatchLineOfCredit(); // Available since v4.3
 			
-			testGetDetailsForLineOFCredit(); // Available since 4.5
+			testGetDetailsForLineOfCredit(); // Available since 4.5
+			
+			testGetAllLinesOfCredditWithDetails(); //Available since 4.5
+			
+			testGetClientLinesOfCreditWithDetails();
+			
+			testGetGroupLinesOfCreditWithDetails();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Lines of Credit Service");
@@ -54,6 +60,74 @@ public class DemoTestLoCService {
 			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
 		}
 
+	}
+
+
+	private static void testGetGroupLinesOfCreditWithDetails() throws MambuApiException {
+
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+
+		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
+
+		String groupId = DemoUtil.demoGroupId;
+		List<LineOfCredit> fetchedLinesOfCredit = null;
+
+		if (null == groupId) {
+			System.out.println("WARNING: " + methodName
+					+ "no group ID is supplied in the properties file. This test can be executed");
+		} else {
+			fetchedLinesOfCredit = linesOfCreditService.getGroupLinesOfCreditDetails(groupId, 0, 5);
+		}
+
+		if (CollectionUtils.isEmpty(fetchedLinesOfCredit)) {
+			System.out.println("WARNING: there were no lines of credit in Mambu in order to be fetched");
+			return;
+		}
+
+		logLinesOfCreditAndDetails(fetchedLinesOfCredit);
+
+	}
+
+	private static void testGetClientLinesOfCreditWithDetails() throws MambuApiException {
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+		
+		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
+		
+		String clientId = DemoUtil.demoClientId;
+		List <LineOfCredit> fetchedLinesOfCredit = null;
+		
+		if(null == clientId){
+			System.out.println("WARNING: " + methodName + "no client ID is supplied in the properties file. This test can be executed");
+		}else{
+		  fetchedLinesOfCredit = linesOfCreditService.getClientLinesOfCreditDetails(clientId, 0, 5);
+		}
+		
+		if(CollectionUtils.isEmpty(fetchedLinesOfCredit)){
+			System.out.println("WARNING: there were no lines of credit in Mambu in order to be fetched");
+			return;
+		}
+		
+		logLinesOfCreditAndDetails(fetchedLinesOfCredit);
+		
+	}
+
+	private static void testGetAllLinesOfCredditWithDetails() throws MambuApiException {
+		
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+		
+		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
+		
+		List <LineOfCredit> fetchedLinesOfCredit = linesOfCreditService.getAllLinesOfCreditWithDetails(0, 100);
+
+		if(CollectionUtils.isEmpty(fetchedLinesOfCredit)){
+			System.out.println("WARNING: there were no lines of credit in Mambu in order to be fetched");
+			return;
+		}
+		
+		logLinesOfCreditAndDetails(fetchedLinesOfCredit);
 	}
 
 	/**
@@ -114,6 +188,24 @@ public class DemoTestLoCService {
 
 		return lineOfCredit;
 	}
+	
+	
+	/**
+	 * Helper method, prints to the console details for a List of Lines of credit received as parameter to this method.
+	 * 
+	 * @param linesOfCredit
+	 *            A list containing lines of credit whose details will be printed to the console.
+	 */
+	public static void logLinesOfCreditAndDetails(List<LineOfCredit> linesOfCredit){
+		
+		if(CollectionUtils.isEmpty(linesOfCredit)){
+			System.out.println("WARNING: No lines of credit was povided in order to log its details");
+		}else{
+			for(LineOfCredit loc: linesOfCredit){
+				logLineOfCreditDetails(loc);
+			}
+		}
+	}
 
 	/**
 	 * Helper method, prints to the console details of the LineOfCredit received as parameter to this method.
@@ -144,18 +236,18 @@ public class DemoTestLoCService {
 	private static void logCustomFieldValuesDetails(List<CustomFieldValue> customFieldValues) {
 		
 		if(CollectionUtils.isNotEmpty(customFieldValues)){
-			System.out.println("Line of credit details of custom field values:");
+			System.out.println("\tLine of credit details of custom field values:");
 			for(CustomFieldValue value : customFieldValues){
-				System.out.println("\tID: " + value.getCustomFieldId() );
-				System.out.println("\tCustom field key: " + value.getCustomFieldKey() );
-				System.out.println("\tEncoded key: " + value.getEncodedKey() );
-				System.out.println("\tValue: " + value.getValue());
-				System.out.println("\tParent key: " + value.getParentKey() );
-				System.out.println("\tIndex in list: " + value.getIndexInList() );
-				System.out.println("\tAmount: " + value.getAmount());
-				System.out.println("\tLinked entity key: " + value.getLinkedEntityKeyValue() );
-				System.out.println("\tCustom field grouped index: " + value.getCustomFieldSetGroupIndex() );
-				System.out.println("\tEntity name:" + value.getEntityName());
+				System.out.println("\t\tID: " + value.getCustomFieldId() );
+				System.out.println("\t\tCustom field key: " + value.getCustomFieldKey() );
+				System.out.println("\t\tEncoded key: " + value.getEncodedKey() );
+				System.out.println("\t\tValue: " + value.getValue());
+				System.out.println("\t\tParent key: " + value.getParentKey() );
+				System.out.println("\t\tIndex in list: " + value.getIndexInList() );
+				System.out.println("\t\tAmount: " + value.getAmount());
+				System.out.println("\t\tLinked entity key: " + value.getLinkedEntityKeyValue() );
+				System.out.println("\t\tCustom field grouped index: " + value.getCustomFieldSetGroupIndex() );
+				System.out.println("\t\tEntity name:" + value.getEntityName());
 			}
 		}
 		
@@ -201,7 +293,7 @@ public class DemoTestLoCService {
 	 * @throws MambuApiException 
 	 * 
 	 */
-	public static void testGetDetailsForLineOFCredit() throws MambuApiException {
+	public static void testGetDetailsForLineOfCredit() throws MambuApiException {
 		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println("\nIn " + methodName);
 		
