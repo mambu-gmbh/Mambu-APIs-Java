@@ -28,7 +28,7 @@ import com.mambu.core.shared.model.CustomFieldValue;
 
 /**
  * Service class which handles API operations for patching and deleting Custom Field Values for supported Mambu
- * Entities. Currently supported entities include: Client, Group. LoanAccount, SavingsAccount,Branch, Centre, User
+ * Entities. Currently supported entities include: Client, Group. LoanAccount, SavingsAccount,Branch, Centre, User, LineOfCredit
  * 
  * 
  * @author mdanilkis
@@ -44,7 +44,7 @@ public class CustomFieldValueService {
 	protected ServiceExecutor serviceExecutor;
 
 	// Specify Mambu entities supported by the Custom Field Value API: Client, Group. LoanAccount, SavingsAccount,
-	// Branch, Centre
+	// Branch, Centre, LineOfCredit
 	private final static MambuEntityType[] supportedEntities = new MambuEntityType[] { MambuEntityType.CLIENT,
 			MambuEntityType.GROUP, MambuEntityType.LOAN_ACCOUNT, MambuEntityType.SAVINGS_ACCOUNT,
 			MambuEntityType.BRANCH, MambuEntityType.CENTRE, MambuEntityType.USER, MambuEntityType.LINE_OF_CREDIT };
@@ -707,7 +707,7 @@ public class CustomFieldValueService {
 
 		// delegate execution to service executor
 		return serviceExecutor.getOwnedEntities(parentEntity, parentEntityId, MambuEntityType.CUSTOM_FIELD_VALUE,
-				customFieldId, null);
+				customFieldId, null, false);
 
 	}
 
