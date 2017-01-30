@@ -390,6 +390,8 @@ public class ClientsService {
 	 * 
 	 *            As of Mambu 4.1 the following fields can be patched: id, clientRoleId, firstName, lastName,
 	 *            middleName, homePhone, mobilePhone1, birthDate, emailAddress, gender, state, notes, preferredLanguage
+	 *            
+	 *            As of Mambu 4.5 the following fields can be patched: assignedBranchKey, assignedCentreKey, assignedUserId (credit officer) 
 	 * 
 	 * @return true if client was updated successfully, false otherwise
 	 * @throws MambuApiException
@@ -421,7 +423,7 @@ public class ClientsService {
 	 * @return true if client was patched successfully
 	 * @throws MambuApiException
 	 */
-	private boolean patchClient(Client client, String clientId) throws MambuApiException {
+	public boolean patchClient(Client client, String clientId) throws MambuApiException {
 		// Available since Mambu 4.1. See See MBU-11868
 		// Updating client state is available since Mambu 4.0. See MBU-11443
 		// Verify that both the client ID and clientState are not NULL

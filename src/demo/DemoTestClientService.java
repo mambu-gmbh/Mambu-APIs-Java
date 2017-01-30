@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import org.mockito.internal.util.reflection.Whitebox;
+
 import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.api.server.handler.documents.model.JSONDocument;
 import com.mambu.apisdk.MambuAPIFactory;
@@ -74,6 +76,8 @@ public class DemoTestClientService {
 			ClientExpanded updatedClient = testUpdateClient();
 			NEW_CLIENT_ID = testPatchClient(updatedClient.getClient()); // Available since 4.1
 			testUpdateClientState(updatedClient.getClient()); // Available since 4.0
+			
+			testUpdateClientAssociations(updatedClient.getClient()); //Available since 4.5
 
 			testGetClientDetails();
 
@@ -118,6 +122,43 @@ public class DemoTestClientService {
 			System.out.println("Error code=" + e.getErrorCode());
 			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
 		}
+	}
+
+	private static String testUpdateClientAssociations(Client client) throws MambuApiException {
+
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+		
+		client.setAssignedBranchKey(DemoUtil.getDemoClient().getAssignedBranchKey());
+		client.setAssignedCentreKey(DemoUtil.getDemoClient().getAssignedCentreKey());
+		client.setAssignedUserKey(DemoUtil.getDemoClient().getAssignedUserKey());
+		
+		// null fields not wanted in patch
+		// and keep only the fields defining associations
+		client.setFirstName(null);
+		client.setLastName(null);
+		client.setMiddleName(null);
+		client.setEmailAddress(null);
+		client.setMobilePhone1(null);
+		client.setHomePhone(null);
+		client.setState(null);
+		client.setClientRole(null);
+		client.setId(null);
+		client.setPreferredLanguage(null);
+		client.setBirthDate(null);
+
+		ClientsService clientService = MambuAPIFactory.getClientService();
+		boolean status = clientService.patchClient(client);
+		System.out.println("Update status=" + status);
+
+		// Get updated client details back to confirm PATCHed values
+		Client updatedClient = clientService.getClient(client.getEncodedKey());
+		String updatedId = updatedClient.getId();
+		System.out.println("\tUpdate AssignedBranchKey=" + updatedClient.getAssignedBranchKey() + "\tAssignedCentreKey="
+				+ updatedClient.getAssignedCentreKey() + "\tAssignedUserKey=" + updatedClient.getAssignedUserKey());
+
+		return updatedId;
+
 	}
 
 	public static void testGetClient() throws MambuApiException {
