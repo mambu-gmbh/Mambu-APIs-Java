@@ -55,26 +55,26 @@ public class DemoTestOrganizationService {
 			demoUser = DemoUtil.getDemoUser();
 			demoCentre = DemoUtil.getDemoCentre();
 
-//			testGetOrganizationDetails();// Available since 3.11
-//
-//			// Test GET all currencies
-//			List<Currency> organizationCurrencies = testGetCurrency(); // Available since 4.2
-//
-//			// Available since 4.3
-//			testGetCurrencyByCode();
-//
-//			// Test GET exchange rates
-//			testGetExchangeRates(organizationCurrencies); // Available since 4.2
-//			// Test POST exchange rate
-//			testPostExchangeRate(organizationCurrencies); // Available since 4.2
-//
-//			testPostExchangeRateWithNullStartDate(organizationCurrencies); // Available since 4.2
-//
-//			testPostIndexInterestRate(); // Available since 3.10
-//
-//			testGetTransactionChannels(); // Available since 3.7
-//
-//			testGetAllBranches();
+			testGetOrganizationDetails();// Available since 3.11
+
+			// Test GET all currencies
+			List<Currency> organizationCurrencies = testGetCurrency(); // Available since 4.2
+
+			// Available since 4.3
+			testGetCurrencyByCode();
+
+			// Test GET exchange rates
+			testGetExchangeRates(organizationCurrencies); // Available since 4.2
+			// Test POST exchange rate
+			testPostExchangeRate(organizationCurrencies); // Available since 4.2
+
+			testPostExchangeRateWithNullStartDate(organizationCurrencies); // Available since 4.2
+
+			testPostIndexInterestRate(); // Available since 3.10
+
+			testGetTransactionChannels(); // Available since 3.7
+
+			testGetAllBranches();
 
 			testGetCustomFieldSetsByType();
 			testGetCustomField();
