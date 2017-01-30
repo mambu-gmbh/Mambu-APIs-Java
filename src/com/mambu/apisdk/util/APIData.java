@@ -142,6 +142,7 @@ public class APIData {
 	public static final String GROUP_NAME = "groupName";
 	public static final String ASSIGNED_BRANCH_KEY = "assignedBranchKey";
 	public static final String ASSIGNED_CENTRE_KEY = "assignedCentreKey";
+	public static final String ASSIGNED_USER_KEY = "assignedUserKey";
 	public static final String GROUP_MEMBERS = "groupMembers";
 	public static final String GROUP_ROLES = "groupRoles";
 	public static final String THE_GROUP = "theGroup";

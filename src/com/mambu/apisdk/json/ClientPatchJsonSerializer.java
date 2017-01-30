@@ -39,7 +39,7 @@ public class ClientPatchJsonSerializer implements JsonSerializer<Client> {
 	private final static Set<String> clientPatchFields = new HashSet<String>(Arrays.asList(APIData.ID,
 			APIData.FIRST_NAME, APIData.LAST_NAME, APIData.MIDDLE_NAME, APIData.HOME_PHONE, APIData.MOBILE_PHONE_1,
 			APIData.EMAIL_ADDRESS, APIData.BIRTH_DATE, APIData.GENDER, APIData.STATE, APIData.NOTES,
-			APIData.PREFERRED_LANGUAGE));
+			APIData.PREFERRED_LANGUAGE, APIData.ASSIGNED_BRANCH_KEY, APIData.ASSIGNED_CENTRE_KEY, APIData.ASSIGNED_USER_KEY));
 
 	// Create API Fields InclusionStrategy
 	private final static JsonFieldsInclusionStrategy clientPatchInclusionStrategy = new JsonFieldsInclusionStrategy(
