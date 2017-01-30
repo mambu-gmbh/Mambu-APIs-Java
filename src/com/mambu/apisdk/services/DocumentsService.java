@@ -180,7 +180,7 @@ public class DocumentsService {
 		if (!isSupported(parentEntity)) {
 			throw new IllegalArgumentException("GET Documents API is not supported for " + parentEntity);
 		}
-		return serviceExecutor.getOwnedEntities(parentEntity, parentId, MambuEntityType.DOCUMENT, offset, limit, false);
+		return serviceExecutor.getOwnedEntities(parentEntity, parentId, MambuEntityType.DOCUMENT, offset, limit);
 
 	}
 
