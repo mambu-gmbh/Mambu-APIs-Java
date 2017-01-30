@@ -4,10 +4,13 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
+
 import com.mambu.accounts.shared.model.AccountHolderType;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.LinesOfCreditService;
+import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.Money;
 import com.mambu.linesofcredit.shared.model.AccountsFromLineOfCredit;
 import com.mambu.linesofcredit.shared.model.LineOfCredit;
@@ -42,6 +45,14 @@ public class DemoTestLoCService {
 			testAddAndRemoveAccountsForLineOfCredit(locAccounts);// Available since 3.12.2
 			
 			testPatchLineOfCredit(); // Available since v4.3
+			
+			testGetDetailsForLineOfCredit(); // Available since 4.5
+			
+			testGetAllLinesOfCreditWithDetails(); //Available since 4.5
+			
+			testGetClientLinesOfCreditWithDetails();
+			
+			testGetGroupLinesOfCreditWithDetails();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Lines of Credit Service");
@@ -49,6 +60,74 @@ public class DemoTestLoCService {
 			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
 		}
 
+	}
+
+
+	private static void testGetGroupLinesOfCreditWithDetails() throws MambuApiException {
+
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+
+		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
+
+		String groupId = DemoUtil.demoGroupId;
+		List<LineOfCredit> fetchedLinesOfCredit = null;
+
+		if (null == groupId) {
+			System.out.println("WARNING: " + methodName
+					+ "no group ID is supplied in the properties file. This test can not be executed");
+		} else {
+			fetchedLinesOfCredit = linesOfCreditService.getGroupLinesOfCreditDetails(groupId, 0, 5);
+		}
+
+		if (CollectionUtils.isEmpty(fetchedLinesOfCredit)) {
+			System.out.println("WARNING: there were no lines of credit in Mambu in order to be fetched");
+			return;
+		}
+
+		logLinesOfCreditAndDetails(fetchedLinesOfCredit);
+
+	}
+
+	private static void testGetClientLinesOfCreditWithDetails() throws MambuApiException {
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+		
+		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
+		
+		String clientId = DemoUtil.demoClientId;
+		List <LineOfCredit> fetchedLinesOfCredit = null;
+		
+		if(null == clientId){
+			System.out.println("WARNING: " + methodName + "no client ID is supplied in the properties file. This test can not be executed");
+		}else{
+		  fetchedLinesOfCredit = linesOfCreditService.getClientLinesOfCreditDetails(clientId, 0, 5);
+		}
+		
+		if(CollectionUtils.isEmpty(fetchedLinesOfCredit)){
+			System.out.println("WARNING: there were no lines of credit in Mambu in order to be fetched");
+			return;
+		}
+		
+		logLinesOfCreditAndDetails(fetchedLinesOfCredit);
+		
+	}
+
+	private static void testGetAllLinesOfCreditWithDetails() throws MambuApiException {
+		
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+		
+		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
+		
+		List <LineOfCredit> fetchedLinesOfCredit = linesOfCreditService.getAllLinesOfCreditWithDetails(0, 100);
+
+		if(CollectionUtils.isEmpty(fetchedLinesOfCredit)){
+			System.out.println("WARNING: there were no lines of credit in Mambu in order to be fetched");
+			return;
+		}
+		
+		logLinesOfCreditAndDetails(fetchedLinesOfCredit);
 	}
 
 	/**
@@ -109,6 +188,24 @@ public class DemoTestLoCService {
 
 		return lineOfCredit;
 	}
+	
+	
+	/**
+	 * Helper method, prints to the console details for a List of Lines of credit received as parameter to this method.
+	 * 
+	 * @param linesOfCredit
+	 *            A list containing lines of credit whose details will be printed to the console.
+	 */
+	public static void logLinesOfCreditAndDetails(List<LineOfCredit> linesOfCredit){
+		
+		if(CollectionUtils.isEmpty(linesOfCredit)){
+			System.out.println("WARNING: No lines of credit was povided in order to log its details");
+		}else{
+			for(LineOfCredit loc: linesOfCredit){
+				logLineOfCreditDetails(loc);
+			}
+		}
+	}
 
 	/**
 	 * Helper method, prints to the console details of the LineOfCredit received as parameter to this method.
@@ -130,7 +227,30 @@ public class DemoTestLoCService {
 			System.out.println("\tCreationDate:" + lineOfCredit.getCreationDate());
 			System.out.println("\tLastModifiedDate:" + lineOfCredit.getLastModifiedDate());
 			System.out.println("\tNotes:" + lineOfCredit.getNotes());
+		
+			// log the CFs details
+			logCustomFieldValuesDetails(lineOfCredit.getCustomFieldValues());
 		}
+	}
+
+	private static void logCustomFieldValuesDetails(List<CustomFieldValue> customFieldValues) {
+		
+		if(CollectionUtils.isNotEmpty(customFieldValues)){
+			System.out.println("\tLine of credit details of custom field values:");
+			for(CustomFieldValue value : customFieldValues){
+				System.out.println("\t\tID: " + value.getCustomFieldId() );
+				System.out.println("\t\tCustom field key: " + value.getCustomFieldKey() );
+				System.out.println("\t\tEncoded key: " + value.getEncodedKey() );
+				System.out.println("\t\tValue: " + value.getValue());
+				System.out.println("\t\tParent key: " + value.getParentKey() );
+				System.out.println("\t\tIndex in list: " + value.getIndexInList() );
+				System.out.println("\t\tAmount: " + value.getAmount());
+				System.out.println("\t\tLinked entity key: " + value.getLinkedEntityKeyValue() );
+				System.out.println("\t\tCustom field grouped index: " + value.getCustomFieldSetGroupIndex() );
+				System.out.println("\t\tEntity name:" + value.getEntityName());
+			}
+		}
+		
 	}
 
 	/**
@@ -165,6 +285,39 @@ public class DemoTestLoCService {
 		System.out.println("Line of Credit. ID=" + lineOfCredit.getId() + "\tAmount=" + lineOfCredit.getAmount()
 				+ "\tOwnerType=" + lineOfCredit.getOwnerType() + "\tHolderKey="
 				+ lineOfCredit.getAccountHolder().getAccountHolderKey());
+		
+	}
+	
+	/**
+	 * Tests GETting the lines of credit with details, including custom fields 
+	 * @throws MambuApiException 
+	 * 
+	 */
+	public static void testGetDetailsForLineOfCredit() throws MambuApiException {
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+		
+		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
+		Integer offset = 0;
+		Integer limit = 100;
+		
+		List<LineOfCredit> linesOfCredit = linesOfCreditService.getAllLinesOfCredit(offset, limit);
+		
+		if(CollectionUtils.isNotEmpty(linesOfCredit)){
+
+			/* Get all details for first line of credit found */
+			LineOfCredit firstLineOfCredit = linesOfCredit.get(0);
+			
+			System.out.println("Getting all details for Line of Credit ID= " + firstLineOfCredit.getEncodedKey());
+			
+			LineOfCredit lineOfCreditDetails = linesOfCreditService.getLineOfCreditDetails(firstLineOfCredit.getEncodedKey());
+			
+			// Log returned LoC details
+			logLineOfCreditDetails(lineOfCreditDetails);
+		}else{
+			System.out.println("WARNING: No Credit lines were found in order to run test " + methodName);
+		}
+		
 	}
 
 	/**

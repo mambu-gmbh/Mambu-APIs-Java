@@ -589,11 +589,13 @@ public class ServiceExecutor {
 	 *            related entity id. Can be null if not required
 	 * @param params
 	 *            params map with filtering parameters
+	 * @param requiresFullDetails
+	 *            boolean flag indicates whether the full or object is wanted
 	 * @return list of owned entities
 	 * @throws MambuApiException
 	 */
 	public <R> R getOwnedEntities(MambuEntityType parentEntity, String parentId, MambuEntityType ownedEntity,
-			String relatedEntityId, ParamsMap params) throws MambuApiException {
+			String relatedEntityId, ParamsMap params, boolean requiresFullDetails) throws MambuApiException {
 
 		if (parentEntity == null || ownedEntity == null) {
 			throw new IllegalArgumentException("Parent Entity and Owned Entity cannot be null");
@@ -601,11 +603,70 @@ public class ServiceExecutor {
 		Class<?> parentClass = parentEntity.getEntityClass();
 		Class<?> ownedClass = ownedEntity.getEntityClass();
 
-		ApiDefinition apiDefinition = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, parentClass, ownedClass);
-
+		ApiDefinition  apiDefinition = createApiDefinitionForGetOwnedEntities(requiresFullDetails, parentClass, ownedClass);
+		
 		return execute(apiDefinition, parentId, relatedEntityId, params);
 	}
 
+	/**
+	 * Helper method, creates the ApiDefinition used in obtaining the owned entities
+	 * 
+	 * @param requiresFullDetails
+	 *            boolean flag indicates whether the full or basic object version is wanted
+	 * @param parentClass
+	 *            the parent class
+	 * @param ownedClass
+	 *            the owned class
+	 * @return newly created ApiDefinition
+	 */
+	private ApiDefinition createApiDefinitionForGetOwnedEntities(boolean requiresFullDetails, Class<?> parentClass,
+			Class<?> ownedClass) {
+
+		ApiDefinition apiDefinition;
+		
+		if(requiresFullDetails){
+			apiDefinition = new ApiDefinition(ApiType.GET_OWNED_ENTITIES_WITH_DETAILS, parentClass, ownedClass);
+		}else{
+			apiDefinition = new ApiDefinition(ApiType.GET_OWNED_ENTITIES, parentClass, ownedClass);
+		}
+		
+		return apiDefinition;
+	}
+
+	/**
+	 * Convenience method to Get a list of entities owned by a parent entity by specifying only pagination parameters
+	 * offset and limit. For example GET all comments for a client or for a loan account with offset and limit
+	 * 
+	 * @param parentEntity
+	 *            parent's MambuEntityType. Example MambuEntityType.CLIENT
+	 * @param parentId
+	 *            encoded key or id of the parent entity
+	 * @param ownedEntity
+	 *            Mambu owned entity. Example, MambuEntityType.COMMENT
+	 * @param offset
+	 *            pagination offset
+	 * @param limit
+	 *            pagination limit
+	 * @param requiresFullDetails boolean flag indicating whether a full or basic object is wanted
+	 * @return list of owned entities
+	 * @throws MambuApiException
+	 */
+	public <R> R getOwnedEntities(MambuEntityType parentEntity, String parentId, MambuEntityType ownedEntity,
+			Integer offset, Integer limit, boolean requiresFullDetails) throws MambuApiException {
+
+		ParamsMap params = new ParamsMap();
+		if (offset != null) {
+			params.addParam(APIData.OFFSET, String.valueOf(offset));
+		}
+		if (limit != null) {
+			params.addParam(APIData.LIMIT, String.valueOf(limit));
+		}
+
+		return getOwnedEntities(parentEntity, parentId, ownedEntity, null, params, requiresFullDetails);
+
+	}
+	
+	
 	/**
 	 * Convenience method to Get a list of entities owned by a parent entity by specifying only pagination parameters
 	 * offset and limit. For example GET all comments for a client or for a loan account with offset and limit
@@ -626,15 +687,7 @@ public class ServiceExecutor {
 	public <R> R getOwnedEntities(MambuEntityType parentEntity, String parentId, MambuEntityType ownedEntity,
 			Integer offset, Integer limit) throws MambuApiException {
 
-		ParamsMap params = new ParamsMap();
-		if (offset != null) {
-			params.addParam(APIData.OFFSET, String.valueOf(offset));
-		}
-		if (limit != null) {
-			params.addParam(APIData.LIMIT, String.valueOf(limit));
-		}
-
-		return getOwnedEntities(parentEntity, parentId, ownedEntity, null, params);
+		return getOwnedEntities(parentEntity, parentId, ownedEntity, offset, limit, false);
 
 	}
 
@@ -815,6 +868,36 @@ public class ServiceExecutor {
 	}
 
 	/**
+	 * Convenience method to GET a paginated list of Mambu entities. Example; GET /api/clients?fullDetails=true with offset and limit
+	 * 
+	 * @param mambuEntity
+	 *            Mambu entity
+	 * @param offset
+	 *            offset
+	 * @param limit
+	 *            limit
+	 * @param requiresFullDetails
+	 *            flag indicating if is a full call if true then 'fullDetails=true' parameter will be added to the call
+	 * @return list of entities for the requested page
+	 * @throws MambuApiException
+	 */
+	public <R> List<R> getPaginatedList(MambuEntityType mambuEntity, Integer offset, Integer limit,
+			boolean requiresFullDetails) throws MambuApiException {
+
+		Class<?> clazz = mambuEntity.getEntityClass();
+
+		ParamsMap params = new ParamsMap();
+		if (offset != null) {
+			params.addParam(APIData.OFFSET, String.valueOf(offset));
+		}
+		if (limit != null) {
+			params.addParam(APIData.LIMIT, String.valueOf(limit));
+		}
+
+		return execute(getApiDefinitionForPaginatedList(requiresFullDetails, clazz), params);
+	}
+	
+	/**
 	 * Convenience method to GET a paginated list of Mambu entities. Example; GET /api/clients with offset and limit
 	 * 
 	 * @param mambuEntity
@@ -826,20 +909,30 @@ public class ServiceExecutor {
 	 * @return list of entities for the requested page
 	 * @throws MambuApiException
 	 */
-	public <R> List<R> getPaginatedList(MambuEntityType mambuEntity, Integer offset, Integer limit)
-			throws MambuApiException {
+	public <R> List<R> getPaginatedList(MambuEntityType mambuEntity, Integer offset, Integer limit) throws MambuApiException {
 
-		Class<?> clazz = mambuEntity.getEntityClass();
+		return getPaginatedList(mambuEntity, offset, limit, false);
+	}
 
-		ParamsMap params = new ParamsMap();
-		if (offset != null) {
-			params.addParam(APIData.OFFSET, String.valueOf(offset));
+	/**
+	 * Creates an ApiDefinition in order to get a list with basic or full details based on requiresFullDetails flag
+	 * 
+	 * @param fullDetails
+	 *  flag indicating the call return type, a collection with full details or a collection with basic details 
+	 * @param clazz
+	 *            the class used to create the ApiDefinition
+	 * @return newly created ApiDefinition
+	 */
+	private ApiDefinition getApiDefinitionForPaginatedList(boolean requiresFullDetails, Class<?> clazz) {
+
+		ApiDefinition apiDefinition;
+
+		if (requiresFullDetails) {
+			apiDefinition = new ApiDefinition(ApiType.GET_LIST_WITH_DETAILS, clazz);
+		} else {
+			apiDefinition = new ApiDefinition(ApiType.GET_LIST, clazz);
 		}
-		if (limit != null) {
-			params.addParam(APIData.LIMIT, String.valueOf(limit));
-		}
-		ApiDefinition apiDefinition = new ApiDefinition(ApiType.GET_LIST, clazz);
-		return execute(apiDefinition, params);
+		return apiDefinition;
 	}
 
 	/**

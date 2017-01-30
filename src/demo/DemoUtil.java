@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.collections.CollectionUtils;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -40,6 +41,7 @@ import com.mambu.apisdk.MambuAPIServiceFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.model.Protocol;
 import com.mambu.apisdk.services.ClientsService;
+import com.mambu.apisdk.services.LinesOfCreditService;
 import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.apisdk.services.SavingsService;
@@ -63,6 +65,7 @@ import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.CustomFilterConstraint;
 import com.mambu.core.shared.model.Money;
 import com.mambu.core.shared.model.User;
+import com.mambu.linesofcredit.shared.model.LineOfCredit;
 import com.mambu.loans.shared.model.CustomPredefinedFee;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
@@ -540,6 +543,31 @@ public class DemoUtil {
 	}
 
 	/**
+	 * Gets a Demo LineOfCredit. Fetch a random LineOfCredit from Mambu.
+
+	 * @return newly fetched LineOfCredit
+	 * @throws MambuApiException
+	 */
+	public static LineOfCredit getDemoLineOfCredit() throws MambuApiException {
+
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+
+		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
+
+		List<LineOfCredit> linesOfCredit = linesOfCreditService.getAllLinesOfCredit(0, 5);
+
+		if (CollectionUtils.isEmpty(linesOfCredit)) {
+			System.out.println(methodName + ": no LineOfCredit was found");
+			return null;
+		}
+
+		int randomIndex = (int) Math.random() * (linesOfCredit.size() - 1);
+
+		return linesOfCredit.get(randomIndex);
+	}
+	
+	/**
 	 * Get Demo group by ID
 	 * 
 	 * @param groupId
@@ -565,6 +593,34 @@ public class DemoUtil {
 		Group group = clientsService.getGroup(groupId);
 
 		return group;
+
+	}
+	
+	/**
+	 * Gets a Demo LineOfCredit. It tries to fetch it from Mambu based on the demoLineOfCredit filled in the properties
+	 * file or fetches a random LineOfCredit.
+	 * 
+	 * @param lineOfCreditId
+	 *            the ID of the line of credit to be fetched from Mambu
+	 * @return newly fetched LineOfCredit
+	 * @throws MambuApiException
+	 */
+	public static LineOfCredit getDemoLineOfCredit(String lineOfCreditId) throws MambuApiException {
+
+		System.out.println("\nIn getDemoLineOfCredit for id=" + lineOfCreditId);
+
+		LinesOfCreditService locService = MambuAPIFactory.getLineOfCreditService();
+
+		// If lineOfCreditId is null and nothing is specified in the configuration file then get a random one
+		if (lineOfCreditId == null && demoLineOfCreditId == null) {
+			
+			LineOfCredit randomLineOfCredit = getDemoLineOfCredit();
+			return locService.getLineOfCreditDetails(randomLineOfCredit.getEncodedKey());
+		}
+
+		lineOfCreditId = (lineOfCreditId != null) ? lineOfCreditId : demoLineOfCreditId;
+
+		return locService.getLineOfCreditDetails(lineOfCreditId);
 
 	}
 

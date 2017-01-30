@@ -11,6 +11,7 @@ import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.GroupExpanded;
 import com.mambu.core.shared.model.CustomFieldValue;
 import com.mambu.core.shared.model.User;
+import com.mambu.linesofcredit.shared.model.LineOfCredit;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanProduct;
 import com.mambu.organization.shared.model.Branch;
@@ -39,6 +40,8 @@ public class DemoEntityParams {
 		demoEntities.add(MambuEntityType.USER);
 		demoEntities.add(MambuEntityType.BRANCH);
 		demoEntities.add(MambuEntityType.CENTRE);
+		demoEntities.add(MambuEntityType.LINE_OF_CREDIT);
+		
 
 	}
 
@@ -151,6 +154,9 @@ public class DemoEntityParams {
 		case CENTRE:
 			Centre centre = DemoUtil.getDemoCentre();
 			return new DemoEntityParams(centre.getName(), centre.getEncodedKey(), centre.getId());
+		case LINE_OF_CREDIT:
+			LineOfCredit loc = DemoUtil.getDemoLineOfCredit(DemoUtil.demoLineOfCreditId);
+			return new DemoEntityParams(loc.getClass().getName(), loc.getEncodedKey(), loc.getId());
 
 		default:
 			throw new IllegalArgumentException("Demo entity  " + mambuEntity
@@ -205,6 +211,9 @@ public class DemoEntityParams {
 		case CENTRE:
 			Centre centre = DemoUtil.getDemoCentre();
 			return centre.getCustomFieldValues();
+		case LINE_OF_CREDIT:
+			LineOfCredit loc = DemoUtil.getDemoLineOfCredit(entityId);
+			return loc.getCustomFieldValues();
 		default:
 			throw new IllegalArgumentException("Custom Filed Value for  " + mambuEntity + " implementation is missing");
 		}
