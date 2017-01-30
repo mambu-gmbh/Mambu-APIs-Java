@@ -83,7 +83,7 @@ public class LinesOfCreditService {
 	 */
 	public List<LineOfCredit> getAllLinesOfCredit(Integer offset, Integer limit) throws MambuApiException {
 
-		return serviceExecutor.getPaginatedList(serviceEntity, offset, limit, false);
+		return serviceExecutor.getPaginatedList(serviceEntity, offset, limit);
 	}
 
 	/**
@@ -169,7 +169,7 @@ public class LinesOfCreditService {
 	 * @throws MambuApiException
 	 */
 	public List<LineOfCredit> getLinesOfCredit(MambuEntityType customerType, String customerId, Integer offset,
-			Integer limit, boolean requresFullDetails) throws MambuApiException {
+			Integer limit, boolean requiresFullDetails) throws MambuApiException {
 
 		// Example: GET /api/clients/{clientId}/linesofcredit or GET /api/groups/{groupId}/linesofcredit
 		// Available since 3.11. See MBU-8413
@@ -180,7 +180,7 @@ public class LinesOfCreditService {
 		switch (customerType) {
 		case CLIENT:
 		case GROUP:
-			return serviceExecutor.getOwnedEntities(customerType, customerId, serviceEntity, offset, limit, requresFullDetails);
+			return serviceExecutor.getOwnedEntities(customerType, customerId, serviceEntity, offset, limit, requiresFullDetails);
 		default:
 			throw new IllegalArgumentException("Lines Of Credit Supported only for Clients and Groups");
 		}

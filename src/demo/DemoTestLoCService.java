@@ -48,7 +48,7 @@ public class DemoTestLoCService {
 			
 			testGetDetailsForLineOfCredit(); // Available since 4.5
 			
-			testGetAllLinesOfCredditWithDetails(); //Available since 4.5
+			testGetAllLinesOfCreditWithDetails(); //Available since 4.5
 			
 			testGetClientLinesOfCreditWithDetails();
 			
@@ -75,7 +75,7 @@ public class DemoTestLoCService {
 
 		if (null == groupId) {
 			System.out.println("WARNING: " + methodName
-					+ "no group ID is supplied in the properties file. This test can be executed");
+					+ "no group ID is supplied in the properties file. This test can not be executed");
 		} else {
 			fetchedLinesOfCredit = linesOfCreditService.getGroupLinesOfCreditDetails(groupId, 0, 5);
 		}
@@ -99,7 +99,7 @@ public class DemoTestLoCService {
 		List <LineOfCredit> fetchedLinesOfCredit = null;
 		
 		if(null == clientId){
-			System.out.println("WARNING: " + methodName + "no client ID is supplied in the properties file. This test can be executed");
+			System.out.println("WARNING: " + methodName + "no client ID is supplied in the properties file. This test can not be executed");
 		}else{
 		  fetchedLinesOfCredit = linesOfCreditService.getClientLinesOfCreditDetails(clientId, 0, 5);
 		}
@@ -113,7 +113,7 @@ public class DemoTestLoCService {
 		
 	}
 
-	private static void testGetAllLinesOfCredditWithDetails() throws MambuApiException {
+	private static void testGetAllLinesOfCreditWithDetails() throws MambuApiException {
 		
 		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println("\nIn " + methodName);
