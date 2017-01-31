@@ -26,6 +26,7 @@ import com.mambu.api.server.handler.tasks.model.JSONTask;
 import com.mambu.api.server.handler.users.model.JSONUser;
 import com.mambu.apisdk.model.DatabaseBackup;
 import com.mambu.apisdk.model.DatabaseBackupRequest;
+import com.mambu.apisdk.model.NotificationsToBeResent;
 import com.mambu.apisdk.model.SettlementAccount;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
@@ -604,6 +605,9 @@ public class ApiDefinition {
 
 		// SettlementAccount endPoint, a workaround because there is no SettlementAccount class
 		apiEndPointsMap.put(SettlementAccount.class, APIData.SETTLEMENT_ACCOUNTS);
+		
+		//Notifications endpoint, a workaround for resending failed messages
+		apiEndPointsMap.put(NotificationsToBeResent.class, APIData.NOTIFICATIONS);
 		
 	}
 
