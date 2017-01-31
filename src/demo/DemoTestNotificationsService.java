@@ -45,7 +45,7 @@ public class DemoTestNotificationsService {
 	}
 
 	/**
-	 * Tests resending failed messaging 
+	 * Tests resending the failed notification messages
 	 * 
 	 * @throws MambuApiException
 	 */
