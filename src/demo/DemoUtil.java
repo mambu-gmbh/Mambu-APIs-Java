@@ -555,7 +555,7 @@ public class DemoUtil {
 
 		LinesOfCreditService linesOfCreditService = MambuAPIFactory.getLineOfCreditService();
 
-		List<LineOfCredit> linesOfCredit = linesOfCreditService.getAllLinesOfCredit(0, 5);
+		List<LineOfCredit> linesOfCredit = linesOfCreditService.getAllLinesOfCreditWithDetails(0, 5);
 
 		if (CollectionUtils.isEmpty(linesOfCredit)) {
 			System.out.println(methodName + ": no LineOfCredit was found");
