@@ -31,9 +31,9 @@ public class DemoTestLoCService {
 
 		try {
 			// tests creating LoC for a client
-			testCreateLineOfCreditForAnAccountHolder(AccountHolderType.CLIENT); // Available since 4.2
+			testCreateLineOfCreditForAnAccountHolder(AccountHolderType.CLIENT, false); // Available since 4.2
 			// tests creating LoC for a group
-			testCreateLineOfCreditForAnAccountHolder(AccountHolderType.GROUP); // Available since 4.2
+			testCreateLineOfCreditForAnAccountHolder(AccountHolderType.GROUP, false); // Available since 4.2
 			testGetLinesOfCredit(); // Available since 3.11
 
 			testGetCustomerLinesOfCredit(); // Available since 3.11
@@ -50,9 +50,11 @@ public class DemoTestLoCService {
 			
 			testGetAllLinesOfCreditWithDetails(); //Available since 4.5
 			
-			testGetClientLinesOfCreditWithDetails();
+			testGetClientLinesOfCreditWithDetails(); //Available since 4.5
 			
-			testGetGroupLinesOfCreditWithDetails();
+			testGetGroupLinesOfCreditWithDetails(); //Available since 4.5
+			
+			testCreateLineOfCreditForAnAccountHolder(AccountHolderType.CLIENT, true); //Available since 4.5
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Lines of Credit Service");
@@ -136,10 +138,12 @@ public class DemoTestLoCService {
 	 * 
 	 * @param accountHolderType
 	 *            account holder type. Must not be null
+	 * @param shouldHaveCustomFields
+	 *            indicates whether the line of credit should be created with or without custom field values
 	 * @throws MambuApiException
 	 */
-	private static void testCreateLineOfCreditForAnAccountHolder(AccountHolderType accountHolderType)
-			throws MambuApiException {
+	private static void testCreateLineOfCreditForAnAccountHolder(AccountHolderType accountHolderType,
+			boolean shouldHaveCustomFields) throws MambuApiException {
 
 		System.out.println("\nIn testCreateLineOfCreditForAGroup");
 
@@ -157,6 +161,10 @@ public class DemoTestLoCService {
 			break;
 		}
 
+		if (shouldHaveCustomFields) {
+			lineOfCredit.setCustomFieldValues(getCustomFieldsValuesFromDemoLoc());
+		}
+
 		// POST the LoC in Mambu
 		System.out.println("Creating LoC with Start Date=" + lineOfCredit.getStartDate() + "\tExpiry Date="
 				+ lineOfCredit.getExpireDate());
@@ -166,6 +174,18 @@ public class DemoTestLoCService {
 		System.out.println("LineOfCredit created today: " + new Date());
 
 	}
+
+	/**
+	 * Helper method, gets the the custom field values from an existing Line of credit
+	 * 
+	 * @return a list of custom field values
+	 * @throws MambuApiException
+	 */
+	private static List<CustomFieldValue> getCustomFieldsValuesFromDemoLoc() throws MambuApiException {
+
+		return DemoUtil.getDemoLineOfCredit(DemoUtil.demoLineOfCreditId).getCustomFieldValues();
+	}
+
 
 	/**
 	 * Helper method, creates a new line of credit object, set some test data on it.
