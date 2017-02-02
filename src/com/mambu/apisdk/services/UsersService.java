@@ -243,6 +243,8 @@ public class UsersService {
 		supportedDataViewTypes.put(DataViewType.SAVINGS_TRANSACTIONS_LOOKUP, ApiViewType.DEPOSIT_TRANSACTIONS);
 
 		supportedDataViewTypes.put(DataViewType.ACTIVITIES_LOOKUP, ApiViewType.SYSTEM_ACTIVITIES);
+		//Added in 4.5
+		supportedDataViewTypes.put(DataViewType.LINE_OF_CREDIT, ApiViewType.LINES_OF_CREDIT);
 
 	}
 
