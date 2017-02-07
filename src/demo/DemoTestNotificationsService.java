@@ -37,9 +37,9 @@ public class DemoTestNotificationsService {
 			testResendingFailedNotifications(); // Available since 4.5
 			
 		} catch (MambuApiException e) {
-			System.out.println("Exception caught in Demo Test Lines of Credit Service");
+			System.out.println("Exception caught in Demo Test Notifications Service");
 			System.out.println("Error code=" + e.getErrorCode());
-			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
+			System.out.println("Cause=" + e.getCause() + ".  Message=" + e.getMessage());
 		}
 	
 	}
@@ -79,9 +79,9 @@ public class DemoTestNotificationsService {
 	 */
 	private static List<String> getFailedNotifications() throws MambuApiException{
 		
-		List<String> foundFaildNotifications = new ArrayList<>();
+		List<String> foundFailedNotifications = new ArrayList<>();
 		
-		ArrayList<JSONFilterConstraint> constraints = new ArrayList<JSONFilterConstraint>();
+		List<JSONFilterConstraint> constraints = new ArrayList<>();
 		JSONFilterConstraint constraint = new JSONFilterConstraint();
 
 		constraint.setDataFieldType(DataFieldType.NATIVE.name());
@@ -99,11 +99,11 @@ public class DemoTestNotificationsService {
 		List<NotificationMessage> notificationMessages = searchService.getNotificationMessages(filterConstraints,
 				"0", "5");
 
-		for(NotificationMessage failedessage :notificationMessages){
-			foundFaildNotifications.add(failedessage.getEncodedKey());
+		for(NotificationMessage failedMessage :notificationMessages){
+			foundFailedNotifications.add(failedMessage.getEncodedKey());
 		}
 		
-		return foundFaildNotifications;
+		return foundFailedNotifications;
 		
 	}
 	

@@ -47,12 +47,12 @@ public class NotificationsService {
 	/**
 	 * Resends the failed messages.
 	 * 
-	 * 	Available since 4.5
-	 * 	Call sample: POST { "action":"resend", "identifiers":[ "8a80808a5317de22015317de5b94034c",
+	 * Available since 4.5 Call sample: POST { "action":"resend", "identifiers":[ "8a80808a5317de22015317de5b94034c",
 	 * "8a80806852f38c860152f38de0ad0019"]} /api/notifications/messages
 	 * 
 	 * @param identifiers
-	 *            a list of identifiers (i.e encodedKeys) of the notifications that need to be resent
+	 *            a list of identifiers (i.e encodedKeys) of the notifications that need to be resent. Only unique
+	 *            encoded keys can be specified within the list.
 	 * @return true if all the messages get successfully resent and false otherwise
 	 * @throws MambuApiException
 	 */

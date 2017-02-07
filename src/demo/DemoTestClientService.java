@@ -122,7 +122,7 @@ public class DemoTestClientService {
 		}
 	}
 
-	private static String testUpdateClientAssociations(Client client) throws MambuApiException {
+	private static void testUpdateClientAssociations(Client client) throws MambuApiException {
 
 		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println("\nIn " + methodName);
@@ -151,11 +151,8 @@ public class DemoTestClientService {
 
 		// Get updated client details back to confirm PATCHed values
 		Client updatedClient = clientService.getClient(client.getEncodedKey());
-		String updatedId = updatedClient.getId();
 		System.out.println("\tUpdate AssignedBranchKey=" + updatedClient.getAssignedBranchKey() + "\tAssignedCentreKey="
 				+ updatedClient.getAssignedCentreKey() + "\tAssignedUserKey=" + updatedClient.getAssignedUserKey());
-
-		return updatedId;
 
 	}
 
