@@ -176,7 +176,7 @@ public class DemoTestLoCService {
 	}
 
 	/**
-	 * Helper method, gets the the custom field values from an existing Line of credit
+	 * Helper method, gets the custom field values from an existing Line of credit
 	 * 
 	 * @return a list of custom field values
 	 * @throws MambuApiException
