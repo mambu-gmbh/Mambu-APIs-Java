@@ -36,6 +36,7 @@ public class CustomViewsService {
 		supportedApiViewTypes.put(ApiViewType.LOAN_TRANSACTIONS, MambuEntityType.LOAN_TRANSACTION);
 		supportedApiViewTypes.put(ApiViewType.DEPOSIT_TRANSACTIONS, MambuEntityType.SAVINGS_TRANSACTION);
 		supportedApiViewTypes.put(ApiViewType.SYSTEM_ACTIVITIES, MambuEntityType.ACTIVITY);
+		supportedApiViewTypes.put(ApiViewType.LINES_OF_CREDIT, MambuEntityType.LINE_OF_CREDIT);
 	}
 
 	/***
@@ -206,6 +207,7 @@ public class CustomViewsService {
 		String entityPath = ApiDefinition.getApiEndPoint(forEntityClass);
 		String apiPath = entityPath;
 		switch (apiViewType) {
+		case LINES_OF_CREDIT:
 		case CLIENTS:
 		case GROUPS:
 		case LOANS:

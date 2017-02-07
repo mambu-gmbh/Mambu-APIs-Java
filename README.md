@@ -46,6 +46,7 @@ The list will be updated constantly and currently contains:
 - IntelligenceService
 - LinesOfCreditService
 - LoansService
+- NotificationsService
 - OrganizationService
 - RepaymentsService
 - SavingsService
