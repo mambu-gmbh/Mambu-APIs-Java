@@ -1553,7 +1553,9 @@ public class LoansService {
 			throw new IllegalArgumentException("loanAcountKey or savingsAccountKey must NOT be NULL");
 		}
 		
-		return serviceExecutor.execute(postSettlementForLoanAccount, savingsAccountKey, loanAccountKey, null);
+		postSettlementForLoanAccount.setApiReturnFormat(ApiReturnFormat.BOOLEAN);
+		
+		return serviceExecutor.execute(postSettlementForLoanAccount, loanAccountKey, savingsAccountKey, null);
 	}
 
 	/**
