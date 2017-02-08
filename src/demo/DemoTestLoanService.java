@@ -2452,10 +2452,10 @@ public class DemoTestLoanService {
 		System.out.println("Obtaining the product type of the loan account");
 		LoanProduct loanProduct = loanService.getLoanProduct(productTypeKey);
 
-		if (!loanProduct.isAccountLinkingEnabled()) {
+		if (!loanProduct.isAccountLinkingEnabled() || loanProduct.isAutoCreateLinkedAccounts()) {
 
 			System.out.println("WARNING: " + methodName
-					+ " PATCH can`t be ran against a loan that doesn`t have account linking enabled");
+					+ " PATCH can`t be ran against a loan that doesn`t have account linking enabled or is set to autogenerate settlement account");
 		} else {
 			String linkableSavingAccountEncodedKey = loanProduct.getLinkableSavingsProductKey();
 			SavingsService savingService = MambuAPIFactory.getSavingsService();
@@ -2519,7 +2519,9 @@ public class DemoTestLoanService {
 		savingsAccount.setProductTypeKey(savingsProduct.getEncodedKey());
 		savingsAccount.setAccountType(savingsProduct.getProductType());
 		savingsAccount.setAccountState(AccountState.PENDING_APPROVAL);
-		savingsAccount.setInterestRate(new BigDecimal(1.50));
+		if(!savingsProduct.isAllowOffset()){
+			savingsAccount.setInterestRate(new BigDecimal(1.50));
+		}
 
 		final long time = new Date().getTime();
 		savingsAccount.setId(apiTestIdPrefix + time);
