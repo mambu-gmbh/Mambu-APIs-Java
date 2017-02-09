@@ -27,7 +27,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 
 import com.google.inject.Inject;
@@ -118,26 +119,25 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		params = addAppKeyToParams(params);
 
-		HttpClient httpClient = new DefaultHttpClient();
 		String response = "";
 		HttpResponse httpResponse = null;
-		try {
-			httpResponse = executeRequestByMethod(urlString, params, method, contentTypeFormat, httpClient,
+		try (CloseableHttpClient closeableHttpClient = HttpClientBuilder.create().build()){
+			httpResponse = executeRequestByMethod(urlString, params, method, contentTypeFormat, closeableHttpClient,
 					httpResponse);
 
 			// Process response
 			response = processResponse(httpResponse, method, contentTypeFormat, urlString, params);
 
+			closeableHttpClient.close();
+			
 		} catch (MalformedURLException e) {
 			LOGGER.severe("MalformedURLException: " + e.getMessage());
 			throw new MambuApiException(e);
 		} catch (IOException e) {
 			LOGGER.warning("IOException: message= " + e.getMessage());
 			throw new MambuApiException(e);
-		} finally {
-			httpClient.getConnectionManager().shutdown();
 		}
-
+		
 		return response;
 	}
 
@@ -170,16 +170,19 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// Mambu may handle API requests differently for different Application Keys
 		params = addAppKeyToParams(params);
 
-		HttpClient httpClient = new DefaultHttpClient();
+		
 		ByteArrayOutputStream byteArrayOutputStreamResponse = null;
 		HttpResponse httpResponse = null;
-		try {
-			httpResponse = executeRequestByMethod(urlString, params, method, contentTypeFormat, httpClient,
+		try(CloseableHttpClient closeableHttpClient = HttpClientBuilder.create().build()) {
+			
+			httpResponse = executeRequestByMethod(urlString, params, method, contentTypeFormat, closeableHttpClient,
 					httpResponse);
 
 			// Process response
 			byteArrayOutputStreamResponse = processInputStreamResponse(httpResponse, method, contentTypeFormat,
 					urlString, params);
+			
+			closeableHttpClient.close();
 
 		} catch (MalformedURLException e) {
 			LOGGER.severe("MalformedURLException: " + e.getMessage());
@@ -187,8 +190,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 		} catch (IOException e) {
 			LOGGER.warning("IOException: message= " + e.getMessage());
 			throw new MambuApiException(e);
-		} finally {
-			httpClient.getConnectionManager().shutdown();
 		}
 
 		return byteArrayOutputStreamResponse;
