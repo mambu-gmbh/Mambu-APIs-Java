@@ -2519,9 +2519,7 @@ public class DemoTestLoanService {
 		savingsAccount.setProductTypeKey(savingsProduct.getEncodedKey());
 		savingsAccount.setAccountType(savingsProduct.getProductType());
 		savingsAccount.setAccountState(AccountState.PENDING_APPROVAL);
-		if(!savingsProduct.isAllowOffset()){
-			savingsAccount.setInterestRate(new BigDecimal(1.50));
-		}
+		savingsAccount.setInterestRate(new BigDecimal(1.50));
 
 		final long time = new Date().getTime();
 		savingsAccount.setId(apiTestIdPrefix + time);
