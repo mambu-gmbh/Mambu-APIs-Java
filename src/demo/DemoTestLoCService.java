@@ -154,7 +154,8 @@ public class DemoTestLoCService {
 			return;
 		}
 		for (LineOfCredit loc : linesOfCredit) {
-			System.out.println("\tID=" + loc.getId() + "\tAmount=" + loc.getAmount());
+			System.out.println("\tID=" + loc.getId() + "\tAmount=" + loc.getAmount() + "\tAvailable Credit Amount="
+					+ loc.getAvailableCreditAmount());
 		}
 		// Test get Line Of Credit details
 		String lineofcreditId = linesOfCredit.get(0).getId();
