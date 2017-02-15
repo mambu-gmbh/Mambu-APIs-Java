@@ -26,6 +26,7 @@ import com.mambu.api.server.handler.tasks.model.JSONTask;
 import com.mambu.api.server.handler.users.model.JSONUser;
 import com.mambu.apisdk.model.DatabaseBackup;
 import com.mambu.apisdk.model.DatabaseBackupRequest;
+import com.mambu.apisdk.model.NotificationsToBeResent;
 import com.mambu.apisdk.model.SettlementAccount;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
@@ -135,9 +136,16 @@ public class ApiDefinition {
 		// Get a List of Entities. Example: GET savings/
 		GET_LIST(Method.GET, ContentType.WWW_FORM, noObjectId, noFullDetails, noRelatedEntityPart,
 				ApiReturnFormat.COLLECTION),
-		// Get Entities owned by another entity, Example: GET clients/1233/loans or GET loans/233/transactions
+		// Get a List of Entities with all the details. Example: GET savings?fullDetails=true
+		GET_LIST_WITH_DETAILS(Method.GET, ContentType.WWW_FORM, noObjectId, fullDetails, noRelatedEntityPart,
+				ApiReturnFormat.COLLECTION),
+		// Get Entities owned by another entity with all its details. Example: GET clients/1233/loans or GET
+		// loans/233/transactions?fullDetails=true
 		GET_OWNED_ENTITIES(Method.GET, ContentType.WWW_FORM, withObjectId, noFullDetails, hasRelatedEntityPart,
 				ApiReturnFormat.COLLECTION),
+		// Get Entities owned by another entity, Example: GET clients/1233/loans or GET loans/233/transactions
+		GET_OWNED_ENTITIES_WITH_DETAILS(Method.GET, ContentType.WWW_FORM, withObjectId, fullDetails, hasRelatedEntityPart,
+						ApiReturnFormat.COLLECTION),
 		// Get an Entity owned by another entity, Example: /api/loanproducts/<ID>/schedule
 		GET_OWNED_ENTITY(Method.GET, ContentType.WWW_FORM, withObjectId, noFullDetails, hasRelatedEntityPart,
 				ApiReturnFormat.OBJECT),
@@ -426,6 +434,7 @@ public class ApiDefinition {
 		}
 
 		switch (apiType) {
+		case GET_LIST_WITH_DETAILS:
 		case GET_ENTITY:
 		case GET_ENTITY_DETAILS:
 		case GET_LIST:
@@ -450,6 +459,7 @@ public class ApiDefinition {
 			break;
 		case GET_OWNED_ENTITY:
 		case GET_OWNED_ENTITIES:
+		case GET_OWNED_ENTITIES_WITH_DETAILS:
 		case GET_RELATED_ENTITIES:
 		case POST_OWNED_ENTITY:
 		case PATCH_OWNED_ENTITY:
@@ -595,6 +605,9 @@ public class ApiDefinition {
 
 		// SettlementAccount endPoint, a workaround because there is no SettlementAccount class
 		apiEndPointsMap.put(SettlementAccount.class, APIData.SETTLEMENT_ACCOUNTS);
+		
+		//Notifications endpoint, a workaround for resending failed messages
+		apiEndPointsMap.put(NotificationsToBeResent.class, APIData.NOTIFICATIONS);
 		
 	}
 

@@ -137,7 +137,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		} finally {
 			httpClient.getConnectionManager().shutdown();
 		}
-
+		
 		return response;
 	}
 
@@ -170,6 +170,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// Mambu may handle API requests differently for different Application Keys
 		params = addAppKeyToParams(params);
 
+		
 		HttpClient httpClient = new DefaultHttpClient();
 		ByteArrayOutputStream byteArrayOutputStreamResponse = null;
 		HttpResponse httpResponse = null;
