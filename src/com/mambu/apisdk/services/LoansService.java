@@ -1034,13 +1034,44 @@ public class LoansService {
 		// Available since Mambu 3.12. See MBU-8988 for more details
 		// POST {JSONFilterConstraints} /api/loans/transactions/search?offset=0&limit=5
 
+		return getLoanTransactions(filterConstraints, offset, limit, false);
+	}
+	
+	
+	/**
+	 * Get loan transactions by specifying filter constraints
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * @param   isFullDetailsWanted         
+	 *             flag indicating the details level wanted,if true then the full version of transaction will be requested
+	 * @return list of loan transactions matching filter constraint
+	 * @throws MambuApiException
+	 */
+	public List<LoanTransaction> getLoanTransactions(JSONFilterConstraints filterConstraints, String offset,
+			String limit, boolean isFullDetailsWanted) throws MambuApiException {
+
+		// Available since Mambu 3.12. See MBU-8988 for more details
+		// POST {JSONFilterConstraints} /api/loans/transactions/search?offset=0&limit=5&fullDetails=true
+
 		ApiDefinition apiDefintition = SearchService
 				.makeApiDefinitionforSearchByFilter(MambuEntityType.LOAN_TRANSACTION);
 
-		// POST Filter JSON with pagination params map
-		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
-				ServiceHelper.makePaginationParams(offset, limit));
+		ParamsMap params = ServiceHelper.makePaginationParams(offset, limit);
+		
+		if (params == null) {
+			params = ServiceHelper.makeDetailsLevelParam(isFullDetailsWanted);
 
+		} else {
+			params.addParam(APIData.FULL_DETAILS, Boolean.toString(isFullDetailsWanted));
+		}
+		
+		// POST Filter JSON with pagination params map
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null, params);
 	}
 
 	/****

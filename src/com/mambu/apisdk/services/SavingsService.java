@@ -94,7 +94,7 @@ public class SavingsService {
 	private final static ApiDefinition postAccountChange = new ApiDefinition(ApiType.POST_ENTITY_ACTION,
 			SavingsAccount.class, SavingsTransaction.class);
 	// Post a transaction in a saving account in order to start its maturity
-	private final static ApiDefinition postStartMaturityTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY, 
+	private final static ApiDefinition postStartMaturityTransaction = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
 			SavingsAccount.class, SavingsTransaction.class, SavingsAccount.class);
 
 	// Get Accounts Transactions (transactions for a specific savings account)
@@ -143,6 +143,7 @@ public class SavingsService {
 	 * 
 	 */
 	public SavingsAccount getSavingsAccount(String accountId) throws MambuApiException {
+
 		return serviceExecutor.execute(getAccount, accountId);
 	}
 
@@ -158,6 +159,7 @@ public class SavingsService {
 	 * 
 	 */
 	public SavingsAccount getSavingsAccountDetails(String accountId) throws MambuApiException {
+
 		return serviceExecutor.execute(getAccountDetails, accountId);
 	}
 
@@ -172,6 +174,7 @@ public class SavingsService {
 	 * @throws MambuApiException
 	 */
 	public List<SavingsAccount> getSavingsAccountsForClient(String clientId) throws MambuApiException {
+
 		return serviceExecutor.execute(getAccountsForClient, clientId);
 	}
 
@@ -259,15 +262,44 @@ public class SavingsService {
 	 */
 	public List<SavingsTransaction> getSavingsTransactions(JSONFilterConstraints filterConstraints, String offset,
 			String limit) throws MambuApiException {
+
+		return getSavingsTransactions(filterConstraints, offset, limit, false);
+
+	}
+
+	/**
+	 * Get savings transactions by specifying filter constraints
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * @param isFullDetailsWanted
+	 *            flag indicating the details level wanted, if true then the full version of transaction will be requested
+	 * @return list of savings transactions matching filter constraints
+	 * @throws MambuApiException
+	 */
+	public List<SavingsTransaction> getSavingsTransactions(JSONFilterConstraints filterConstraints, String offset,
+			String limit, boolean isFullDetailsWanted) throws MambuApiException {
 		// Available since Mambu 3.12. See MBU-8988 for more details
-		// POST {JSONFilterConstraints} /api/savings/transactions/search?offset=0&limit=5
+		// POST {JSONFilterConstraints} /api/savings/transactions/search?fullDetails=true&offset=0&limit=5
 
 		ApiDefinition apiDefintition = SearchService
 				.makeApiDefinitionforSearchByFilter(MambuEntityType.SAVINGS_TRANSACTION);
 
+		ParamsMap params = ServiceHelper.makePaginationParams(offset, limit);
+
+		if (params == null) {
+			params = ServiceHelper.makeDetailsLevelParam(isFullDetailsWanted);
+
+		} else {
+			params.addParam(APIData.FULL_DETAILS, Boolean.toString(isFullDetailsWanted));
+		}
+
 		// POST Filter JSON with pagination params map
-		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
-				ServiceHelper.makePaginationParams(offset, limit));
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null, params);
 
 	}
 
@@ -415,8 +447,8 @@ public class SavingsService {
 	 *            fee.
 	 * 
 	 *            Note: Once MBU-12865 is implemented this method will support both predefined fees and arbitrary fees
-	 *            and the (@link #applyFeeToLoanAccount(String, String, String, String)} method used for
-	 *            arbitrary fees can be deprecated
+	 *            and the (@link #applyFeeToLoanAccount(String, String, String, String)} method used for arbitrary fees
+	 *            can be deprecated
 	 * @param notes
 	 *            transaction notes
 	 * 
@@ -426,6 +458,7 @@ public class SavingsService {
 	 */
 	public SavingsTransaction applyFeeToSavingsAccount(String accountId, List<CustomPredefinedFee> fees, String notes)
 			throws MambuApiException {
+
 		//
 		if (fees == null || fees.size() != 1) {
 			throw new IllegalArgumentException("There must be exactly one fee present");
@@ -457,6 +490,7 @@ public class SavingsService {
 	 */
 	public SavingsTransaction executeJSONTransactionRequest(String accountId, SavingsTransactionType transactionType,
 			JSONTransactionRequest transactionRequest) throws MambuApiException {
+
 		//
 		if (transactionRequest == null || transactionType == null) {
 			throw new IllegalArgumentException("Transaction request and transactionType must not be null");
@@ -536,8 +570,8 @@ public class SavingsService {
 			transactionTypeParam = SavingsTransactionType.FEE_ADJUSTED.name();
 			break;
 		default:
-			throw new IllegalArgumentException("Reversal for Savings Transaction Type "
-					+ originalTransactionType.name() + " is not supported");
+			throw new IllegalArgumentException(
+					"Reversal for Savings Transaction Type " + originalTransactionType.name() + " is not supported");
 		}
 		ParamsMap paramsMap = new ParamsMap();
 		paramsMap.addParam(TYPE, transactionTypeParam);
@@ -599,6 +633,7 @@ public class SavingsService {
 	 * @throws MambuApiException
 	 */
 	public boolean deleteSavingsAccount(String accountId) throws MambuApiException {
+
 		return serviceExecutor.execute(deleteAccount, accountId);
 	}
 
@@ -630,7 +665,7 @@ public class SavingsService {
 
 		return serviceExecutor.execute(postAccountChange, accountId, paramsMap);
 	}
-	
+
 	/**
 	 * Starts maturity for a saving account. (A transaction will be created and posted into Mambu in order to accomplish
 	 * this)
@@ -677,7 +712,8 @@ public class SavingsService {
 	 * @throws MambuApiException
 	 */
 
-	public SavingsAccount undoCloseSavingsAccount(SavingsAccount savingsAccount, String notes) throws MambuApiException {
+	public SavingsAccount undoCloseSavingsAccount(SavingsAccount savingsAccount, String notes)
+			throws MambuApiException {
 		// Available since Mambu 4.2. See MBU-13193 for details.
 		// Supports UNDO_REJECT, UNDO_WITHDRAWN, UNDO_CLOSE
 
@@ -692,9 +728,8 @@ public class SavingsService {
 		// Get the transaction type based on how the account was closed
 		String undoCloserTransactionType = ServiceHelper.getUndoCloserTransactionType(savingsAccount);
 		if (undoCloserTransactionType == null) {
-			throw new IllegalArgumentException(
-					"Account is not in a state to perform UNDO close via API. Account State="
-							+ savingsAccount.getAccountState());
+			throw new IllegalArgumentException("Account is not in a state to perform UNDO close via API. Account State="
+					+ savingsAccount.getAccountState());
 		}
 
 		// Create params map with expected API's params
@@ -718,6 +753,7 @@ public class SavingsService {
 	 * @throws MambuApiException
 	 */
 	public List<SavingsAccount> getSavingsAccountsForGroup(String groupId) throws MambuApiException {
+
 		return serviceExecutor.execute(getAccountsForGroup, groupId);
 	}
 
@@ -777,6 +813,7 @@ public class SavingsService {
 	 */
 	public List<SavingsAccount> getSavingsAccountsByBranchOfficerState(String branchId, String creditOfficerUserName,
 			String accountState, String offset, String limit) throws MambuApiException {
+
 		String centreId = null;
 		return getSavingsAccountsByBranchCentreOfficerState(branchId, centreId, creditOfficerUserName, accountState,
 				offset, limit);
@@ -840,6 +877,7 @@ public class SavingsService {
 	 * @throws MambuApiException
 	 */
 	public SavingsProduct getSavingsProduct(String productId) throws MambuApiException {
+
 		return serviceExecutor.execute(getProduct, productId);
 	}
 
@@ -857,6 +895,7 @@ public class SavingsService {
 	 * @throws MambuApiException
 	 */
 	public JSONSavingsAccount createSavingsAccount(JSONSavingsAccount jsonSavingsAccount) throws MambuApiException {
+
 		// Example: POST // {"savingsAccount":
 		// { "accountHolderKey":"123", "accountHolderType":"CLIENT”,… },
 		// "customInformation":[{ "customFieldID":"fieldId_1","value":"true" }, ….]
@@ -954,8 +993,8 @@ public class SavingsService {
 			throw new IllegalArgumentException("Account must not be NULL");
 		}
 
-		String encodedKey = savingsAccount.getEncodedKey() != null ? savingsAccount.getEncodedKey() : savingsAccount
-				.getId();
+		String encodedKey = savingsAccount.getEncodedKey() != null ? savingsAccount.getEncodedKey()
+				: savingsAccount.getId();
 		if (encodedKey == null) {
 			throw new IllegalArgumentException("Cannot update Account: the encoded key or id must NOT be null");
 		}
@@ -998,6 +1037,7 @@ public class SavingsService {
 	 * @throws IllegalArgumentException
 	 */
 	public boolean patchSavingsAccount(SavingsAccount savings) throws MambuApiException {
+
 		// Example: PATCH JSON /api/savings/{ID}
 		// See MBU-10447 for details
 		if (savings == null) {
@@ -1035,6 +1075,22 @@ public class SavingsService {
 				ApiReturnFormat.COLLECTION);
 		return serviceExecutor.execute(apiDefinition, savingsId);
 
+	}
+
+	public SavingsTransaction getSavingsTransactionById(String transactionId, boolean isFullDetaulsLevel)
+			throws MambuApiException {
+
+		if (transactionId == null) {
+			throw new IllegalArgumentException("The ID of the saving transaction must not be null");
+		}
+
+		String urlPath = APIData.SAVINGS + "/" + APIData.TRANSACTIONS + "/" + APIData.SEARCH + "?fullDetailsLevel="
+				+ isFullDetaulsLevel;
+
+		ApiDefinition apiDefinition = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET, LoanAccount.class,
+				ApiReturnFormat.COLLECTION);
+
+		return serviceExecutor.execute(apiDefinition, (String) null);
 	}
 
 }

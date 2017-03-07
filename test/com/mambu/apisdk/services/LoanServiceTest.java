@@ -110,6 +110,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 						+ "\"penaltyPaid\":0,"
 						+ "\"penaltyBalance\":0,"
 						+ "\"scheduleDueDatesMethod\":\"INTERVAL\","
+						+ "\"futurePaymentsAcceptance\":\"NO_FUTURE_PAYMENTS\","
 						+ "\"hasCustomSchedule\":false,"
 						+ "\"repaymentPeriodCount\":1,"
 						+ "\"repaymentPeriodUnit\":\"DAYS\","

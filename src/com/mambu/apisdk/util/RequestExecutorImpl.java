@@ -106,6 +106,9 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		// Pagination parameters for POST with JSON are to be provided with the URL. See MBU-8975
 		urlString = urlHelper.addJsonPaginationParams(urlString, method, contentTypeFormat, params);
+		
+		// Details level parameter for POST with JSON 
+		urlString = urlHelper.addJsonDetailsParam(urlString, method, contentTypeFormat, params);
 
 		// Log API Request details
 		logApiRequestDetails(urlString, params, method, contentTypeFormat);

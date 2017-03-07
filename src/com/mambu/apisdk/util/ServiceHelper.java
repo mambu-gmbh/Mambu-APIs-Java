@@ -434,6 +434,23 @@ public class ServiceHelper {
 		return params;
 
 	}
+	
+	
+	/**
+	 * Convenience helper to make parameters map which contains only the fullDetails parameter
+	 * 
+	 * @param isFullDetailsNeeded
+	 *           flag indicating if full or basic details output is wanted
+	 *           
+	 * @return ParamsMap newly created ParamsMap
+	 */
+	public static ParamsMap makeDetailsLevelParam(boolean isFullDetailsNeeded) {
+		
+		ParamsMap params = new ParamsMap();
+		params.addParam(APIData.FULL_DETAILS, Boolean.toString(isFullDetailsNeeded));
+		
+		return params;
+	}
 
 	/**
 	 * Add appKey value to the json string.
