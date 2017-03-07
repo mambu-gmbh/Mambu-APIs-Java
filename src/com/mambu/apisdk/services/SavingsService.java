@@ -1077,20 +1077,4 @@ public class SavingsService {
 
 	}
 
-	public SavingsTransaction getSavingsTransactionById(String transactionId, boolean isFullDetaulsLevel)
-			throws MambuApiException {
-
-		if (transactionId == null) {
-			throw new IllegalArgumentException("The ID of the saving transaction must not be null");
-		}
-
-		String urlPath = APIData.SAVINGS + "/" + APIData.TRANSACTIONS + "/" + APIData.SEARCH + "?fullDetailsLevel="
-				+ isFullDetaulsLevel;
-
-		ApiDefinition apiDefinition = new ApiDefinition(urlPath, ContentType.WWW_FORM, Method.GET, LoanAccount.class,
-				ApiReturnFormat.COLLECTION);
-
-		return serviceExecutor.execute(apiDefinition, (String) null);
-	}
-
 }
