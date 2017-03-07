@@ -195,7 +195,7 @@ public class URLHelper {
 	
 	
 	/**
-	 * Add detils level param to a given URL String for POST with application/json content type.  For example,
+	 * Add details level param to a given URL String for POST with application/json content type.  For example,
 	 * in API call POST {JSONFilterConstraints} /api/loans/search?offset=0&limit=5
 	 * 
 	 * @param urlString
