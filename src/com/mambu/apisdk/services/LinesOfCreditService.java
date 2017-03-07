@@ -70,6 +70,10 @@ public class LinesOfCreditService {
 	/***
 	 * Get all lines of credit defined for all clients and groups
 	 * 
+	 * Call sample:
+	 *  GET api/linesofcredit
+	 *  Available since 3.11. See MBU-8414
+	 * 
 	 * @param offset
 	 *            pagination offset. If null, Mambu default (zero) will be used
 	 * @param limit
@@ -79,22 +83,40 @@ public class LinesOfCreditService {
 	 */
 	public List<LineOfCredit> getAllLinesOfCredit(Integer offset, Integer limit) throws MambuApiException {
 
-		// GET api/linesofcredit
-		// Available since 3.11. See MBU-8414
-
 		return serviceExecutor.getPaginatedList(serviceEntity, offset, limit);
 	}
 
+	/**
+	 * Get all lines of credit defined for all clients and groups with all the details (including custom fields)
+	 * 
+	 * Call sample:
+	 * 	GET api/linesofcredit?fullDetails=true
+	 *	Available since 4.5. See JSDK-88
+	 * 
+	 * @param offset
+	 *  pagination offset. If null, Mambu default (zero) will be used
+	 * @param limit
+	 *  pagination limit. If null, Mambu default will be used
+	 * @return a list of all Lines of Credit having all the details
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<LineOfCredit> getAllLinesOfCreditWithDetails(Integer offset, Integer limit) throws MambuApiException {
+
+		return serviceExecutor.getPaginatedList(serviceEntity, offset, limit, true);
+	}
+
+	
 	/***
 	 * Get line of credit
 	 * 
-	 * @param lineofcreditId
+	 * @param lineOfCreditId
 	 *            the id or the encoded key of a Line Of Credit. Mandatory. Must not be null
 	 * 
 	 * @return Line of Credit
 	 * @throws MambuApiException
 	 */
-	public LineOfCredit getLineOfCredit(String lineofcreditId) throws MambuApiException {
+	public LineOfCredit getLineOfCredit(String lineOfCreditId) throws MambuApiException {
 
 		// GET api/linesofcredit/{id}
 		// Response example: {"lineOfCredit":{"encodedKey":"abc123","id":"FVT160", "amount":"5000",.. }}
@@ -102,7 +124,30 @@ public class LinesOfCreditService {
 
 		// This API returns LineOfCreditExpanded object
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.GET_ENTITY, LineOfCreditExpanded.class);
-		LineOfCreditExpanded lineOfCreditExpanded = serviceExecutor.execute(apiDefinition, lineofcreditId);
+		LineOfCreditExpanded lineOfCreditExpanded = serviceExecutor.execute(apiDefinition, lineOfCreditId);
+
+		// Return as the LineOfCredit
+		return lineOfCreditExpanded.getLineOfCredit();
+	}
+	
+	
+	/***
+	 * Gets the details of a line of credit including custom fields information
+	 *  GET api/linesofcredit/{id}?fullDetails=true
+	 *  Response example: {"lineOfCredit":{"encodedKey":"abc123","id":"FVT160", "amount":"5000",.. }}
+	 *	Available since 4.5. 
+	 *
+	 * @param lineOfCreditId
+	 *            the id or the encoded key of a Line Of Credit. Mandatory. Must not be null
+	 * 
+	 * @return Line of Credit with all the details including custom field values
+	 * @throws MambuApiException
+	 */
+	public LineOfCredit getLineOfCreditDetails(String lineOfCreditId) throws MambuApiException {
+
+		// This API returns LineOfCreditExpanded object
+		ApiDefinition apiDefinition = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, LineOfCreditExpanded.class);
+		LineOfCreditExpanded lineOfCreditExpanded = serviceExecutor.execute(apiDefinition, lineOfCreditId);
 
 		// Return as the LineOfCredit
 		return lineOfCreditExpanded.getLineOfCredit();
@@ -124,7 +169,7 @@ public class LinesOfCreditService {
 	 * @throws MambuApiException
 	 */
 	public List<LineOfCredit> getLinesOfCredit(MambuEntityType customerType, String customerId, Integer offset,
-			Integer limit) throws MambuApiException {
+			Integer limit, boolean requiresFullDetails) throws MambuApiException {
 
 		// Example: GET /api/clients/{clientId}/linesofcredit or GET /api/groups/{groupId}/linesofcredit
 		// Available since 3.11. See MBU-8413
@@ -135,7 +180,7 @@ public class LinesOfCreditService {
 		switch (customerType) {
 		case CLIENT:
 		case GROUP:
-			return serviceExecutor.getOwnedEntities(customerType, customerId, serviceEntity, offset, limit);
+			return serviceExecutor.getOwnedEntities(customerType, customerId, serviceEntity, offset, limit, requiresFullDetails);
 		default:
 			throw new IllegalArgumentException("Lines Of Credit Supported only for Clients and Groups");
 		}
@@ -160,11 +205,34 @@ public class LinesOfCreditService {
 		// Example: GET /api/clients/{clientId}/linesofcredit
 		// Available since 3.11. See MBU-8413
 
-		return getLinesOfCredit(MambuEntityType.CLIENT, clientId, offset, limit);
+		return getLinesOfCredit(MambuEntityType.CLIENT, clientId, offset, limit, false);
 	}
+	
+	/**
+	 * Convenience method to Get lines of credit with all details (including custom fields) for a Client
+	 *
+	 * Example: GET /api/clients/{clientId}/linesofcredit?fullDetails=true Available since 4.5. See JSDK-88
+	 * 
+	 * @param clientId
+	 *            the ID of the client
+	 * @param offset
+	 *            pagination offset.
+	 * @param limit
+	 *            pagination limit.
+	 * @return the List of Lines of Credit with full details
+	 * @throws MambuApiException
+	 */
+	public List<LineOfCredit> getClientLinesOfCreditDetails(String clientId, Integer offset, Integer limit)
+			throws MambuApiException {
 
+		return getLinesOfCredit(MambuEntityType.CLIENT, clientId, offset, limit, true);
+	}
+	
 	/***
 	 * Convenience method to Get lines of credit for a Group
+	 * 
+	 * Example: GET /api/groups/{groupId}/linesofcredit
+	 * Available since 3.11. See MBU-8413
 	 * 
 	 * @param groupId
 	 *            group ID. Mandatory. Must not be null.
@@ -178,41 +246,61 @@ public class LinesOfCreditService {
 	public List<LineOfCredit> getGroupLinesOfCredit(String groupId, Integer offset, Integer limit)
 			throws MambuApiException {
 
-		// Example: GET /api/groups/{groupId}/linesofcredit
-		// Available since 3.11. See MBU-8413
-
-		return getLinesOfCredit(MambuEntityType.GROUP, groupId, offset, limit);
+		return getLinesOfCredit(MambuEntityType.GROUP, groupId, offset, limit, false);
 	}
+	
+	/**
+	 * Convenience method to Get lines of credit for a Group with all the details (including custom fields)
+	 * 
+	 * Example: GET /api/groups/{groupId}/linesofcredit?fullDetails=true Available since 4.5. 
+	 * See JSDK-88
+	 * 
+	 * @param groupId
+	 *            group ID. Mandatory. Must not be null.
+	 * @param offset
+	 *            pagination offset.
+	 * @param limit
+	 *            pagination limit.
+	 * @return he List of Lines of Credit with full details
+	 * 
+	 * @throws MambuApiException
+	 */
+	public List<LineOfCredit> getGroupLinesOfCreditDetails(String groupId, Integer offset, Integer limit)
+			throws MambuApiException {
+
+		return getLinesOfCredit(MambuEntityType.GROUP, groupId, offset, limit, true);
+	}
+
 
 	/***
 	 * Get all accounts for a line of credit
 	 * 
-	 * @param lineofcreditId
+	 * @param lineOfCreditId
 	 *            the id or the encoded key of a Line Of Credit. Mandatory. Must not be null
 	 * 
 	 * @return accounts for the line of credit
 	 * @throws MambuApiException
 	 */
-	public AccountsFromLineOfCredit getAccountsForLineOfCredit(String lineofcreditId) throws MambuApiException {
+	public AccountsFromLineOfCredit getAccountsForLineOfCredit(String lineOfCreditId) throws MambuApiException {
 
 		// Example: GET /api/linesofcredit/{ID}/accounts
 		// Available since 3.11. See MBU-8415
 
 		ApiDefinition getAccountForLoC = new ApiDefinition(ApiType.GET_OWNED_ENTITY, LineOfCredit.class,
 				AccountsFromLineOfCredit.class);
-		return serviceExecutor.execute(getAccountForLoC, lineofcreditId);
+		return serviceExecutor.execute(getAccountForLoC, lineOfCreditId);
 	}
 
 	/**
 	 * Add Loan Account to a line of credit
 	 * 
-	 * @param lineofcreditId
+	 * @param lineOfCreditId
 	 *            the id or the encoded key of a Line Of Credit. Mandatory. Must not be null
 	 * @param loanAccountId
 	 *            the id or the encoded key of a Loan Account. Mandatory. Must not be null
 	 * @return added loan account
 	 */
-	public LoanAccount addLoanAccount(String lineofcreditId, String loanAccountId) throws MambuApiException {
+	public LoanAccount addLoanAccount(String lineOfCreditId, String loanAccountId) throws MambuApiException {
 
 		// Example: POST /api/linesofcredit/{LOC_ID}/loans/{ACCOUNT_ID}
 		// Available since 3.12.2. See MBU-9864
@@ -223,19 +311,19 @@ public class LinesOfCreditService {
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.POST_OWNED_ENTITY, LineOfCredit.class,
 				LoanAccount.class);
 
-		return serviceExecutor.execute(apiDefinition, lineofcreditId, loanAccountId, null);
+		return serviceExecutor.execute(apiDefinition, lineOfCreditId, loanAccountId, null);
 	}
 
 	/**
 	 * Add Savings Account to a line of credit
 	 * 
-	 * @param lineofcreditId
+	 * @param lineOfCreditId
 	 *            the id or the encoded key of a Line Of Credit. Mandatory. Must not be null
 	 * @param savingsAccountId
 	 *            the id or the encoded key of a Savings Account. Mandatory. Must not be null
 	 * @return added savings account
 	 */
-	public SavingsAccount addSavingsAccount(String lineofcreditId, String savingsAccountId) throws MambuApiException {
+	public SavingsAccount addSavingsAccount(String lineOfCreditId, String savingsAccountId) throws MambuApiException {
 
 		// Example: POST /api/linesofcredit/{LOC_ID}/savings/{ACCOUNT_ID}
 		// Available since 3.12.2. See MBU-9864
@@ -246,13 +334,13 @@ public class LinesOfCreditService {
 		ApiDefinition apiDefinition = new ApiDefinition(ApiType.POST_OWNED_ENTITY, LineOfCredit.class,
 				SavingsAccount.class);
 
-		return serviceExecutor.execute(apiDefinition, lineofcreditId, savingsAccountId, null);
+		return serviceExecutor.execute(apiDefinition, lineOfCreditId, savingsAccountId, null);
 	}
 
 	/**
 	 * Delete Account from a line of credit
 	 * 
-	 * @param lineofcreditId
+	 * @param lineOfCreditId
 	 *            the id or the encoded key of a Line Of Credit. Mandatory. Must not be null
 	 * @param accountType
 	 *            account type. Must not be null
@@ -260,7 +348,7 @@ public class LinesOfCreditService {
 	 *            the id or the encoded key of the Account. Mandatory. Must not be null
 	 * @return true if success
 	 */
-	public boolean deleteAccount(String lineofcreditId, Type accountType, String accountId) throws MambuApiException {
+	public boolean deleteAccount(String lineOfCreditId, Type accountType, String accountId) throws MambuApiException {
 
 		if (accountType == null || accountId == null) {
 			throw new IllegalArgumentException("Account Type and Account ID must not be null. Type=" + accountType
@@ -269,7 +357,7 @@ public class LinesOfCreditService {
 		MambuEntityType ownedEentityType = (accountType == Type.LOAN) ? MambuEntityType.LOAN_ACCOUNT
 				: MambuEntityType.SAVINGS_ACCOUNT;
 
-		return serviceExecutor.deleteOwnedEntity(MambuEntityType.LINE_OF_CREDIT, lineofcreditId, ownedEentityType,
+		return serviceExecutor.deleteOwnedEntity(MambuEntityType.LINE_OF_CREDIT, lineOfCreditId, ownedEentityType,
 				accountId);
 
 	}
@@ -302,34 +390,34 @@ public class LinesOfCreditService {
 	/**
 	 * Convenience method to Delete Loan Account from a line of credit
 	 * 
-	 * @param lineofcreditId
+	 * @param lineOfCreditId
 	 *            the id or the encoded key of a Line Of Credit. Mandatory. Must not be null
 	 * @param loanAccountId
 	 *            the id or the encoded key of a Loan Account. Mandatory. Must not be null
 	 * @return true if success
 	 */
-	public boolean deleteLoanAccount(String lineofcreditId, String loanAccountId) throws MambuApiException {
+	public boolean deleteLoanAccount(String lineOfCreditId, String loanAccountId) throws MambuApiException {
 
 		// Example: DELETE /api/linesofcredit/{LOC_ID}/loans/{ACCOUNT_ID}
 		// Available since 3.12.2. See MBU-9873
-		return deleteAccount(lineofcreditId, Type.LOAN, loanAccountId);
+		return deleteAccount(lineOfCreditId, Type.LOAN, loanAccountId);
 	}
 
 	/**
 	 * Convenience method to Delete Savings Account from a line of credit
 	 * 
-	 * @param lineofcreditId
+	 * @param lineOfCreditId
 	 *            the id or the encoded key of a Line Of Credit. Mandatory. Must not be null
 	 * @param savingsAccountId
 	 *            the id or the encoded key of a Savings Account. Mandatory. Must not be null
 	 * @return true if success
 	 */
-	public boolean deleteSavingsAccount(String lineofcreditId, String savingsAccountId) throws MambuApiException {
+	public boolean deleteSavingsAccount(String lineOfCreditId, String savingsAccountId) throws MambuApiException {
 
 		// Example: DELETE /api/linesofcredit/{LOC_ID}/savings/{ACCOUNT_ID}
 		// Available since 3.12.2. See MBU-9873
 
-		return deleteAccount(lineofcreditId, Type.SAVINGS, savingsAccountId);
+		return deleteAccount(lineOfCreditId, Type.SAVINGS, savingsAccountId);
 
 	}
 	

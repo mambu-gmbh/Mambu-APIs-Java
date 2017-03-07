@@ -27,6 +27,7 @@ public class URLHelper {
 	private String protocol;
 	private static String API_ENDPOINT = "/api/";
 	private static String DELIMITER = "?";
+	private static String AND = "&";
 
 	private final static Logger LOGGER = Logger.getLogger(URLHelper.class.getName());
 
@@ -142,8 +143,13 @@ public class URLHelper {
 	 */
 	public static String makeUrlWithParams(String urlString, ParamsMap paramsMap) {
 
+		if(urlString.contains(DELIMITER)){
+			return paramsMap != null ? urlString + AND + paramsMap.getURLString() : urlString;
+		}
+
 		return paramsMap != null ? urlString + DELIMITER + paramsMap.getURLString() : urlString;
 	}
+	
 
 	/**
 	 * Add pagination params to a given URL String for POST with application/json content type. Pagination parameters
@@ -183,6 +189,43 @@ public class URLHelper {
 		// Remove pagination params already added to the URL
 		params.remove(APIData.OFFSET);
 		params.remove(APIData.LIMIT);
+
+		return urlWithParams;
+	}
+	
+	
+	/**
+	 * Add detils level param to a given URL String for POST with application/json content type.  For example,
+	 * in API call POST {JSONFilterConstraints} /api/loans/search?offset=0&limit=5
+	 * 
+	 * @param urlString
+	 *            original URL string
+	 * @param method
+	 *            method
+	 * @param contentTypeFormat
+	 *            content type format
+	 * @param params
+	 *            input parameters. If pagination parameters are added to the URL string then they are removed from the
+	 *            original params map
+	 * @return URL string with pagination parameters added for POST with application/json content type
+	 */
+	public String addJsonDetailsParam(String urlString, Method method, ContentType contentTypeFormat,
+			ParamsMap params) {
+
+		if (params == null || !(method == Method.POST && contentTypeFormat == ContentType.JSON)) {
+			return urlString;
+		}
+		
+		if(params.get(APIData.FULL_DETAILS) == null){
+			return urlString;
+		}
+		ParamsMap detailsParam = new ParamsMap();
+		
+		detailsParam.put(APIData.FULL_DETAILS, params.get(APIData.FULL_DETAILS));
+		
+		String urlWithParams = makeUrlWithParams(urlString, detailsParam);
+
+		params.remove(APIData.FULL_DETAILS);
 
 		return urlWithParams;
 	}

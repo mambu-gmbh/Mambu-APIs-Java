@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.inject.Inject;
 import com.mambu.api.server.handler.customviews.model.ApiViewType;
+import com.mambu.api.server.handler.users.model.JSONUser;
 import com.mambu.apisdk.MambuAPIService;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
@@ -41,6 +42,8 @@ public class UsersService {
 			CustomView.class);
 	private final static ApiDefinition getUserRoles = new ApiDefinition(ApiType.GET_LIST, Role.class);
 	private final static ApiDefinition getUserRole = new ApiDefinition(ApiType.GET_ENTITY_DETAILS, Role.class);
+	
+	private final static ApiDefinition createUser = new ApiDefinition(ApiType.CREATE_JSON_ENTITY, JSONUser.class, JSONUser.class);
 
 	/***
 	 * Create a new users service
@@ -240,6 +243,8 @@ public class UsersService {
 		supportedDataViewTypes.put(DataViewType.SAVINGS_TRANSACTIONS_LOOKUP, ApiViewType.DEPOSIT_TRANSACTIONS);
 
 		supportedDataViewTypes.put(DataViewType.ACTIVITIES_LOOKUP, ApiViewType.SYSTEM_ACTIVITIES);
+		//Added in 4.5
+		supportedDataViewTypes.put(DataViewType.LINE_OF_CREDIT, ApiViewType.LINES_OF_CREDIT);
 
 	}
 
@@ -283,6 +288,34 @@ public class UsersService {
 		// GET /api/userroles/{KEY}
 		// See MBU-9263
 		return serviceExecutor.execute(getUserRole, roleKey);
+	}
+	
+	/**
+	 * Creates a new user
+	 * 
+	 * i.e. API call POST api/users JSON payload: { "user": { "username": "tinker", "password": "pass1234566", "email":
+	 * "ddd@mambu.com", "title": "Mrs", "firstName": "John"... } } 
+	 * NOTE: for more information on users API visit
+	 * 
+	 * @see <a href="https://developer.mambu.com/customer/en/portal/articles/1162284-users-api?b_id=874">Users API</a>
+	 * 
+	 * @param user
+	 *            The user to be created. Must be not be null. Also, take into account that the user must have a role
+	 *            assigned.
+	 *            
+	 * @return newly created user
+	 */
+	public User createUser(User user) throws MambuApiException {
+
+		// See MBU-15091
+		if (user == null) {
+			throw new IllegalArgumentException("User must not be null.");
+		}
+
+		JSONUser jsonUser = new JSONUser();
+		jsonUser.setUser(user);
+		JSONUser jsonCreatedUser = serviceExecutor.executeJson(createUser, jsonUser);
+		return jsonCreatedUser.getUser();
 	}
 
 }

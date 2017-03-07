@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
+
 import com.mambu.accounts.shared.model.TransactionLimitType;
 import com.mambu.api.server.handler.activityfeed.model.JSONActivity;
 import com.mambu.api.server.handler.customviews.model.ApiViewType;
@@ -84,6 +86,8 @@ public class DemoTestUsersService {
 
 			List<Role> userRoles = testGetAllUserRoles(); // Available since 3.14
 			testGetAllUserRoleDetails(userRoles); // Available since 3.14
+			
+			testCreateUser(); // Available since 4.4
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Users Service");
@@ -91,7 +95,7 @@ public class DemoTestUsersService {
 			System.out.println(" Cause=" + e.getCause() + ".  Message=" + e.getMessage());
 		}
 	}
-
+	
 	public static void testGetAllUsers() throws MambuApiException {
 		System.out.println(methodName = "\nIn testGetAllUsers");
 		UsersService usersService = MambuAPIFactory.getUsersService();
@@ -518,10 +522,25 @@ public class DemoTestUsersService {
 		message = message == null ? "" : message;
 		System.out.println(message + "\tTotal Users=" + users.size());
 		for (User user : users) {
-			System.out.println(" Username=" + user.getUsername() + "\tName=" + user.getFullName() + "\tId="
-					+ user.getId() + "\tBranch=" + user.getAssignedBranchKey() + "\tAdmin=" + user.isAdministrator());
+			logIndividualUserDetails(user);
 		}
 		System.out.println();
+	}
+
+	/**
+	 * Logs some details for an individual user
+	 * 
+	 * @param user
+	 *            The users whose details will be logged to the consoles
+	 */
+	private static void logIndividualUserDetails(User user) {
+		System.out.println("User details:");
+		System.out.println("\tUsername = " + user.getUsername());  
+		System.out.println("\tName = " + user.getFullName()); 
+		System.out.println("\tId = " + user.getId());
+		System.out.println("\tBranch = "	+ user.getAssignedBranchKey());
+		System.out.println("\tUsername = " + user.getUsername());
+		System.out.println("\tNotes = " + user.getNotes());
 	}
 
 	// Log Custom View Summary results. See MBU-11879
@@ -563,4 +582,50 @@ public class DemoTestUsersService {
 			}
 		}
 	}
+
+	/* 
+	 * Tests creating a new user
+	 */
+	private static void testCreateUser() throws MambuApiException {
+		
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+		
+		UsersService usersService = MambuAPIFactory.getUsersService();
+
+		List<Role> userRoles = usersService.getUserRoles();
+		
+		if(CollectionUtils.isEmpty(userRoles)){
+			System.out.println("WARNING: There are no roles in the appication!");
+			System.out.println("User can`t be created without a role");
+			return;
+		}
+		long currentTime = System.currentTimeMillis();		
+		User userToBeCreated = new User();
+		
+		userToBeCreated.setRole(userRoles.get(0));
+		userToBeCreated.setFirstName("API");
+		userToBeCreated.setLastName("User ");
+		userToBeCreated.setUsername("ApiUser" + currentTime);
+		userToBeCreated.setPassword("password2010");
+		userToBeCreated.setNotes("User created through SDK " + currentTime);
+		Permissions permissions = new Permissions();
+		permissions.setCanManageAllBranches(true);
+		permissions.setCanManageEntitiesAssignedToOtherOfficers(true);
+		userToBeCreated.setPermissions(permissions);
+		userToBeCreated.setAssignedBranchKey(demoUser.getAssignedBranchKey());
+
+		User createdUser = usersService.createUser(userToBeCreated);
+		
+		if(createdUser == null){
+			System.out.println("The new user couldn`t be created!");
+			return;
+		}
+
+		//log the details
+		System.out.println("Details of the newly created user:");
+		logIndividualUserDetails(createdUser);
+		
+	}
+	
 }

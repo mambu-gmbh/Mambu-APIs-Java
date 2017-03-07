@@ -28,6 +28,7 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.json.LoanAccountPatchJsonSerializer;
 import com.mambu.apisdk.json.LoanProductScheduleJsonSerializer;
 import com.mambu.apisdk.model.ApiLoanAccount;
+import com.mambu.apisdk.model.SettlementAccount;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
 import com.mambu.apisdk.util.ApiDefinition.ApiReturnFormat;
@@ -131,6 +132,9 @@ public class LoansService {
 		// Use LoanAccountPatchJsonSerializer to make the expected format
 		patchAccount.addJsonSerializer(LoanAccount.class, new LoanAccountPatchJsonSerializer());
 	}
+	// Used to link loan accounts with savings accounts
+	private final static ApiDefinition postSettlementForLoanAccount = new ApiDefinition(ApiType.POST_OWNED_ENTITY,
+			LoanAccount.class, SettlementAccount.class);
 	// Update Loan Tranches. Returns updated LoanAccount. POST /api/loans/loanId/tranches
 	private final static ApiDefinition updateAccountTranches = new ApiDefinition(ApiType.POST_ENTITY_ACTION,
 			LoanAccount.class, LoanTranche.class);
@@ -1030,13 +1034,44 @@ public class LoansService {
 		// Available since Mambu 3.12. See MBU-8988 for more details
 		// POST {JSONFilterConstraints} /api/loans/transactions/search?offset=0&limit=5
 
+		return getLoanTransactions(filterConstraints, offset, limit, false);
+	}
+	
+	
+	/**
+	 * Get loan transactions by specifying filter constraints
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * @param   isFullDetailsWanted         
+	 *             flag indicating the details level wanted,if true then the full version of transaction will be requested
+	 * @return list of loan transactions matching filter constraint
+	 * @throws MambuApiException
+	 */
+	public List<LoanTransaction> getLoanTransactions(JSONFilterConstraints filterConstraints, String offset,
+			String limit, boolean isFullDetailsWanted) throws MambuApiException {
+
+		// Available since Mambu 3.12. See MBU-8988 for more details
+		// POST {JSONFilterConstraints} /api/loans/transactions/search?offset=0&limit=5&fullDetails=true
+
 		ApiDefinition apiDefintition = SearchService
 				.makeApiDefinitionforSearchByFilter(MambuEntityType.LOAN_TRANSACTION);
 
-		// POST Filter JSON with pagination params map
-		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
-				ServiceHelper.makePaginationParams(offset, limit));
+		ParamsMap params = ServiceHelper.makePaginationParams(offset, limit);
+		
+		if (params == null) {
+			params = ServiceHelper.makeDetailsLevelParam(isFullDetailsWanted);
 
+		} else {
+			params.addParam(APIData.FULL_DETAILS, Boolean.toString(isFullDetailsWanted));
+		}
+		
+		// POST Filter JSON with pagination params map
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null, params);
 	}
 
 	/****
@@ -1521,4 +1556,66 @@ public class LoansService {
 
 		return reverseLoanTransaction(accountId, transactionType, transactionId, notes);
 	}
+
+	/**
+	 * Updates or links a settlement account with a loan account.
+	 * 
+	 * Call: POST : /api/loans/{LOAN_KEY}/settlementAccounts/{SAVINGS_KEY}
+	 * 
+	 * Sample call: POST /api/loans/8a8086a756dfa8f30156e0bdbf060259/settlementAccounts/8a80866357976c62015798e0b60e00d0
+	 * 
+	 * Sample response: {"returnCode":0,"returnStatus":"SUCCESS"}
+	 * 
+	 * Available since Mambu 4.4
+	 * 
+	 * @param loanAccountKey
+	 *            A string key representing the ID or the encoding key of the loan account. Must NOT be NULL.
+	 * 
+	 * @param savingsAccountKey
+	 *            A string key representing the ID or the encoding key of the saving account Must NOT be NULL.
+	 * 
+	 * @return true if it succeeds linking the two accounts of the keys passed as parameters in a call to this method.
+	 * @throws MambuApiException
+	 */
+	public Boolean addSettlementAccount(String loanAccountKey, String savingsAccountKey)
+			throws MambuApiException {
+
+		if (savingsAccountKey == null || loanAccountKey == null) {
+			throw new IllegalArgumentException("loanAcountKey or savingsAccountKey must NOT be NULL");
+		}
+		
+		postSettlementForLoanAccount.setApiReturnFormat(ApiReturnFormat.BOOLEAN);
+		
+		return serviceExecutor.execute(postSettlementForLoanAccount, loanAccountKey, savingsAccountKey, null);
+	}
+
+	/**
+	 * Deletes the link between the loan account and saving account (known as settlement account)
+	 * 
+	 * Call: DELETE /api/loans/{LOAN_KEY}/settlementAccounts/{SAVINGS_KEY}
+	 * 
+	 * Sample call: DELETE /api/loans/STLACC_7832648/settlementAccounts/8a80866357976c62015798e0b60e00d0
+	 * 
+	 * Sample response: {"returnCode":0,"returnStatus":"SUCCESS"}
+	 * 
+	 * Available since Mambu 4.4
+	 * 
+	 * @param loanAccountKey
+	 *            A string key representing the ID or the encoding key of the loan account. Must NOT be NULL.
+	 * @param savingAccountKey
+	 *            A string key representing the ID or the encoding key of the saving account. Must NOT be NULL.
+	 * @return true if the linkage succeeded.
+	 * @throws MambuApiException
+	 */
+	public Boolean deleteSettlementAccount(String loanAccountKey, String savingAccountKey)
+			throws MambuApiException {
+
+		if (savingAccountKey == null || loanAccountKey == null) {
+			throw new IllegalArgumentException("loanAcountKey or savingAccountKey must NOT be NULL");
+		}
+
+		return serviceExecutor.deleteOwnedEntity(MambuEntityType.LOAN_ACCOUNT, loanAccountKey,
+				MambuEntityType.SETTLEMENT_ACCOUNT, savingAccountKey);
+	}
+
 }

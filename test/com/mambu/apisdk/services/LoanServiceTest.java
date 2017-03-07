@@ -110,6 +110,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 						+ "\"penaltyPaid\":0,"
 						+ "\"penaltyBalance\":0,"
 						+ "\"scheduleDueDatesMethod\":\"INTERVAL\","
+						+ "\"futurePaymentsAcceptance\":\"NO_FUTURE_PAYMENTS\","
 						+ "\"hasCustomSchedule\":false,"
 						+ "\"repaymentPeriodCount\":1,"
 						+ "\"repaymentPeriodUnit\":\"DAYS\","
@@ -122,7 +123,8 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 						+ "\"interestRateSource\":\"FIXED_INTEREST_RATE\","
 						+ "\"accruedInterest\":0,"
 						+ "\"accruedPenalty\":0,\"loanPenaltyCalculationMethod\":\"NONE\","
-						+ "\"arrearsTolerancePeriod\":0}," // Added in 4.2: defaults to zero in the model
+						+ "\"arrearsTolerancePeriod\":0," // Added in 4.2: defaults to zero in the model
+						+ "\"allowOffset\":false}," // Added in 4.5: defaults to false in the model
 						+ "\"customInformation\":["
 						+ "{\"value\":\"My Loan Purpose 5\",\"indexInList\":-1,\"toBeDeleted\":false,\"customFieldID\":\"Loan_Purpose_Loan_Accounts\"},"
 						+ "{\"value\":\"Trust\",\"indexInList\":-1,\"toBeDeleted\":false,\"customFieldID\":\"Loan_Originator_Loan_Accounts\"}"

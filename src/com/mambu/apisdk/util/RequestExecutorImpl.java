@@ -106,6 +106,9 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		// Pagination parameters for POST with JSON are to be provided with the URL. See MBU-8975
 		urlString = urlHelper.addJsonPaginationParams(urlString, method, contentTypeFormat, params);
+		
+		// Details level parameter for POST with JSON 
+		urlString = urlHelper.addJsonDetailsParam(urlString, method, contentTypeFormat, params);
 
 		// Log API Request details
 		logApiRequestDetails(urlString, params, method, contentTypeFormat);
@@ -137,7 +140,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		} finally {
 			httpClient.getConnectionManager().shutdown();
 		}
-
+		
 		return response;
 	}
 
@@ -170,6 +173,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// Mambu may handle API requests differently for different Application Keys
 		params = addAppKeyToParams(params);
 
+		
 		HttpClient httpClient = new DefaultHttpClient();
 		ByteArrayOutputStream byteArrayOutputStreamResponse = null;
 		HttpResponse httpResponse = null;

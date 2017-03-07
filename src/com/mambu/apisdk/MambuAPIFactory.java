@@ -18,6 +18,7 @@ import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.services.IntelligenceService;
 import com.mambu.apisdk.services.LinesOfCreditService;
 import com.mambu.apisdk.services.LoansService;
+import com.mambu.apisdk.services.NotificationsService;
 import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.apisdk.services.RepaymentsService;
 import com.mambu.apisdk.services.SavingsService;
@@ -332,6 +333,21 @@ public class MambuAPIFactory {
 		validateFactorySetUp();
 		return injector.getInstance(DatabaseService.class);
 	}
+	
+	/***
+	 * Get an instance of the NotificationsService class
+	 * 
+	 * @return the obtained NotificationsService instance
+	 * 
+	 * @throws MambuApiException
+	 */
+	public static NotificationsService getNotificationsService() throws MambuApiException {
+
+		validateFactorySetUp();
+		return injector.getInstance(NotificationsService.class);
+	}
+	
+	
 
 	//
 	/***

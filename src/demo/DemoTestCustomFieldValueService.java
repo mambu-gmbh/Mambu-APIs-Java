@@ -32,7 +32,7 @@ public class DemoTestCustomFieldValueService {
 		try {
 			testUpdateAndDeleteCustomFieldValues();
 			testUpdateAndDeleteTransactionCustomFieldValues(); // Available since Mambu 4.1
-			testUpdateMultiplaCustomFields(); // Available since 4.2. For more details see 12231
+			testUpdateMultipleCustomFields(); // Available since 4.2. For more details see 12231
 
 			// Available since 3.8
 			// Support for Grouped Custom fields available since 3.11
@@ -269,7 +269,7 @@ public class DemoTestCustomFieldValueService {
 	}
 
 	// Tests PATCHing a list of custom fields
-	private static void testUpdateMultiplaCustomFields() throws MambuApiException {
+	private static void testUpdateMultipleCustomFields() throws MambuApiException {
 
 		System.out.println(methodName = "\nIn testUpdateMultiplaCustomFields");
 
