@@ -1,3 +1,4 @@
+
 /**
  * 
  */
@@ -100,6 +101,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 						+ "\"principalDue\":0,"
 						+ "\"principalPaid\":0,"
 						+ "\"principalBalance\":0,"
+						+ "\"redrawBalance\":0,"
 						+ "\"interestDue\":0,"
 						+ "\"interestPaid\":0,"
 						+ "\"interestBalance\":0,"
@@ -110,6 +112,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 						+ "\"penaltyPaid\":0,"
 						+ "\"penaltyBalance\":0,"
 						+ "\"scheduleDueDatesMethod\":\"INTERVAL\","
+						+ "\"futurePaymentsAcceptance\":\"NO_FUTURE_PAYMENTS\","
 						+ "\"hasCustomSchedule\":false,"
 						+ "\"repaymentPeriodCount\":1,"
 						+ "\"repaymentPeriodUnit\":\"DAYS\","
