@@ -1487,14 +1487,9 @@ public class LoansService {
 			transactionTypeParam = LoanTransactionType.INTEREST_APPLIED_ADJUSTMENT.name();
 			break;
 		case WRITE_OFF:
-			// TODO: Remove IllegalArgumentException to support reverse for WRITE_OFF when MBU-13191 is implemented and
-			// un-comment the code below setting transactionTypeParam. Also update method documentation by adding
-			// WRITE_OFF_ADJUSTMENT for MBU-13191
-			throw new IllegalArgumentException(
-					"Reversal for Loan Transaction Type " + originalTransactionType.name() + " is not supported");
-			// transactionTypeParam = LoanTransactionType.WRITE_OFF_ADJUSTMENT.name();
-			// break;
-
+			// 4.6 See MBU-13191
+			 transactionTypeParam = LoanTransactionType.WRITE_OFF_ADJUSTMENT.name();
+			 break;
 		default:
 			throw new IllegalArgumentException(
 					"Reversal for Loan Transaction Type " + originalTransactionType.name() + " is not supported");

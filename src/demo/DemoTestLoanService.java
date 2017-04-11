@@ -1074,10 +1074,8 @@ public class DemoTestLoanService {
 		System.out.println(
 				"\nOK Write Off for account=" + accountId + "\tTransaction Id=" + transaction.getTransactionId());
 
-		// Test reversing this transaction
-		// TODO: Uncomment call to testReverseLoanAccountTransactions() when support for WTITE_OFF reversal is
-		// implemented. See MBU-13191.
-		// testReverseLoanAccountTransactions(Collections.singletonList(transaction));
+		// Test reversing this transaction. See MBU-13191.
+		testReverseLoanAccountTransactions(Collections.singletonList(transaction));
 	}
 
 	public static List<LoanTransaction> testGetLoanAccountTransactions() throws MambuApiException {
@@ -1123,9 +1121,7 @@ public class DemoTestLoanService {
 			case REPAYMENT:
 			case FEE:
 			case INTEREST_APPLIED:
-				// TODO: Uncomment the case WRITE_OF line below and test WRITE_OFF reversal when support for WTITE_OFF
-				// reversal is implemented. See MBU-13191.
-				// case WRITE_OFF:
+			case WRITE_OFF:
 				reversalTested = true;
 				// Try reversing supported transaction type
 				// Catch exceptions: For example, if there were later transactions logged after this one then Mambu
