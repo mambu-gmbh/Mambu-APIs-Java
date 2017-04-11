@@ -1176,6 +1176,7 @@ public class LoansService {
 		case FEE:
 		case REPAYMENT:
 		case INTEREST_RATE_CHANGED: // Available since Mambu 4.3. See MBU-13714
+		case PAYMENT_MADE:	
 			break;
 		default:
 			throw new IllegalArgumentException("Transaction  type " + transactionType + " is not supported");
@@ -1205,6 +1206,29 @@ public class LoansService {
 		}
 
 		return executeJSONTransactionRequest(accountId, LoanTransactionType.INTEREST_RATE_CHANGED, transactionRequest);
+
+	}
+	
+	/**
+	 * Convenience method for posting a payment made transaction on a loan account.
+	 * 
+	 * @param accountId
+	 *            the id of the account.
+	 * @param transactionRequest
+	 *            JSON transaction request
+	 * 
+	 * @return newly posted transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public LoanTransaction postPaymentMade(String accountId, JSONTransactionRequest transactionRequest)
+			throws MambuApiException {
+
+		if (accountId == null || transactionRequest == null) {
+			throw new IllegalArgumentException("Transaction request and account id must not be null");
+		}
+
+		return executeJSONTransactionRequest(accountId, LoanTransactionType.PAYMENT_MADE, transactionRequest);
 
 	}
 
