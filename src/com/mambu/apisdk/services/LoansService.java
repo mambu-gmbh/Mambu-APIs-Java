@@ -1490,6 +1490,9 @@ public class LoansService {
 			// 4.6 See MBU-13191
 			 transactionTypeParam = LoanTransactionType.WRITE_OFF_ADJUSTMENT.name();
 			 break;
+		case PAYMENT_MADE:
+			 transactionTypeParam = LoanTransactionType.PAYMENT_MADE_ADJUSTMENT.name();
+			 break;
 		default:
 			throw new IllegalArgumentException(
 					"Reversal for Loan Transaction Type " + originalTransactionType.name() + " is not supported");

@@ -182,9 +182,10 @@ public class DemoTestLoanService {
 					// Test Disburse and Undo disburse
 					testDisburseLoanAccount();
 
-					// Test posting a payment made transaction
-					 testPostPaymentMadeTransactionOnALoan();
-					 
+					// Test posting a payment made transaction 
+					LoanTransaction paymentMadeTransaction = testPostPaymentMadeTransactionOnALoan(); //Available since 4.6
+					testReversePaymentMadeTransaction(paymentMadeTransaction); // Available since 4.6
+
 					// Test Change interest rate for active revolving credit loans
 					testChangeInterestRateForActiveRevolvingCreditLoans();
 
@@ -309,11 +310,12 @@ public class DemoTestLoanService {
 
 	}
 
-	public static void testPostPaymentMadeTransactionOnALoan() throws MambuApiException {
+	public static LoanTransaction testPostPaymentMadeTransactionOnALoan() throws MambuApiException {
 
 		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println("\nIn " + methodName);
 
+		LoanTransaction loanTransaction = null;
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		LoanProductType loanProductType = demoProduct.getLoanProductType();
 		// Get the updated state of the loan account
@@ -327,13 +329,37 @@ public class DemoTestLoanService {
 			jsonTransactionRequest.setAmount(new BigDecimal("10.0"));
 			jsonTransactionRequest.setNotes("Created payment made transaction through API ");
 
-			LoanTransaction loanTransaction = loanService.postPaymentMade(NEW_LOAN_ACCOUNT_ID, jsonTransactionRequest);
+			loanTransaction = loanService.postPaymentMade(NEW_LOAN_ACCOUNT_ID, jsonTransactionRequest);
 
 			System.out.println("The transaction was posted on the loan account " + NEW_LOAN_ACCOUNT_ID
 					+ ". Transaction ID = " + loanTransaction.getTransactionId());
 		} else {
 			System.out.println(
 					"The loan account does not meet the prerequisites, therefore the transaction wasn`t posted.");
+		}
+
+		return loanTransaction;
+
+	}
+
+	private static void testReversePaymentMadeTransaction(LoanTransaction paymentMadeTransaction) {
+
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+
+		if (paymentMadeTransaction == null) {
+			System.out.println("There is no PAYMENT_MADE transaction to be reversed");
+		} else {
+			try {
+				LoansService loanService = MambuAPIFactory.getLoanService();
+				String accountId = NEW_LOAN_ACCOUNT_ID;
+				String notes = "Undo PAYMENT_MADE transactio via API";
+				LoanTransaction transaction = loanService.reverseLoanTransaction(paymentMadeTransaction, notes);
+				System.out.println("\nOK reverse payment made transaction for account=" + accountId
+						+ "\tTransaction Id=" + transaction.getTransactionId());
+			} catch (MambuApiException e) {
+				DemoUtil.logException(methodName, e);
+			}
 		}
 
 	}
@@ -1122,6 +1148,7 @@ public class DemoTestLoanService {
 			case FEE:
 			case INTEREST_APPLIED:
 			case WRITE_OFF:
+			case PAYMENT_MADE:
 				reversalTested = true;
 				// Try reversing supported transaction type
 				// Catch exceptions: For example, if there were later transactions logged after this one then Mambu
