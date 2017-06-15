@@ -182,13 +182,17 @@ public class DemoTestLoanService {
 					// Test Disburse and Undo disburse
 					testDisburseLoanAccount();
 
+					// Test posting a payment made transaction 
+					LoanTransaction paymentMadeTransaction = testPostPaymentMadeTransactionOnALoan(); //Available since 4.6
+					testReversePaymentMadeTransaction(paymentMadeTransaction); // Available since 4.6
+
 					// Test Change interest rate for active revolving credit loans
 					testChangeInterestRateForActiveRevolvingCreditLoans();
 
 					// Edit the loan amount only for active revolving credit loans
 					testEditLoanAmountForActiveRevolvingCreditLoans();
-					testEditPrincipalPaymentAmountForActiveRevolvingCreditLoans(); //available since 4.4
-					testEditPrincipalPaymentPercentageForActiveRevolvingCreditLoans(); //available since 4.4
+					testEditPrincipalPaymentAmountForActiveRevolvingCreditLoans(); // available since 4.4
+					testEditPrincipalPaymentPercentageForActiveRevolvingCreditLoans(); // available since 4.4
 					testUndoDisburseLoanAccount(); // Available since 3.9
 					testDisburseLoanAccount();
 					testGetLoanAccountTransactions();
@@ -306,6 +310,60 @@ public class DemoTestLoanService {
 
 	}
 
+	public static LoanTransaction testPostPaymentMadeTransactionOnALoan() throws MambuApiException {
+
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+
+		LoanTransaction loanTransaction = null;
+		LoansService loanService = MambuAPIFactory.getLoanService();
+		LoanProductType loanProductType = demoProduct.getLoanProductType();
+		// Get the updated state of the loan account
+		AccountState accountState = loanService.getLoanAccount(NEW_LOAN_ACCOUNT_ID).getAccountState();
+
+		// post transaction on a loan that fulfills the conditions
+		if (loanProductType.equals(LoanProductType.OFFSET_LOAN) && demoProduct.getRedrawSettings() != null
+				&& demoProduct.getRedrawSettings().isAllowRedraw() && accountState.equals(AccountState.ACTIVE)) {
+
+			JSONTransactionRequest jsonTransactionRequest = new JSONTransactionRequest();
+			jsonTransactionRequest.setAmount(new BigDecimal("10.0"));
+			jsonTransactionRequest.setNotes("Created payment made transaction through API ");
+
+			loanTransaction = loanService.postPaymentMade(NEW_LOAN_ACCOUNT_ID, jsonTransactionRequest);
+
+			System.out.println("The transaction was posted on the loan account " + NEW_LOAN_ACCOUNT_ID
+					+ ". Transaction ID = " + loanTransaction.getTransactionId());
+		} else {
+			System.out.println(
+					"The loan account does not meet the prerequisites, therefore the transaction wasn`t posted.");
+		}
+
+		return loanTransaction;
+
+	}
+
+	private static void testReversePaymentMadeTransaction(LoanTransaction paymentMadeTransaction) {
+
+		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+
+		if (paymentMadeTransaction == null) {
+			System.out.println("There is no PAYMENT_MADE transaction to be reversed");
+		} else {
+			try {
+				LoansService loanService = MambuAPIFactory.getLoanService();
+				String accountId = NEW_LOAN_ACCOUNT_ID;
+				String notes = "Undo PAYMENT_MADE transactio via API";
+				LoanTransaction transaction = loanService.reverseLoanTransaction(paymentMadeTransaction, notes);
+				System.out.println("\nOK reverse payment made transaction for account=" + accountId
+						+ "\tTransaction Id=" + transaction.getTransactionId());
+			} catch (MambuApiException e) {
+				DemoUtil.logException(methodName, e);
+			}
+		}
+
+	}
+
 	// Edit the loan amount for active revolving credit loans. See MBU-12661
 	private static void testEditLoanAmountForActiveRevolvingCreditLoans() throws MambuApiException {
 
@@ -343,7 +401,7 @@ public class DemoTestLoanService {
 					"The loan account does not meet the prerequisites, therefore its loan amount will not be updated.");
 		}
 	}
-	
+
 	private static void testEditPrincipalPaymentAmountForActiveRevolvingCreditLoans() throws MambuApiException {
 
 		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
@@ -355,9 +413,9 @@ public class DemoTestLoanService {
 
 		PrincipalPaymentAccountSettings paymentSettings = newAccount.getPrincipalPaymentSettings();
 		// Edit loan's principal payment amount for active revolving credit loan
-		if (loanProductType.equals(LoanProductType.REVOLVING_CREDIT) && 
-				PrincipalPaymentMethod.FLAT.equals(paymentSettings.getPrincipalPaymentMethod()) && 
-				(accountState.equals(AccountState.ACTIVE) || accountState.equals(AccountState.ACTIVE_IN_ARREARS))) {
+		if (loanProductType.equals(LoanProductType.REVOLVING_CREDIT)
+				&& PrincipalPaymentMethod.FLAT.equals(paymentSettings.getPrincipalPaymentMethod())
+				&& (accountState.equals(AccountState.ACTIVE) || accountState.equals(AccountState.ACTIVE_IN_ARREARS))) {
 
 			LoanAccount newLoanAccount = new LoanAccount();
 			newLoanAccount.setId(NEW_LOAN_ACCOUNT_ID);
@@ -381,32 +439,33 @@ public class DemoTestLoanService {
 					"The loan account does not meet the prerequisites, therefore its principal payment amount will not be updated.");
 		}
 	}
-	
+
 	private static void testEditPrincipalPaymentPercentageForActiveRevolvingCreditLoans() throws MambuApiException {
 
 		methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println("\nIn " + methodName);
-		
+
 		LoanProductType loanProductType = demoProduct.getLoanProductType();
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		AccountState accountState = loanService.getLoanAccount(NEW_LOAN_ACCOUNT_ID).getAccountState();
-		
+
 		PrincipalPaymentAccountSettings paymentSettings = newAccount.getPrincipalPaymentSettings();
 
 		// Edit loan's principal payment percentage for active revolving credit loan
-		if (loanProductType.equals(LoanProductType.REVOLVING_CREDIT) && 
-			PrincipalPaymentMethod.OUTSTANDING_PRINCIPAL_PERCENTAGE.equals(paymentSettings.getPrincipalPaymentMethod()) &&
-			(accountState.equals(AccountState.ACTIVE) || accountState.equals(AccountState.ACTIVE_IN_ARREARS))) {
+		if (loanProductType.equals(LoanProductType.REVOLVING_CREDIT)
+				&& PrincipalPaymentMethod.OUTSTANDING_PRINCIPAL_PERCENTAGE
+						.equals(paymentSettings.getPrincipalPaymentMethod())
+				&& (accountState.equals(AccountState.ACTIVE) || accountState.equals(AccountState.ACTIVE_IN_ARREARS))) {
 
 			LoanAccount newLoanAccount = new LoanAccount();
 			newLoanAccount.setId(NEW_LOAN_ACCOUNT_ID);
-		
+
 			paymentSettings.setPercentage(paymentSettings.getPercentage().add(new BigDecimal(extraPercentage)));
 			newLoanAccount.setPrincipalPaymentSettings(paymentSettings);
-			
+
 			// null the unwanted PATCH fields
 			newLoanAccount.setLoanAmount((BigDecimal) null);
-			newLoanAccount.setPeriodicPayment((BigDecimal) null); 
+			newLoanAccount.setPeriodicPayment((BigDecimal) null);
 			newLoanAccount.setRepaymentInstallments(null);
 			newLoanAccount.setGracePeriod(null);
 			newLoanAccount.setPrincipalRepaymentInterval(null);
@@ -414,8 +473,8 @@ public class DemoTestLoanService {
 
 			boolean patchResult = loanService.patchLoanAccount(newLoanAccount);
 
-			System.out.println("The loan's principal payment percentage was edited for the loan account " + NEW_LOAN_ACCOUNT_ID + ". Status: "
-					+ patchResult);
+			System.out.println("The loan's principal payment percentage was edited for the loan account "
+					+ NEW_LOAN_ACCOUNT_ID + ". Status: " + patchResult);
 		} else {
 			System.out.println(
 					"The loan account does not meet the prerequisites, therefore its principal payment percentage will not be updated.");
@@ -1041,10 +1100,8 @@ public class DemoTestLoanService {
 		System.out.println(
 				"\nOK Write Off for account=" + accountId + "\tTransaction Id=" + transaction.getTransactionId());
 
-		// Test reversing this transaction
-		// TODO: Uncomment call to testReverseLoanAccountTransactions() when support for WTITE_OFF reversal is
-		// implemented. See MBU-13191.
-		// testReverseLoanAccountTransactions(Collections.singletonList(transaction));
+		// Test reversing this transaction. See MBU-13191.
+		testReverseLoanAccountTransactions(Collections.singletonList(transaction));
 	}
 
 	public static List<LoanTransaction> testGetLoanAccountTransactions() throws MambuApiException {
@@ -1090,9 +1147,8 @@ public class DemoTestLoanService {
 			case REPAYMENT:
 			case FEE:
 			case INTEREST_APPLIED:
-				// TODO: Uncomment the case WRITE_OF line below and test WRITE_OFF reversal when support for WTITE_OFF
-				// reversal is implemented. See MBU-13191.
-				// case WRITE_OFF:
+			case WRITE_OFF:
+			case PAYMENT_MADE:
 				reversalTested = true;
 				// Try reversing supported transaction type
 				// Catch exceptions: For example, if there were later transactions logged after this one then Mambu
@@ -2489,7 +2545,7 @@ public class DemoTestLoanService {
 
 			System.out.println("The result of adding settlements is: " + additionSucceeded);
 
-			if(additionSucceeded){
+			if (additionSucceeded) {
 				// delete it now
 				testDeleteSettlementAccount(savingsAccount); // available since Mambu v4.4
 			}
@@ -2535,8 +2591,7 @@ public class DemoTestLoanService {
 	 *            The saving account used for linkage deletion
 	 * @throws MambuApiException
 	 */
-	public static void testDeleteSettlementAccount(SavingsAccount savingsAccount)
-			throws MambuApiException {
+	public static void testDeleteSettlementAccount(SavingsAccount savingsAccount) throws MambuApiException {
 		// use the previously linked account
 
 		methodName = new Object() {}.getClass().getEnclosingMethod().getName();

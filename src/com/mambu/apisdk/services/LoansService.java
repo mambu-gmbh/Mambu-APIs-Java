@@ -1176,6 +1176,7 @@ public class LoansService {
 		case FEE:
 		case REPAYMENT:
 		case INTEREST_RATE_CHANGED: // Available since Mambu 4.3. See MBU-13714
+		case PAYMENT_MADE: // Available since Mambu 4.6. See MBU-16269	
 			break;
 		default:
 			throw new IllegalArgumentException("Transaction  type " + transactionType + " is not supported");
@@ -1205,6 +1206,29 @@ public class LoansService {
 		}
 
 		return executeJSONTransactionRequest(accountId, LoanTransactionType.INTEREST_RATE_CHANGED, transactionRequest);
+
+	}
+	
+	/**
+	 * Convenience method for posting a payment made transaction on a loan account.
+	 * 
+	 * @param accountId
+	 *            the id of the account.
+	 * @param transactionRequest
+	 *            JSON transaction request
+	 * 
+	 * @return newly posted transaction
+	 * 
+	 * @throws MambuApiException
+	 */
+	public LoanTransaction postPaymentMade(String accountId, JSONTransactionRequest transactionRequest)
+			throws MambuApiException {
+
+		if (accountId == null || transactionRequest == null) {
+			throw new IllegalArgumentException("Transaction request and account id must not be null");
+		}
+
+		return executeJSONTransactionRequest(accountId, LoanTransactionType.PAYMENT_MADE, transactionRequest);
 
 	}
 
@@ -1463,14 +1487,12 @@ public class LoansService {
 			transactionTypeParam = LoanTransactionType.INTEREST_APPLIED_ADJUSTMENT.name();
 			break;
 		case WRITE_OFF:
-			// TODO: Remove IllegalArgumentException to support reverse for WRITE_OFF when MBU-13191 is implemented and
-			// un-comment the code below setting transactionTypeParam. Also update method documentation by adding
-			// WRITE_OFF_ADJUSTMENT for MBU-13191
-			throw new IllegalArgumentException(
-					"Reversal for Loan Transaction Type " + originalTransactionType.name() + " is not supported");
-			// transactionTypeParam = LoanTransactionType.WRITE_OFF_ADJUSTMENT.name();
-			// break;
-
+			// 4.6 See MBU-13191
+			 transactionTypeParam = LoanTransactionType.WRITE_OFF_ADJUSTMENT.name();
+			 break;
+		case PAYMENT_MADE:
+			 transactionTypeParam = LoanTransactionType.PAYMENT_MADE_ADJUSTMENT.name();
+			 break;
 		default:
 			throw new IllegalArgumentException(
 					"Reversal for Loan Transaction Type " + originalTransactionType.name() + " is not supported");
