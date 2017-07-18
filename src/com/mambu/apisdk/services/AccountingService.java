@@ -197,8 +197,8 @@ public class AccountingService {
 	 * @return list of GL journal entries matching filter constraints
 	 * @throws MambuApiException
 	 */
-	public List<GLJournalEntry> getGLJournalEntries(JSONFilterConstraints filterConstraints, String offset, String limit)
-			throws MambuApiException {
+	public List<GLJournalEntry> getGLJournalEntries(JSONFilterConstraints filterConstraints, String offset,
+			String limit) throws MambuApiException {
 
 		// POST {JSONFilterConstraints} /api/gljournalentries/search?offset=0&limit=5
 		// See MBU-12099
@@ -234,23 +234,97 @@ public class AccountingService {
 		// /api/gljournalentries
 		// See MBU-1737
 
-		if (entries == null || entries.size() < 2) {
-			throw new IllegalArgumentException("At least one debit and one credit entry is required");
+		validateParamsForPostingGLEntries(entries, date);
+
+		ParamsMap params = populateBaseParams(entries, branchId, date, notes);
+
+		return executePostGLJournalEntries(params);
+	}
+
+	/**
+	 * Post GL Journal Entries
+	 * 
+	 * @param entries
+	 *            a list of entries with the GL transaction details. Must not be null. At least one debit and one credit
+	 *            entry must be specified. Any number of journal entries may be posted with a given date and branch id
+	 *            as long as the standard accounting rules apply. For each entry its glCode, entryType and amount must
+	 *            not be null.
+	 * @param branchId
+	 *            a branch id.
+	 * @param date
+	 *            The date of the posting of the journal entry. Must be not null
+	 * @param notes
+	 *            transaction notes
+	 * @param transactionId
+	 *            the transaction id
+	 * @return created journal entries
+	 * @throws MambuApiException
+	 */
+	public List<GLJournalEntry> postGLJournalEntries(List<ApiGLJournalEntry> entries, String branchId, String date,
+			String notes, String transactionId) throws MambuApiException {
+
+		// POST
+		// "branchId=2&date=2010-02-03&debitAccount1=100001&debitAmount1=30&creditAccount1=100002&creditAmount1=30&transactionID=9284"
+		// /api/gljournalentries
+		// See MBU-15973
+
+		validateParamsForPostingGLEntries(entries, date);
+
+		ParamsMap params = populateBaseParams(entries, branchId, date, notes);
+
+		if (transactionId != null) {
+			params.put(APIData.TRANSACTION_ID, transactionId);
 		}
-		if (date == null) {
-			throw new IllegalArgumentException("Date must not be null");
-		}
+
+		return executePostGLJournalEntries(params);
+	}
+
+	/**
+	 * Executes the posting of GL journal entries
+	 * 
+	 * @param params
+	 *            the parameters of the call
+	 * @return a list containing successful posted entries
+	 * 
+	 * @throws MambuApiException
+	 */
+	private List<GLJournalEntry> executePostGLJournalEntries(ParamsMap params) throws MambuApiException {
+
+		// Create ApiDefinition
+		ApiDefinition apiDefinition = new ApiDefinition(APIData.GLJOURNALENTRIES, ContentType.WWW_FORM, Method.POST,
+				GLJournalEntry.class, ApiReturnFormat.COLLECTION);
+
+		// Execute API
+		List<GLJournalEntry> glEntries = serviceExecutor.execute(apiDefinition, params);
+		return glEntries;
+	}
+
+	/**
+	 * Populates all the basic parameters needed to post GL journal entries
+	 * 
+	 * @param entries
+	 *            the GL entries to be posted
+	 * @param branchId
+	 *            the branch id
+	 * @param date
+	 *            the date
+	 * @param notes
+	 *            the notes
+	 * @return a map containing the parameters for posting journal entries
+	 */
+	private ParamsMap populateBaseParams(List<ApiGLJournalEntry> entries, String branchId, String date, String notes) {
 
 		ParamsMap params = new ParamsMap();
 		int debitIndex = 1;
 		int creditIndex = 1;
+
 		for (ApiGLJournalEntry entry : entries) {
 			String glCode = entry.getGlCode();
 			EntryType entryType = entry.getEntryType();
 			BigDecimal amount = entry.getAmount();
 			if (glCode == null || entryType == null || amount == null) {
-				throw new IllegalArgumentException("GlCode " + glCode + " EntryType=" + entryType + " and Amount="
-						+ amount + " must not be null");
+				throw new IllegalArgumentException(
+						"GlCode " + glCode + " EntryType=" + entryType + " and Amount=" + amount + " must not be null");
 			}
 
 			String accountParam = null;
@@ -267,21 +341,35 @@ public class AccountingService {
 				creditIndex++;
 				break;
 			}
+
 			params.put(accountParam, glCode);
 			params.put(amountParam, String.valueOf(amount.doubleValue()));
 
 		}
+
 		// Add date, barnchId, and notes
 		params.put(APIData.DATE, date);
 		params.put(APIData.BRANCH_ID, branchId);
 		params.put(APIData.NOTES, notes);
 
-		// Create ApiDefinition
-		ApiDefinition apiDefiinition = new ApiDefinition(APIData.GLJOURNALENTRIES, ContentType.WWW_FORM, Method.POST,
-				GLJournalEntry.class, ApiReturnFormat.COLLECTION);
+		return params;
+	}
 
-		// Execute API
-		List<GLJournalEntry> glEntries = serviceExecutor.execute(apiDefiinition, params);
-		return glEntries;
+	/**
+	 * Checks whether the parameters needed for posting GL entries are valid
+	 * 
+	 * @param entries
+	 *            the entries to be validated
+	 * @param date
+	 *            the date needed to be validated
+	 */
+	private void validateParamsForPostingGLEntries(List<ApiGLJournalEntry> entries, String date) {
+
+		if (entries == null || entries.size() < 2) {
+			throw new IllegalArgumentException("At least one debit and one credit entry is required");
+		}
+		if (date == null) {
+			throw new IllegalArgumentException("Date must not be null");
+		}
 	}
 }
