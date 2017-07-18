@@ -171,7 +171,7 @@ public class DemoTestAccountingService {
 	public static void testPostGLJournalEntriesWithTransactionChannel(List<GLAccount> allAccounts)
 			throws MambuApiException {
 
-		System.out.println("\nIn testPostGLJournalEntries");
+		System.out.println("\nIn testPostGLJournalEntriesWithTransactionChannel");
 
 		final int needTestGlAccounts = 3;
 		if (allAccounts == null || allAccounts.size() < needTestGlAccounts) {
