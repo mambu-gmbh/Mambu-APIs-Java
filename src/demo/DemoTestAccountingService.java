@@ -37,7 +37,9 @@ public class DemoTestAccountingService {
 			testGetGLAccountByCode(allAccounts); // Available since Mambu 1.1
 
 			testPostGLJournalEntries(allAccounts); // Available since 2.0
+			testPostGLJournalEntriesWithTransactionId(allAccounts);
 			testGetGLJournalEntries(); // Available since 2.0
+			
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Accounting Service");
@@ -132,35 +134,78 @@ public class DemoTestAccountingService {
 		ApiGLJournalEntry entry1a = new ApiGLJournalEntry(account2.getGlCode(), EntryType.CREDIT, amount);
 		entries.add(entry1);
 		entries.add(entry1a);
-		// Add one debit and two matching credit transactions
-		BigDecimal halfAmount = amount.divide(new BigDecimal(2)); // credit half of debit amount to each of two accounts
-		ApiGLJournalEntry entry2 = new ApiGLJournalEntry(account2.getGlCode(), EntryType.DEBIT, amount);
-		ApiGLJournalEntry entry2a = new ApiGLJournalEntry(account1.getGlCode(), EntryType.CREDIT, halfAmount);
-		ApiGLJournalEntry entry2b = new ApiGLJournalEntry(account3.getGlCode(), EntryType.CREDIT, halfAmount);
-		entries.add(entry2);
-		entries.add(entry2a);
-		entries.add(entry2b);
-		// Add two debit and one matching credit transaction
-		// TODO: re-test this scenario when MBU-14104 issue is fixed: Journal Entries cannot be added via API as long as
-		// 2 GL Accounts used as Debit are equal with 1 GL Account used as Credit
-		ApiGLJournalEntry entry3a = new ApiGLJournalEntry(account3.getGlCode(), EntryType.DEBIT, halfAmount);
-		ApiGLJournalEntry entry3b = new ApiGLJournalEntry(account1.getGlCode(), EntryType.DEBIT, halfAmount);
-		ApiGLJournalEntry entry3 = new ApiGLJournalEntry(account2.getGlCode(), EntryType.CREDIT, amount);
-		entries.add(entry3a);
-		entries.add(entry3b);
-		entries.add(entry3);
+		 // Add one debit and two matching credit transactions
+		 BigDecimal halfAmount = amount.divide(new BigDecimal(2)); // credit half of debit amount to each of two accounts
+		 ApiGLJournalEntry entry2 = new ApiGLJournalEntry(account2.getGlCode(), EntryType.DEBIT, amount);
+		 ApiGLJournalEntry entry2a = new ApiGLJournalEntry(account1.getGlCode(), EntryType.CREDIT, halfAmount);
+		 ApiGLJournalEntry entry2b = new ApiGLJournalEntry(account3.getGlCode(), EntryType.CREDIT, halfAmount);
+		 entries.add(entry2);
+		 entries.add(entry2a);
+		 entries.add(entry2b);
+		 // Add two debit and one matching credit transaction
+		 // TODO: re-test this scenario when MBU-14104 issue is fixed: Journal Entries cannot be added via API as long as
+		 // 2 GL Accounts used as Debit are equal with 1 GL Account used as Credit
+		 ApiGLJournalEntry entry3a = new ApiGLJournalEntry(account3.getGlCode(), EntryType.DEBIT, halfAmount);
+		 ApiGLJournalEntry entry3b = new ApiGLJournalEntry(account1.getGlCode(), EntryType.DEBIT, halfAmount);
+		 ApiGLJournalEntry entry3 = new ApiGLJournalEntry(account2.getGlCode(), EntryType.CREDIT, amount);
+		 entries.add(entry3a);
+		 entries.add(entry3b);
+		 entries.add(entry3);
 
 		// Specify Date and Branch Id
 		String date = DateUtils.format(new Date());
 		String branchId = demoBranch.getId();
+
 		// POST entries
 		List<GLJournalEntry> gLJournalEntries = service.postGLJournalEntries(entries, branchId, date, "API entry");
 		System.out.println("Total GLJournalEntries Created=" + gLJournalEntries.size());
 
 		// Log output
 		for (GLJournalEntry entry : gLJournalEntries) {
-			System.out.println("\tID=" + entry.getEntryId() + "\tAmount=" + entry.getAmount() + "\tType="
-					+ entry.getType());
+			System.out.println(
+					"\tID=" + entry.getEntryId() + "\tAmount=" + entry.getAmount() + "\tType=" + entry.getType());
+		}
+
+	}
+	
+	public static void testPostGLJournalEntriesWithTransactionId(List<GLAccount> allAccounts)
+			throws MambuApiException {
+
+		System.out.println("\nIn testPostGLJournalEntriesWithTransactionId");
+
+		final int needTestGlAccounts = 3;
+		if (allAccounts == null || allAccounts.size() < needTestGlAccounts) {
+			int totalAccounts = allAccounts == null ? 0 : allAccounts.size();
+			System.out.println("WARNING: Not enough GLAccounts. Need " + needTestGlAccounts + " Have " + totalAccounts);
+			return;
+		}
+
+		AccountingService service = MambuAPIFactory.getAccountingService();
+		// Create Debit/Credit transaction entries
+		List<ApiGLJournalEntry> entries = new ArrayList<>();
+		GLAccount account1 = allAccounts.get(0);
+		GLAccount account2 = allAccounts.get(1);
+		
+		// Add one debit and one matching credit transaction
+		BigDecimal amount = new BigDecimal("500.00");
+		ApiGLJournalEntry entry1 = new ApiGLJournalEntry(account1.getGlCode(), EntryType.DEBIT, amount);
+		ApiGLJournalEntry entry1a = new ApiGLJournalEntry(account2.getGlCode(), EntryType.CREDIT, amount);
+		entries.add(entry1);
+		entries.add(entry1a);
+
+		// Specify Date and Branch Id
+		String date = DateUtils.format(new Date());
+		String branchId = demoBranch.getId();
+
+		// POST entries
+		List<GLJournalEntry> gLJournalEntries = service.postGLJournalEntries(entries, branchId, date, "API entry",
+				"589214");
+		System.out.println("Total GLJournalEntries Created=" + gLJournalEntries.size());
+
+		// Log output
+		for (GLJournalEntry entry : gLJournalEntries) {
+			System.out.println(
+					"\tID=" + entry.getEntryId() + "\tAmount=" + entry.getAmount() + "\tType=" + entry.getType());
 		}
 
 	}
@@ -185,8 +230,8 @@ public class DemoTestAccountingService {
 		System.out.println("Total GLJournalEntry=" + gLJournalEntries.size());
 		// Log output
 		for (GLJournalEntry entry : gLJournalEntries) {
-			System.out.println("\tID=" + entry.getEntryId() + "\tAmount=" + entry.getAmount() + "\tType="
-					+ entry.getType());
+			System.out.println(
+					"\tID=" + entry.getEntryId() + "\tAmount=" + entry.getAmount() + "\tType=" + entry.getType());
 		}
 	}
 

@@ -104,6 +104,7 @@ public class APIData {
 	public static final String TO_SAVINGS = "toSavingsAccount";
 	public static final String TO_LOAN = "toLoanAccount";
 	public static final String ORIGINAL_TRANSACTION_ID = "originalTransactionId";
+	public static final String TRANSACTION_ID = "transactionID";
 
 	// Filters
 	public static final String BRANCH_ID = "branchId";
