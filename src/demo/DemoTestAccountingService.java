@@ -37,7 +37,7 @@ public class DemoTestAccountingService {
 			testGetGLAccountByCode(allAccounts); // Available since Mambu 1.1
 
 			testPostGLJournalEntries(allAccounts); // Available since 2.0
-			testPostGLJournalEntriesWithTransactionChannel(allAccounts);
+			testPostGLJournalEntriesWithTransactionId(allAccounts);
 			testGetGLJournalEntries(); // Available since 2.0
 			
 
@@ -168,7 +168,7 @@ public class DemoTestAccountingService {
 
 	}
 	
-	public static void testPostGLJournalEntriesWithTransactionChannel(List<GLAccount> allAccounts)
+	public static void testPostGLJournalEntriesWithTransactionId(List<GLAccount> allAccounts)
 			throws MambuApiException {
 
 		System.out.println("\nIn testPostGLJournalEntriesWithTransactionChannel");

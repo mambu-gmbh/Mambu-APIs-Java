@@ -291,11 +291,11 @@ public class AccountingService {
 	private List<GLJournalEntry> executePostGLJournalEntries(ParamsMap params) throws MambuApiException {
 
 		// Create ApiDefinition
-		ApiDefinition apiDefiinition = new ApiDefinition(APIData.GLJOURNALENTRIES, ContentType.WWW_FORM, Method.POST,
+		ApiDefinition apiDefinition = new ApiDefinition(APIData.GLJOURNALENTRIES, ContentType.WWW_FORM, Method.POST,
 				GLJournalEntry.class, ApiReturnFormat.COLLECTION);
 
 		// Execute API
-		List<GLJournalEntry> glEntries = serviceExecutor.execute(apiDefiinition, params);
+		List<GLJournalEntry> glEntries = serviceExecutor.execute(apiDefinition, params);
 		return glEntries;
 	}
 
