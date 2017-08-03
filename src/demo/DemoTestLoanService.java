@@ -921,7 +921,7 @@ public class DemoTestLoanService {
 		switch (productType) {
 		case DYNAMIC_TERM_LOAN:
 		case FIXED_TERM_LOAN:
-		case PAYMENT_PLAN:
+		case INTEREST_FREE_LOAN:
 			// Amount can be null
 			amount = null;
 			break;
@@ -1228,7 +1228,7 @@ public class DemoTestLoanService {
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		// repayment number parameter is needed only for FIXED_TERM_LOAN and PAYMENT_PLAN products
 		boolean needRepaymentNumber = productType == LoanProductType.FIXED_TERM_LOAN
-				|| productType == LoanProductType.PAYMENT_PLAN;
+				|| productType == LoanProductType.INTEREST_FREE_LOAN;
 		Integer repaymentNumber = needRepaymentNumber ? 3 : null;
 		// TODO: For fixed interest commission product schedule is not defined until all funds are assigned and interest
 		// rate is calculated. Check if the schedule exists. See MBU-13391
