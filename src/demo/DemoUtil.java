@@ -51,7 +51,7 @@ import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.ClientExpanded;
 import com.mambu.clients.shared.model.Group;
 import com.mambu.clients.shared.model.GroupExpanded;
-import com.mambu.core.shared.helper.EnumUtils;
+import com.mambu.core.shared.helper.MambuEnumUtils;
 import com.mambu.core.shared.helper.StringUtils;
 import com.mambu.core.shared.model.CustomField;
 import com.mambu.core.shared.model.CustomFieldDataType;
@@ -185,7 +185,7 @@ public class DemoUtil {
 
 		}
 		// Set up Factory
-		MambuAPIFactory.setUp(EnumUtils.searchEnum(Protocol.class, protocol), domain, user, password);
+		MambuAPIFactory.setUp(MambuEnumUtils.searchEnum(Protocol.class, protocol), domain, user, password);
 
 		// set up App Key
 		MambuAPIFactory.setApplicationKey(appKeyValue);
@@ -342,9 +342,9 @@ public class DemoUtil {
 	public static MambuAPIServiceFactory getAPIServiceFactory(boolean secondaryDomain) {
 
 		if (!secondaryDomain) {
-			return MambuAPIServiceFactory.getFactory(EnumUtils.searchEnum(Protocol.class, protocol), domain, user, password);
+			return MambuAPIServiceFactory.getFactory(MambuEnumUtils.searchEnum(Protocol.class, protocol), domain, user, password);
 		} else {
-			return MambuAPIServiceFactory.getFactory(EnumUtils.searchEnum(Protocol.class, protocol2), domain2, user2, password2);
+			return MambuAPIServiceFactory.getFactory(MambuEnumUtils.searchEnum(Protocol.class, protocol2), domain2, user2, password2);
 		}
 	}
 
