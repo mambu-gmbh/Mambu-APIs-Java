@@ -104,6 +104,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 						+ "\"redrawBalance\":0,"
 						+ "\"interestDue\":0,"
 						+ "\"interestPaid\":0,"
+						+ "\"interestFromArrearsBalance\":0,"
 						+ "\"interestFromArrearsDue\":0,"
 						+ "\"interestFromArrearsPaid\":0,"
 						+ "\"interestBalance\":0,"
@@ -127,7 +128,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 						+ "\"principalRepaymentInterval\":1,"
 						+ "\"interestRateSource\":\"FIXED_INTEREST_RATE\","
 						+ "\"accruedInterest\":0,"
-						+ "\"interestFromArrearsAccrued\":0,"
+						+ "\"interestFromArrearsAccrued\":0,"	
 						+ "\"accruedPenalty\":0,\"loanPenaltyCalculationMethod\":\"NONE\","
 						+ "\"arrearsTolerancePeriod\":0," // Added in 4.2: defaults to zero in the model
 						+ "\"allowOffset\":false}," // Added in 4.5: defaults to false in the model
