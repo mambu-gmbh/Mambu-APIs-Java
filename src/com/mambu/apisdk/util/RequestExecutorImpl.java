@@ -21,13 +21,15 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 
 import com.google.inject.Inject;
@@ -118,7 +120,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		params = addAppKeyToParams(params);
 
-		HttpClient httpClient = new DefaultHttpClient();
+		HttpClient httpClient = createCustomHttpClient();
+				
 		String response = "";
 		HttpResponse httpResponse = null;
 		try {
@@ -140,6 +143,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		
 		return response;
 	}
+	
 
 	/**
 	 * Gets the InputStream from the response and converts it into a ByteArrayOutputStream for laster use. (i.e executes
@@ -170,8 +174,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// Mambu may handle API requests differently for different Application Keys
 		params = addAppKeyToParams(params);
 
-		
-		HttpClient httpClient = new DefaultHttpClient();
+		HttpClient httpClient = createCustomHttpClient();
+				
 		ByteArrayOutputStream byteArrayOutputStreamResponse = null;
 		HttpResponse httpResponse = null;
 		try {
@@ -193,6 +197,22 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 
 		return byteArrayOutputStreamResponse;
+	}
+	
+	/**
+	 * Creates an httpClient used to run the API calls
+	 * 
+	 * @return newly created httpClient
+	 */
+	private HttpClient createCustomHttpClient() {
+
+		System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.client.protocol.ResponseProcessCookies", "fatal");
+
+		HttpClient httpClient = HttpClients.custom()
+				.setDefaultRequestConfig(RequestConfig.custom()
+						.setCookieSpec(CookieSpecs.STANDARD).build())
+			        .build();
+		return httpClient;
 	}
 
 	/**

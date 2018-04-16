@@ -38,23 +38,18 @@ public class SavingsAccountPatchJsonSerializer implements JsonSerializer<Savings
 	 * 
 	 */
 	private final static Set<String> modifiableSavingsAccountFields = new HashSet<String>(Arrays.asList(
-			APIData.INTEREST_SETTINGS, // contains intestRate and interestSpread for deposit rates
-			APIData.OVERDRAFT_INTEREST_SETTINGS, // // contains intestRate and interestSpread for overdraft settings
-			APIData.MAX_WITHDRAWAL_AMOUNT, APIData.RECOMMENDED_DEPOSIT_AMOUNT, APIData.TARGET_AMOUNT,
-			APIData.OVERDRAFT_LIMIT, APIData.OVERDRAFT_EXPIRY_DATE));
-
-	/**
-	 * A list of InterestAccountSettings class fields supported by the PATCH savings account API. See MBU-10447
-	 */
-	private final static Set<String> modifiableInterestRateFields = new HashSet<String>(Arrays.asList(
-			APIData.INTEREST_RATE, APIData.INTEREST_RATE_SPREAD));
+			APIData.MAX_WITHDRAWAL_AMOUNT, 
+			APIData.RECOMMENDED_DEPOSIT_AMOUNT, 
+			APIData.TARGET_AMOUNT,
+			APIData.OVERDRAFT_LIMIT, 
+			APIData.OVERDRAFT_EXPIRY_DATE
+			));
 
 	// Create Inclusion Strategy with only those fields supported by PATCH Savings API
 	private final static JsonFieldsInclusionStrategy savingsPatchInclusionStrategy;
 	static {
 		savingsPatchInclusionStrategy = new JsonFieldsInclusionStrategy(SavingsAccount.class,
 				modifiableSavingsAccountFields);
-		savingsPatchInclusionStrategy.addInclusion(InterestAccountSettings.class, modifiableInterestRateFields);
 
 	}
 
