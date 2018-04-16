@@ -200,7 +200,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	}
 	
 	/**
-	 * Creates an httpClient for used to run the API calls
+	 * Creates an httpClient used to run the API calls
 	 * 
 	 * @return newly created httpClient
 	 */
