@@ -120,14 +120,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		params = addAppKeyToParams(params);
 
-		System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.client.protocol.ResponseProcessCookies", "fatal");
-
-		HttpClient httpClient = HttpClients.custom()
-				    .setDefaultRequestConfig(RequestConfig.custom()
-			        .setCookieSpec(CookieSpecs.STANDARD).build())
-			        .build();
-		
-		
+		HttpClient httpClient = createCustomHttpClient();
+				
 		String response = "";
 		HttpResponse httpResponse = null;
 		try {
@@ -149,6 +143,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		
 		return response;
 	}
+	
 
 	/**
 	 * Gets the InputStream from the response and converts it into a ByteArrayOutputStream for laster use. (i.e executes
@@ -179,12 +174,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// Mambu may handle API requests differently for different Application Keys
 		params = addAppKeyToParams(params);
 
-		System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.client.protocol.ResponseProcessCookies", "fatal");
-
-		HttpClient httpClient = HttpClients.custom()
-				    .setDefaultRequestConfig(RequestConfig.custom()
-			        .setCookieSpec(CookieSpecs.STANDARD).build())
-			        .build();
+		HttpClient httpClient = createCustomHttpClient();
 				
 		ByteArrayOutputStream byteArrayOutputStreamResponse = null;
 		HttpResponse httpResponse = null;
@@ -207,6 +197,22 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 
 		return byteArrayOutputStreamResponse;
+	}
+	
+	/**
+	 * Creates a httpClient for used to run the API calls
+	 * 
+	 * @return newly created httpClient
+	 */
+	private HttpClient createCustomHttpClient() {
+
+		System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.client.protocol.ResponseProcessCookies", "fatal");
+
+		HttpClient httpClient = HttpClients.custom()
+				    .setDefaultRequestConfig(RequestConfig.custom()
+			        .setCookieSpec(CookieSpecs.STANDARD).build())
+			        .build();
+		return httpClient;
 	}
 
 	/**
