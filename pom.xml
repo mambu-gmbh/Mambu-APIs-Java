@@ -5,7 +5,7 @@
 	<groupId>Mambu-APIs-Java</groupId>
 	<artifactId>Mambu-APIs-Java</artifactId>
 	<name>Mambu Java APIs SDK</name>
-	<version>5.0-bin</version>
+	<version>6.0-bin</version>
 	<url>http://www.mambu.com</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -48,7 +48,7 @@
 		<testSourceDirectory>test</testSourceDirectory>
 		<plugins>
 			<plugin>
-			 <version>3.2</version>
+				<version>3.2</version>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
 					<source>1.7</source>
@@ -78,7 +78,7 @@
 			</plugin>
 
 			<plugin>
-			<version>3.0.0</version>
+				<version>3.0.0</version>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
@@ -136,16 +136,16 @@
 		<dependency>
 			<groupId>com.mambu</groupId>
 			<artifactId>mambumodels</artifactId>
-			<version>5.0</version>
+			<version>6</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/mambu-models-V5.0.jar
+			<systemPath>${project.basedir}/lib/mambu-models-V6.jar
 			</systemPath>
 			<optional>false</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
-			<version>4.5</version>
+			<version>4.5.5</version>
 			<optional>false</optional>
 		</dependency>
 		<dependency>
@@ -203,12 +203,12 @@
 			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
-			
+
 		<dependency>
-    		<groupId>com.google.gwt</groupId>
-    		<artifactId>gwt-servlet</artifactId>
-    		<version>2.8.0</version>
-    		<scope>compile</scope>
+			<groupId>com.google.gwt</groupId>
+			<artifactId>gwt-servlet</artifactId>
+			<version>2.8.0</version>
+			<scope>compile</scope>
 		</dependency>
 
 	</dependencies>

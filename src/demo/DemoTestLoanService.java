@@ -23,7 +23,7 @@ import com.mambu.accounts.shared.model.ProductSecuritySettings;
 import com.mambu.accounts.shared.model.TransactionChannel;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.accountsecurity.shared.model.Guaranty;
-import com.mambu.accountsecurity.shared.model.Guaranty.GuarantyType;
+import com.mambu.accountsecurity.shared.model.Guaranty.SecurityType;
 import com.mambu.accountsecurity.shared.model.InvestorFund;
 import com.mambu.admin.shared.model.InterestProductSettings;
 import com.mambu.admin.shared.model.PrincipalPaymentProductSettings;
@@ -1902,7 +1902,7 @@ public class DemoTestLoanService {
 		ArrayList<Guaranty> guarantees = new ArrayList<Guaranty>();
 		if (demoProduct.isGuarantorsEnabled()) {
 			// GuarantyType.GUARANTOR
-			Guaranty guarantySecurity = new Guaranty(GuarantyType.GUARANTOR);
+			Guaranty guarantySecurity = new Guaranty(SecurityType.GUARANTOR);
 			guarantySecurity.setAmount(loanAccount.getLoanAmount());
 			guarantySecurity.setGuarantorKey(demoClient.getEncodedKey());
 			guarantySecurity.setGuarantorType(demoClient.getAccountHolderType()); // Mambu now supports guarantor type
@@ -1911,7 +1911,7 @@ public class DemoTestLoanService {
 		}
 		if (demoProduct.isCollateralEnabled()) {
 			// GuarantyType.ASSET
-			Guaranty guarantyAsset = new Guaranty(GuarantyType.ASSET);
+			Guaranty guarantyAsset = new Guaranty(SecurityType.ASSET);
 			guarantyAsset.setAssetName("Asset Name as a collateral");
 			guarantyAsset.setAmount(loanAccount.getLoanAmount());
 			guarantees.add(guarantyAsset);
