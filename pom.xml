@@ -138,7 +138,7 @@
 			<artifactId>mambumodels</artifactId>
 			<version>6</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/mambu-models-V6.jar
+			<systemPath>${project.basedir}/lib/mambu-models-V6.0.jar
 			</systemPath>
 			<optional>false</optional>
 		</dependency>
