@@ -131,6 +131,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 						+ "\"interestFromArrearsAccrued\":0,"	
 						+ "\"accruedPenalty\":0,\"loanPenaltyCalculationMethod\":\"NONE\","
 						+ "\"arrearsTolerancePeriod\":0," // Added in 4.2: defaults to zero in the model
+						+ "\"interestRoundingVersion\":\"VERSION_2\","// added in 7.0
 						+ "\"allowOffset\":false}," // Added in 4.5: defaults to false in the model
 						+ "\"customInformation\":["
 						+ "{\"value\":\"My Loan Purpose 5\",\"indexInList\":-1,\"toBeDeleted\":false,\"customFieldID\":\"Loan_Purpose_Loan_Accounts\"},"
