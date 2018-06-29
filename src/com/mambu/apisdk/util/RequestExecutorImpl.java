@@ -198,7 +198,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		return byteArrayOutputStreamResponse;
 	}
-	
+
 	/**
 	 * Creates an httpClient used to run the API calls
 	 * 
@@ -206,12 +206,11 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 */
 	private HttpClient createCustomHttpClient() {
 
-		System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.client.protocol.ResponseProcessCookies", "fatal");
-
 		HttpClient httpClient = HttpClients.custom()
-				.setDefaultRequestConfig(RequestConfig.custom()
-						.setCookieSpec(CookieSpecs.STANDARD).build())
-			        .build();
+				// set cookies validation on ignore
+				.setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.IGNORE_COOKIES).build())
+				.build();
+
 		return httpClient;
 	}
 
