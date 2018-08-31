@@ -1403,11 +1403,11 @@ public class DemoUtil {
 		}
 
 		// As of Mambu 3.9, settings for custom fields are per entity type, see MBU-7034
-		List<CustomFieldLink> links = field.getCustomFieldLinks();
+		Set<CustomFieldLink> links = field.getCustomFieldLinks();
 		if (links == null || links.size() == 0) {
 			System.out.println("Field's CustomFieldLinks are empty");
 			if (links == null) {
-				links = new ArrayList<CustomFieldLink>();
+				links = new HashSet<CustomFieldLink>();
 			}
 		}
 		for (CustomFieldLink link : links) {

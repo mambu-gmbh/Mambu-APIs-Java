@@ -39,9 +39,9 @@ import com.mambu.loans.shared.data.DisbursementDetailsDataField;
 import com.mambu.loans.shared.data.LoansDataField;
 import com.mambu.loans.shared.model.LoanAccount;
 import com.mambu.loans.shared.model.LoanTransaction;
+import com.mambu.notifications.shared.model.MessageTemplateEvent;
 import com.mambu.notifications.shared.model.NotificationMessage;
 import com.mambu.notifications.shared.model.NotificationMessageDataField;
-import com.mambu.notifications.shared.model.MessageTemplateEvent;
 import com.mambu.savings.shared.data.SavingsDataField;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsTransaction;
@@ -288,6 +288,31 @@ public class DemoTestSearchService {
 			filterConstraints.setSortDetails(sortDetails);
 
 			System.out.println("\nTesting Get Clients by filter:");
+			List<Client> clients = clientsService.getClients(filterConstraints, offset, limit);
+			System.out.println("Total clients returned=" + clients.size());
+		} else {
+			System.out.println("Warning: Cannot test filter by custom field. Client " + demoClient.getFullNameWithId()
+					+ " has no assigned custom fields");
+		}
+		
+		// Test GET Clients by Custom Field value using EQUALS_CASE_SENSITIVE
+		if (customFields != null && customFields.size() > 0) {
+			JSONFilterConstraint constraint = new JSONFilterConstraint();
+			CustomFieldValue fieldValue = customFields.get(0);
+
+			// Specify Filter to get Clients custom field value
+			constraint.setDataFieldType(DataFieldType.CUSTOM.name());
+			constraint.setFilterSelection(fieldValue.getCustomFieldKey());
+			constraint.setFilterElement(FilterElement.EQUALS_CASE_SENSITIVE.name());
+			constraint.setValue(fieldValue.getValue());
+			constraint.setSecondValue(null);
+
+			constraints.add(constraint);
+
+			filterConstraints = new JSONFilterConstraints();
+			filterConstraints.setFilterConstraints(constraints);
+
+			System.out.println("\nTesting Get Clients by filter using EQUALS_CASE_SENSITIVE filter:");
 			List<Client> clients = clientsService.getClients(filterConstraints, offset, limit);
 			System.out.println("Total clients returned=" + clients.size());
 		} else {
