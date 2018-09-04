@@ -471,10 +471,10 @@ public class DemoTestSearchService {
 
 		JSONFilterConstraint constraint = new JSONFilterConstraint();
 
-		constraint.setDataFieldType(dataFieldType.name());
+		constraint.setDataFieldType(dataFieldType!= null ? dataFieldType.name(): null);
 		constraint.setFilterSelection(filterSelection);
-		constraint.setFilterElement(filterElement.name());
-		constraint.setDataItemType(dataItemType.name());
+		constraint.setFilterElement(filterElement!=null ? filterElement.name():null);
+		constraint.setDataItemType(dataItemType != null ? dataItemType.name(): null);
 		constraint.setValue(value);
 		constraint.setSecondValue(secondValue);
 
