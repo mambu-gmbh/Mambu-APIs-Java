@@ -9,6 +9,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
+
 import com.mambu.accounting.shared.column.TransactionsDataField;
 import com.mambu.accounting.shared.model.GLJournalEntry;
 import com.mambu.accounts.shared.model.AccountState;
@@ -33,6 +35,7 @@ import com.mambu.core.shared.data.DataItemType;
 import com.mambu.core.shared.data.FilterElement;
 import com.mambu.core.shared.data.SortingOrder;
 import com.mambu.core.shared.model.CustomFieldValue;
+import com.mambu.core.shared.model.CustomFilter;
 import com.mambu.core.shared.model.SearchResult;
 import com.mambu.core.shared.model.SearchType;
 import com.mambu.loans.shared.data.DisbursementDetailsDataField;
@@ -53,6 +56,9 @@ import com.mambu.savings.shared.model.SavingsTransaction;
  * 
  */
 public class DemoTestSearchService {
+
+	private static final String ZERO_OFFSET = "0";
+	private static final String FIVE_LIMIT = "5";
 
 	public static void main(String[] args) {
 
@@ -251,34 +257,39 @@ public class DemoTestSearchService {
 		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println("\nIn " + methodName);
 
-		String offset = "0";
-		String limit = "5";
+		List<CustomFieldValue> customFields = searchClientsByCustomField();
 
-		List<JSONFilterConstraint> constraints = new ArrayList<JSONFilterConstraint>();
-		JSONFilterConstraint constraint1 = new JSONFilterConstraint();
+		searchCustomFieldsUsingEqualsCaseSensitive(customFields);
 
+		searchGroupsByName();
+
+		List<LoanAccount> loans = searchNotActiveLoanAccountsById();
+
+		searchLoanTransactions(loans);
+
+		List<SavingsAccount> savings = searchSavingsAccounts();
+
+		searchSavingsTransactions(savings);
+
+		searchGlJournalEntries();
+	}
+
+	private static List<CustomFieldValue> searchClientsByCustomField() throws MambuApiException {
+
+		Client demoClient = DemoUtil.getDemoClient();
+		ClientExpanded clientDetails = DemoUtil.getDemoClientDetails(demoClient.getEncodedKey());
 		// Clients
 		// Test GET Clients by Custom Field value
 		ClientsService clientsService = MambuAPIFactory.getClientService();
 
-		Client demoClient = DemoUtil.getDemoClient();
-		ClientExpanded clientDetails = DemoUtil.getDemoClientDetails(demoClient.getEncodedKey());
 		List<CustomFieldValue> customFields = clientDetails.getCustomFieldValues();
-		JSONFilterConstraints filterConstraints;
-		if (customFields != null && customFields.size() > 0) {
+
+		if (CollectionUtils.isNotEmpty(customFields)) {
 			CustomFieldValue fieldValue = customFields.get(0);
 
 			// Specify Filter to get Clients custom field value
-			constraint1.setDataFieldType(DataFieldType.CUSTOM.name());
-			constraint1.setFilterSelection(fieldValue.getCustomFieldKey());
-			constraint1.setFilterElement(FilterElement.EQUALS.name());
-			constraint1.setValue(fieldValue.getValue());
-			constraint1.setSecondValue(null);
-
-			constraints.add(constraint1);
-
-			filterConstraints = new JSONFilterConstraints();
-			filterConstraints.setFilterConstraints(constraints);
+			JSONFilterConstraints filterConstraints = createSingleFilterConstraints(DataFieldType.CUSTOM,
+					fieldValue.getCustomFieldKey(), FilterElement.EQUALS, null, fieldValue.getValue(), null);
 
 			// Add sorting order. See MBU-10444. Available since 3.14
 			// "sortDetails":{"sortingColumn":"BIRTHDATE", "sortingOrder":"DESCENDING"}
@@ -288,120 +299,113 @@ public class DemoTestSearchService {
 			filterConstraints.setSortDetails(sortDetails);
 
 			System.out.println("\nTesting Get Clients by filter:");
-			List<Client> clients = clientsService.getClients(filterConstraints, offset, limit);
-			System.out.println("Total clients returned=" + clients.size());
-		} else {
-			System.out.println("Warning: Cannot test filter by custom field. Client " + demoClient.getFullNameWithId()
-					+ " has no assigned custom fields");
-		}
-		
-		// Test GET Clients by Custom Field value using EQUALS_CASE_SENSITIVE
-		if (customFields != null && customFields.size() > 0) {
-			JSONFilterConstraint constraint = new JSONFilterConstraint();
-			CustomFieldValue fieldValue = customFields.get(0);
-
-			// Specify Filter to get Clients custom field value
-			constraint.setDataFieldType(DataFieldType.CUSTOM.name());
-			constraint.setFilterSelection(fieldValue.getCustomFieldKey());
-			constraint.setFilterElement(FilterElement.EQUALS_CASE_SENSITIVE.name());
-			constraint.setValue(fieldValue.getValue());
-			constraint.setSecondValue(null);
-
-			constraints.add(constraint);
-
-			filterConstraints = new JSONFilterConstraints();
-			filterConstraints.setFilterConstraints(constraints);
-
-			System.out.println("\nTesting Get Clients by filter using EQUALS_CASE_SENSITIVE filter:");
-			List<Client> clients = clientsService.getClients(filterConstraints, offset, limit);
+			List<Client> clients = clientsService.getClients(filterConstraints, ZERO_OFFSET, FIVE_LIMIT);
 			System.out.println("Total clients returned=" + clients.size());
 		} else {
 			System.out.println("Warning: Cannot test filter by custom field. Client " + demoClient.getFullNameWithId()
 					+ " has no assigned custom fields");
 		}
 
-		// Groups
-		// Test Get Groups by Group name
-		Group demoGroup = DemoUtil.getDemoGroup();
-		constraints = new ArrayList<JSONFilterConstraint>();
-		constraint1 = new JSONFilterConstraint();
+		return customFields;
+	}
 
-		// Specify Filter to get Groups by group name
-		constraint1.setDataFieldType(DataFieldType.NATIVE.name());
-		constraint1.setFilterSelection(GroupsDataField.GROUP_NAME.name());
-		constraint1.setFilterElement(FilterElement.EQUALS.name());
-		constraint1.setValue(demoGroup.getGroupName());
-		constraint1.setSecondValue(null);
+	private static void searchGlJournalEntries() throws MambuApiException {
 
-		constraints.add(constraint1);
+		List<JSONFilterConstraint> constraints = new ArrayList<>();
+
+		// GL Journal Entries
+		// Filter for amount greater than 1000
+		constraints.add(createConstraint(DataFieldType.NATIVE, TransactionsDataField.AMOUNT.name(),
+				FilterElement.EQUALS, DataItemType.SAVINGS_TRANSACTION, "1000", null));
+
+		Date now = new Date();
+		long offsetDays = 10 * 24 * 60 * 60 * 1000; // 10 days
+		Date from = new Date(now.getTime() - offsetDays);
+		DateFormat df = new SimpleDateFormat(DateUtils.DATE_FORMAT);
+		// Filter for creation date to be in the last 10 days
+		constraints.add(createConstraint(DataFieldType.NATIVE, SavingsDataField.CREATION_DATE.name(),
+				FilterElement.BETWEEN, DataItemType.SAVINGS_TRANSACTION, df.format(from), df.format(now)));
+
+		JSONFilterConstraints filterConstraints;
 		filterConstraints = new JSONFilterConstraints();
 		filterConstraints.setFilterConstraints(constraints);
 
-		System.out.println("\nTesting Get Groups by filter:");
-		List<Group> groups = clientsService.getGroups(filterConstraints, offset, limit);
-		System.out.println("Total groups returned=" + groups.size());
+		AccountingService accountingService = MambuAPIFactory.getAccountingService();
+		System.out.println("\nTesting Get GL Journal Entries by filters:");
+		List<GLJournalEntry> journalEntries = accountingService.getGLJournalEntries(filterConstraints, ZERO_OFFSET,
+				FIVE_LIMIT);
+		System.out.println("Total journal entries returned = " + journalEntries.size());
+	}
 
-		// Loan Accounts
-		// Test Get Loan Accounts by account ID's first char and account state
-		LoanAccount demoLoanAccount = DemoUtil.getDemoLoanAccount();
+	private static void searchSavingsTransactions(List<SavingsAccount> savings) throws MambuApiException {
+
+		SavingsService savingsService = MambuAPIFactory.getSavingsService();
+
+		// Savings Transactions
+		// Test Get Savings Transactions by parent account id
+		if (CollectionUtils.isNotEmpty(savings)) {
+
+			// Specify Filter to get Savings Transactions by parent account ID
+			JSONFilterConstraints filterConstraints = createSingleFilterConstraints(DataFieldType.NATIVE,
+					TransactionsDataField.PARENT_ACCOUNT_ID.name(), FilterElement.EQUALS,
+					DataItemType.SAVINGS_TRANSACTION, savings.get(0).getId(), null);
+
+			System.out.println("\nTesting Get Savings Transactions by filter:");
+			List<SavingsTransaction> savingsTransactions = savingsService.getSavingsTransactions(filterConstraints,
+					ZERO_OFFSET, FIVE_LIMIT);
+			System.out.println("Total Savings transactions returned=" + savingsTransactions.size());
+
+		} else {
+			System.out.println("Warning: Cannot test savings transactions: no savings accounts returned");
+		}
+	}
+
+	private static List<SavingsAccount> searchSavingsAccounts() throws MambuApiException {
+
+		SavingsService savingsService = MambuAPIFactory.getSavingsService();
+
+		// Savings Accounts
+		// Test Get Savings Accounts Created in the last 20 days
+		// Filter for Account Creation date to be in the last 20 days
+		Date now = new Date();
+		long offsetDays = 20 * 24 * 60 * 60 * 1000; // 20 days
+		Date from = new Date(now.getTime() - offsetDays);
+		DateFormat df = new SimpleDateFormat(DateUtils.DATE_FORMAT);
+
+		JSONFilterConstraints savingsFilterConstraints = createSingleFilterConstraints(DataFieldType.NATIVE,
+				SavingsDataField.CREATION_DATE.name(), FilterElement.BETWEEN, DataItemType.SAVINGS, df.format(from),
+				df.format(now));
+
+		System.out.println("\nTesting Get Savings Accounts by filter:");
+		List<SavingsAccount> savings = savingsService.getSavingsAccounts(savingsFilterConstraints, ZERO_OFFSET,
+				FIVE_LIMIT);
+		System.out.println("Total savings returned=" + savings.size());
+
+		return savings;
+	}
+
+	private static void searchLoanTransactions(List<LoanAccount> loans) throws MambuApiException {
+
+		Client demoClient = DemoUtil.getDemoClient();
+		ClientExpanded clientDetails = DemoUtil.getDemoClientDetails(demoClient.getEncodedKey());
 		LoansService loansService = MambuAPIFactory.getLoanService();
-
-		constraints = new ArrayList<JSONFilterConstraint>();
-		constraint1 = new JSONFilterConstraint();
-
-		// Specify Filter to get Loans by account ID's first char
-		constraint1.setDataFieldType(DataFieldType.NATIVE.name());
-		constraint1.setFilterSelection(LoansDataField.ACCOUNT_ID.name());
-		constraint1.setFilterElement(FilterElement.STARTS_WITH.name());
-		constraint1.setValue(demoLoanAccount.getId().substring(0, 1));
-		constraint1.setSecondValue(null);
-
-		constraints.add(constraint1);
-
-		// Constraint 2: not Active accounts
-		JSONFilterConstraint constraint2 = new JSONFilterConstraint();
-		constraint2.setDataFieldType(DataFieldType.NATIVE.name());
-		constraint2.setFilterSelection(LoansDataField.ACCOUNT_STATE.name());
-		constraint2.setFilterElement(FilterElement.EQUALS.name());
-		constraint2.setValue(AccountState.ACTIVE.name());
-		constraint2.setSecondValue(null);
-
-		constraints.add(constraint2);
-		filterConstraints = new JSONFilterConstraints();
-		filterConstraints.setFilterConstraints(constraints);
-
-		System.out.println("\nTesting Get Loan Accounts by filter:");
-		List<LoanAccount> loans = loansService.getLoanAccounts(filterConstraints, offset, limit);
-		System.out.println("Total loans returned=" + loans.size());
 
 		// Loan Transactions
 		// Test Get Loan Transactions by parent account id
-		if (loans != null && loans.size() > 0) {
-			constraints = new ArrayList<JSONFilterConstraint>();
-			constraint1 = new JSONFilterConstraint();
+		if (CollectionUtils.isNotEmpty(loans)) {
 
 			// Specify Filter to get Loan Transactions by parent account ID
-			constraint1.setDataFieldType(DataFieldType.NATIVE.name());
-			constraint1.setDataItemType(DataItemType.LOAN_TRANSACTION.name());
-			constraint1.setFilterSelection(TransactionsDataField.PARENT_ACCOUNT_ID.name());
-			constraint1.setFilterElement(FilterElement.STARTS_WITH.name());
-			constraint1.setValue(loans.get(0).getId());
-			constraint1.setSecondValue(null);
-
-			constraints.add(constraint1);
+			JSONFilterConstraints filterConstraints = createSingleFilterConstraints(DataFieldType.NATIVE,
+					TransactionsDataField.PARENT_ACCOUNT_ID.name(), FilterElement.STARTS_WITH,
+					DataItemType.LOAN_TRANSACTION, loans.get(0).getId(), null);
 
 			// Test specifying filter entities based on Another Entity criteria. See MBU-8985. Available since 3.12
 			// Add Filter for Loan Transactions to filter by Client ID
 			// Example: filterSelection":"ID","filterElement":"EQUALS","dataItemType":"CLIENT","value":"197495342"
-			constraint2 = new JSONFilterConstraint();
-			constraint2.setDataItemType(DataItemType.CLIENT.name());
-			constraint2.setFilterSelection(ClientsDataField.ID.name());
-			constraint2.setFilterElement(FilterElement.EQUALS.name());
-			constraint2.setValue(clientDetails.getId());
-			constraints.add(constraint2);
+			JSONFilterConstraint byClientIdConstraint = createConstraint(null, ClientsDataField.ID.name(),
+					FilterElement.EQUALS, DataItemType.CLIENT, clientDetails.getId(), null);
 
-			filterConstraints = new JSONFilterConstraints();
-			filterConstraints.setFilterConstraints(constraints);
+			filterConstraints.getFilterConstraints().add(byClientIdConstraint);
 
 			// Add sorting order. See MBU-10444. Available since 3.14
 			// "sortDetails":{"sortingColumn":"AMOUNT", "sortingOrder":"ASCENDING"}
@@ -411,100 +415,113 @@ public class DemoTestSearchService {
 			filterConstraints.setSortDetails(sortDetails);
 
 			System.out.println("\nTesting Get Loan Transactions by filter:");
-			List<LoanTransaction> loanTransactions = loansService.getLoanTransactions(filterConstraints, offset, limit);
+			List<LoanTransaction> loanTransactions = loansService.getLoanTransactions(filterConstraints, ZERO_OFFSET,
+					FIVE_LIMIT);
 			System.out.println("Total loan transactions returned=" + loanTransactions.size());
 
 		} else {
 			System.out.println("Warning: Cannot test loan transactions: no loan accounts returned");
 		}
-		// Savings Accounts
-		// Test Get Savings Accounts Created in the last 20 days
-		SavingsService savingsService = MambuAPIFactory.getSavingsService();
-		constraints = new ArrayList<JSONFilterConstraint>();
+	}
 
-		// Filter for Account Creation date to be in the last 20 days
-		constraint1 = new JSONFilterConstraint();
-		constraint1.setDataFieldType(DataFieldType.NATIVE.name());
-		constraint1.setDataItemType(DataItemType.SAVINGS.name());
-		constraint1.setFilterSelection(SavingsDataField.CREATION_DATE.name());
-		constraint1.setFilterElement(FilterElement.BETWEEN.name());
-		Date now = new Date();
-		long offsetDays = 20 * 24 * 60 * 60 * 1000; // 20 days
-		Date from = new Date(now.getTime() - offsetDays);
-		DateFormat df = new SimpleDateFormat(DateUtils.DATE_FORMAT);
-		constraint1.setValue(df.format(from));
-		constraint1.setSecondValue(df.format(now));
+	private static List<LoanAccount> searchNotActiveLoanAccountsById() throws MambuApiException {
 
-		constraints.add(constraint1);
+		// Loan Accounts
+		// Test Get Loan Accounts by account ID's first char and account state
+		LoanAccount demoLoanAccount = DemoUtil.getDemoLoanAccount();
 
-		filterConstraints = new JSONFilterConstraints();
-		filterConstraints.setFilterConstraints(constraints);
+		LoansService loansService = MambuAPIFactory.getLoanService();
 
-		System.out.println("\nTesting Get Savings Accounts by filter:");
-		List<SavingsAccount> savings = savingsService.getSavingsAccounts(filterConstraints, offset, limit);
-		System.out.println("Total savings returned=" + savings.size());
+		// Specify Filter to get Loans by account ID's first char
+		JSONFilterConstraints filterConstraints = createSingleFilterConstraints(DataFieldType.NATIVE,
+				LoansDataField.ACCOUNT_ID.name(), FilterElement.STARTS_WITH, null,
+				demoLoanAccount.getId().substring(0, 1), null);
 
-		// Savings Transactions
-		// Test Get Savings Transactions by parent account id
-		if (savings != null && savings.size() > 0) {
-			constraints = new ArrayList<JSONFilterConstraint>();
-			constraint1 = new JSONFilterConstraint();
+		// Constraint 2: not Active accounts
+		JSONFilterConstraint activeAccountConstraint = createConstraint(DataFieldType.NATIVE,
+				LoansDataField.ACCOUNT_STATE.name(), FilterElement.EQUALS, null, AccountState.ACTIVE.name(), null);
 
-			// Specify Filter to get Savings Transactions by parent account ID
-			constraint1.setDataFieldType(DataFieldType.NATIVE.name());
-			constraint1.setDataItemType(DataItemType.SAVINGS_TRANSACTION.name());
-			constraint1.setFilterSelection(TransactionsDataField.PARENT_ACCOUNT_ID.name());
-			constraint1.setFilterElement(FilterElement.EQUALS.name());
-			constraint1.setValue(savings.get(0).getId());
-			constraint1.setSecondValue(null);
+		filterConstraints.getFilterConstraints().add(activeAccountConstraint);
 
-			constraints.add(constraint1);
-			filterConstraints = new JSONFilterConstraints();
-			filterConstraints.setFilterConstraints(constraints);
+		System.out.println("\nTesting Get Loan Accounts by filter:");
+		List<LoanAccount> loans = loansService.getLoanAccounts(filterConstraints, ZERO_OFFSET, FIVE_LIMIT);
+		System.out.println("Total loans returned=" + loans.size());
 
-			System.out.println("\nTesting Get Savings Transactions by filter:");
-			List<SavingsTransaction> savingsTransactions = savingsService.getSavingsTransactions(filterConstraints,
-					offset, limit);
-			System.out.println("Total Savings transactions returned=" + savingsTransactions.size());
+		return loans;
+	}
+
+	private static void searchGroupsByName() throws MambuApiException {
+
+		ClientsService clientsService = MambuAPIFactory.getClientService();
+
+		// Groups
+		// Test Get Groups by Group name
+		Group demoGroup = DemoUtil.getDemoGroup();
+		JSONFilterConstraints filterConstraints2 = createSingleFilterConstraints(DataFieldType.NATIVE,
+				GroupsDataField.GROUP_NAME.name(), FilterElement.EQUALS, null, demoGroup.getName(), null);
+
+		System.out.println("\nTesting Get Groups by filter:");
+		List<Group> groups = clientsService.getGroups(filterConstraints2, ZERO_OFFSET, FIVE_LIMIT);
+
+		System.out.println("Total groups returned=" + groups.size());
+	}
+
+	private static JSONFilterConstraint createConstraint(DataFieldType dataFieldType, String filterSelection,
+			FilterElement filterElement, DataItemType dataItemType, String value, String secondValue) {
+
+		JSONFilterConstraint constraint = new JSONFilterConstraint();
+
+		constraint.setDataFieldType(dataFieldType.name());
+		constraint.setFilterSelection(filterSelection);
+		constraint.setFilterElement(filterElement.name());
+		constraint.setDataItemType(dataItemType.name());
+		constraint.setValue(value);
+		constraint.setSecondValue(secondValue);
+
+		return constraint;
+	}
+
+	private static void searchCustomFieldsUsingEqualsCaseSensitive(List<CustomFieldValue> customFields)
+			throws MambuApiException {
+
+		Client demoClient = DemoUtil.getDemoClient();
+		ClientsService clientsService = MambuAPIFactory.getClientService();
+
+		// Test GET Clients by Custom Field value using EQUALS_CASE_SENSITIVE
+		if (CollectionUtils.isNotEmpty(customFields)) {
+
+			CustomFieldValue fieldValue = customFields.get(0);
+
+			// Specify Filter to get Clients custom field value
+			JSONFilterConstraints filterConstraints = createSingleFilterConstraints(DataFieldType.CUSTOM,
+					fieldValue.getCustomFieldKey(), FilterElement.EQUALS_CASE_SENSITIVE, null, fieldValue.getValue(),
+					null);
+
+			System.out.println("\nTesting Get Clients by filter using EQUALS_CASE_SENSITIVE filter:");
+			List<Client> clients = clientsService.getClients(filterConstraints, ZERO_OFFSET, FIVE_LIMIT);
+			System.out.println("Total clients returned=" + clients.size());
 
 		} else {
-			System.out.println("Warning: Cannot test savings transactions: no savings accounts returned");
+			System.out.println("Warning: Cannot test filter by custom field. Client " + demoClient.getFullNameWithId()
+					+ " has no assigned custom fields");
 		}
+	}
 
-		// GL Journal Entries
-		AccountingService accountingService = MambuAPIFactory.getAccountingService();
-		constraints = new ArrayList<>();
+	private static JSONFilterConstraints createSingleFilterConstraints(DataFieldType dataFieldType,
+			String filterSelection, FilterElement filterElement, DataItemType dataItemType, String value,
+			String secondValue) {
 
-		// Filter for amount greater than 1000
-		constraint1 = new JSONFilterConstraint();
-		constraint1.setDataFieldType(DataFieldType.NATIVE.name());
-		constraint1.setDataItemType(DataItemType.SAVINGS_TRANSACTION.name());
-		constraint1.setFilterSelection(TransactionsDataField.AMOUNT.name());
-		constraint1.setFilterElement(FilterElement.EQUALS.name());
-		constraint1.setValue("1000");
+		JSONFilterConstraint constraint = createConstraint(dataFieldType, filterSelection, filterElement, dataItemType,
+				value, secondValue);
 
-		constraints.add(constraint1);
+		JSONFilterConstraints filterConstraints = new JSONFilterConstraints();
 
-		// Filter for creation date to be in the last 10 days
-		constraint2 = new JSONFilterConstraint();
-		constraint2.setDataFieldType(DataFieldType.NATIVE.name());
-		constraint2.setFilterSelection(SavingsDataField.CREATION_DATE.name());
-		constraint2.setFilterElement(FilterElement.BETWEEN.name());
-		now = new Date();
-		offsetDays = 10 * 24 * 60 * 60 * 1000; // 10 days
-		from = new Date(now.getTime() - offsetDays);
-		df = new SimpleDateFormat(DateUtils.DATE_FORMAT);
-		constraint2.setValue(df.format(from));
-		constraint2.setSecondValue(df.format(now));
+		List<JSONFilterConstraint> constraints = new ArrayList<JSONFilterConstraint>();
+		constraints.add(constraint);
 
-		constraints.add(constraint2);
-
-		filterConstraints = new JSONFilterConstraints();
 		filterConstraints.setFilterConstraints(constraints);
 
-		System.out.println("\nTesting Get GL Journal Entries by filters:");
-		List<GLJournalEntry> journalEntries = accountingService.getGLJournalEntries(filterConstraints, offset, limit);
-		System.out.println("Total journal entries returned = " + journalEntries.size());
+		return filterConstraints;
 	}
 
 	// Test search loans by disbursement details using on the fly filter API
