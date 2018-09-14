@@ -13,9 +13,9 @@ Usage
 
 To use the Mambu Java API Wrapper, please include the following jars in your build path
 
-* build/Mambu-APIs-Java-7.1-bin.jar
-* build/Mambu-APIs-Java-7.1-bin-sources.jar
-* lib/mambu-models-V7.1.jar
+* build/Mambu-APIs-Java-7.2-bin.jar
+* build/Mambu-APIs-Java-7.2-bin-sources.jar
+* lib/mambu-models-V7.2.jar
 * further dependencies to run and test (see pom.xml for versions)
  * httpclient
  * httpcore
