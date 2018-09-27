@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
@@ -28,9 +29,11 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.ssl.SSLContexts;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -209,9 +212,24 @@ public class RequestExecutorImpl implements RequestExecutor {
 		HttpClient httpClient = HttpClients.custom()
 				// set cookies validation on ignore
 				.setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.IGNORE_COOKIES).build())
+				.setSSLSocketFactory(createSslConnectionSocketFactory())
 				.build();
 
 		return httpClient;
+	}
+
+	/**
+	 * Creates custom SSLConnectionSocketFactory using and set it to use only the TLSv1.2 as supported protocol
+	 * 
+	 * @return newly created SSLConnectionSocketFactory
+	 */
+	private SSLConnectionSocketFactory createSslConnectionSocketFactory() {
+
+		SSLConnectionSocketFactory sslConnFactory = new
+				SSLConnectionSocketFactory(SSLContexts.createDefault(),
+				new String[] {"TLSv1","TLSv1.1"}, null,
+				SSLConnectionSocketFactory.getDefaultHostnameVerifier());
+		return sslConnFactory;
 	}
 
 	/**
