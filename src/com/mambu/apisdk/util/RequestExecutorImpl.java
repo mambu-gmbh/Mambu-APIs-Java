@@ -208,7 +208,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * @return newly created httpClient
 	 */
 	private HttpClient createCustomHttpClient() {
-
+		
 		HttpClient httpClient = HttpClients.custom()
 				// set cookies validation on ignore
 				.setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.IGNORE_COOKIES).build())
@@ -227,8 +227,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		SSLConnectionSocketFactory sslConnFactory = new
 				SSLConnectionSocketFactory(SSLContexts.createDefault(),
-				new String[] {"TLSv1","TLSv1.1"}, null,
-				SSLConnectionSocketFactory.getDefaultHostnameVerifier());
+				new String[] {"TLSv1.2"}, null,
+				SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
 		return sslConnFactory;
 	}
 
