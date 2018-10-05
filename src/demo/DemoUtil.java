@@ -185,7 +185,7 @@ public class DemoUtil {
 
 		}
 		// Set up Factory
-		MambuAPIFactory.setUp(MambuEnumUtils.searchEnum(Protocol.class, protocol), domain, user, password);
+		MambuAPIFactory.setUp(MambuEnumUtils.searchEnum(Protocol.class, protocol), domain, user, password, "Mambu SDKv1.0 UA header");
 
 		// set up App Key
 		MambuAPIFactory.setApplicationKey(appKeyValue);

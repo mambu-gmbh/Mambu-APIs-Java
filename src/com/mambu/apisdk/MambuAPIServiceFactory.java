@@ -57,7 +57,7 @@ public final class MambuAPIServiceFactory {
 	 */
 	public static MambuAPIServiceFactory getFactory(String domain, String username, String password) {
 
-		Injector injector = Guice.createInjector(new MambuAPIModule(Protocol.HTTPS, domain, username, password));
+		Injector injector = Guice.createInjector(new MambuAPIModule(Protocol.HTTPS, domain, username, password, "Mambu SDKv.10"));
 		return new MambuAPIServiceFactory(injector);
 	}
 
@@ -79,7 +79,31 @@ public final class MambuAPIServiceFactory {
 	public static MambuAPIServiceFactory getFactory(Protocol protocol, String domain, String username,
 			String password) {
 
-		Injector injector = Guice.createInjector(new MambuAPIModule(protocol, domain, username, password));
+		Injector injector = Guice.createInjector(new MambuAPIModule(protocol, domain, username, password, "Mambu SDKv1.0"));
+		return new MambuAPIServiceFactory(injector);
+	}
+	
+	/***
+	 * Set up the Guice Module with data required for accessing the remote server, returning a factory object to
+	 * retrieve Mambu API services that have Mambu credentials built-in
+	 * 
+	 * @param protocol
+	 *            the protocol used for communication
+	 * @param domain
+	 *            the domain where the server is found
+	 * @param username
+	 *            the name of the user
+	 * @param password
+	 *            the password used by the user
+	 * @param userAgentHeaderValue
+	 *            the user agent header value to be passed with all requests 
+	 * 
+	 * @return factory object to create API service objects which are bound to the given credentials
+	 */
+	public static MambuAPIServiceFactory getFactory(Protocol protocol, String domain, String username,
+			String password, String userAgentHeaderValue) {
+
+		Injector injector = Guice.createInjector(new MambuAPIModule(protocol, domain, username, password, userAgentHeaderValue));
 		return new MambuAPIServiceFactory(injector);
 	}
 
