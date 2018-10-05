@@ -219,7 +219,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	}
 
 	/**
-	 * Creates custom SSLConnectionSocketFactory using and set it to use only the TLSv1.2 as supported protocol
+	 * Creates custom SSLConnectionSocketFactory and set it to use only the TLSv1.2 as supported protocol
 	 * 
 	 * @return newly created SSLConnectionSocketFactory
 	 */
