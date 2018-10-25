@@ -1,5 +1,6 @@
 package com.mambu.apisdk;
 
+import static com.mambu.apisdk.MambuAPIFactory.DEFAULT_USER_AGENT_HEADER_VALUE;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -57,7 +58,7 @@ public final class MambuAPIServiceFactory {
 	 */
 	public static MambuAPIServiceFactory getFactory(String domain, String username, String password) {
 
-		Injector injector = Guice.createInjector(new MambuAPIModule(Protocol.HTTPS, domain, username, password, "Mambu SDKv.10"));
+		Injector injector = Guice.createInjector(new MambuAPIModule(Protocol.HTTPS, domain, username, password, DEFAULT_USER_AGENT_HEADER_VALUE));
 		return new MambuAPIServiceFactory(injector);
 	}
 
@@ -79,7 +80,7 @@ public final class MambuAPIServiceFactory {
 	public static MambuAPIServiceFactory getFactory(Protocol protocol, String domain, String username,
 			String password) {
 
-		Injector injector = Guice.createInjector(new MambuAPIModule(protocol, domain, username, password, "Mambu SDKv1.0"));
+		Injector injector = Guice.createInjector(new MambuAPIModule(protocol, domain, username, password, DEFAULT_USER_AGENT_HEADER_VALUE));
 		return new MambuAPIServiceFactory(injector);
 	}
 	

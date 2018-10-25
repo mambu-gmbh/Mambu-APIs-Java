@@ -34,7 +34,8 @@ import com.mambu.apisdk.services.UsersService;
  */
 public class MambuAPIFactory {
 
-	private static final String DEFAULT_USER_AGENT_HEADER_VALUE = "Mambu SDKv1.0";
+	public static final String DEFAULT_USER_AGENT_HEADER_VALUE = "Mambu SDKv1.0";
+	
 	/***
 	 * The Guice injector used for the creation of each service
 	 */
