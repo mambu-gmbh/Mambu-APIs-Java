@@ -53,17 +53,17 @@ public class RequestExecutorImpl implements RequestExecutor {
 	private static final String USER_AGENT_HEADER_NAME = "User-Agent";
 	private static final String TLS_V1_2 = "TLSv1.2";
 	// Added charset charset=UTF-8, MBU-4137 is now fixed
-	private final static String UTF8_CHARSET = StandardCharsets.UTF_8.name();
-	private final static String WWW_FORM_URLENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=UTF-8";
-	private final static String JSON_CONTENT_TYPE = "application/json; charset=UTF-8"; 	// Added charset charset=UTF-8, MBU-4137 is now fixed
-	private final static String APPLICATION_KEY = APIData.APPLICATION_KEY; // as per JIRA issue MBU-3236
-	private final static Logger LOGGER = Logger.getLogger(RequestExecutorImpl.class.getName());
+	private static final String UTF8_CHARSET = StandardCharsets.UTF_8.name();
+	private static final String WWW_FORM_URLENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=UTF-8";
+	private static final String JSON_CONTENT_TYPE = "application/json; charset=UTF-8"; 	// Added charset charset=UTF-8, MBU-4137 is now fixed
+	private static final String APPLICATION_KEY = APIData.APPLICATION_KEY; // as per JIRA issue MBU-3236
+	private static final Logger LOGGER = Logger.getLogger(RequestExecutorImpl.class.getName());
 	// Specify Logger Levels to be used for logging API request, response details as well as Mambu exceptions
-	private final static Level REQUEST_LOG_LEVEL = Level.FINER; // Logging API Request level
-	private final static Level RESPONSE_LOG_LEVEL = Level.FINER; // Logging API Response level
-	private final static Level EXCEPTION_LOG_LEVEL = Level.WARNING; // Logging Mambu exceptions level
+	private static final Level REQUEST_LOG_LEVEL = Level.FINER; // Logging API Request level
+	private static final Level RESPONSE_LOG_LEVEL = Level.FINER; // Logging API Response level
+	private static final Level EXCEPTION_LOG_LEVEL = Level.WARNING; // Logging Mambu exceptions level
 	// Log curl template (equivalent to the actual API request) at FINEST level
-	private final static Level CURL_REQUEST_TEMPLATE_LOG_LEVEL = Level.FINEST;
+	private static final Level CURL_REQUEST_TEMPLATE_LOG_LEVEL = Level.FINEST;
 
 	private URLHelper urlHelper;
 	private String encodedAuthorization;
