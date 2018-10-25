@@ -34,6 +34,8 @@ import com.mambu.apisdk.services.UsersService;
  */
 public class MambuAPIFactory {
 
+	public static final String DEFAULT_USER_AGENT_HEADER_VALUE = "Mambu SDKv1.0";
+	
 	/***
 	 * The Guice injector used for the creation of each service
 	 */
@@ -64,7 +66,25 @@ public class MambuAPIFactory {
 	 */
 	public static void setUp(String domain, String username, String password) {
 
-		injector = Guice.createInjector(new MambuAPIModule(Protocol.HTTPS, domain, username, password));
+		injector = Guice.createInjector(new MambuAPIModule(Protocol.HTTPS, domain, username, password, DEFAULT_USER_AGENT_HEADER_VALUE));
+	}
+	
+	/***
+	 * Convenience method for setting up the Guice Module with data required for accessing the remote server. The
+	 * application protocol that is used is HTTPS
+	 * 
+	 * @param domain
+	 *            the domain where the server is found
+	 * @param username
+	 *            the name of the user
+	 * @param password
+	 *            the password used by the user
+	 * @param userAgentHeaderValue
+	 *            the user agent header value to be sent along with all request calls
+	 */
+	public static void setUp(String domain, String username, String password, String userAgentHeaderValue) {
+
+		injector = Guice.createInjector(new MambuAPIModule(Protocol.HTTPS, domain, username, password, userAgentHeaderValue));
 	}
 
 	/***
@@ -81,8 +101,28 @@ public class MambuAPIFactory {
 	 */
 	public static void setUp(Protocol protocol, String domain, String username, String password) {
 
-		injector = Guice.createInjector(new MambuAPIModule(protocol, domain, username, password));
+		injector = Guice.createInjector(new MambuAPIModule(protocol, domain, username, password, DEFAULT_USER_AGENT_HEADER_VALUE));
 	}
+	
+	/***
+	 * Set up the Guice Module with data required for accessing the remote server
+	 * 
+	 * @param protocol
+	 *            the protocol used for communication
+	 * @param domain
+	 *            the domain where the server is found
+	 * @param username
+	 *            the name of the user
+	 * @param password
+	 *            the password used by the user
+	 * @param userAgentHeaderValue
+	 *            the user agent header value to be sent along with all request calls
+	 */
+	public static void setUp(Protocol protocol, String domain, String username, String password, String userAgentHeaderValue) {
+
+		injector = Guice.createInjector(new MambuAPIModule(protocol, domain, username, password, userAgentHeaderValue));
+	}
+	
 
 	/***
 	 * Throw a MambuAPIException if the injector is null, meaning the user didn't set up the factory

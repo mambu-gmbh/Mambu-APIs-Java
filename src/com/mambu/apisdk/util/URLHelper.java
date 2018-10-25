@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mambu.apisdk.model.Domain;
+import com.mambu.apisdk.model.UserAgentHeader;
 import com.mambu.apisdk.model.ApplicationProtocol;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
@@ -23,6 +24,7 @@ import com.mambu.apisdk.util.RequestExecutor.Method;
 @Singleton
 public class URLHelper {
 
+	private String agentHeaderValue;
 	private String domainName;
 	private String protocol;
 	private static String API_ENDPOINT = "/api/";
@@ -31,9 +33,10 @@ public class URLHelper {
 	private final static Logger LOGGER = Logger.getLogger(URLHelper.class.getName());
 
 	@Inject
-	public URLHelper(@ApplicationProtocol String protocol, @Domain String domainName) {
+	public URLHelper(@ApplicationProtocol String protocol, @Domain String domainName, @UserAgentHeader String userAgentHeaderValue) {
 		this.protocol = protocol;
 		this.domainName = domainName;
+		this.agentHeaderValue = userAgentHeaderValue; 
 	}
 
 	/**
@@ -77,6 +80,7 @@ public class URLHelper {
 	 */
 	private URI createURI(String details) throws URISyntaxException {
 		if (isDomainNameWithPort()) {
+			
 			return new URI(protocol, null, host(), port(), API_ENDPOINT + details, null, null);
 		} else {
 			return new URI(protocol, domainName, API_ENDPOINT + details, null);
@@ -185,5 +189,14 @@ public class URLHelper {
 		params.remove(APIData.LIMIT);
 
 		return urlWithParams;
+	}
+	
+	/**
+	 * Gets the user agent header value as set once with the factory initialization 
+	 * 
+	 * @return String value representing the user agent header value 
+	 */
+	public String userAgentHeaderValue(){
+		return agentHeaderValue;
 	}
 }

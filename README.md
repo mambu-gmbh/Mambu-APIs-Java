@@ -57,6 +57,11 @@ To use the factory, some date must be provided in order to set it up:
 
 	MambuAPIServiceFactory serviceFactory = MambuAPIServiceFactory.getFactory(
 		"mydomain.mambu.com", "username", "password");
+		
+		OR
+		
+	MambuAPIServiceFactory serviceFactory = MambuAPIServiceFactory.getFactory(
+		"mydomain.mambu.com", "username", "password", "user agent header value");
 
 After this step, each service can be taken through a simple call like:
 
