@@ -28,6 +28,8 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
@@ -46,24 +48,26 @@ import com.mambu.apisdk.exception.MambuApiException;
 @Singleton
 public class RequestExecutorImpl implements RequestExecutor {
 
+	private static final String CONTENT_TYPE_HEADER_NAME = "Content-Type";
+	private static final String AUTHORIZATION_HEADER_NAME = "Authorization";
+	private static final String USER_AGENT_HEADER_NAME = "User-Agent";
+	private static final String TLS_V1_2 = "TLSv1.2";
+	// Added charset charset=UTF-8, MBU-4137 is now fixed
+	private static final String UTF8_CHARSET = StandardCharsets.UTF_8.name();
+	private static final String WWW_FORM_URLENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=UTF-8";
+	private static final String JSON_CONTENT_TYPE = "application/json; charset=UTF-8"; 	// Added charset charset=UTF-8, MBU-4137 is now fixed
+	private static final String APPLICATION_KEY = APIData.APPLICATION_KEY; // as per JIRA issue MBU-3236
+	private static final Logger LOGGER = Logger.getLogger(RequestExecutorImpl.class.getName());
+	// Specify Logger Levels to be used for logging API request, response details as well as Mambu exceptions
+	private static final Level REQUEST_LOG_LEVEL = Level.FINER; // Logging API Request level
+	private static final Level RESPONSE_LOG_LEVEL = Level.FINER; // Logging API Response level
+	private static final Level EXCEPTION_LOG_LEVEL = Level.WARNING; // Logging Mambu exceptions level
+	// Log curl template (equivalent to the actual API request) at FINEST level
+	private static final Level CURL_REQUEST_TEMPLATE_LOG_LEVEL = Level.FINEST;
+
 	private URLHelper urlHelper;
 	private String encodedAuthorization;
-	private final static String UTF8_charset = StandardCharsets.UTF_8.name();
-	private final static String wwwFormUrlEncodedContentType = "application/x-www-form-urlencoded; charset=UTF-8";
-
-	// Added charset charset=UTF-8, MBU-4137 is now fixed
-	private final static String jsonContentType = "application/json; charset=UTF-8";
-
-	private final static String APPLICATION_KEY = APIData.APPLICATION_KEY; // as per JIRA issue MBU-3236
-
-	private final static Logger LOGGER = Logger.getLogger(RequestExecutorImpl.class.getName());
-	// Specify Logger Levels to be used for logging API request, response details as well as Mambu exceptions
-	private final static Level requesLogLevel = Level.FINER; // Logging API Request level
-	private final static Level responseLogLevel = Level.FINER; // Logging API Response level
-	private final static Level exceptionLogLevel = Level.WARNING; // Logging Mambu exceptions level
-	// Log curl template (equivalent to the actual API request) at FINEST level
-	private final static Level curlRequestTemplateLogLevel = Level.FINEST;
-
+	
 	@Inject
 	public RequestExecutorImpl(URLHelper urlHelper) {
 		this.urlHelper = urlHelper;
@@ -113,7 +117,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		logApiRequestDetails(urlString, params, method, contentTypeFormat);
 		// Optionally log a template for the "curl" command as if it would be executed with the request specific API
 		// params
-		logCurlRequestDetails(urlString, params, method, contentTypeFormat);
+		logCurlRequestDetails(urlString, params, method, contentTypeFormat, urlHelper.userAgentHeaderValue());
 
 		// Add 'Application Key', if it was set by the application
 		// Mambu may handle API requests differently for different Application Keys
@@ -123,6 +127,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		HttpClient httpClient = createCustomHttpClient();
 				
 		String response = "";
+		
 		HttpResponse httpResponse = null;
 		try {
 			httpResponse = executeRequestByMethod(urlString, params, method, contentTypeFormat, httpClient,
@@ -168,7 +173,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		logApiRequestDetails(urlString, params, method, contentTypeFormat);
 		// Optionally log a template for the "curl" command as if it would be executed with the request specific API
 		// params
-		logCurlRequestDetails(urlString, params, method, contentTypeFormat);
+		logCurlRequestDetails(urlString, params, method, contentTypeFormat, urlHelper.userAgentHeaderValue());
 
 		// Add 'Application Key', if it was set by the application
 		// Mambu may handle API requests differently for different Application Keys
@@ -205,13 +210,28 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * @return newly created httpClient
 	 */
 	private HttpClient createCustomHttpClient() {
-
+		
 		HttpClient httpClient = HttpClients.custom()
 				// set cookies validation on ignore
 				.setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.IGNORE_COOKIES).build())
+				.setSSLSocketFactory(createSslConnectionSocketFactory())
 				.build();
 
 		return httpClient;
+	}
+
+	/**
+	 * Creates custom SSLConnectionSocketFactory and set it to use only the TLSv1.2 as supported protocol
+	 * 
+	 * @return newly created SSLConnectionSocketFactory
+	 */
+	private SSLConnectionSocketFactory createSslConnectionSocketFactory() {
+
+		SSLConnectionSocketFactory sslConnFactory = new
+				SSLConnectionSocketFactory(SSLContexts.createDefault(),
+				new String[] {TLS_V1_2}, null,
+				SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+		return sslConnFactory;
 	}
 
 	/**
@@ -256,8 +276,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 
 		// Log Mambu response
-		if (LOGGER.isLoggable(responseLogLevel)) {
-			logApiResponse(responseLogLevel, urlString, status, responseMessage);
+		if (LOGGER.isLoggable(RESPONSE_LOG_LEVEL)) {
+			logApiResponse(RESPONSE_LOG_LEVEL, urlString, status, responseMessage);
 		}
 
 		// if status is Ok - return the response
@@ -311,23 +331,23 @@ public class RequestExecutorImpl implements RequestExecutor {
 	private static void logExceptionForProcessingResponse(Method method, ContentType contentType, String urlString,
 			ParamsMap params, String response, Integer errorCode) {
 
-		if (LOGGER.isLoggable(exceptionLogLevel)) {
+		if (LOGGER.isLoggable(EXCEPTION_LOG_LEVEL)) {
 			// Remove appKey from the URL string when logging exception
 			String urlLogString = urlString;
 			String appKeyValue = MambuAPIFactory.getApplicationKey();
 			if (appKeyValue != null) {
 				urlLogString = urlLogString.replace(appKeyValue, "...");
 			}
-			LOGGER.log(exceptionLogLevel, "Creating exception, error code=" + errorCode + " for url=" + urlLogString);
+			LOGGER.log(EXCEPTION_LOG_LEVEL, "Creating exception, error code=" + errorCode + " for url=" + urlLogString);
 			// if response was not logged - log it now with the exception
-			if (!LOGGER.isLoggable(responseLogLevel)) {
-				LOGGER.log(exceptionLogLevel, "Mambu Response: " + response);
+			if (!LOGGER.isLoggable(RESPONSE_LOG_LEVEL)) {
+				LOGGER.log(EXCEPTION_LOG_LEVEL, "Mambu Response: " + response);
 			}
 			// If the request was not logged yet - log it now for this exception to see all needed request details
-			if (!LOGGER.isLoggable(requesLogLevel)) {
+			if (!LOGGER.isLoggable(REQUEST_LOG_LEVEL)) {
 				// Request was not log. Log it now with the exception
-				LOGGER.log(exceptionLogLevel, "Request causing Mambu exception:");
-				logApiRequest(exceptionLogLevel, method, contentType, urlLogString, params);
+				LOGGER.log(EXCEPTION_LOG_LEVEL, "Request causing Mambu exception:");
+				logApiRequest(EXCEPTION_LOG_LEVEL, method, contentType, urlLogString, params);
 			}
 		}
 	}
@@ -370,12 +390,14 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 *            The HTTP method
 	 * @param contentTypeFormat
 	 *            The content type
+	 * @param userAgentHeaderValue
+	 *            The value for the user agent header
 	 */
 	private void logCurlRequestDetails(String urlString, ParamsMap params, Method method,
-			ContentType contentTypeFormat) {
+			ContentType contentTypeFormat, String userAgentHeaderValue) {
 
-		if (LOGGER.isLoggable(curlRequestTemplateLogLevel)) {
-			logCurlCommandForRequest(method, contentTypeFormat, urlString, params);
+		if (LOGGER.isLoggable(CURL_REQUEST_TEMPLATE_LOG_LEVEL)) {
+			logCurlCommandForRequest(method, contentTypeFormat, urlString, params, userAgentHeaderValue);
 		}
 	}
 
@@ -395,8 +417,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 	private void logApiRequestDetails(String urlString, ParamsMap params, Method method,
 			ContentType contentTypeFormat) {
 
-		if (LOGGER.isLoggable(requesLogLevel)) {
-			logApiRequest(requesLogLevel, method, contentTypeFormat, urlString, params);
+		if (LOGGER.isLoggable(REQUEST_LOG_LEVEL)) {
+			logApiRequest(REQUEST_LOG_LEVEL, method, contentTypeFormat, urlString, params);
 		}
 	}
 
@@ -455,8 +477,9 @@ public class RequestExecutorImpl implements RequestExecutor {
 		final String contentType = getFormattedContentTypeString(contentTypeFormat);
 
 		HttpPost httpPost = new HttpPost(urlString);
-		httpPost.setHeader("Content-Type", contentType);
-		httpPost.setHeader("Authorization", "Basic " + encodedAuthorization);
+		httpPost.setHeader(CONTENT_TYPE_HEADER_NAME, contentType);
+		httpPost.setHeader(AUTHORIZATION_HEADER_NAME, "Basic " + encodedAuthorization);
+		httpPost.setHeader(USER_AGENT_HEADER_NAME, urlHelper.userAgentHeaderValue());
 
 		if (params != null && params.size() > 0) {
 			switch (contentTypeFormat) {
@@ -466,7 +489,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 				List<NameValuePair> httpParams = getListFromParams(params);
 
 				// use UTF-8 to encode
-				HttpEntity postEntity = new UrlEncodedFormEntity(httpParams, UTF8_charset);
+				HttpEntity postEntity = new UrlEncodedFormEntity(httpParams, UTF8_CHARSET);
 
 				httpPost.setEntity(postEntity);
 
@@ -497,12 +520,13 @@ public class RequestExecutorImpl implements RequestExecutor {
 			throws MalformedURLException, IOException, MambuApiException {
 
 		// PATCH request is using json ContentType
-		final String contentType = jsonContentType;
+		final String contentType = JSON_CONTENT_TYPE;
 
 		// HttpPatch is available since org.apache.httpcomponents v4.2
 		HttpPatch httpPatch = new HttpPatch(urlString);
-		httpPatch.setHeader("Content-Type", contentType);
-		httpPatch.setHeader("Authorization", "Basic " + encodedAuthorization);
+		httpPatch.setHeader(CONTENT_TYPE_HEADER_NAME, contentType);
+		httpPatch.setHeader(AUTHORIZATION_HEADER_NAME, "Basic " + encodedAuthorization);
+		httpPatch.setHeader(USER_AGENT_HEADER_NAME, urlHelper.userAgentHeaderValue()); 
 
 		// Format jsonEntity
 		StringEntity jsonEntity = makeJsonEntity(params);
@@ -535,8 +559,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		HttpGet httpGet = new HttpGet(urlString);
 		// add Authorozation header
-		httpGet.setHeader("Authorization", "Basic " + encodedAuthorization);
-		// setHeader("Content-Type") not need for GET requests
+		httpGet.setHeader(AUTHORIZATION_HEADER_NAME, "Basic " + encodedAuthorization);
+		httpGet.setHeader(USER_AGENT_HEADER_NAME, urlHelper.userAgentHeaderValue()); 
 
 		// execute
 		HttpResponse httpResponse = httpClient.execute(httpGet);
@@ -565,7 +589,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 
 		HttpDelete httpDelete = new HttpDelete(urlString);
-		httpDelete.setHeader("Authorization", "Basic " + encodedAuthorization);
+		httpDelete.setHeader(AUTHORIZATION_HEADER_NAME, "Basic " + encodedAuthorization);
+		httpDelete.setHeader(USER_AGENT_HEADER_NAME, urlHelper.userAgentHeaderValue());
 
 		// execute
 		HttpResponse httpResponse = httpClient.execute(httpDelete);
@@ -596,7 +621,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		jsonString = addAppKeyToJson(jsonString, params);
 
 		// Format jsonEntity
-		StringEntity jsonEntity = new StringEntity(jsonString, UTF8_charset);
+		StringEntity jsonEntity = new StringEntity(jsonString, UTF8_CHARSET);
 
 		return jsonEntity;
 
@@ -637,8 +662,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 
 		// Log Mambu response
-		if (LOGGER.isLoggable(responseLogLevel)) {
-			logApiResponse(responseLogLevel, urlString, status, response);
+		if (LOGGER.isLoggable(RESPONSE_LOG_LEVEL)) {
+			logApiResponse(RESPONSE_LOG_LEVEL, urlString, status, response);
 		}
 
 		// if status is Ok - return the response
@@ -671,7 +696,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		String response = "";
 
 		// read the response content
-		BufferedReader in = new BufferedReader(new InputStreamReader(content, UTF8_charset));
+		BufferedReader in = new BufferedReader(new InputStreamReader(content, UTF8_CHARSET));
 		String line;
 		while ((line = in.readLine()) != null) {
 			response += line;
@@ -718,11 +743,11 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		switch (contentTypeFormat) {
 		case WWW_FORM:
-			return wwwFormUrlEncodedContentType;
+			return WWW_FORM_URLENCODED_CONTENT_TYPE;
 		case JSON:
-			return jsonContentType;
+			return JSON_CONTENT_TYPE;
 		default:
-			return wwwFormUrlEncodedContentType;
+			return WWW_FORM_URLENCODED_CONTENT_TYPE;
 		}
 	}
 
@@ -856,9 +881,11 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 *            url string with added params for www-form-urlencoded requests
 	 * @param params
 	 *            the ParamsMap.
+	 * @param userAgentHeaderValue
+	 *            the value for user agent header
 	 */
 	private static void logCurlCommandForRequest(Method method, ContentType contentType, String urlString,
-			ParamsMap params) {
+			ParamsMap params, String userAgentHeaderValue) {
 
 		if (method == null) {
 			return;
@@ -882,10 +909,14 @@ public class RequestExecutorImpl implements RequestExecutor {
 		String url = urlString;
 		// Add content type header
 		contentType = (contentType == null) ? ContentType.WWW_FORM : contentType;
-		String contentHeader = " -H \"Content-type: " + getFormattedContentTypeString(contentType) + "\"";
+		String contentHeader = " -H \""+ CONTENT_TYPE_HEADER_NAME + ": " + getFormattedContentTypeString(contentType) + "\"";
 
+		// Add user agent header
+		String userAgentHeader = (userAgentHeaderValue != null)
+				? " -H \"" + USER_AGENT_HEADER_NAME + ": " + userAgentHeaderValue + "\"" : null;
+		
 		// Make curl command
-		String curlCommand = "curl" + apiMethod + contentHeader;
+		String curlCommand = "curl" + apiMethod + contentHeader + userAgentHeader;
 
 		// Add appkey param (as a placeholder only)
 		String appKeyValue = MambuAPIFactory.getApplicationKey();
@@ -931,7 +962,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		// Make final curl command and log it on a separate line
 		curlCommand = "\n" + curlCommand + " '" + url + "'";
-		LOGGER.log(curlRequestTemplateLogLevel, curlCommand);
+		LOGGER.log(CURL_REQUEST_TEMPLATE_LOG_LEVEL, curlCommand);
 
 	}
 
@@ -998,7 +1029,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// Log response details
 		if (status != HttpURLConnection.HTTP_OK && status != HttpURLConnection.HTTP_CREATED) {
 			// Error status. Log as error
-			LOGGER.log(exceptionLogLevel, "Error status=" + status + " Error response=" + response);
+			LOGGER.log(EXCEPTION_LOG_LEVEL, "Error status=" + status + " Error response=" + response);
 		} else {
 			if (!LOGGER.isLoggable(logerLevel)) {
 				return;

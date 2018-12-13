@@ -13,9 +13,9 @@ Usage
 
 To use the Mambu Java API Wrapper, please include the following jars in your build path
 
- * build/Mambu-APIs-Java-8.0-bin.jar
- * build/Mambu-APIs-Java-8.0-bin-sources.jar
- * lib/mambu-models-V8.0.jar
+ * build/Mambu-APIs-Java-9.0-bin.jar
+ * build/Mambu-APIs-Java-9.0-bin-sources.jar
+ * lib/mambu-models-V9.0.jar
  * further dependencies to run and test (see pom.xml for versions)
  * httpclient
  * httpcore
@@ -57,6 +57,11 @@ To use the factory, some date must be provided in order to set it up:
 
 	MambuAPIServiceFactory serviceFactory = MambuAPIServiceFactory.getFactory(
 		"mydomain.mambu.com", "username", "password");
+		
+		OR
+		
+	MambuAPIServiceFactory serviceFactory = MambuAPIServiceFactory.getFactory(
+		"mydomain.mambu.com", "username", "password", "user agent header value");
 
 After this step, each service can be taken through a simple call like:
 

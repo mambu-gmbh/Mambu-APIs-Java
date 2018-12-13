@@ -1,5 +1,7 @@
 package demo;
 
+import static com.mambu.apisdk.MambuAPIFactory.DEFAULT_USER_AGENT_HEADER_VALUE;
+
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -185,7 +187,7 @@ public class DemoUtil {
 
 		}
 		// Set up Factory
-		MambuAPIFactory.setUp(MambuEnumUtils.searchEnum(Protocol.class, protocol), domain, user, password);
+		MambuAPIFactory.setUp(MambuEnumUtils.searchEnum(Protocol.class, protocol), domain, user, password, DEFAULT_USER_AGENT_HEADER_VALUE + " UA header");
 
 		// set up App Key
 		MambuAPIFactory.setApplicationKey(appKeyValue);
