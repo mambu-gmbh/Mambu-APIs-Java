@@ -150,15 +150,15 @@ public class DemoTestSavingsService {
 					testGetSavingsAccountsForClient();
 
 					// Test deposit and reversal transactions
-					SavingsTransaction deposiTransaction = testDepositToSavingsAccount();
+					SavingsTransaction depositTransaction = testDepositToSavingsAccount();
 					
-					testSearchSavingsTransactionsWithCustomFields(deposiTransaction);
-					testSearchSavingsTransactionsWithoutCustomFiels(deposiTransaction);
+					testSearchSavingsTransactionsWithCustomFields(depositTransaction);
+					testSearchSavingsTransactionsWithoutCustomFields(depositTransaction);
 
-					testSearchSavingsTransactionEntitiesWithoutCustomFiels(deposiTransaction);
-					testSearchSavingsTransactionEntitiesWithCustomFields(deposiTransaction);
+					testSearchSavingsTransactionEntitiesWithoutCustomFields(depositTransaction);
+					testSearchSavingsTransactionEntitiesWithCustomFields(depositTransaction);
 
-					testReverseSavingsAccountTransaction(deposiTransaction); // Available since 3.10
+					testReverseSavingsAccountTransaction(depositTransaction); // Available since 3.10
 
 					testDepositToSavingsAccount(); // Make another deposit after reversal to continue testing
 					testStartMaturityForSavingAccount(); // Available since 4.4
@@ -563,7 +563,7 @@ public class DemoTestSavingsService {
 	}
 
 	
-	private static void testSearchSavingsTransactionsWithoutCustomFiels(SavingsTransaction savingsTransaction) throws MambuApiException {
+	private static void testSearchSavingsTransactionsWithoutCustomFields(SavingsTransaction savingsTransaction) throws MambuApiException {
 
 		String methodName = new Object() { }.getClass().getEnclosingMethod().getName();
 		System.out.println("\nIn " + methodName);
@@ -573,10 +573,10 @@ public class DemoTestSavingsService {
 
 		List<SavingsTransaction> transactions = savingsService.getSavingsTransactionsWithBasicDetails(filterConstraints, "0", "100");
 
-		checkCustomFieldValueExsistenceOnTransactions(transactions);
+		checkCustomFieldValueExistenceOnTransactions(transactions);
 	}
 
-	private static void testSearchSavingsTransactionEntitiesWithoutCustomFiels(SavingsTransaction savingsTransaction) throws MambuApiException {
+	private static void testSearchSavingsTransactionEntitiesWithoutCustomFields(SavingsTransaction savingsTransaction) throws MambuApiException {
 
 		String methodName = new Object() { }.getClass().getEnclosingMethod().getName();
 		System.out.println("\nIn " + methodName);
@@ -586,10 +586,10 @@ public class DemoTestSavingsService {
 
 		List<SavingsTransaction> transactions = searchService.searchEntitiesWithBasicDetails(MambuEntityType.SAVINGS_TRANSACTION,  filterConstraints, "0", "100");
 
-		checkCustomFieldValueExsistenceOnTransactions(transactions);
+		checkCustomFieldValueExistenceOnTransactions(transactions);
 	}
 
-	private static void checkCustomFieldValueExsistenceOnTransactions(List<SavingsTransaction> transactions) {
+	private static void checkCustomFieldValueExistenceOnTransactions(List<SavingsTransaction> transactions) {
 		for (SavingsTransaction transaction : transactions) {
 
 			List<CustomFieldValue> customFieldValues = transaction.getCustomFieldValues();

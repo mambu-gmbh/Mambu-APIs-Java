@@ -317,8 +317,6 @@ public class SavingsService {
 				ServiceHelper.makePaginationParams(offset, limit));
 	}
 
-	
-
 	/****
 	 * Make a withdrawal from an account.
 	 * 

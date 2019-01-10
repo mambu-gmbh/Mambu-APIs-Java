@@ -915,13 +915,14 @@ public class DemoTestLoanService {
 	/**
 	 *  Test disburse loan account
 	 *
-	 * @return the dibusrsement transaction
+	 * @return the disbursement transaction
 	 *
 	 * @throws MambuApiException in case the disbursement failed
 	 */
 	public static LoanTransaction testDisburseLoanAccount() throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testDisburseLoanAccount");
+		String methodName = new Object() { }.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		if (newAccount == null) {
@@ -2638,7 +2639,7 @@ public class DemoTestLoanService {
 		System.out.println("\nIn " + methodName);
 
 		if(loanTransaction == null){
-			System.out.println("WARN: " + methodName + " could not run transaction is null");
+			System.out.println("WARN: " + methodName + " could not run because transaction is null");
 		}
 
 		JSONFilterConstraints filterConstraints = getJsonFilterConstraintsForParentTransactionGreaterThanOne(loanTransaction);
