@@ -685,6 +685,11 @@ public class ApiDefinition {
 
 		this.returnFormat = returnFormat;
 	}
+	
+	public void setWithFullDetails(boolean isWithFullDetails) {
+	
+		this.isWithFullDetails = isWithFullDetails;
+	}
 
 	public void setContentType(ContentType contentType) {
 

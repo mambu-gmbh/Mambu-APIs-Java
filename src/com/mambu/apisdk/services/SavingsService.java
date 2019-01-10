@@ -248,6 +248,10 @@ public class SavingsService {
 	/**
 	 * Get savings transactions by specifying filter constraints
 	 * 
+	 * Note: This method is deprecated, you may use the getSavingsTransactionsWithFullDetails in order to obtain savings
+	 * transaction with full (custom field included) details or getSavingsAccountsWithBasicDetails to obtain the savings
+	 * transactions in basic details level.
+	 * 
 	 * @param filterConstraints
 	 *            filter constraints. Must not be null
 	 * @param offset
@@ -257,19 +261,63 @@ public class SavingsService {
 	 * @return list of savings transactions matching filter constraints
 	 * @throws MambuApiException
 	 */
+	@Deprecated
 	public List<SavingsTransaction> getSavingsTransactions(JSONFilterConstraints filterConstraints, String offset,
 			String limit) throws MambuApiException {
+		
+		return getSavingsTransactionsWithFullDetails(filterConstraints, offset, limit);
+	}
+	
+	/**
+	 * Get savings transactions by specifying filter constraints with all the details (custom fields included)
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * @return list of savings transactions matching filter constraints
+	 * @throws MambuApiException
+	 */
+	public List<SavingsTransaction> getSavingsTransactionsWithFullDetails(JSONFilterConstraints filterConstraints, String offset,
+			String limit) throws MambuApiException {
+
 		// Available since Mambu 3.12. See MBU-8988 for more details
 		// POST {JSONFilterConstraints} /api/savings/transactions/search?offset=0&limit=5
-
-		ApiDefinition apiDefintition = SearchService
-				.makeApiDefinitionforSearchByFilter(MambuEntityType.SAVINGS_TRANSACTION);
-
+		ApiDefinition apiDefintition = makeSearchTransactionsWithFullApiDefinition();
+		
 		// POST Filter JSON with pagination params map
 		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
 				ServiceHelper.makePaginationParams(offset, limit));
-
 	}
+	
+	/**
+	 * Get savings transactions by specifying filter constraints with all the details (no custom fields)
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * @return list of savings transactions matching filter constraints
+	 * @throws MambuApiException
+	 */
+	public List<SavingsTransaction> getSavingsTransactionsWithBasicDetails(JSONFilterConstraints filterConstraints, String offset,
+			String limit) throws MambuApiException {
+
+		// Available since Mambu 3.12. See MBU-8988 for more details
+		// POST {JSONFilterConstraints} /api/savings/transactions/search?offset=0&limit=5
+		ApiDefinition apiDefintition = SearchService
+				.makeApiDefinitionForSearchByFilter(MambuEntityType.SAVINGS_TRANSACTION);
+		
+		// POST Filter JSON with pagination params map
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
+				ServiceHelper.makePaginationParams(offset, limit));
+	}
+
+	
 
 	/****
 	 * Make a withdrawal from an account.
@@ -784,7 +832,10 @@ public class SavingsService {
 	}
 
 	/**
-	 * Get savings accounts by specifying filter constraints
+	 * Get savings accounts by specifying filter constraints.
+	 * 
+	 * 
+	 * Also notice that the full details one may come with a performance hit so use it only if needed. 
 	 * 
 	 * @param filterConstraints
 	 *            filter constraints. Must not be null
@@ -797,18 +848,17 @@ public class SavingsService {
 	 */
 	public List<SavingsAccount> getSavingsAccounts(JSONFilterConstraints filterConstraints, String offset, String limit)
 			throws MambuApiException {
-		// Available since Mambu 3.12. See MBU-8988 for more details
-		// POST {JSONFilterConstraints} /api/savings/search?offset=0&limit=5
 
+		// Available since Mambu 3.12. See MBU-8988 for more details
+		// POST {JSONFilterConstraints} /api/savings/search?offset=0&limit=5&fullDetails=true
 		ApiDefinition apiDefintition = SearchService
-				.makeApiDefinitionforSearchByFilter(MambuEntityType.SAVINGS_ACCOUNT);
+				.makeApiDefinitionForSearchByFilter(MambuEntityType.SAVINGS_ACCOUNT);
 
 		// POST Filter JSON with pagination params map
 		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
-				ServiceHelper.makePaginationParams(offset, limit));
-
+						ServiceHelper.makePaginationParams(offset, limit));
 	}
-
+	
 	// Savings Products
 	/***
 	 * Get a list of Savings Products
@@ -1035,6 +1085,15 @@ public class SavingsService {
 				ApiReturnFormat.COLLECTION);
 		return serviceExecutor.execute(apiDefinition, savingsId);
 
+	}
+	
+	private ApiDefinition makeSearchTransactionsWithFullApiDefinition() {
+
+		ApiDefinition apiDefinition = SearchService
+				.makeApiDefinitionForSearchByFilter(MambuEntityType.SAVINGS_TRANSACTION);
+		apiDefinition.setWithFullDetails(true);
+		
+		return apiDefinition;
 	}
 
 }

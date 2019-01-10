@@ -48,6 +48,7 @@ import com.mambu.apisdk.exception.MambuApiException;
 @Singleton
 public class RequestExecutorImpl implements RequestExecutor {
 
+	private static final String QUESTION_MARK_CHARACTER = "?";
 	private static final String CONTENT_TYPE_HEADER_NAME = "Content-Type";
 	private static final String AUTHORIZATION_HEADER_NAME = "Authorization";
 	private static final String USER_AGENT_HEADER_NAME = "User-Agent";
@@ -64,6 +65,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	private static final Level EXCEPTION_LOG_LEVEL = Level.WARNING; // Logging Mambu exceptions level
 	// Log curl template (equivalent to the actual API request) at FINEST level
 	private static final Level CURL_REQUEST_TEMPLATE_LOG_LEVEL = Level.FINEST;
+	private static final String FULL_DETAILS_QUERY_PARAM = "fullDetails";
 
 	private URLHelper urlHelper;
 	private String encodedAuthorization;
@@ -112,6 +114,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		// Pagination parameters for POST with JSON are to be provided with the URL. See MBU-8975
 		urlString = urlHelper.addJsonPaginationParams(urlString, method, contentTypeFormat, params);
+		urlString = urlHelper.addDetailsParam(urlString, method, contentTypeFormat, params);
 
 		// Log API Request details
 		logApiRequestDetails(urlString, params, method, contentTypeFormat);
@@ -877,8 +880,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 *            request's content type
 	 * @param urlString
 	 *            request's url
-	 * @param urlWithParams
-	 *            url string with added params for www-form-urlencoded requests
 	 * @param params
 	 *            the ParamsMap.
 	 * @param userAgentHeaderValue
@@ -948,22 +949,35 @@ public class RequestExecutorImpl implements RequestExecutor {
 				final String logAppKey = "\"" + APIData.APPLICATION_KEY + "\":\"" + emptyAppKey + "\",";
 
 				jsonString = jsonString.replace(appKey, logAppKey);
-
 			}
+
+			urlParams = addFullDetailsParam(params, urlParams);
+
 			// Add JSON to the command line
 			curlCommand = curlCommand + " -d '" + jsonString + "' ";
 			break;
 		}
 		// Add placeholder for the user's credentials
 		url = url.replace("://", "://user:pwd@");
+		
 		if (urlParams.length() > 0) {
-			url = url + "?" + urlParams;
+			String paramsDelimiter = url.contains(QUESTION_MARK_CHARACTER) ? "&" : QUESTION_MARK_CHARACTER;
+			url = url + paramsDelimiter + urlParams;
 		}
 
 		// Make final curl command and log it on a separate line
 		curlCommand = "\n" + curlCommand + " '" + url + "'";
 		LOGGER.log(CURL_REQUEST_TEMPLATE_LOG_LEVEL, curlCommand);
 
+	}
+
+	private static String addFullDetailsParam(ParamsMap params, String urlParams) {
+
+		if (params != null && params.size() > 0 && params.get(FULL_DETAILS_QUERY_PARAM) != null) {
+			return urlParams + FULL_DETAILS_QUERY_PARAM + "="+ params.get(FULL_DETAILS_QUERY_PARAM);
+		}
+
+		return urlParams;
 	}
 
 	// Strings and constants used for logging formatting

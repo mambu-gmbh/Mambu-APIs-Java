@@ -583,7 +583,7 @@ public class ClientsService {
 		// Available since Mambu 3.12. See MBU-8975 for more details
 		// POST {JSONFilterConstraints} /api/clients/search?offset=0&limit=5
 
-		ApiDefinition apiDefintition = SearchService.makeApiDefinitionforSearchByFilter(MambuEntityType.CLIENT);
+		ApiDefinition apiDefintition = SearchService.makeApiDefinitionForSearchByFilter(MambuEntityType.CLIENT);
 
 		// POST Filter JSON with pagination params map
 		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
@@ -609,7 +609,7 @@ public class ClientsService {
 		// Available since Mambu 3.12. See MBU-8987 for more details
 		// POST {JSONFilterConstraints} /api/groups/search?offset=0&limit=5
 
-		ApiDefinition apiDefintition = SearchService.makeApiDefinitionforSearchByFilter(MambuEntityType.GROUP);
+		ApiDefinition apiDefintition = SearchService.makeApiDefinitionForSearchByFilter(MambuEntityType.GROUP);
 
 		// POST Filter JSON with pagination params map
 		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
