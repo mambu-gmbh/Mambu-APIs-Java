@@ -1,5 +1,15 @@
 package demo;
 
+import static com.mambu.accounting.shared.column.TransactionsDataField.AMOUNT;
+import static com.mambu.accounting.shared.column.TransactionsDataField.PARENT_ACCOUNT_KEY;
+import static com.mambu.core.shared.data.DataFieldType.NATIVE;
+import static com.mambu.core.shared.data.DataItemType.LOAN_TRANSACTION;
+import static com.mambu.core.shared.data.FilterElement.EQUALS;
+import static com.mambu.core.shared.data.FilterElement.MORE_THAN;
+import static demo.DemoTestSearchService.createConstraint;
+import static demo.DemoTestSearchService.createSingleFilterConstraints;
+import static demo.DemoUtil.logCustomFieldValues;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -27,6 +37,8 @@ import com.mambu.accountsecurity.shared.model.Guaranty.SecurityType;
 import com.mambu.accountsecurity.shared.model.InvestorFund;
 import com.mambu.admin.shared.model.InterestProductSettings;
 import com.mambu.admin.shared.model.PrincipalPaymentProductSettings;
+import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraint;
+import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
 import com.mambu.api.server.handler.loan.model.JSONLoanAccountResponse;
 import com.mambu.api.server.handler.loan.model.JSONRestructureEntity;
 import com.mambu.api.server.handler.loan.model.JSONTransactionRequest;
@@ -154,14 +166,14 @@ public class DemoTestLoanService {
 					// Create account to test patch, approve, undo approve, reject, close
 					testCreateJsonAccount();
 					testAddAndRemoveSetllementAccounts(); // Available since Mambu 4.4
-					testPatchLoanAccountTerms(); // Available since 3.9.3
+	//				testPatchLoanAccountTerms(); // Available since 3.9.3
 
 					// As per the requirement 2.1 from MBU-10017, when approving a tranched loan account, the loan
 					// amount should be equal to the tranches amount.
 					testUpdateTranchesAmount();
 					testApproveLoanAccount();
 					testUndoApproveLoanAccount();
-					testUpdateLoanAccount();
+		//			testUpdateLoanAccount();
 
 					// Test REJECT and WITHDRAW transactions first
 					// Test Close and UNDO Close as REJECT and WITHDRAW first
@@ -180,7 +192,10 @@ public class DemoTestLoanService {
 					testApproveLoanAccount();
 
 					// Test Disburse and Undo disburse
-					testDisburseLoanAccount();
+					LoanTransaction loanTransaction = testDisburseLoanAccount();
+
+					testSearchLoanTransactionsWithCustomFields(loanTransaction);
+					testSearchLoanTransactionsWithoutCustomFields(loanTransaction);
 
 					// Test posting a payment made transaction 
 					LoanTransaction paymentMadeTransaction = testPostPaymentMadeTransactionOnALoan(); //Available since 4.6
@@ -522,7 +537,7 @@ public class DemoTestLoanService {
 					+ guaranty.getSavingsAccountKey() + "\tAmount=" + guaranty.getAmount());
 
 			List<CustomFieldValue> guarantyCustomValues = guaranty.getCustomFieldValues();
-			DemoUtil.logCustomFieldValues(guarantyCustomValues, "Guarantor", guaranty.getEncodedKey());
+			logCustomFieldValues(guarantyCustomValues, "Guarantor", guaranty.getEncodedKey());
 		}
 		// Log Investor Funds. Available since Mambu 3.13. See MBU-9887
 		List<InvestorFund> funds = loanDeatils.getFunds();
@@ -536,7 +551,7 @@ public class DemoTestLoanService {
 					+ "\tSavinsg Key=" + fund.getSavingsAccountKey() + "\tAmount=" + fund.getAmount());
 
 			List<CustomFieldValue> fundCustomValues = fund.getCustomFieldValues();
-			DemoUtil.logCustomFieldValues(fundCustomValues, "Fund", fund.getEncodedKey());
+			logCustomFieldValues(fundCustomValues, "Fund", fund.getEncodedKey());
 		}
 	}
 
@@ -570,7 +585,7 @@ public class DemoTestLoanService {
 		// Check returned custom fields after create
 		List<CustomFieldValue> customFieldValues = newAccount.getCustomFieldValues();
 		// Log Custom Field Values
-		DemoUtil.logCustomFieldValues(customFieldValues, newAccount.getLoanName(), newAccount.getId());
+		logCustomFieldValues(customFieldValues, newAccount.getLoanName(), newAccount.getId());
 
 	}
 
@@ -897,10 +912,17 @@ public class DemoTestLoanService {
 				+ result2.getGuarantees().size());
 	}
 
-	// / Transactions testing
-	public static void testDisburseLoanAccount() throws MambuApiException {
+	/**
+	 *  Test disburse loan account
+	 *
+	 * @return the disbursement transaction
+	 *
+	 * @throws MambuApiException in case the disbursement failed
+	 */
+	public static LoanTransaction testDisburseLoanAccount() throws MambuApiException {
 
-		System.out.println(methodName = "\nIn testDisburseLoanAccount");
+		String methodName = new Object() { }.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
 
 		LoansService loanService = MambuAPIFactory.getLoanService();
 		if (newAccount == null) {
@@ -937,7 +959,7 @@ public class DemoTestLoanService {
 			if (nonDisbursedTranches == null || nonDisbursedTranches.size() == 0) {
 				System.out.println(
 						"WARNING: Cannot test disburse: Loan  " + account.getId() + " has non disbursed tranches");
-				return;
+				return null;
 			}
 			// Check if we the disburse time is not in a future
 			Date expectedTrancheDisbDate = nonDisbursedTranches.get(0).getExpectedDisbursementDate();
@@ -945,7 +967,7 @@ public class DemoTestLoanService {
 			if (expectedTrancheDisbDate.after(now)) {
 				System.out.println(
 						"WARNING: cannot disburse tranche. Its ExpectedDisbursementDate=" + expectedTrancheDisbDate);
-				return;
+				return null;
 			}
 			// If not the first tranche - set the firstRepaymentDate to null
 			if (account.getDisbursedTranches() != null && account.getDisbursedTranches().size() > 0) {
@@ -1019,20 +1041,24 @@ public class DemoTestLoanService {
 					channelKey, false);
 		}
 
+		LoanTransaction disbursementTransaction =  null;
 		try {
 			// Send API request to Mambu to test JSON Disburse API
-			LoanTransaction transaction = loanService.disburseLoanAccount(accountId, amount, disbDetails,
+			disbursementTransaction = loanService.disburseLoanAccount(accountId, amount, disbDetails,
 					transactionFields, notes);
-			System.out.println("Disbursed OK: Transaction Id=" + transaction.getTransactionId() + " amount="
-					+ transaction.getAmount());
+			System.out.println("Disbursed OK: Transaction Id=" + disbursementTransaction.getTransactionId() + " amount="
+					+ disbursementTransaction.getAmount());
 
 			// Since 4.2. More details on MBU-13211
-			testGetCustomFieldForLoanTransaction(account, transaction);
+			testGetCustomFieldForLoanTransaction(account, disbursementTransaction);
+
+			return disbursementTransaction;
 
 		} catch (MambuApiException e) {
-
 			DemoUtil.logException(methodName, e);
 		}
+
+		return disbursementTransaction;
 	}
 
 	/**
@@ -1065,7 +1091,7 @@ public class DemoTestLoanService {
 					MambuEntityType.LOAN_ACCOUNT, account.getId(), MambuEntityType.LOAN_TRANSACTION,
 					transaction.getEncodedKey(), customFieldValue.getCustomFieldId());
 			// logs the details to the console
-			DemoUtil.logCustomFieldValues(retrievedCustomFieldValues, "LoanTransaction", account.getId());
+			logCustomFieldValues(retrievedCustomFieldValues, "LoanTransaction", account.getId());
 		}
 
 	}
@@ -2237,7 +2263,7 @@ public class DemoTestLoanService {
 		List<CustomFieldValue> transactionFields = disbDetails.getCustomFieldValues();
 		if (transactionFields != null) {
 			System.out.println("Total Transaction Fields= " + transactionFields.size());
-			DemoUtil.logCustomFieldValues(transactionFields, "Channel", channelKey);
+			logCustomFieldValues(transactionFields, "Channel", channelKey);
 		} else {
 			System.out.println("\tNull transaction custom fields");
 		}
@@ -2604,5 +2630,84 @@ public class DemoTestLoanService {
 				savingsAccount.getEncodedKey());
 
 		System.out.println("The delete result is: " + deleteResult);
+	}
+
+
+	private static void testSearchLoanTransactionsWithCustomFields(LoanTransaction loanTransaction) throws MambuApiException {
+
+		String methodName = new Object() { }.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+
+		if(loanTransaction == null){
+			System.out.println("WARN: " + methodName + " could not run because transaction is null");
+		}
+
+		JSONFilterConstraints filterConstraints = getJsonFilterConstraintsForParentTransactionGreaterThanOne(loanTransaction);
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		List<LoanTransaction> transactions = loanService.getLoanTransactionsWithFullDetails(filterConstraints, "0", "100");
+
+		for (LoanTransaction transaction : transactions) {
+
+			List<CustomFieldValue> customFieldValues = transaction.getCustomFieldValues();
+			logCustomFieldValues(customFieldValues, "LoanAccount", transaction.getParentAccountKey());
+		}
+	}
+
+	private static void testSearchLoanTransactionsWithoutCustomFields(LoanTransaction loanTransaction) throws MambuApiException {
+
+		String methodName = new Object() { }.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+
+		if(loanTransaction == null){
+			System.out.println("WARN: " + methodName + " could not run transaction is null");
+		}
+
+		JSONFilterConstraints filterConstraints = createSingleFilterConstraints(
+				NATIVE,
+				PARENT_ACCOUNT_KEY.name(),
+				EQUALS,
+				LOAN_TRANSACTION,
+				loanTransaction.getParentAccountKey(),
+				null);
+
+		LoansService loanService = MambuAPIFactory.getLoanService();
+
+		List<LoanTransaction> transactions = loanService.getLoanTransactionsWithBasicDetails(filterConstraints, "0", "100");
+
+		for (LoanTransaction transaction : transactions) {
+
+			List<CustomFieldValue> customFieldValues = transaction.getCustomFieldValues();
+
+			if (customFieldValues == null){
+				System.out.println("No custom fields were found for transaction:" +  transaction.getId());
+			} else {
+				System.out.println("WARN: custom fields were returned for transaction");
+			}
+		}
+	}
+
+	private static JSONFilterConstraints getJsonFilterConstraintsForParentTransactionGreaterThanOne(LoanTransaction loanTransaction) {
+
+		JSONFilterConstraints filterConstraints = createSingleFilterConstraints(
+				NATIVE,
+				AMOUNT.name(),
+				MORE_THAN,
+				LOAN_TRANSACTION,
+				"1",
+				null);
+
+		JSONFilterConstraint accountConstraint = createConstraint(
+				NATIVE,
+				PARENT_ACCOUNT_KEY.name(),
+				EQUALS,
+				LOAN_TRANSACTION,
+				loanTransaction.getParentAccountKey(),
+				null);
+
+		filterConstraints.getFilterConstraints().add(accountConstraint);
+
+		return filterConstraints;
 	}
 }
