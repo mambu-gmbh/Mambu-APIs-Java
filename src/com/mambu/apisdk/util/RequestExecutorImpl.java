@@ -973,7 +973,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 	private static String addFullDetailsParam(ParamsMap params, String urlParams) {
 
-		if (params != null && params.size() > 0 && params.get(FULL_DETAILS_QUERY_PARAM) != null) {
+		if (params != null && params.get(FULL_DETAILS_QUERY_PARAM) != null) {
 			return urlParams + FULL_DETAILS_QUERY_PARAM + "="+ params.get(FULL_DETAILS_QUERY_PARAM);
 		}
 

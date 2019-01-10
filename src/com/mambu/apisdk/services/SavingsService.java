@@ -249,7 +249,7 @@ public class SavingsService {
 	 * Get savings transactions by specifying filter constraints
 	 * 
 	 * Note: This method is deprecated, you may use the getSavingsTransactionsWithFullDetails in order to obtain savings
-	 * transaction with full (custom field included) details or getSavingsAccountsWithBasicDetails to obtain the savings
+	 * transactions with full details (custom fields included) or getSavingsAccountsWithBasicDetails to obtain the savings
 	 * transactions in basic details level.
 	 * 
 	 * @param filterConstraints

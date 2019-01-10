@@ -24,7 +24,7 @@ import com.mambu.apisdk.util.RequestExecutor.Method;
 @Singleton
 public class URLHelper {
 
-	public static final String AMPERSAND_DELIMITER = "&";
+	private static final String AMPERSAND_DELIMITER = "&";
 	private String agentHeaderValue;
 	private String domainName;
 	private String protocol;
@@ -194,7 +194,16 @@ public class URLHelper {
 
 		return urlWithParams;
 	}
-	
+
+	/**
+	 *  Appends the details level query param to a given URL in case exist
+	 *
+	 * @param urlString	the String URL where the details level will be appended
+	 * @param method the HTTP method of the request
+	 * @param contentTypeFormat the content type of the request
+	 * @param params the params of the request
+	 * @return the appended URL
+	 */
 	public String addDetailsParam(String urlString, Method method, ContentType contentTypeFormat,
 			ParamsMap params) {
 
