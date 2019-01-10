@@ -35,7 +35,6 @@ import com.mambu.core.shared.data.DataItemType;
 import com.mambu.core.shared.data.FilterElement;
 import com.mambu.core.shared.data.SortingOrder;
 import com.mambu.core.shared.model.CustomFieldValue;
-import com.mambu.core.shared.model.CustomFilter;
 import com.mambu.core.shared.model.SearchResult;
 import com.mambu.core.shared.model.SearchType;
 import com.mambu.loans.shared.data.DisbursementDetailsDataField;
@@ -466,7 +465,7 @@ public class DemoTestSearchService {
 		System.out.println("Total groups returned=" + groups.size());
 	}
 
-	private static JSONFilterConstraint createConstraint(DataFieldType dataFieldType, String filterSelection,
+	static JSONFilterConstraint createConstraint(DataFieldType dataFieldType, String filterSelection,
 			FilterElement filterElement, DataItemType dataItemType, String value, String secondValue) {
 
 		JSONFilterConstraint constraint = new JSONFilterConstraint();
@@ -507,7 +506,7 @@ public class DemoTestSearchService {
 		}
 	}
 
-	private static JSONFilterConstraints createSingleFilterConstraints(DataFieldType dataFieldType,
+	public static JSONFilterConstraints createSingleFilterConstraints(DataFieldType dataFieldType,
 			String filterSelection, FilterElement filterElement, DataItemType dataItemType, String value,
 			String secondValue) {
 
@@ -516,7 +515,7 @@ public class DemoTestSearchService {
 
 		JSONFilterConstraints filterConstraints = new JSONFilterConstraints();
 
-		List<JSONFilterConstraint> constraints = new ArrayList<JSONFilterConstraint>();
+		List<JSONFilterConstraint> constraints = new ArrayList<>();
 		constraints.add(constraint);
 
 		filterConstraints.setFilterConstraints(constraints);
@@ -531,7 +530,7 @@ public class DemoTestSearchService {
 		System.out.println("\nIn " + methodName);
 
 		// Create Filter Constraints
-		ArrayList<JSONFilterConstraint> constraints = new ArrayList<JSONFilterConstraint>();
+		ArrayList<JSONFilterConstraint> constraints = new ArrayList<>();
 		JSONFilterConstraint constraint = new JSONFilterConstraint();
 
 		// Specify Filter with disbursement details. See MBU-14097
@@ -579,7 +578,7 @@ public class DemoTestSearchService {
 		System.out.println("\nIn " + methodName);
 
 		// Create Filter Constraints
-		ArrayList<JSONFilterConstraint> constraints = new ArrayList<JSONFilterConstraint>();
+		ArrayList<JSONFilterConstraint> constraints = new ArrayList<>();
 		JSONFilterConstraint constraint1 = new JSONFilterConstraint();
 		JSONFilterConstraint constraint2 = new JSONFilterConstraint();
 

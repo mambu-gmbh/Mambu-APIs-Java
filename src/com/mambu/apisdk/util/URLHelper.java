@@ -9,9 +9,9 @@ import java.util.logging.Logger;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mambu.apisdk.model.ApplicationProtocol;
 import com.mambu.apisdk.model.Domain;
 import com.mambu.apisdk.model.UserAgentHeader;
-import com.mambu.apisdk.model.ApplicationProtocol;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
 
@@ -24,11 +24,12 @@ import com.mambu.apisdk.util.RequestExecutor.Method;
 @Singleton
 public class URLHelper {
 
+	private static final String AMPERSAND_DELIMITER = "&";
 	private String agentHeaderValue;
 	private String domainName;
 	private String protocol;
 	private static String API_ENDPOINT = "/api/";
-	private static String DELIMITER = "?";
+	private static String QUESTION_MARK_DELIMITER = "?";
 
 	private final static Logger LOGGER = Logger.getLogger(URLHelper.class.getName());
 
@@ -146,7 +147,10 @@ public class URLHelper {
 	 */
 	public static String makeUrlWithParams(String urlString, ParamsMap paramsMap) {
 
-		return paramsMap != null ? urlString + DELIMITER + paramsMap.getURLString() : urlString;
+		String paramDelimiter = urlString.contains(QUESTION_MARK_DELIMITER) ?
+				AMPERSAND_DELIMITER : QUESTION_MARK_DELIMITER;
+
+		return paramsMap != null ? urlString + paramDelimiter + paramsMap.getURLString() : urlString;
 	}
 
 	/**
@@ -188,6 +192,38 @@ public class URLHelper {
 		params.remove(APIData.OFFSET);
 		params.remove(APIData.LIMIT);
 
+		return urlWithParams;
+	}
+
+	/**
+	 *  Appends the details level query param to a given URL in case exist
+	 *
+	 * @param urlString	the String URL where the details level will be appended
+	 * @param method the HTTP method of the request
+	 * @param contentTypeFormat the content type of the request
+	 * @param params the params of the request
+	 * @return the appended URL
+	 */
+	public String addDetailsParam(String urlString, Method method, ContentType contentTypeFormat,
+			ParamsMap params) {
+
+		// Add only for POST with ContentType.JSON (for ContentType.WWW_FORM all params will be added to the URL)
+		if (params == null || !(method == Method.POST && contentTypeFormat == ContentType.JSON)) {
+			return urlString;
+		}
+
+		if (params.get(APIData.FULL_DETAILS) == null) {
+			return urlString;
+		}
+
+		ParamsMap paginationParams = new ParamsMap();
+		paginationParams.put(APIData.FULL_DETAILS, params.get(APIData.FULL_DETAILS));
+
+		String urlWithParams = makeUrlWithParams(urlString, paginationParams);
+
+		// Remove full detail params already added to the URL
+		params.remove(APIData.FULL_DETAILS);
+		
 		return urlWithParams;
 	}
 	

@@ -203,7 +203,7 @@ public class AccountingService {
 		// POST {JSONFilterConstraints} /api/gljournalentries/search?offset=0&limit=5
 		// See MBU-12099
 		ApiDefinition apiDefinition = SearchService
-				.makeApiDefinitionforSearchByFilter(MambuEntityType.GL_JOURNAL_ENTRY);
+				.makeApiDefinitionForSearchByFilter(MambuEntityType.GL_JOURNAL_ENTRY);
 
 		// POST Filter JSON with pagination params map
 		return serviceExecutor.executeJson(apiDefinition, filterConstraints, null, null,

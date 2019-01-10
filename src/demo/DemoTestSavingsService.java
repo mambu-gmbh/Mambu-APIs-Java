@@ -1,4 +1,14 @@
+
 package demo;
+
+import static com.mambu.accounting.shared.column.TransactionsDataField.AMOUNT;
+import static com.mambu.accounting.shared.column.TransactionsDataField.PARENT_ACCOUNT_KEY;
+import static com.mambu.core.shared.data.DataFieldType.NATIVE;
+import static com.mambu.core.shared.data.FilterElement.EQUALS;
+import static com.mambu.core.shared.data.FilterElement.MORE_THAN;
+import static demo.DemoTestSearchService.createConstraint;
+import static demo.DemoTestSearchService.createSingleFilterConstraints;
+import static demo.DemoUtil.logCustomFieldValues;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -18,16 +28,20 @@ import com.mambu.accounts.shared.model.InterestRateSource;
 import com.mambu.accounts.shared.model.InterestRateTerms;
 import com.mambu.accounts.shared.model.TransactionDetails;
 import com.mambu.admin.shared.model.InterestProductSettings;
+import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraint;
+import com.mambu.api.server.handler.core.dynamicsearch.model.JSONFilterConstraints;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.services.CustomFieldValueService;
 import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.services.OrganizationService;
 import com.mambu.apisdk.services.SavingsService;
+import com.mambu.apisdk.services.SearchService;
 import com.mambu.apisdk.util.APIData.CLOSER_TYPE;
 import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.model.Client;
 import com.mambu.clients.shared.model.Group;
+import com.mambu.core.shared.data.DataItemType;
 import com.mambu.core.shared.model.Currency;
 import com.mambu.core.shared.model.CustomFieldType;
 import com.mambu.core.shared.model.CustomFieldValue;
@@ -136,8 +150,15 @@ public class DemoTestSavingsService {
 					testGetSavingsAccountsForClient();
 
 					// Test deposit and reversal transactions
-					SavingsTransaction deposiTransaction = testDepositToSavingsAccount();
-					testReverseSavingsAccountTransaction(deposiTransaction); // Available since 3.10
+					SavingsTransaction depositTransaction = testDepositToSavingsAccount();
+					
+					testSearchSavingsTransactionsWithCustomFields(depositTransaction);
+					testSearchSavingsTransactionsWithoutCustomFields(depositTransaction);
+
+					testSearchSavingsTransactionEntitiesWithoutCustomFields(depositTransaction);
+					testSearchSavingsTransactionEntitiesWithCustomFields(depositTransaction);
+
+					testReverseSavingsAccountTransaction(depositTransaction); // Available since 3.10
 
 					testDepositToSavingsAccount(); // Make another deposit after reversal to continue testing
 					testStartMaturityForSavingAccount(); // Available since 4.4
@@ -271,8 +292,8 @@ public class DemoTestSavingsService {
 	 * 
 	 * @param newAccount
 	 *            The saving account
-	 * @return
-	 * @throws MambuApiException
+	 * @return a list of transactions for bulk reversal test
+	 * @throws MambuApiException if creation of transactions fails
 	 */
 	private static List<SavingsTransaction> createThreeSavingTransactionsForBulkReversalTest(SavingsAccount newAccount)
 			throws MambuApiException {
@@ -304,7 +325,7 @@ public class DemoTestSavingsService {
 		return transactions;
 	}
 
-	public static void testGetSavingsAccount() throws MambuApiException {
+	private static void testGetSavingsAccount() throws MambuApiException {
 
 		System.out.println(methodName = "\nIn testGetSavingsAccount");
 
@@ -442,8 +463,6 @@ public class DemoTestSavingsService {
 	 * Gets the custom field values from the saving transaction passed as argument to this method, and then iterates
 	 * over them and call Mambu to get the details and logs them to the console.
 	 * 
-	 * @param account
-	 *            The account (saving account) holding the transaction
 	 * @param transaction
 	 *            The transaction (saving transaction) holding the custom field details
 	 * @throws MambuApiException
@@ -478,7 +497,7 @@ public class DemoTestSavingsService {
 					MambuEntityType.SAVINGS_ACCOUNT, savingAccount.getId(), MambuEntityType.SAVINGS_TRANSACTION,
 					transaction.getEncodedKey(), customFieldValue.getCustomFieldId());
 			// logs the details to the console
-			DemoUtil.logCustomFieldValues(retrievedCustomFieldValues, "SavingTransaction", savingAccount.getId());
+			logCustomFieldValues(retrievedCustomFieldValues, "SavingTransaction", savingAccount.getId());
 		}
 	}
 
@@ -505,6 +524,82 @@ public class DemoTestSavingsService {
 				+ transaction.getAmount() + " Balance =" + transaction.getBalance());
 
 		return transaction;
+	}
+
+	private static void testSearchSavingsTransactionsWithCustomFields(SavingsTransaction savingsTransaction) throws MambuApiException {
+
+		String methodName = new Object() { }.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+
+		JSONFilterConstraints filterConstraints = getJsonFilterConstraintsForParentTransactionGreaterThanOne(savingsTransaction);
+
+		SavingsService savingsService = MambuAPIFactory.getSavingsService();
+
+		List<SavingsTransaction> transactions = savingsService.getSavingsTransactionsWithFullDetails(filterConstraints, "0", "100");
+
+		for (SavingsTransaction transaction : transactions) {
+
+			List<CustomFieldValue> customFieldValues = transaction.getCustomFieldValues();
+			logCustomFieldValues(customFieldValues, "SavingsAccount", transaction.getParentAccountKey());
+		}
+	}
+
+	private static void testSearchSavingsTransactionEntitiesWithCustomFields(SavingsTransaction savingsTransaction) throws MambuApiException {
+
+		String methodName = new Object() { }.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+
+		JSONFilterConstraints filterConstraints = getJsonFilterConstraintsForParentTransactionGreaterThanOne(savingsTransaction);
+
+		SearchService searchService = MambuAPIFactory.getSearchService();
+
+		List<SavingsTransaction> transactions = searchService.searchEntitiesWithFullDetails(MambuEntityType.SAVINGS_TRANSACTION, filterConstraints, "0", "100");
+
+		for (SavingsTransaction transaction : transactions) {
+
+			List<CustomFieldValue> customFieldValues = transaction.getCustomFieldValues();
+			logCustomFieldValues(customFieldValues, "SavingsAccount", transaction.getParentAccountKey());
+		}
+	}
+
+	
+	private static void testSearchSavingsTransactionsWithoutCustomFields(SavingsTransaction savingsTransaction) throws MambuApiException {
+
+		String methodName = new Object() { }.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+
+		JSONFilterConstraints filterConstraints = getJsonFilterConstraintsForParentTransactionGreaterThanOne(savingsTransaction);
+		SavingsService savingsService = MambuAPIFactory.getSavingsService();
+
+		List<SavingsTransaction> transactions = savingsService.getSavingsTransactionsWithBasicDetails(filterConstraints, "0", "100");
+
+		checkCustomFieldValueExistenceOnTransactions(transactions);
+	}
+
+	private static void testSearchSavingsTransactionEntitiesWithoutCustomFields(SavingsTransaction savingsTransaction) throws MambuApiException {
+
+		String methodName = new Object() { }.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+
+		JSONFilterConstraints filterConstraints = getJsonFilterConstraintsForParentTransactionGreaterThanOne(savingsTransaction);
+		SearchService searchService = MambuAPIFactory.getSearchService();
+
+		List<SavingsTransaction> transactions = searchService.searchEntitiesWithBasicDetails(MambuEntityType.SAVINGS_TRANSACTION,  filterConstraints, "0", "100");
+
+		checkCustomFieldValueExistenceOnTransactions(transactions);
+	}
+
+	private static void checkCustomFieldValueExistenceOnTransactions(List<SavingsTransaction> transactions) {
+		for (SavingsTransaction transaction : transactions) {
+
+			List<CustomFieldValue> customFieldValues = transaction.getCustomFieldValues();
+
+			if (customFieldValues == null) {
+				System.out.println("No custom fields were found for transaction:" + transaction.getId());
+			} else {
+				System.out.println("WARN: custom fields were returned for transaction");
+			}
+		}
 	}
 
 	public static SavingsTransaction testTransferFromSavingsAccount() throws MambuApiException {
@@ -1305,4 +1400,28 @@ public class DemoTestSavingsService {
 			}
 		}
 	}
+
+
+	private static JSONFilterConstraints getJsonFilterConstraintsForParentTransactionGreaterThanOne(SavingsTransaction savingsTransaction) {
+
+		JSONFilterConstraints filterConstraints = createSingleFilterConstraints(
+				NATIVE,
+				AMOUNT.name(),
+				MORE_THAN,
+				DataItemType.SAVINGS_TRANSACTION,
+				"1",
+				null);
+
+		JSONFilterConstraint accountConstraint = createConstraint(
+				NATIVE,
+				PARENT_ACCOUNT_KEY.name(),
+				EQUALS,
+				DataItemType.SAVINGS_TRANSACTION,
+				savingsTransaction.getParentAccountKey(),
+				null);
+		filterConstraints.getFilterConstraints().add(accountConstraint);
+
+		return filterConstraints;
+	}
+	
 }

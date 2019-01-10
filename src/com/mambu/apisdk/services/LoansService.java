@@ -1019,6 +1019,10 @@ public class LoansService {
 	/**
 	 * Get loan transactions by specifying filter constraints
 	 * 
+	 * Note: This method is deprecated, you may use the getLoanTransactionsWithFullDetails in order to obtain loan
+	 * transaction with full details (custom fields included) or getLoanTransactionsWithBasicDetails to obtain the loan
+	 * transactions in basic details level.
+	 * 
 	 * @param filterConstraints
 	 *            filter constraints. Must not be null
 	 * @param offset
@@ -1026,21 +1030,62 @@ public class LoansService {
 	 * @param limit
 	 *            pagination limit. If not null it must be an integer greater than zero
 	 * @return list of loan transactions matching filter constraint
-	 * @throws MambuApiException
+	 * @throws MambuApiException in case something failed during transaction fetching
 	 */
+	@Deprecated
 	public List<LoanTransaction> getLoanTransactions(JSONFilterConstraints filterConstraints, String offset,
+			String limit) throws MambuApiException {
+
+			return getLoanTransactionsWithFullDetails(filterConstraints, offset, limit);
+	}
+	
+	/**
+	 * Get loan transactions by specifying filter constraints (including custom fields)
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * @return list of loan transactions matching filter constraint
+	 * @throws MambuApiException in case something failed during transaction fetching
+	 */
+	public List<LoanTransaction> getLoanTransactionsWithFullDetails(JSONFilterConstraints filterConstraints, String offset,
+			String limit) throws MambuApiException {
+
+		// Available since Mambu 3.12. See MBU-8988 for more details
+		// POST {JSONFilterConstraints} /api/loans/transactions/search?offset=0&limit=5&fullDetails=true
+		ApiDefinition apiDefintition = makeSearchTransactionsWithFullApiDefinition();
+		
+		// POST Filter JSON with pagination params map
+		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
+				ServiceHelper.makePaginationParams(offset, limit));
+	}
+	
+	/**
+	 * Get loan transactions by specifying filter constraints with basic details level (no custom fields)
+	 * 
+	 * @param filterConstraints
+	 *            filter constraints. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 * @return list of loan transactions matching filter constraint
+	 * @throws MambuApiException in case something failed during transaction fetching
+	 */
+	public List<LoanTransaction> getLoanTransactionsWithBasicDetails(JSONFilterConstraints filterConstraints, String offset,
 			String limit) throws MambuApiException {
 
 		// Available since Mambu 3.12. See MBU-8988 for more details
 		// POST {JSONFilterConstraints} /api/loans/transactions/search?offset=0&limit=5
-
 		ApiDefinition apiDefintition = SearchService
-				.makeApiDefinitionforSearchByFilter(MambuEntityType.LOAN_TRANSACTION);
+				.makeApiDefinitionForSearchByFilter(MambuEntityType.LOAN_TRANSACTION);
 
 		// POST Filter JSON with pagination params map
 		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
 				ServiceHelper.makePaginationParams(offset, limit));
-
 	}
 
 	/****
@@ -1344,7 +1389,7 @@ public class LoansService {
 		// Available since Mambu 3.12. See MBU-8988 for more details
 		// POST {JSONFilterConstraints} /api/loans/search?offset=0&limit=5
 
-		ApiDefinition apiDefintition = SearchService.makeApiDefinitionforSearchByFilter(MambuEntityType.LOAN_ACCOUNT);
+		ApiDefinition apiDefintition = SearchService.makeApiDefinitionForSearchByFilter(MambuEntityType.LOAN_ACCOUNT);
 
 		// POST Filter JSON with pagination params map
 		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
@@ -1608,5 +1653,15 @@ public class LoansService {
 		return serviceExecutor.deleteOwnedEntity(MambuEntityType.LOAN_ACCOUNT, loanAccountKey,
 				MambuEntityType.SETTLEMENT_ACCOUNT, savingAccountKey);
 	}
+	
+	private ApiDefinition makeSearchTransactionsWithFullApiDefinition() {
+
+		ApiDefinition apiDefinition = SearchService
+				.makeApiDefinitionForSearchByFilter(MambuEntityType.LOAN_TRANSACTION);
+		apiDefinition.setWithFullDetails(true);
+		
+		return apiDefinition;
+	}
+	
 
 }

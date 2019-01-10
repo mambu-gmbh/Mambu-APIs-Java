@@ -3,7 +3,6 @@
  */
 package com.mambu.apisdk.services;
 
-// import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
@@ -54,8 +53,8 @@ public class SearchService {
 		this.serviceExecutor = new ServiceExecutor(mambuAPIService);
 	}
 
-	/***
-	 * Get a Map of search results <SearchResul, List<SearchResult> for a given query and an optional list of search
+	/**
+	 * Get a Map of search results <SearchResult, List<SearchResult> for a given query and an optional list of search
 	 * types
 	 * 
 	 * @param query
@@ -107,7 +106,37 @@ public class SearchService {
 	 * retrieve entities by filter constraints for any supported entity type. API users can also use methods specific to
 	 * each entity, for example to get clients by filter constraints use
 	 * {@link ClientsService#getClients(JSONFilterConstraints, String, String)}
-	 * 
+	 * <p>
+	 * Note: This method is deprecated, you may use the {@link SearchService#searchEntitiesWithFullDetails(MambuEntityType, JSONFilterConstraints, String, String)} in order to obtain entities
+	 * with full details (custom fields included) or searchEntitiesWithBasicDetails to obtain the entities in basic details level.
+	 *
+	 * @param searchEntityType  Mambu entity type. Must not be null. Currently searching with filter constrains API supports the
+	 *                          following entities: Clients, Groups, Loans, Savings, Loan Transactions, SavingsTransactions and
+	 *                          NotificationMessages
+	 * @param filterConstraints JSONFilterConstraints object defining an array of applicable filter constraints and an optional sort
+	 *                          order. Must not be null
+	 * @param offset            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit             pagination limit. If not null it must be an integer greater than zero
+	 * @return list of entities of the searchEntityType matching provided filter constraints
+	 * @throws MambuApiException in case exception occurs while fetching entities
+	 */
+	@Deprecated
+	public <T> List<T> searchEntities(MambuEntityType searchEntityType, JSONFilterConstraints filterConstraints,
+			String offset, String limit) throws MambuApiException {
+
+		return searchEntitiesWithFullDetails(searchEntityType, filterConstraints, offset, limit);
+
+	}
+
+	/**
+	 * Convenience method to GET Mambu entities by specifying filter constraints. This generic method can be used to
+	 * retrieve entities by filter constraints for any supported entity type. API users can also use methods specific to
+	 * each entity, for example to get clients by filter constraints use
+	 * {@link ClientsService#getClients(JSONFilterConstraints, String, String)}
+	 *
+	 * Note: the retrieved entities will not contain custom fields. In case custom fields are needed
+	 * {@link SearchService#searchEntitiesWithFullDetails(MambuEntityType, JSONFilterConstraints, String, String)} must be used
+	 *
 	 * @param searchEntityType
 	 *            Mambu entity type. Must not be null. Currently searching with filter constrains API supports the
 	 *            following entities: Clients, Groups, Loans, Savings, Loan Transactions, SavingsTransactions and
@@ -119,23 +148,64 @@ public class SearchService {
 	 *            pagination offset. If not null it must be an integer greater or equal to zero
 	 * @param limit
 	 *            pagination limit. If not null it must be an integer greater than zero
-	 * 
+	 *
 	 * @return list of entities of the searchEntityType matching provided filter constraints
-	 * @throws MambuApiException
+	 * @throws MambuApiException in case exception occurs while fetching entities
 	 */
-	public <T> List<T> searchEntities(MambuEntityType searchEntityType, JSONFilterConstraints filterConstraints,
-			String offset, String limit) throws MambuApiException {
-		// Available since Mambu 3.12. See MBU-8986, MBU-8975
-		// For NotificationMessages available since Mambu 3.14. See MBU-10646
-		// Specifying the sort order is available since Mambu 3.14. See MBU-10444
-		// POST {JSONFilterConstraints} /api/savings/transactions/search?offset=0&limit=5
+	public <T> List<T> searchEntitiesWithBasicDetails(MambuEntityType searchEntityType, JSONFilterConstraints filterConstraints,
+									  String offset, String limit) throws MambuApiException {
 
-		// Example:: POST /api/loans/search {
-		// "filterConstraints":[{"filterSelection":"CREATION_DATE", "filterElement":"BETWEEN", "value":"2000-01-01",
-		// "secondValue":"2072-01-01", "dataItemType":"CLIENT" }],
-		// "sortDetails":{"sortingColumn":"ACCOUNT_ID", "sortingOrder":"ASCENDING", "dataItemType":"LOANS"}}
+//		 Available since Mambu 3.12. See MBU-8986, MBU-8975
+//		 For NotificationMessages available since Mambu 3.14. See MBU-10646
+//		 Specifying the sort order is available since Mambu 3.14. See MBU-10444
+//		 POST {JSONFilterConstraints} /api/savings/transactions/search?offset=0&limit=5
+//		 Example: POST /api/loans/search {
+//		 "filterConstraints":[{"filterSelection":"CREATION_DATE", "filterElement":"BETWEEN", "value":"2000-01-01",
+//		 "secondValue":"2072-01-01", "dataItemType":"CLIENT" }],
+//		 "sortDetails":{"sortingColumn":"ACCOUNT_ID", "sortingOrder":"ASCENDING", "dataItemType":"LOANS"}}
 
-		ApiDefinition apiDefinition = SearchService.makeApiDefinitionforSearchByFilter(searchEntityType);
+		ApiDefinition apiDefinition = SearchService.makeApiDefinitionForSearchByFilter(searchEntityType);
+
+		// POST Filter JSON with pagination params map
+		return serviceExecutor.executeJson(apiDefinition, filterConstraints, null, null,
+				ServiceHelper.makePaginationParams(offset, limit));
+
+	}
+
+	/**
+	 * Convenience method to GET Mambu entities by specifying filter constraints. This generic method can be used to
+	 * retrieve entities by filter constraints for any supported entity type. API users can also use methods specific to
+	 * each entity, for example to get clients by filter constraints use
+	 * {@link ClientsService#getClients(JSONFilterConstraints, String, String)}
+	 *
+	 * @param searchEntityType
+	 *            Mambu entity type. Must not be null. Currently searching with filter constrains API supports the
+	 *            following entities: Clients, Groups, Loans, Savings, Loan Transactions, SavingsTransactions and
+	 *            NotificationMessages
+	 * @param filterConstraints
+	 *            JSONFilterConstraints object defining an array of applicable filter constraints and an optional sort
+	 *            order. Must not be null
+	 * @param offset
+	 *            pagination offset. If not null it must be an integer greater or equal to zero
+	 * @param limit
+	 *            pagination limit. If not null it must be an integer greater than zero
+	 *
+	 * @return list of entities of the searchEntityType matching provided filter constraints
+	 * @throws MambuApiException in case exception occurs while fetching entities
+	 */
+	public <T> List<T> searchEntitiesWithFullDetails(MambuEntityType searchEntityType, JSONFilterConstraints filterConstraints,
+										  String offset, String limit) throws MambuApiException {
+
+//		Available since Mambu 3.12. See MBU-8986, MBU-8975
+//		For NotificationMessages available since Mambu 3.14. See MBU-10646
+//		Specifying the sort order is available since Mambu 3.14. See MBU-10444
+//		POST {JSONFilterConstraints} /api/savings/transactions/search?fullDetails=true&offset=0&limit=5
+//		Example: POST /api/loans/search?fullDetails=true {
+//		"filterConstraints":[{"filterSelection":"CREATION_DATE", "filterElement":"BETWEEN", "value":"2000-01-01",
+//		"secondValue":"2072-01-01", "dataItemType":"CLIENT" }],
+//		"sortDetails":{"sortingColumn":"ACCOUNT_ID", "sortingOrder":"ASCENDING", "dataItemType":"LOANS"}}
+
+		ApiDefinition apiDefinition = makeSearchEntitiesWithFullApiDefinition(searchEntityType);
 
 		// POST Filter JSON with pagination params map
 		return serviceExecutor.executeJson(apiDefinition, filterConstraints, null, null,
@@ -155,7 +225,7 @@ public class SearchService {
 	 * 
 	 * @return api definition for searching entities using filter constraints
 	 */
-	public static ApiDefinition makeApiDefinitionforSearchByFilter(MambuEntityType searchEntityType) {
+	public static ApiDefinition makeApiDefinitionForSearchByFilter(MambuEntityType searchEntityType) {
 
 		// See MBU-8986, MBU-8975, MBU-8987, MBU-8988, MBU-8989, MBU-11120
 		// POST Example for searching clients. See MBU-8975.
@@ -176,11 +246,8 @@ public class SearchService {
 
 		// Specify Api definition for searching with filter constraints.
 		Class<?> returnEntityClass = searchEntityType.getEntityClass();
-		ApiDefinition apiDefinition = new ApiDefinition(searchUrl, ContentType.JSON, Method.POST, returnEntityClass,
+		return  new ApiDefinition(searchUrl, ContentType.JSON, Method.POST, returnEntityClass,
 				ApiReturnFormat.COLLECTION);
-
-		return apiDefinition;
-
 	}
 
 	/**
@@ -245,20 +312,27 @@ public class SearchService {
 	 * @param limit
 	 *            pagination limit. If not null it must be an integer greater than zero
 	 * @return list of notification messages matching filter constraints
-	 * @throws MambuApiException
+	 * @throws MambuApiException in case something wrong happens while getting notification messages
 	 */
 	public List<NotificationMessage> getNotificationMessages(JSONFilterConstraints filterConstraints, String offset,
 			String limit) throws MambuApiException {
 		// Available since Mambu 3.14. See MBU-10646 for more details
 		// POST {JSONFilterConstraints} /api/notifications/messages/search?offset=0&limit=5
 
-		ApiDefinition apiDefintition = SearchService
-				.makeApiDefinitionforSearchByFilter(MambuEntityType.NOTIFICATION_MESSAGE);
+		ApiDefinition apiDefinition = SearchService
+				.makeApiDefinitionForSearchByFilter(MambuEntityType.NOTIFICATION_MESSAGE);
 
 		// POST Filter JSON with pagination params map
-		return serviceExecutor.executeJson(apiDefintition, filterConstraints, null, null,
+		return serviceExecutor.executeJson(apiDefinition, filterConstraints, null, null,
 				ServiceHelper.makePaginationParams(offset, limit));
 
+	}
+
+
+	private ApiDefinition makeSearchEntitiesWithFullApiDefinition(MambuEntityType searchEntityType) {
+		ApiDefinition apiDefinition = SearchService.makeApiDefinitionForSearchByFilter(searchEntityType);
+		apiDefinition.setWithFullDetails(true);
+		return apiDefinition;
 	}
 
 }
