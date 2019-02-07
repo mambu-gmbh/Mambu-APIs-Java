@@ -77,6 +77,7 @@ public class ServiceHelper {
 		request.setNotes(notes);
 		// Add Back Date and First Repayment Date
 		request.setDate(backDate);
+		request.setValueDate(backDate);
 		request.setFirstRepaymentDate(firstRepaymentDate);
 		// Add transaction custom fields
 		request.setCustomInformation(customInformation);
