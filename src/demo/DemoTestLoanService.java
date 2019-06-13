@@ -1313,7 +1313,7 @@ public class DemoTestLoanService {
 		}
 
 	}
-	public static void testApplyInterestToLoanAccount(Boolean genericCall) throws MambuApiException {
+	public static void testApplyInterestToLoanAccount(boolean genericCall) throws MambuApiException {
 
 		System.out.println(methodName = "\nIn testApplyInterestToLoanAccount");
 
