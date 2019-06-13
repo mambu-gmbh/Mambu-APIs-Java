@@ -1313,7 +1313,7 @@ public class DemoTestLoanService {
 		}
 
 	}
-	public static void testApplyInterestToLoanAccount(Boolean callGeneric) throws MambuApiException {
+	public static void testApplyInterestToLoanAccount(Boolean genericCall) throws MambuApiException {
 
 		System.out.println(methodName = "\nIn testApplyInterestToLoanAccount");
 
@@ -1330,7 +1330,7 @@ public class DemoTestLoanService {
 		
 		try {
 			
-			LoanTransaction transaction = callGeneric ?
+			LoanTransaction transaction = genericCall ?
 					loanService.executeJSONTransactionRequest(accountId, LoanTransactionType.INTEREST_APPLIED, jsonTransactionRequest):
 					loanService.applyInterestToLoanAccount(accountId, date, notes);		
 			
