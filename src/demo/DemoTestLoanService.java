@@ -229,7 +229,7 @@ public class DemoTestLoanService {
 					testRequestApprovalLoanAccount(); // Available since 3.13
 					testApproveLoanAccount();
 					testDisburseLoanAccount();
-					testApplyInterestToLoanAccount(true); // Available since 3.1
+					testApplyInterestToLoanAccount(); // Available since 3.1
 					testApplyFeeToLoanAccount();
 
 					testBulkReverseLoanTransactions(); // Available since Mambu 4.2
@@ -1313,7 +1313,7 @@ public class DemoTestLoanService {
 		}
 
 	}
-	public static void testApplyInterestToLoanAccount(boolean genericCall) throws MambuApiException {
+	public static void testApplyInterestToLoanAccount() throws MambuApiException {
 
 		System.out.println(methodName = "\nIn testApplyInterestToLoanAccount");
 
@@ -1323,17 +1323,8 @@ public class DemoTestLoanService {
 		System.out.println("For Loan ID=" + accountId);
 		Date date = new Date();
 		String notes = "Notes for applying interest to a loan";
-		
-		JSONTransactionRequest jsonTransactionRequest = new JSONTransactionRequest();
-		jsonTransactionRequest.setDate(date);
-		jsonTransactionRequest.setNotes(notes);
-		
 		try {
-			
-			LoanTransaction transaction = genericCall ?
-					loanService.executeJSONTransactionRequest(accountId, LoanTransactionType.INTEREST_APPLIED, jsonTransactionRequest):
-					loanService.applyInterestToLoanAccount(accountId, date, notes);		
-			
+			LoanTransaction transaction = loanService.applyInterestToLoanAccount(accountId, date, notes);
 			System.out.println("Transaction. ID= " + transaction.getTransactionId().toString() + "\tTransaction Amount="
 					+ transaction.getAmount().toString());
 		} catch (MambuApiException e) {
