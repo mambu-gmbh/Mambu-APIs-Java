@@ -45,6 +45,8 @@ import com.mambu.api.server.handler.loan.model.JSONTransactionRequest;
 import com.mambu.api.server.handler.loan.model.RestructureDetails;
 import com.mambu.apisdk.MambuAPIFactory;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.model.ScheduleQueryParam;
+import com.mambu.apisdk.model.ScheduleQueryParams;
 import com.mambu.apisdk.services.CustomFieldValueService;
 import com.mambu.apisdk.services.DocumentsService;
 import com.mambu.apisdk.services.LoansService;
@@ -142,7 +144,7 @@ public class DemoTestLoanService {
 			// Run tests for all required product types
 			for (LoanProductType productType : productTypes) {
 
-				System.out.println("\n*** Product Type=" + productType + " ***");
+				System.out.println("\n*** Product  are pType=" + productType + " ***");
 
 				// Get random product of a specific type or a product for a specific product id
 				demoProduct = (productTypesTesting) ? DemoUtil.getDemoLoanProduct(productType)
@@ -162,6 +164,8 @@ public class DemoTestLoanService {
 				}
 
 				try {
+					
+					previewSchedule();
 
 					// Create account to test patch, approve, undo approve, reject, close
 					testCreateJsonAccount();
@@ -1325,7 +1329,7 @@ public class DemoTestLoanService {
 		String notes = "Notes for applying interest to a loan";
 		
 		JSONTransactionRequest jsonTransactionRequest = new JSONTransactionRequest();
-		jsonTransactionRequest.setValueDate(date);
+		jsonTransactionRequest.setBookingDate(date);
 		jsonTransactionRequest.setNotes(notes);
 		
 		try {
@@ -1746,18 +1750,30 @@ public class DemoTestLoanService {
 		// Get the repayment schedule for these loan params
 		List<Repayment> repayments = loanService.getLoanProductSchedule(productId, loanAccount);
 
-		// Log the results
-		int totalRepayments = (repayments == null) ? 0 : repayments.size();
-		System.out.println("Total repayments=" + totalRepayments + "\tfor product ID=" + productId);
-		if (totalRepayments == 0) {
-			return;
-		}
-		Repayment firstRepayment = repayments.get(0);
-		Repayment lastRepayment = repayments.get(totalRepayments - 1);
-		System.out.println("First Repayment. Due Date=" + firstRepayment.getDueDate() + "\tTotal Due="
-				+ firstRepayment.getTotalDue());
-		System.out.println("Last Repayment. Due Date=" + lastRepayment.getDueDate() + "\tTotal Due="
-				+ lastRepayment.getTotalDue());
+		logRepayments(productId, repayments);
+	}
+	
+	public static void previewSchedule() throws MambuApiException {
+		
+		LoansService loanService = MambuAPIFactory.getLoanService();
+		
+		String productId = demoProduct.getId();
+		
+		LoanAccount loanAccount = new LoanAccount();
+		loanAccount.setLoanAmount(Money.from(10000l));
+		loanAccount.setInterestRate(null);
+		loanAccount.setPrincipalRepaymentInterval(null);
+		loanAccount.setGracePeriod(null);
+		loanAccount.setPeriodicPayment((BigDecimal)null);
+		loanAccount.setRepaymentInstallments(null);
+	
+		ScheduleQueryParams scheduleParams = ScheduleQueryParams.instance();
+		scheduleParams.addQueryParam(ScheduleQueryParam.ORGANIZATION_COMMISSION, "20");
+		scheduleParams.addQueryParam(ScheduleQueryParam.PERIODIC_PAYMENT, "10");
+	
+		List<Repayment> repayments = loanService.getLoanProductSchedule(productId, loanAccount, scheduleParams);
+
+		logRepayments(productId, repayments);		
 	}
 
 	private static final String apiTestIdPrefix = "API-";
@@ -2718,5 +2734,22 @@ public class DemoTestLoanService {
 		filterConstraints.getFilterConstraints().add(accountConstraint);
 
 		return filterConstraints;
+	}
+	
+	private static void logRepayments(String productId, List<Repayment> repayments) {
+
+		int totalRepayments = (repayments == null) ? 0 : repayments.size();
+		System.out.println("Total repayments=" + totalRepayments + "\tfor product ID=" + productId);
+		
+		if (totalRepayments == 0) {
+			return;
+		}
+		
+		Repayment firstRepayment = repayments.get(0);
+		Repayment lastRepayment = repayments.get(totalRepayments - 1);
+		System.out.println("First Repayment. Due Date=" + firstRepayment.getDueDate() + "\tTotal Due="
+				+ firstRepayment.getTotalDue());
+		System.out.println("Last Repayment. Due Date=" + lastRepayment.getDueDate() + "\tTotal Due="
+				+ lastRepayment.getTotalDue());
 	}
 }
