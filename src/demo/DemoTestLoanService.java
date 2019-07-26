@@ -144,7 +144,7 @@ public class DemoTestLoanService {
 			// Run tests for all required product types
 			for (LoanProductType productType : productTypes) {
 
-				System.out.println("\n*** Product  are pType=" + productType + " ***");
+				System.out.println("\n*** Product Type=" + productType + " ***");
 
 				// Get random product of a specific type or a product for a specific product id
 				demoProduct = (productTypesTesting) ? DemoUtil.getDemoLoanProduct(productType)
