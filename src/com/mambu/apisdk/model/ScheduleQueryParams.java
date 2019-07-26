@@ -4,10 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Schedule query parameters model, used to create extra query params for preview schedule API
+ * Schedule query parameters model, used to create extra query params for preview schedule API. The rest of the query
+ * params can be sent using LoanAccount entity (i.e loanAmount (mandatory), anticipatedDisbursement, firstRepaymentDate,
+ * interestRate, repaymentInstallments)
  * 
  * @author acostros
- *
  */
 public class ScheduleQueryParams {
 
