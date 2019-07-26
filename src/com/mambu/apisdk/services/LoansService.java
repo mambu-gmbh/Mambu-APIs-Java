@@ -5,6 +5,9 @@ package com.mambu.apisdk.services;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.collections.MapUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -28,6 +31,8 @@ import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.json.LoanAccountPatchJsonSerializer;
 import com.mambu.apisdk.json.LoanProductScheduleJsonSerializer;
 import com.mambu.apisdk.model.ApiLoanAccount;
+import com.mambu.apisdk.model.ScheduleQueryParam;
+import com.mambu.apisdk.model.ScheduleQueryParams;
 import com.mambu.apisdk.model.SettlementAccount;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ApiDefinition;
@@ -1455,7 +1460,29 @@ public class LoansService {
 	 * @throws MambuApiException
 	 */
 	public List<Repayment> getLoanProductSchedule(String productId, LoanAccount account) throws MambuApiException {
+		
+		return getLoanProductSchedule(productId, account, null);
+	}
 
+	/**
+	 * Get repayment schedule preview for a Loan Product
+	 * 
+	 * @param productId
+	 * the id of the loan product. Must not be null.
+	 * @param account
+	 * loan account containing parameters for determining loan schedule
+	 * 
+	 *            Only the following loan account parameters are currently supported: loanAmount (mandatory),
+	 *            anticipatedDisbursement, firstRepaymentDate, interestRate, repaymentInstallments, gracePeriod,
+	 *            repaymentPeriodUnit, repaymentPeriodCount, principalRepaymentInterval, fixedDaysOfMonth
+	 *            
+	 * @param queryParams
+	 * 			some extra schedule parameters to be used with for preview i.e periodicPayment, organizationCommission
+	 * @return the List of Repayments (the preview)
+	 * @throws MambuApiException in case something goes wrong while obtaining the preview
+	 */
+	public List<Repayment> getLoanProductSchedule(String productId, LoanAccount account, ScheduleQueryParams queryParams) throws MambuApiException {
+		
 		// E.g. GET /api/loanproducts/{ID}/schedule?loanAmount=1250&anticipatedDisbursement=2015-02-10&interestRate=4
 		// E.g. GET /api/loanproducts/{ID}/schedule?loanAmount=1250&fixedDaysOfMonth=2,10,20
 
@@ -1469,10 +1496,13 @@ public class LoansService {
 
 		// Add applicable params to the map
 		ParamsMap params = ServiceHelper.makeParamsForLoanSchedule(account, getProductSchedule);
+		addExtraScheduleParams(queryParams, params);
+		
 		// The API returns a JSONLoanRepayments object containing a list of repayments
 		JSONLoanRepayments jsonRepayments = serviceExecutor.execute(getProductSchedule, productId, params);
 		// Return list of repayments
 		return jsonRepayments != null ? jsonRepayments.getRepayments() : null;
+		
 	}
 
 	/****
@@ -1662,6 +1692,19 @@ public class LoansService {
 		apiDefinition.setWithFullDetails(true);
 		
 		return apiDefinition;
+	}
+	
+	private void addExtraScheduleParams(ScheduleQueryParams queryParams, ParamsMap params) {
+
+		if(queryParams != null && MapUtils.isNotEmpty(queryParams.getParams())){
+			
+			Map<ScheduleQueryParam, String> parameters = queryParams.getParams();
+
+			for(Map.Entry<ScheduleQueryParam, String> param : parameters.entrySet()){
+
+				params.addParam(param.getKey().getParamName(), param.getValue());
+			}
+		}
 	}
 	
 
