@@ -117,7 +117,7 @@ public final class MambuAPIServiceFactory {
 	 * @param domain
 	 *            the domain where the server is found
 	 * @param apiKey
-	 * 	          the ApiKey header for an ApiConsumer. See <a href="https://support.mambu.com/docs/api-consumers</a>
+	 * 	          the ApiKey header for an ApiConsumer. @see https://support.mambu.com/docs/api-consumers
 	 *
 	 * @return factory object to create API service objects which are bound to the given credentials
 	 */
@@ -136,7 +136,7 @@ public final class MambuAPIServiceFactory {
 	 * @param domain
 	 *            the domain where the server is found
 	 * @param apiKey
-	 * 	          the ApiKey header for an ApiConsumer. See <a href="https://support.mambu.com/docs/api-consumers</a>
+	 * 	          the ApiKey header for an ApiConsumer. @see https://support.mambu.com/docs/api-consumers
 	 *
 	 * @return factory object to create API service objects which are bound to the given credentials
 	 */
@@ -155,7 +155,7 @@ public final class MambuAPIServiceFactory {
 	 * @param domain
 	 *            the domain where the server is found
 	 * @param apiKey
-	 * 	          the ApiKey header for an ApiConsumer. See <a href="https://support.mambu.com/docs/api-consumers</a>
+	 * 	          the ApiKey header for an ApiConsumer. @see https://support.mambu.com/docs/api-consumers
 	 * @param userAgentHeaderValue
 	 *            the user agent header value to be passed with all requests
 	 *

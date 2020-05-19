@@ -133,7 +133,7 @@ public class MambuAPIFactory {
 	 * @param domain
 	 *            the domain where the server is found
 	 * @param apiKey
-	 * 	          the ApiKey header for an ApiConsumer. See <a href="https://support.mambu.com/docs/api-consumers</a>user
+	 * 	          the ApiKey header for an ApiConsumer. @see https://support.mambu.com/docs/api-consumers
 	 */
 	public static void setUpWithApiKey(String domain, String apiKey) {
 
@@ -147,7 +147,7 @@ public class MambuAPIFactory {
 	 * @param domain
 	 *            the domain where the server is found
 	 * @param apiKey
-	 * 	          the ApiKey header for an ApiConsumer. See <a href="https://support.mambu.com/docs/api-consumers</a>
+	 * 	          the ApiKey header for an ApiConsumer. @see https://support.mambu.com/docs/api-consumers
 	 * @param userAgentHeaderValue
 	 *            the user agent header value to be sent along with all request calls
 	 */
@@ -164,7 +164,7 @@ public class MambuAPIFactory {
 	 * @param domain
 	 *            the domain where the server is found
 	 * @param apiKey
-	 * 	          the ApiKey header for an ApiConsumer. See <a href="https://support.mambu.com/docs/api-consumers</a>
+	 * 	          the ApiKey header for an ApiConsumer. @see https://support.mambu.com/docs/api-consumers
 	 */
 	public static void setUpWithApiKey(Protocol protocol, String domain, String apiKey) {
 
@@ -179,7 +179,7 @@ public class MambuAPIFactory {
 	 * @param domain
 	 *            the domain where the server is found
 	 * @param apiKey
-	 * 	          the ApiKey header for an ApiConsumer. See <a href="https://support.mambu.com/docs/api-consumers</a>
+	 * 	          the ApiKey header for an ApiConsumer. @see https://support.mambu.com/docs/api-consumers
 	 * @param userAgentHeaderValue
 	 *            the user agent header value to be sent along with all request calls
 	 */

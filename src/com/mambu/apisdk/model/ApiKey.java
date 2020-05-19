@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 import com.google.inject.BindingAnnotation;
 
 /**
- * Annotation class for defining the ApiKey header for an ApiConsumer. See <a href="https://support.mambu.com/docs/api-consumers</a>
+ * Annotation class for defining the ApiKey header for an ApiConsumer. @see https://support.mambu.com/docs/api-consumers
  *
  * @author cezarrom
  */
