@@ -114,7 +114,7 @@ public class DemoUtil {
 	private static String password = "demo"; // demo User password
 	private static String password2 = "demo"; // demo User password for domain2
 
-	private static String apiKey = "DiiCtz7KgQnOi6vdkP1aRw9dCbseINot"; // Api Consumer's key
+	private static String apiKey = "someKey"; // Api Consumer's key
 
 
 	// Demo Data
@@ -228,6 +228,8 @@ public class DemoUtil {
 			System.out.println("Null  Properties file, cannot obtain demo data");
 			return;
 		}
+
+		apiKey = properties.getProperty("apikey", apiKey);
 
 		// Get Properties. For protocol, domain, user and demo client we can also use hardcoded defaults if not provided
 		protocol = makeDefaultIfEmpty(properties.getProperty("protocol"), protocol);
