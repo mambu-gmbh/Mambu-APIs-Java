@@ -20,7 +20,7 @@ public class DemoTestDatabaseService {
 
 	public static void main(String[] args) {
 
-		DemoUtil.setUp();
+		DemoUtil.setUpWithBasicAuth();
 
 		if (testTriggerDatabaseBackup()) {// Available since V4.3
 			// added here because we don`t know how long to wait until the backup is done
@@ -37,7 +37,6 @@ public class DemoTestDatabaseService {
 	/**
 	 * Tests triggering of a DB backup process
 	 * 
-	 * @throws MambuApiException
 	 */
 	private static boolean testTriggerDatabaseBackup() {
 
@@ -65,7 +64,6 @@ public class DemoTestDatabaseService {
 	/**
 	 * Tests downloading a DB backup
 	 * 
-	 * @throws MambuApiException
 	 */
 	private static boolean testDownloadLatestDbBackup()  {
 

@@ -18,7 +18,7 @@ public class DemoTestMultiTenantService {
 
 	public static void main(String[] args) {
 		try {
-			DemoUtil.setUp();
+			DemoUtil.setUpWithBasicAuth();
 			demoClient = DemoUtil.getDemoClient();
 			demoClient2 = DemoUtil.getDemoClient(true);
 

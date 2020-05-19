@@ -7,7 +7,7 @@ import java.util.Date;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.mambu.apisdk.MambuAPIServiceTest;
+import com.mambu.apisdk.ServiceTestBase;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.MambuEntityType;
@@ -19,7 +19,7 @@ import com.mambu.apisdk.util.RequestExecutor;
  *
  */
 
-public class ActivitiesServiceTest extends MambuAPIServiceTest {
+public class ActivitiesServiceTest extends ServiceTestBase {
 
     private static final String ACTIVITIES_ENDPOINT = "https://demo.mambutest.com/api/activities";
 	private ActivitiesService service;

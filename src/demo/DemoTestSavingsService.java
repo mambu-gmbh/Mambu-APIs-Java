@@ -79,7 +79,7 @@ public class DemoTestSavingsService {
 
 	public static void main(String[] args) {
 
-		DemoUtil.setUp();
+		DemoUtil.setUpWithBasicAuth();
 
 		try {
 			// Get Demo data

@@ -29,7 +29,7 @@ public class DemoTestDocumentTemplatesService {
 
 	public static void main(String[] args) {
 
-		DemoUtil.setUp();
+		DemoUtil.setUpWithBasicAuth();
 
 		try {
 			// Test getting account and transaction templates for Loans

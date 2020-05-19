@@ -37,7 +37,7 @@ public class DemoTestRepaymentService {
 
 	public static void main(String[] args) {
 
-		DemoUtil.setUp();
+		DemoUtil.setUpWithBasicAuth();
 
 		try {
 			final String testAccountId = null; // use specific account id or null to get random loan account
@@ -62,7 +62,7 @@ public class DemoTestRepaymentService {
 
 	}
 
-	public static List<Repayment> testGetLoanAccountRepayments() throws MambuApiException {
+	private static List<Repayment> testGetLoanAccountRepayments() throws MambuApiException {
 
 		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println("\nIn " + methodName);
@@ -83,7 +83,7 @@ public class DemoTestRepaymentService {
 
 	}
 
-	public static void testGetRepaymentsDueFromTo() throws MambuApiException {
+	private static void testGetRepaymentsDueFromTo() throws MambuApiException {
 
 		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println("\nIn " + methodName);
@@ -94,14 +94,14 @@ public class DemoTestRepaymentService {
 		List<Repayment> repayemnts = repaymentService.getRapaymentsDueFromTo(dueFromString, dueToString, offset, limit);
 
 		System.out.println("Total Repayments=" + repayemnts.size() + " Offset=" + offset + "  Limit=" + limit);
-		if (repayemnts.size() > 0) {
+		if (!repayemnts.isEmpty()) {
 			System.out.println("First Repayment Due date=" + repayemnts.get(0).getDueDate().toString());
 			System.out.println(
 					"Last  Repayment Due date=" + repayemnts.get(repayemnts.size() - 1).getDueDate().toString());
 		}
 	}
 
-	public static void testUpdateLoanRepaymentsSchedule() throws MambuApiException {
+	private static void testUpdateLoanRepaymentsSchedule() throws MambuApiException {
 
 		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println("\nIn " + methodName);
@@ -113,7 +113,7 @@ public class DemoTestRepaymentService {
 
 		System.out.println("Account " + LOAN_ACCOUNT_ID + " has " + repayments.size() + " repayments");
 
-		List<Repayment> modifiedRepayments = new ArrayList<Repayment>();
+		List<Repayment> modifiedRepayments = new ArrayList<>();
 		final long fiveDays = 5 * 24 * 60 * 60 * 1000L; // 5 days
 		int minusOrPlusOne = -1; // indicator to increase or t decrease repayment amount
 		final int maxRepaymentsToUpdate = 4; // Maximum number to update
@@ -169,7 +169,7 @@ public class DemoTestRepaymentService {
 	}
 
 	// Test getting repayments schedule for investor account.
-	public static void testGetInvestorAccountRepayments() throws MambuApiException {
+	private static void testGetInvestorAccountRepayments() throws MambuApiException {
 
 		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println("\nIn " + methodName);
@@ -215,7 +215,7 @@ public class DemoTestRepaymentService {
 	}
 
 	// Tests deleting a repayment for a loan account
-	public static void testDeleteRepayment() throws MambuApiException {
+	private static void testDeleteRepayment() throws MambuApiException {
 
 		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println(methodName = "\nIn " + methodName);
@@ -290,7 +290,7 @@ public class DemoTestRepaymentService {
 		Money totalPrincipalAmountBalance = demoLoanAccount.getPrincipalAmount();
 
 		// calculate the due for remaining repayments
-		BigDecimal repaymentPrincipal = new BigDecimal(totalPrincipalAmountBalance.getAmount()
+		BigDecimal repaymentPrincipal = BigDecimal.valueOf(totalPrincipalAmountBalance.getAmount()
 				.divide(newInstallementsNo, 2, RoundingMode.HALF_UP).doubleValue());
 
 		Money principal = new Money(repaymentPrincipal.doubleValue());

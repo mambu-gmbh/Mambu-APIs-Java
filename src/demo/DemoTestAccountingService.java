@@ -28,7 +28,7 @@ public class DemoTestAccountingService {
 
 	public static void main(String[] args) {
 
-		DemoUtil.setUp();
+		DemoUtil.setUpWithBasicAuth();
 
 		try {
 			demoBranch = DemoUtil.getDemoBranch();

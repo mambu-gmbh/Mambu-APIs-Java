@@ -1,6 +1,7 @@
 package com.mambu.apisdk;
 
 import static com.mambu.apisdk.MambuAPIFactory.DEFAULT_USER_AGENT_HEADER_VALUE;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.mambu.apisdk.exception.MambuApiException;
@@ -105,6 +106,64 @@ public final class MambuAPIServiceFactory {
 			String password, String userAgentHeaderValue) {
 
 		Injector injector = Guice.createInjector(new MambuAPIModule(protocol, domain, username, password, userAgentHeaderValue));
+		return new MambuAPIServiceFactory(injector);
+	}
+
+	/***
+	 * Convenience method for setting up the Guice Module with data required for accessing the remote server, returning
+	 * a factory object to retrieve Mambu API services that have Mambu credentials built-in. The application protocol
+	 * that is used is HTTPS
+	 *
+	 * @param domain
+	 *            the domain where the server is found
+	 * @param apiKey
+	 * 	          the ApiKey header for an ApiConsumer. See <a href="https://support.mambu.com/docs/api-consumers</a>
+	 *
+	 * @return factory object to create API service objects which are bound to the given credentials
+	 */
+	public static MambuAPIServiceFactory getFactoryWithApiKey(String domain, String apiKey) {
+
+		Injector injector = Guice.createInjector(new MambuAPIModule(Protocol.HTTPS, domain, apiKey, DEFAULT_USER_AGENT_HEADER_VALUE));
+		return new MambuAPIServiceFactory(injector);
+	}
+
+	/***
+	 * Set up the Guice Module with data required for accessing the remote server, returning a factory object to
+	 * retrieve Mambu API services that have Mambu credentials built-in
+	 *
+	 * @param protocol
+	 *            the protocol used for communication
+	 * @param domain
+	 *            the domain where the server is found
+	 * @param apiKey
+	 * 	          the ApiKey header for an ApiConsumer. See <a href="https://support.mambu.com/docs/api-consumers</a>
+	 *
+	 * @return factory object to create API service objects which are bound to the given credentials
+	 */
+	public static MambuAPIServiceFactory getFactoryWithApiKey(Protocol protocol, String domain, String apiKey) {
+
+		Injector injector = Guice.createInjector(new MambuAPIModule(protocol, domain, apiKey, DEFAULT_USER_AGENT_HEADER_VALUE));
+		return new MambuAPIServiceFactory(injector);
+	}
+
+	/***
+	 * Set up the Guice Module with data required for accessing the remote server, returning a factory object to
+	 * retrieve Mambu API services that have Mambu credentials built-in
+	 *
+	 * @param protocol
+	 *            the protocol used for communication
+	 * @param domain
+	 *            the domain where the server is found
+	 * @param apiKey
+	 * 	          the ApiKey header for an ApiConsumer. See <a href="https://support.mambu.com/docs/api-consumers</a>
+	 * @param userAgentHeaderValue
+	 *            the user agent header value to be passed with all requests
+	 *
+	 * @return factory object to create API service objects which are bound to the given credentials
+	 */
+	public static MambuAPIServiceFactory getFactoryWithApiKey(Protocol protocol, String domain, String apiKey, String userAgentHeaderValue) {
+
+		Injector injector = Guice.createInjector(new MambuAPIModule(protocol, domain, apiKey, userAgentHeaderValue));
 		return new MambuAPIServiceFactory(injector);
 	}
 

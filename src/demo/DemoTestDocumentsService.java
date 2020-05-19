@@ -33,7 +33,7 @@ public class DemoTestDocumentsService {
 
 	public static void main(String[] args) {
 
-		DemoUtil.setUp();
+		DemoUtil.setUpWithBasicAuth();
 
 		try {
 			demoUser = DemoUtil.getDemoUser();
@@ -68,7 +68,7 @@ public class DemoTestDocumentsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public static void testUploadDocument() throws MambuApiException {
+	private static void testUploadDocument() throws MambuApiException {
 
 		System.out.println("\nIn testUploadDocument");
 
@@ -105,7 +105,7 @@ public class DemoTestDocumentsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public static void testUploadDocumentFromFile() throws MambuApiException {
+	private static void testUploadDocumentFromFile() throws MambuApiException {
 		System.out.println("\nIn testUploadDocumentFromFile");
 
 		// Our Test file to upload.
@@ -164,7 +164,7 @@ public class DemoTestDocumentsService {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public static void testGetImage() throws MambuApiException {
+	private static void testGetImage() throws MambuApiException {
 		System.out.println("\nIn testGetImage");
 
 		DocumentsService documentsService = MambuAPIFactory.getDocumentsService();

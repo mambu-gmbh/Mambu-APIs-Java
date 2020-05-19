@@ -6,7 +6,7 @@ import java.util.Date;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.mambu.apisdk.MambuAPIServiceTest;
+import com.mambu.apisdk.ServiceTestBase;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
@@ -18,7 +18,7 @@ import com.mambu.tasks.shared.model.Task;
  * @author thobach
  * 
  */
-public class TasksServiceTest extends MambuAPIServiceTest {
+public class TasksServiceTest extends ServiceTestBase {
 
 	private TasksService service;
 

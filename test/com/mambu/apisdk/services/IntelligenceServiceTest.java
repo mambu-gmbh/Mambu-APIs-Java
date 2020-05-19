@@ -1,12 +1,9 @@
-/**
- * 
- */
 package com.mambu.apisdk.services;
 
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.mambu.apisdk.MambuAPIServiceTest;
+import com.mambu.apisdk.ServiceTestBase;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
 import com.mambu.apisdk.util.RequestExecutor.Method;
@@ -16,7 +13,7 @@ import com.mambu.intelligence.shared.model.Intelligence.Indicator;
  * @author ipenciuc
  * 
  */
-public class IntelligenceServiceTest extends MambuAPIServiceTest {
+public class IntelligenceServiceTest extends ServiceTestBase {
 
 	private IntelligenceService service;
 

@@ -30,7 +30,7 @@ public class DemoTestNotificationsService {
 
 	public static void main(String[] args) {
 
-		DemoUtil.setUp();
+		DemoUtil.setUpWithBasicAuth();
 
 		try {
 

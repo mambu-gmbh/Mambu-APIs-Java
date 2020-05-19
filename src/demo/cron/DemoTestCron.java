@@ -20,7 +20,7 @@ public class DemoTestCron {
 		Timer timer = new Timer();
 		DemoTestRunner demoTestRunner = new DemoTestRunner();
 
-		DemoUtil.setUp();
+		DemoUtil.setUpWithBasicAuth();
 
 		Calendar startTime = Calendar.getInstance();
 		startTime.set(Calendar.HOUR_OF_DAY, DemoUtil.demoCronStartHour);

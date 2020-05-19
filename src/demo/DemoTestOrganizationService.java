@@ -49,7 +49,7 @@ public class DemoTestOrganizationService {
 
 	public static void main(String[] args) {
 
-		DemoUtil.setUp();
+		DemoUtil.setUpWithBasicAuth();
 
 		try {
 			demoUser = DemoUtil.getDemoUser();

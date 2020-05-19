@@ -27,7 +27,7 @@ public class DemoTestLoCService {
 
 	public static void main(String[] args) {
 
-		DemoUtil.setUp();
+		DemoUtil.setUpWithBasicAuth();
 
 		try {
 			// tests creating LoC for a client

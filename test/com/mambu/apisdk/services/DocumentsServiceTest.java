@@ -4,7 +4,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import com.mambu.api.server.handler.documents.model.JSONDocument;
-import com.mambu.apisdk.MambuAPIServiceTest;
+import com.mambu.apisdk.ServiceTestBase;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
@@ -16,7 +16,7 @@ import com.mambu.docs.shared.model.OwnerType;
  * @author thobach
  * 
  */
-public class DocumentsServiceTest extends MambuAPIServiceTest {
+public class DocumentsServiceTest extends ServiceTestBase {
 
 	private DocumentsService service;
 
