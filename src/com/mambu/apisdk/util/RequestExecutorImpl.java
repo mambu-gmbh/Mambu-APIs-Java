@@ -55,7 +55,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 	private static final String AUTHORIZATION_HEADER_NAME = "Authorization";
 	private static final String APIKEY_HEADER_NAME = "apikey";
 	private static final String USER_AGENT_HEADER_NAME = "User-Agent";
-	private static final String TLS_V1_2 = "TLSv1.2";
 	// Added charset charset=UTF-8, MBU-4137 is now fixed
 	private static final String UTF8_CHARSET = StandardCharsets.UTF_8.name();
 	private static final String WWW_FORM_URLENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=UTF-8";
@@ -71,11 +70,13 @@ public class RequestExecutorImpl implements RequestExecutor {
 	private static final String FULL_DETAILS_QUERY_PARAM = "fullDetails";
 
 	private URLHelper urlHelper;
+	private HttpClientProvider httpClientProvider;
 	private Header authenticationHeader;
 
 	@Inject
-	public RequestExecutorImpl(URLHelper urlHelper) {
+	public RequestExecutorImpl(HttpClientProvider httpClientProvider, URLHelper urlHelper) {
 		this.urlHelper = urlHelper;
+		this.httpClientProvider = httpClientProvider;
 	}
 
 	// Without params and with default contentType (ContentType.WWW_FORM)
@@ -130,7 +131,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		params = addAppKeyToParams(params);
 
-		HttpClient httpClient = createCustomHttpClient();
+		HttpClient httpClient = httpClientProvider.createCustomHttpClient();
 				
 		String response = "";
 		
@@ -185,9 +186,9 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// Mambu may handle API requests differently for different Application Keys
 		params = addAppKeyToParams(params);
 
-		HttpClient httpClient = createCustomHttpClient();
+		HttpClient httpClient = httpClientProvider.createCustomHttpClient();
 				
-		ByteArrayOutputStream byteArrayOutputStreamResponse = null;
+		ByteArrayOutputStream byteArrayOutputStreamResponse;
 		HttpResponse httpResponse = null;
 		try {
 			httpResponse = executeRequestByMethod(urlString, params, method, contentTypeFormat, httpClient,
@@ -208,36 +209,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 
 		return byteArrayOutputStreamResponse;
-	}
-
-	/**
-	 * Creates an httpClient used to run the API calls
-	 * 
-	 * @return newly created httpClient
-	 */
-	private HttpClient createCustomHttpClient() {
-		
-		HttpClient httpClient = HttpClients.custom()
-				// set cookies validation on ignore
-				.setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.IGNORE_COOKIES).build())
-				.setSSLSocketFactory(createSslConnectionSocketFactory())
-				.build();
-
-		return httpClient;
-	}
-
-	/**
-	 * Creates custom SSLConnectionSocketFactory and set it to use only the TLSv1.2 as supported protocol
-	 * 
-	 * @return newly created SSLConnectionSocketFactory
-	 */
-	private SSLConnectionSocketFactory createSslConnectionSocketFactory() {
-
-		SSLConnectionSocketFactory sslConnFactory = new
-				SSLConnectionSocketFactory(SSLContexts.createDefault(),
-				new String[] {TLS_V1_2}, null,
-				SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-		return sslConnFactory;
 	}
 
 	/**
@@ -267,7 +238,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		int status = httpResponse.getStatusLine().getStatusCode();
 
 		ByteArrayOutputStream response = null;
-		String responseMessage = "";
+		String responseMessage;
 		// Get the response Entity
 		HttpEntity entity = httpResponse.getEntity();
 		if (entity != null && status == HttpURLConnection.HTTP_OK) {
@@ -276,7 +247,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		} else {
 			// read the content for the error message
-			String errorMessage = null;
+			String errorMessage;
 			errorMessage = processResponse(httpResponse, method, contentType, urlString, params);
 			responseMessage = errorMessage;
 		}
@@ -597,7 +568,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// get status
 		int status = httpResponse.getStatusLine().getStatusCode();
 
-		InputStream content = null;
+		InputStream content;
 		String response = "";
 
 		// Get the response Entity
@@ -739,7 +710,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 */
 	private static List<NameValuePair> getListFromParams(ParamsMap params) {
 
-		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(params.size());
+		List<NameValuePair> nameValuePairs = new ArrayList<>(params.size());
 
 		for (Map.Entry<String, String> entry : params.entrySet()) {
 			// only put the parameter in the URL if its value is not null
