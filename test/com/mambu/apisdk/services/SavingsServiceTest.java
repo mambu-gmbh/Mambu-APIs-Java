@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.mambu.apisdk.services;
 
 import java.util.ArrayList;
@@ -11,7 +8,7 @@ import org.mockito.Mockito;
 
 import com.mambu.accounts.shared.model.AccountState;
 import com.mambu.api.server.handler.savings.model.JSONSavingsAccount;
-import com.mambu.apisdk.MambuAPIServiceTest;
+import com.mambu.apisdk.ServiceTestBase;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
@@ -24,7 +21,7 @@ import com.mambu.savings.shared.model.SavingsType;
  * @author ipenciuc
  * 
  */
-public class SavingsServiceTest extends MambuAPIServiceTest {
+public class SavingsServiceTest extends ServiceTestBase {
 
 	private SavingsService service;
 
@@ -46,7 +43,7 @@ public class SavingsServiceTest extends MambuAPIServiceTest {
 		savingsAccount.setClientAccountHolderKey("8ad661123b36cfaf013b42c2e0f46dca");
 
 		// Add Custom Fields
-		List<CustomFieldValue> savingsAccountCustomInformation = new ArrayList<CustomFieldValue>();
+		List<CustomFieldValue> savingsAccountCustomInformation = new ArrayList<>();
 
 		CustomFieldValue custField1 = new CustomFieldValue();
 		custField1.setCustomFieldId("Interest_Deposit_Accounts");

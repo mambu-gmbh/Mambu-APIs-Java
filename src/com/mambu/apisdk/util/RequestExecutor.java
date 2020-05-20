@@ -12,13 +12,15 @@ import com.mambu.apisdk.exception.MambuApiException;
  */
 public interface RequestExecutor {
 
-	public enum Method {
+	void setAuthorization(String apiKey);
+
+	enum Method {
 		GET, POST, PATCH, DELETE
 	}
 
 	// Content Type. Currently supported either "x-www-form-urlencoded"
 	// (default) or json
-	public enum ContentType {
+	enum ContentType {
 		WWW_FORM, JSON
 	}
 
@@ -28,7 +30,7 @@ public interface RequestExecutor {
 	 * @param username
 	 * @param password
 	 */
-	public void setAuthorization(String username, String password);
+	void setAuthorization(String username, String password);
 
 	/**
 	 * Executes a request with given url and request method
@@ -40,7 +42,7 @@ public interface RequestExecutor {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public String executeRequest(String urlString, Method method) throws MambuApiException;
+	String executeRequest(String urlString, Method method) throws MambuApiException;
 
 	/**
 	 * Executes a request with given url, some params and a request method. Defaults the content Type to WWW_FORM
@@ -57,7 +59,7 @@ public interface RequestExecutor {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public String executeRequest(String urlString, ParamsMap params, Method method) throws MambuApiException;
+	String executeRequest(String urlString, ParamsMap params, Method method) throws MambuApiException;
 
 	/**
 	 * Executes a request with given url and specifying the contentType, with some params and a request method.
@@ -76,7 +78,7 @@ public interface RequestExecutor {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public String executeRequest(String urlString, ParamsMap params, Method method, ContentType contentTypeFormat)
+	String executeRequest(String urlString, ParamsMap params, Method method, ContentType contentTypeFormat)
 			throws MambuApiException;
 
 	/**
@@ -94,7 +96,7 @@ public interface RequestExecutor {
 	 * 
 	 * @throws MambuApiException
 	 */
-	public String executeRequest(String urlString, Method method, ContentType contentTypeFormat)
+	String executeRequest(String urlString, Method method, ContentType contentTypeFormat)
 			throws MambuApiException;
 
 	/**
@@ -109,7 +111,7 @@ public interface RequestExecutor {
 	 *            the ApiDefinition holding details like HTTP method, content type and API return type
 	 * @return A ByteArrayOutputStream from the InputStream of the HTTP response.
 	 */
-	public ByteArrayOutputStream executeRequest(String urlString, ParamsMap params, ApiDefinition apiDefinition)
+	ByteArrayOutputStream executeRequest(String urlString, ParamsMap params, ApiDefinition apiDefinition)
 			throws MambuApiException;
 
 }

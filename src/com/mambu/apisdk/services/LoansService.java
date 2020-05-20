@@ -853,7 +853,7 @@ public class LoansService {
 	 *            repaymentInstallments, repaymentPeriodCount, repaymentPeriodUnit, expectedDisbursementDate,
 	 *            firstRepaymentDate, gracePeriod, principalRepaymentInterval, penaltyRate, periodicPayment
 	 * 
-	 * @returns success or failure
+	 * @return success or failure
 	 * 
 	 * @throws MambuApiException
 	 * @throws IllegalArgumentException
