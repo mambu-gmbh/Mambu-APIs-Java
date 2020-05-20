@@ -1,13 +1,10 @@
-/**
- * 
- */
 package com.mambu.apisdk.services;
 
 import static org.mockito.Mockito.verify;
 
 import org.junit.Test;
 
-import com.mambu.apisdk.MambuAPIServiceTest;
+import com.mambu.apisdk.ServiceTestBase;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
@@ -17,7 +14,7 @@ import com.mambu.apisdk.util.RequestExecutor.Method;
  * @author ipenciuc
  * 
  */
-public class ClientServiceTest extends MambuAPIServiceTest {
+public class ClientServiceTest extends ServiceTestBase {
 
 	private ClientsService service;
 

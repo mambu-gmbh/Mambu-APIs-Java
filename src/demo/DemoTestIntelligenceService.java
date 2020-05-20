@@ -17,7 +17,7 @@ public class DemoTestIntelligenceService {
 
 	public static void main(String[] args) {
 
-		DemoUtil.setUp();
+		DemoUtil.setUpWithBasicAuth();
 
 		try {
 
@@ -31,7 +31,7 @@ public class DemoTestIntelligenceService {
 
 	}
 
-	public static void testGetIndicators() throws MambuApiException {
+	private static void testGetIndicators() throws MambuApiException {
 		System.out.println("\nIn testGetIndicators");
 
 		IntelligenceService intelligenceService = MambuAPIFactory.getIntelligenceService();

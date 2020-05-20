@@ -1,12 +1,9 @@
-/**
- * 
- */
 package com.mambu.apisdk.services;
 
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.mambu.apisdk.MambuAPIServiceTest;
+import com.mambu.apisdk.ServiceTestBase;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.APIData;
 import com.mambu.apisdk.util.ParamsMap;
@@ -18,7 +15,7 @@ import com.mambu.core.shared.model.CustomFieldType;
  * @author ipenciuc
  * 
  */
-public class OrganizationServiceTest extends MambuAPIServiceTest {
+public class OrganizationServiceTest extends ServiceTestBase {
 
 	private OrganizationService service;
 

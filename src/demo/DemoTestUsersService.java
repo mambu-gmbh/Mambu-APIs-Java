@@ -1,5 +1,8 @@
 package demo;
 
+import static demo.UsersUtil.logIndividualUserDetails;
+import static demo.UsersUtil.logUsers;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -60,7 +63,7 @@ public class DemoTestUsersService {
 
 	public static void main(String[] args) {
 
-		DemoUtil.setUp();
+		DemoUtil.setUpWithBasicAuth();
 
 		try {
 			demoUser = DemoUtil.getDemoUser();
@@ -512,35 +515,6 @@ public class DemoTestUsersService {
 		System.out.println("\tKey=" + userRole.getEncodedKey() + "\tName=" + userRole.getName() + "\n\tPermissions="
 				+ userRole.getPermissions().getPermissionSet());
 
-	}
-
-	// Log some details for a list of users. Prefix with an optional message
-	private static void logUsers(List<User> users, String message) {
-		if (users == null) {
-			return;
-		}
-		message = message == null ? "" : message;
-		System.out.println(message + "\tTotal Users=" + users.size());
-		for (User user : users) {
-			logIndividualUserDetails(user);
-		}
-		System.out.println();
-	}
-
-	/**
-	 * Logs some details for an individual user
-	 * 
-	 * @param user
-	 *            The users whose details will be logged to the consoles
-	 */
-	private static void logIndividualUserDetails(User user) {
-		System.out.println("User details:");
-		System.out.println("\tUsername = " + user.getUsername());  
-		System.out.println("\tName = " + user.getFullName()); 
-		System.out.println("\tId = " + user.getId());
-		System.out.println("\tBranch = "	+ user.getAssignedBranchKey());
-		System.out.println("\tUsername = " + user.getUsername());
-		System.out.println("\tNotes = " + user.getNotes());
 	}
 
 	// Log Custom View Summary results. See MBU-11879

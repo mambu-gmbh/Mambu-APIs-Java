@@ -30,7 +30,7 @@ public class DemoTestTasksService {
 
 	public static void main(String[] args) {
 
-		DemoUtil.setUp();
+		DemoUtil.setUpWithBasicAuth();
 
 		try {
 			// Get demo entities needed for testing

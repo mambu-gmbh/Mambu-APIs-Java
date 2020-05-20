@@ -114,7 +114,7 @@ public class DemoTestLoanService {
 
 	public static void main(String[] args) {
 
-		DemoUtil.setUp();
+		DemoUtil.setUpWithBasicAuth();
 
 		try {
 			// Get demo entities needed for testing
@@ -2134,7 +2134,6 @@ public class DemoTestLoanService {
 						System.out.println("Account " + id + " DELETED. Status=" + deleted);
 					} catch (MambuApiException e) {
 						System.out.println("Account " + id + " is NOT deleted. Exception=" + e.getMessage());
-						continue;
 					}
 				}
 			}

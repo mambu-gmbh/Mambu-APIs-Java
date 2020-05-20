@@ -17,21 +17,18 @@ import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.CookieSpecs;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 
 import com.google.inject.Inject;
@@ -51,8 +48,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 	private static final String QUESTION_MARK_CHARACTER = "?";
 	private static final String CONTENT_TYPE_HEADER_NAME = "Content-Type";
 	private static final String AUTHORIZATION_HEADER_NAME = "Authorization";
+	private static final String APIKEY_HEADER_NAME = "apikey";
 	private static final String USER_AGENT_HEADER_NAME = "User-Agent";
-	private static final String TLS_V1_2 = "TLSv1.2";
 	// Added charset charset=UTF-8, MBU-4137 is now fixed
 	private static final String UTF8_CHARSET = StandardCharsets.UTF_8.name();
 	private static final String WWW_FORM_URLENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=UTF-8";
@@ -68,11 +65,13 @@ public class RequestExecutorImpl implements RequestExecutor {
 	private static final String FULL_DETAILS_QUERY_PARAM = "fullDetails";
 
 	private URLHelper urlHelper;
-	private String encodedAuthorization;
-	
+	private HttpClientProvider httpClientProvider;
+	private Header authenticationHeader;
+
 	@Inject
-	public RequestExecutorImpl(URLHelper urlHelper) {
+	public RequestExecutorImpl(HttpClientProvider httpClientProvider, URLHelper urlHelper) {
 		this.urlHelper = urlHelper;
+		this.httpClientProvider = httpClientProvider;
 	}
 
 	// Without params and with default contentType (ContentType.WWW_FORM)
@@ -127,7 +126,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		params = addAppKeyToParams(params);
 
-		HttpClient httpClient = createCustomHttpClient();
+		HttpClient httpClient = httpClientProvider.createCustomHttpClient();
 				
 		String response = "";
 		
@@ -182,9 +181,9 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// Mambu may handle API requests differently for different Application Keys
 		params = addAppKeyToParams(params);
 
-		HttpClient httpClient = createCustomHttpClient();
+		HttpClient httpClient = httpClientProvider.createCustomHttpClient();
 				
-		ByteArrayOutputStream byteArrayOutputStreamResponse = null;
+		ByteArrayOutputStream byteArrayOutputStreamResponse;
 		HttpResponse httpResponse = null;
 		try {
 			httpResponse = executeRequestByMethod(urlString, params, method, contentTypeFormat, httpClient,
@@ -205,36 +204,6 @@ public class RequestExecutorImpl implements RequestExecutor {
 		}
 
 		return byteArrayOutputStreamResponse;
-	}
-
-	/**
-	 * Creates an httpClient used to run the API calls
-	 * 
-	 * @return newly created httpClient
-	 */
-	private HttpClient createCustomHttpClient() {
-		
-		HttpClient httpClient = HttpClients.custom()
-				// set cookies validation on ignore
-				.setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.IGNORE_COOKIES).build())
-				.setSSLSocketFactory(createSslConnectionSocketFactory())
-				.build();
-
-		return httpClient;
-	}
-
-	/**
-	 * Creates custom SSLConnectionSocketFactory and set it to use only the TLSv1.2 as supported protocol
-	 * 
-	 * @return newly created SSLConnectionSocketFactory
-	 */
-	private SSLConnectionSocketFactory createSslConnectionSocketFactory() {
-
-		SSLConnectionSocketFactory sslConnFactory = new
-				SSLConnectionSocketFactory(SSLContexts.createDefault(),
-				new String[] {TLS_V1_2}, null,
-				SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-		return sslConnFactory;
 	}
 
 	/**
@@ -264,7 +233,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		int status = httpResponse.getStatusLine().getStatusCode();
 
 		ByteArrayOutputStream response = null;
-		String responseMessage = "";
+		String responseMessage;
 		// Get the response Entity
 		HttpEntity entity = httpResponse.getEntity();
 		if (entity != null && status == HttpURLConnection.HTTP_OK) {
@@ -273,7 +242,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 		} else {
 			// read the content for the error message
-			String errorMessage = null;
+			String errorMessage;
 			errorMessage = processResponse(httpResponse, method, contentType, urlString, params);
 			responseMessage = errorMessage;
 		}
@@ -470,49 +439,21 @@ public class RequestExecutorImpl implements RequestExecutor {
 		return httpResponse;
 	}
 
-	/**
-	 * Executes a POST request as per the interface specification
-	 */
-	private HttpResponse executePostRequest(HttpClient httpClient, String urlString, ParamsMap params,
-			ContentType contentTypeFormat) throws MalformedURLException, IOException, MambuApiException {
+	@Override
+	public void setAuthorization(String username, String password) {
 
-		// Get properly formatted ContentType
-		final String contentType = getFormattedContentTypeString(contentTypeFormat);
+		// encode the username and password
+		String userNamePassword = username + ":" + password;
 
-		HttpPost httpPost = new HttpPost(urlString);
-		httpPost.setHeader(CONTENT_TYPE_HEADER_NAME, contentType);
-		httpPost.setHeader(AUTHORIZATION_HEADER_NAME, "Basic " + encodedAuthorization);
-		httpPost.setHeader(USER_AGENT_HEADER_NAME, urlHelper.userAgentHeaderValue());
+		authenticationHeader = new BasicHeader(AUTHORIZATION_HEADER_NAME, "Basic " + new String(Base64.encodeBase64(userNamePassword.getBytes())));
 
-		if (params != null && params.size() > 0) {
-			switch (contentTypeFormat) {
 
-			case WWW_FORM:
-				// convert parms to a list for HttpEntity
-				List<NameValuePair> httpParams = getListFromParams(params);
+	}
 
-				// use UTF-8 to encode
-				HttpEntity postEntity = new UrlEncodedFormEntity(httpParams, UTF8_CHARSET);
+	@Override
+	public void setAuthorization(String apiKey) {
 
-				httpPost.setEntity(postEntity);
-
-				break;
-
-			case JSON:
-
-				// Make jsonEntity
-				StringEntity jsonEntity = makeJsonEntity(params);
-
-				httpPost.setEntity(jsonEntity);
-
-				break;
-			}
-		}
-
-		// execute
-		HttpResponse httpResponse = httpClient.execute(httpPost);
-
-		return httpResponse;
+		authenticationHeader = new BasicHeader(APIKEY_HEADER_NAME, apiKey);
 
 	}
 
@@ -520,7 +461,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * Executes a PATCH request as per the interface specification
 	 */
 	private HttpResponse executePatchRequest(HttpClient httpClient, String urlString, ParamsMap params)
-			throws MalformedURLException, IOException, MambuApiException {
+			throws IOException, MambuApiException {
 
 		// PATCH request is using json ContentType
 		final String contentType = JSON_CONTENT_TYPE;
@@ -528,8 +469,8 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// HttpPatch is available since org.apache.httpcomponents v4.2
 		HttpPatch httpPatch = new HttpPatch(urlString);
 		httpPatch.setHeader(CONTENT_TYPE_HEADER_NAME, contentType);
-		httpPatch.setHeader(AUTHORIZATION_HEADER_NAME, "Basic " + encodedAuthorization);
-		httpPatch.setHeader(USER_AGENT_HEADER_NAME, urlHelper.userAgentHeaderValue()); 
+		httpPatch.addHeader(authenticationHeader);
+		httpPatch.setHeader(USER_AGENT_HEADER_NAME, urlHelper.userAgentHeaderValue());
 
 		// Format jsonEntity
 		StringEntity jsonEntity = makeJsonEntity(params);
@@ -544,7 +485,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 
 	/***
 	 * Execute a GET request as per the interface specification
-	 * 
+	 *
 	 * @param httpClient
 	 *            http client
 	 * @param urlString
@@ -554,49 +495,19 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 * @return Http Response
 	 */
 	private HttpResponse executeGetRequest(HttpClient httpClient, String urlString, ParamsMap params)
-			throws MalformedURLException, IOException, MambuApiException {
+			throws IOException, MambuApiException {
 
 		if (params != null && params.size() > 0) {
-			urlString = new String((URLHelper.makeUrlWithParams(urlString, params)));
+			urlString = URLHelper.makeUrlWithParams(urlString, params);
 		}
 
 		HttpGet httpGet = new HttpGet(urlString);
 		// add Authorozation header
-		httpGet.setHeader(AUTHORIZATION_HEADER_NAME, "Basic " + encodedAuthorization);
-		httpGet.setHeader(USER_AGENT_HEADER_NAME, urlHelper.userAgentHeaderValue()); 
+		httpGet.addHeader(authenticationHeader);
+		httpGet.setHeader(USER_AGENT_HEADER_NAME, urlHelper.userAgentHeaderValue());
 
 		// execute
 		HttpResponse httpResponse = httpClient.execute(httpGet);
-
-		return httpResponse;
-
-	}
-
-	/***
-	 * Execute a DELETE request as per the interface specification
-	 * 
-	 * @param httpClient
-	 *            http client
-	 * 
-	 * @param urlString
-	 * 
-	 * @param params
-	 *            ParamsMap with parameters
-	 * @return Http Response
-	 */
-	private HttpResponse executeDeleteRequest(HttpClient httpClient, String urlString, ParamsMap params)
-			throws MalformedURLException, IOException, MambuApiException {
-
-		if (params != null && params.size() > 0) {
-			urlString = new String((URLHelper.makeUrlWithParams(urlString, params)));
-		}
-
-		HttpDelete httpDelete = new HttpDelete(urlString);
-		httpDelete.setHeader(AUTHORIZATION_HEADER_NAME, "Basic " + encodedAuthorization);
-		httpDelete.setHeader(USER_AGENT_HEADER_NAME, urlHelper.userAgentHeaderValue());
-
-		// execute
-		HttpResponse httpResponse = httpClient.execute(httpDelete);
 
 		return httpResponse;
 
@@ -652,7 +563,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		// get status
 		int status = httpResponse.getStatusLine().getStatusCode();
 
-		InputStream content = null;
+		InputStream content;
 		String response = "";
 
 		// Get the response Entity
@@ -707,12 +618,79 @@ public class RequestExecutorImpl implements RequestExecutor {
 		return response;
 	}
 
-	@Override
-	public void setAuthorization(String username, String password) {
+	/***
+	 * Execute a DELETE request as per the interface specification
+	 *
+	 * @param httpClient
+	 *            http client
+	 *
+	 * @param urlString
+	 *
+	 * @param params
+	 *            ParamsMap with parameters
+	 * @return Http Response
+	 */
+	private HttpResponse executeDeleteRequest(HttpClient httpClient, String urlString, ParamsMap params)
+			throws IOException, MambuApiException {
 
-		// encode the username and password
-		String userNamePassword = username + ":" + password;
-		encodedAuthorization = new String(Base64.encodeBase64(userNamePassword.getBytes()));
+		if (params != null && params.size() > 0) {
+			urlString = (URLHelper.makeUrlWithParams(urlString, params));
+		}
+
+		HttpDelete httpDelete = new HttpDelete(urlString);
+		httpDelete.addHeader(authenticationHeader);
+		httpDelete.setHeader(USER_AGENT_HEADER_NAME, urlHelper.userAgentHeaderValue());
+
+		// execute
+		HttpResponse httpResponse = httpClient.execute(httpDelete);
+
+		return httpResponse;
+
+	}
+
+	/**
+	 * Executes a POST request as per the interface specification
+	 */
+	private HttpResponse executePostRequest(HttpClient httpClient, String urlString, ParamsMap params,
+											ContentType contentTypeFormat) throws IOException, MambuApiException {
+
+		// Get properly formatted ContentType
+		final String contentType = getFormattedContentTypeString(contentTypeFormat);
+
+		HttpPost httpPost = new HttpPost(urlString);
+		httpPost.setHeader(CONTENT_TYPE_HEADER_NAME, contentType);
+		httpPost.addHeader(authenticationHeader);
+		httpPost.setHeader(USER_AGENT_HEADER_NAME, urlHelper.userAgentHeaderValue());
+
+		if (params != null && params.size() > 0) {
+			switch (contentTypeFormat) {
+
+				case WWW_FORM:
+					// convert parms to a list for HttpEntity
+					List<NameValuePair> httpParams = getListFromParams(params);
+
+					// use UTF-8 to encode
+					HttpEntity postEntity = new UrlEncodedFormEntity(httpParams, UTF8_CHARSET);
+
+					httpPost.setEntity(postEntity);
+
+					break;
+
+				case JSON:
+
+					// Make jsonEntity
+					StringEntity jsonEntity = makeJsonEntity(params);
+
+					httpPost.setEntity(jsonEntity);
+
+					break;
+			}
+		}
+
+		// execute
+		HttpResponse httpResponse = httpClient.execute(httpPost);
+
+		return httpResponse;
 
 	}
 
@@ -727,7 +705,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 	 */
 	private static List<NameValuePair> getListFromParams(ParamsMap params) {
 
-		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(params.size());
+		List<NameValuePair> nameValuePairs = new ArrayList<>(params.size());
 
 		for (Map.Entry<String, String> entry : params.entrySet()) {
 			// only put the parameter in the URL if its value is not null
@@ -810,7 +788,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 		switch (method) {
 		case GET:
 			// For GET add params to the url as in to be sent request itself
-			urlWithParams = new String((URLHelper.makeUrlWithParams(urlString, params)));
+			urlWithParams = (URLHelper.makeUrlWithParams(urlString, params));
 			requestDetails = requestDetails + urlWithParams;
 			break;
 
@@ -837,7 +815,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 			break;
 		case DELETE:
 			// For DELETE ads params to the url as in to be sent request itself
-			urlWithParams = new String((URLHelper.makeUrlWithParams(urlString, params)));
+			urlWithParams = (URLHelper.makeUrlWithParams(urlString, params));
 			requestDetails = requestDetails + urlWithParams;
 			break;
 
@@ -1056,7 +1034,7 @@ public class RequestExecutorImpl implements RequestExecutor {
 			final int encodedDataStart = response.indexOf(encodedDataIndicator);
 			// Document APIs may also return very long strings with encoded content (but without the
 			// BASE64_ENCODING_INDICATOR as for image API)
-			final boolean isDocumentApiResponse = (urlString.contains(documentsApiEndpoint)) ? true : false;
+			final boolean isDocumentApiResponse = urlString.contains(documentsApiEndpoint);
 			if (encodedDataStart != -1) {
 				// This is a response containing base64 encoded data. Strip the bulk of it out
 				int totalCharsToShow = encodedDataStart + encodedDataIndicator.length() + howManyEncodedCharsToShow;

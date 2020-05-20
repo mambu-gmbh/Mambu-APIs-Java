@@ -1,10 +1,13 @@
 package com.mambu.apisdk;
 
+import static com.mambu.core.shared.helper.StringUtils.isNotEmpty;
+
 import java.io.ByteArrayOutputStream;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mambu.apisdk.exception.MambuApiException;
+import com.mambu.apisdk.model.ApiKey;
 import com.mambu.apisdk.model.Domain;
 import com.mambu.apisdk.model.Password;
 import com.mambu.apisdk.model.Username;
@@ -35,15 +38,21 @@ public class MambuAPIService {
 	 *            password to connect with to the apis
 	 * @param domainName
 	 *            based domain name for the tenant (eg: mytenant.mambu.com)
+	 * @param apiKey
+	 *            the apiKey required for the authentication
 	 */
 	@Inject
-	public MambuAPIService(@Domain String domainName, @Username String username, @Password String password,
-			RequestExecutor executor, URLHelper urlHelper) {
+	public MambuAPIService(@Domain String domainName, @Username String username, @Password String password, @ApiKey String apiKey,
+						   RequestExecutor executor, URLHelper urlHelper) {
 
 		this.urlHelper = urlHelper;
 		this.executor = executor;
 
-		executor.setAuthorization(username, password);
+		if (isNotEmpty(apiKey)) {
+			this.executor.setAuthorization(apiKey);
+		} else {
+			this.executor.setAuthorization(username, password);
+		}
 	}
 
 	/**

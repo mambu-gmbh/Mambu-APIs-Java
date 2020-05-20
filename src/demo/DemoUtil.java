@@ -91,7 +91,7 @@ import com.mambu.savings.shared.model.SavingsType;
  * d) initializes MambuAPIFactory and sets up Application Key parameter
  * 
  * Usage: Update domain, user password as needed. Update logger.properties file and config.properties file as needed,
- * 
+ *
  * All other demo programs must invoke the following static method to use this class: setUp(). E.g. DemoUtil.setUp();
  * 
  * @author mdanilkis
@@ -113,6 +113,9 @@ public class DemoUtil {
 	// password
 	private static String password = "demo"; // demo User password
 	private static String password2 = "demo"; // demo User password for domain2
+
+	private static String apiKey = "someKey"; // Api Consumer's key
+
 
 	// Demo Data
 	static String demoClientLastName = "Doe"; // Doe Chernaya
@@ -144,8 +147,27 @@ public class DemoUtil {
 
 	public static String exceptionLogPrefix = "*** Exception *** ";
 
-	public static void setUp() {
+	public static void setUpWithBasicAuth() {
+		String appKeyValue = setUp();
 
+		// set up App Key
+		MambuAPIFactory.setApplicationKey(appKeyValue);
+		// Set up Factory
+		MambuAPIFactory.setUp(MambuEnumUtils.searchEnum(Protocol.class, protocol), domain, user, password, DEFAULT_USER_AGENT_HEADER_VALUE + " UA header");
+	}
+
+	public static void setUpWithApiKey() {
+
+		// get Logging properties file
+		String appKeyValue = setUp();
+
+		// set up App Key
+		MambuAPIFactory.setApplicationKey(appKeyValue);
+		// Set up Factory
+		MambuAPIFactory.setUpWithApiKey(domain, apiKey);
+	}
+
+	private static String setUp() {
 		// get Logging properties file
 		try {
 
@@ -186,13 +208,9 @@ public class DemoUtil {
 			e.printStackTrace();
 
 		}
-		// Set up Factory
-		MambuAPIFactory.setUp(MambuEnumUtils.searchEnum(Protocol.class, protocol), domain, user, password, DEFAULT_USER_AGENT_HEADER_VALUE + " UA header");
-
-		// set up App Key
-		MambuAPIFactory.setApplicationKey(appKeyValue);
 
 		initData();
+		return appKeyValue;
 	}
 
 	private static void initData() {
@@ -210,6 +228,8 @@ public class DemoUtil {
 			System.out.println("Null  Properties file, cannot obtain demo data");
 			return;
 		}
+
+		apiKey = properties.getProperty("apikey", apiKey);
 
 		// Get Properties. For protocol, domain, user and demo client we can also use hardcoded defaults if not provided
 		protocol = makeDefaultIfEmpty(properties.getProperty("protocol"), protocol);

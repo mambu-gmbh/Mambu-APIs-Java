@@ -1,7 +1,3 @@
-
-/**
- * 
- */
 package com.mambu.apisdk.services;
 
 import java.math.BigDecimal;
@@ -12,7 +8,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import com.mambu.accounts.shared.model.AccountHolderType;
-import com.mambu.apisdk.MambuAPIServiceTest;
+import com.mambu.apisdk.ServiceTestBase;
 import com.mambu.apisdk.exception.MambuApiException;
 import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor.ContentType;
@@ -26,7 +22,7 @@ import com.mambu.loans.shared.model.LoanAccount.RepaymentPeriodUnit;
  * @author ipenciuc
  * 
  */
-public class LoanServiceTest extends MambuAPIServiceTest {
+public class LoanServiceTest extends ServiceTestBase {
 
 	private LoansService service;
 
@@ -56,7 +52,7 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 
 		// ADd Custom Fields
 
-		List<CustomFieldValue> clientCustomInformation = new ArrayList<CustomFieldValue>();
+		List<CustomFieldValue> clientCustomInformation = new ArrayList<>();
 
 		CustomFieldValue custField1 = new CustomFieldValue();
 		String customFieldId = "Loan_Purpose_Loan_Accounts";
@@ -158,4 +154,4 @@ public class LoanServiceTest extends MambuAPIServiceTest {
 				"https://demo.mambutest.com/api/loans/8ad661123b36cfaf013b42c2e0f46dca/transactions", params,
 				Method.POST, ContentType.WWW_FORM);
 	}
-}
+}

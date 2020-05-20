@@ -19,7 +19,7 @@ public class DemoTestCommentsService {
 
 	public static void main(String[] args) {
 
-		DemoUtil.setUp();
+		DemoUtil.setUpWithBasicAuth();
 
 		try {
 
@@ -36,7 +36,7 @@ public class DemoTestCommentsService {
 	// Test creating a comment and getting comments for all supported Mambu entities
 	// As of Mambu 3.11 the following entity types support Comments: Client. Group, LoanAccount, SavingsAccount,
 	// LoanProduct, SavingsProduct, Branch, Centre, User
-	public static void testCreateAndGetComments() throws MambuApiException {
+	private static void testCreateAndGetComments() throws MambuApiException {
 		System.out.println("\nIn testCreateAndGetComments");
 
 		CommentsService commentsService = MambuAPIFactory.getCommentsService();

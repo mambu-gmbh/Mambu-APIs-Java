@@ -1,61 +1,53 @@
 package com.mambu.apisdk;
 
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
+import static com.mambu.core.shared.helper.StringUtils.EMPTY_STRING;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-import org.junit.Before;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
-import com.mambu.apisdk.exception.MambuApiException;
-import com.mambu.apisdk.util.ParamsMap;
 import com.mambu.apisdk.util.RequestExecutor;
 import com.mambu.apisdk.util.URLHelper;
 
-/***
- * Class extended by all service-test classes
- * 
- * @author ipenciuc
- * 
+/**
+ * @author cezarrom
  */
+@RunWith(MockitoJUnitRunner.class)
 public class MambuAPIServiceTest {
 
-	protected MambuAPIService mambuApiService;
-	protected RequestExecutor executor;
-	protected URLHelper mockUrlHelper;
+	private final static String DOMAIN_NAME = "someDomainName";
+	private final static String USERNAME = "someUsername";
+	private final static String PASSWORD = "somePassword";
+	private final static String APIKEY = "someApiKey";
 
-	String username = "user";
-	String password = "password";
-	String domain = "demo.mambutest.com";
+	@Mock
+	private RequestExecutor executorMock;
+	@Mock
+	private URLHelper urlHelperMock;
 
-	private String urlRoot = "https://demo.mambutest.com/api/";
 
-	@Before
-	public void setUp() throws MambuApiException {
+	@Test
+	public void givenApiKeyWhenMambuAPIServiceIsCreatedThenAuthorizationIsBasedOnApiKey() {
 
-		executor = Mockito.mock(RequestExecutor.class);
-		mockUrlHelper = Mockito.mock(URLHelper.class);
+		new MambuAPIService(DOMAIN_NAME, USERNAME, PASSWORD, APIKEY, executorMock, urlHelperMock);
 
-		mambuApiService = new MambuAPIService(domain, username, password, executor, mockUrlHelper);
+		verify(executorMock).setAuthorization(APIKEY);
 
-		when(mockUrlHelper.createUrl(Mockito.anyString())).thenAnswer(new Answer<String>() {
+		verifyNoMoreInteractions(executorMock);
 
-			@Override
-			public String answer(InvocationOnMock invocation) throws Throwable {
-				return urlRoot + (String) invocation.getArguments()[0];
-			}
-		});
+	}
 
-		when(mockUrlHelper.createUrlWithParams(anyString(), (ParamsMap) anyObject())).thenAnswer(new Answer<String>() {
+	@Test
+	public void givenApiKeyIsNotProvidedWhenMambuAPIServiceIsCreatedThenAuthorizationIsBasedOnBasicAuth() {
 
-			@Override
-			public String answer(InvocationOnMock invocation) throws Throwable {
-				return urlRoot + (String) invocation.getArguments()[0] + "?"
-						+ ((ParamsMap) invocation.getArguments()[1]).getURLString();
-			}
-		});
+		new MambuAPIService(DOMAIN_NAME, USERNAME, PASSWORD, EMPTY_STRING, executorMock, urlHelperMock);
+
+		verify(executorMock).setAuthorization(USERNAME, PASSWORD);
+
+		verifyNoMoreInteractions(executorMock);
 
 	}
 }
