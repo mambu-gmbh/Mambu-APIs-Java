@@ -73,7 +73,7 @@ After this step, each service can be taken through a simple call like:
 
 See the classes from demo package for a few more examples of using the library
 
-Or check out the javadocs here: http://mambu-gmbh.github.com/Mambu-APIs-Java/
+Or check out the javadocs here: http://mambu-gmbh.github.io/Mambu-APIs-Java/
 
 Contributing to the Project
 ----------------------------
