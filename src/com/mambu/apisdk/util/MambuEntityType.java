@@ -32,7 +32,7 @@ import com.mambu.savings.shared.model.SavingsTransaction;
 public enum MambuEntityType {
 
 	// A list of entities supported by the API wrapper library. To be extended as needed
-	CLIENT(Client.class), CLIENT_EXTENDED(ClientExpanded.class), GROUP(Group.class), LOAN_ACCOUNT(LoanAccount.class), SAVINGS_ACCOUNT(SavingsAccount.class), LOAN_PRODUCT(
+	CLIENT(Client.class), CLIENT_EXPANDED(ClientExpanded.class), GROUP(Group.class), LOAN_ACCOUNT(LoanAccount.class), SAVINGS_ACCOUNT(SavingsAccount.class), LOAN_PRODUCT(
 			LoanProduct.class), SAVINGS_PRODUCT(SavingsProduct.class), LOAN_TRANSACTION(LoanTransaction.class), SAVINGS_TRANSACTION(
 			SavingsTransaction.class), BRANCH(Branch.class), CENTRE(Centre.class), USER(User.class), COMMENT(
 			Comment.class), CUSTOM_FIELD_VALUE(CustomFieldValue.class), LINE_OF_CREDIT(LineOfCredit.class), ACTIVITY(

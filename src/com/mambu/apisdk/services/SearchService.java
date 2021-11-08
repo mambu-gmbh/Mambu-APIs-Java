@@ -267,7 +267,7 @@ public class SearchService {
 		String entityUrl;
 		switch (searchEntityType) {
 		case CLIENT:
-		case CLIENT_EXTENDED:
+		case CLIENT_EXPANDED:
 			entityUrl = APIData.CLIENTS;
 			break;
 		case GROUP:

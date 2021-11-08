@@ -671,7 +671,7 @@ public class DemoTestSearchService {
 
 		SearchService searchService = MambuAPIFactory.getSearchService();
 		Date d1 = new Date();
-		List<ClientExpanded> listOfClients = searchService.searchEntitiesWithFullDetails(MambuEntityType.CLIENT_EXTENDED, query, "0", "1000");
+		List<ClientExpanded> listOfClients = searchService.searchEntitiesWithFullDetails(MambuEntityType.CLIENT_EXPANDED, query, "0", "1000");
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
