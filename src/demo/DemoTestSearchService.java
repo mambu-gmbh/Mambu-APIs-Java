@@ -675,7 +675,15 @@ public class DemoTestSearchService {
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
-		System.out.println("Search Clients for query=" + query + "\tReturned=" + listOfClients.size() + "\tTotal time="
+		System.out.println("Search Clients full for query=" + query + "\tReturned=" + listOfClients.size() + "\tTotal time="
+				+ diff);
+
+		d1 = new Date();
+		listOfClients = searchService.searchEntities(MambuEntityType.CLIENT_EXPANDED, query, "0", "1000");
+		d2 = new Date();
+		diff = d2.getTime() - d1.getTime();
+
+		System.out.println("Search Clients entities for query=" + query + "\tReturned=" + listOfClients.size() + "\tTotal time="
 				+ diff);
 	}
 
