@@ -1,19 +1,5 @@
 package demo;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
-import com.mambu.clients.shared.model.GroupExpanded;
-import com.mambu.clients.shared.model.GroupRole;
-import com.mambu.core.shared.model.ClientRole;
-import org.apache.commons.collections.CollectionUtils;
-
 import com.mambu.accounting.shared.column.TransactionsDataField;
 import com.mambu.accounting.shared.model.GLJournalEntry;
 import com.mambu.accounts.shared.model.AccountState;
@@ -51,6 +37,16 @@ import com.mambu.notifications.shared.model.NotificationMessageDataField;
 import com.mambu.savings.shared.data.SavingsDataField;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsTransaction;
+import org.apache.commons.collections.CollectionUtils;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Test class to show example usage of the api calls
@@ -651,8 +647,7 @@ public class DemoTestSearchService {
 
 	private static void searchClientWithBasicDetails() throws MambuApiException {
 
-		String methodName = new Object() {}
-				.getClass().getEnclosingMethod().getName();
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println("\nIn " + methodName);
 
 		JSONFilterConstraints query = getFilterContrainstsForEquals(ClientsDataField.ID.name(), demoClient.getId());
@@ -660,19 +655,16 @@ public class DemoTestSearchService {
 		SearchService searchService = MambuAPIFactory.getSearchService();
 		Date d1 = new Date();
 		List<Client> listOfClients = searchService.searchEntitiesWithBasicDetails(MambuEntityType.CLIENT, query, "0", "1000");
-
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
-		System.out
-				.println("Search Clients for query=" + query + "\tReturned=" + listOfClients.size() + "\tTotal time=" + diff);
-
+		System.out.println("Search Clients for query=" + query + "\tReturned=" + listOfClients.size() + "\tTotal time="
+				+ diff);
 	}
 
 	private static void searchClientWithFullDetails() throws MambuApiException {
 
-		String methodName = new Object() {}
-				.getClass().getEnclosingMethod().getName();
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
 		System.out.println("\nIn " + methodName);
 
 		JSONFilterConstraints query = getFilterContrainstsForEquals(ClientsDataField.ID.name(), demoClient.getId());
@@ -680,13 +672,11 @@ public class DemoTestSearchService {
 		SearchService searchService = MambuAPIFactory.getSearchService();
 		Date d1 = new Date();
 		List<ClientExpanded> listOfClients = searchService.searchEntitiesWithFullDetails(MambuEntityType.CLIENT_EXTENDED, query, "0", "1000");
-
 		Date d2 = new Date();
 		long diff = d2.getTime() - d1.getTime();
 
-		System.out
-				.println("Search Clients for query=" + query + "\tReturned=" + listOfClients.size() + "\tTotal time=" + diff);
-
+		System.out.println("Search Clients for query=" + query + "\tReturned=" + listOfClients.size() + "\tTotal time="
+				+ diff);
 	}
 
 	private static JSONFilterConstraints getFilterContrainstsForEquals(String key, String value) {
