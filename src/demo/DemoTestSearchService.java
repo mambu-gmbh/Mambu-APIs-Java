@@ -1,16 +1,5 @@
 package demo;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.collections.CollectionUtils;
-
 import com.mambu.accounting.shared.column.TransactionsDataField;
 import com.mambu.accounting.shared.model.GLJournalEntry;
 import com.mambu.accounts.shared.model.AccountState;
@@ -25,6 +14,7 @@ import com.mambu.apisdk.services.LoansService;
 import com.mambu.apisdk.services.SavingsService;
 import com.mambu.apisdk.services.SearchService;
 import com.mambu.apisdk.util.DateUtils;
+import com.mambu.apisdk.util.MambuEntityType;
 import com.mambu.clients.shared.data.ClientsDataField;
 import com.mambu.clients.shared.data.GroupsDataField;
 import com.mambu.clients.shared.model.Client;
@@ -47,6 +37,16 @@ import com.mambu.notifications.shared.model.NotificationMessageDataField;
 import com.mambu.savings.shared.data.SavingsDataField;
 import com.mambu.savings.shared.model.SavingsAccount;
 import com.mambu.savings.shared.model.SavingsTransaction;
+import org.apache.commons.collections.CollectionUtils;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Test class to show example usage of the api calls
@@ -58,12 +58,14 @@ public class DemoTestSearchService {
 
 	private static final String ZERO_OFFSET = "0";
 	private static final String FIVE_LIMIT = "5";
+	private static Client demoClient;
 
 	public static void main(String[] args) {
 
 		DemoUtil.setUpWithBasicAuth();
 
 		try {
+			demoClient = DemoUtil.getDemoClient();
 
 			testSearchAll();
 
@@ -82,6 +84,10 @@ public class DemoTestSearchService {
 			testSearchNotificationMessages(); // Available since Mambu 3.14
 
 			testSearchByDisbursementDetails(); // Available since Mambu 4.3
+
+			searchClientWithFullDetails();
+
+			searchClientWithBasicDetails();
 
 		} catch (MambuApiException e) {
 			System.out.println("Exception caught in Demo Test Search Service");
@@ -638,4 +644,59 @@ public class DemoTestSearchService {
 		}
 	}
 
+
+	private static void searchClientWithBasicDetails() throws MambuApiException {
+
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+
+		JSONFilterConstraints query = getFilterContrainstsForEquals(ClientsDataField.ID.name(), demoClient.getId());
+
+		SearchService searchService = MambuAPIFactory.getSearchService();
+		Date d1 = new Date();
+		List<Client> listOfClients = searchService.searchEntitiesWithBasicDetails(MambuEntityType.CLIENT, query, "0", "1000");
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
+
+		System.out.println("Search Clients for query=" + query + "\tReturned=" + listOfClients.size() + "\tTotal time="
+				+ diff);
+	}
+
+	private static void searchClientWithFullDetails() throws MambuApiException {
+
+		String methodName = new Object() {}.getClass().getEnclosingMethod().getName();
+		System.out.println("\nIn " + methodName);
+
+		JSONFilterConstraints query = getFilterContrainstsForEquals(ClientsDataField.ID.name(), demoClient.getId());
+
+		SearchService searchService = MambuAPIFactory.getSearchService();
+		Date d1 = new Date();
+		List<ClientExpanded> listOfClients = searchService.searchEntitiesWithFullDetails(MambuEntityType.CLIENT_EXPANDED, query, "0", "1000");
+		Date d2 = new Date();
+		long diff = d2.getTime() - d1.getTime();
+
+		System.out.println("Search Clients full for query=" + query + "\tReturned=" + listOfClients.size() + "\tTotal time="
+				+ diff);
+
+		d1 = new Date();
+		listOfClients = searchService.searchEntities(MambuEntityType.CLIENT_EXPANDED, query, "0", "1000");
+		d2 = new Date();
+		diff = d2.getTime() - d1.getTime();
+
+		System.out.println("Search Clients entities for query=" + query + "\tReturned=" + listOfClients.size() + "\tTotal time="
+				+ diff);
+	}
+
+	private static JSONFilterConstraints getFilterContrainstsForEquals(String key, String value) {
+		JSONFilterConstraints query = new JSONFilterConstraints();
+		List<JSONFilterConstraint> constraints = new ArrayList<>();
+		query.setFilterConstraints(constraints);
+
+		JSONFilterConstraint x = new JSONFilterConstraint();
+		x.setFilterSelection(key);
+		x.setFilterElement(FilterElement.EQUALS.name());
+		x.setValue(value);
+		constraints.add(x);
+		return query;
+	}
 }
