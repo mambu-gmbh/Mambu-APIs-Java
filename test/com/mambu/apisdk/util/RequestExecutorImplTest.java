@@ -26,11 +26,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 
 /**
  * @author cezarrom
  */
 @RunWith(MockitoJUnitRunner.class)
+@PowerMockIgnore({ "javax.management.*", "com.sun.org.apache.xerces.*", "javax.xml.*",
+		"org.xml.*", "org.w3c.dom.*", "com.sun.org.apache.xalan.*", "javax.activation.*" })
 public class RequestExecutorImplTest {
 
 	private static final String SOME_URL = "someUrl";
