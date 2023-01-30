@@ -1,3 +1,8 @@
+Mambu Java Client repository is archived
+===================
+
+Please be aware that the Mambu Java Client repository has been archived because is not maintained anymore, it won't benefit by latest updates in terms of functionality and security patches. Repository  will become read-only together will all pull requests.
+
 Mambu Java Client
 ===================
 
